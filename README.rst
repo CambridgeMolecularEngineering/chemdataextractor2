@@ -1,4 +1,4 @@
-ChemDataExtractor
+ChemDataExtractor-Development
 =================
 
 .. image:: http://img.shields.io/pypi/v/ChemDataExtractor.svg?style=flat-square
@@ -12,6 +12,7 @@ ChemDataExtractor
 
 ChemDataExtractor is a toolkit for extracting chemical information from the scientific literature.
 
+This is the development version of ChemDataExtractor. The most recent unstable release is available [here](https://github.com/CambridgeMolecularEngineering/chemdataextractor)
 
 Features
 --------
@@ -24,24 +25,10 @@ Features
 - Document processing to resolve data interdependencies
 
 
-Installation
-------------
+Development
+-----------
 
-To install ChemDataExtractor, simply run::
-
-    pip install chemdataextractor
-
-Or if you are an Anaconda user, run::
-
-    conda install -c chemdataextractor chemdataextractor
-
-Alternatively, try one of the other `installation options`_.
-
-
-Documentation
--------------
-
-Full documentation is available at http://chemdataextractor.org/docs
+Please read the [Introduction](http://github.com/CambridgeMolecularEngineering/chemdataextractor-development/Introduction.md) for development instructions.
 
 
 License
