@@ -249,7 +249,7 @@ Then push the branch on github:
 You are now able to edit the source and commit/push to your local branch as you please.
 
 ### 3.3 Pushing to Master
-We encourage you to push your code to master whenever you make material changes to your code. This helps to ensure that the development branches never become too disimilar from the master. All new code should be fully tested and documented in line with the testing and style guidelines outlined in the following sections.
+We encourage you to push your code to master whenever you make material changes to your code. This helps to ensure that the development branches never become too disimilar from the master. All new code should be fully tested and documented in line with the testing and style guidelines outlined in the following sections. To then push to master, you will have to submit a pull request outlining the changes. These will then be approved/merged/closed by the reviewer.
 
 ## 4. Testing
 Tests are small scripts written to ensure that a new bit of code is behaving as it should. It's very common for someone to add a few lines to one part of some software, only for it to unexpectedly break some functionality elsewhere in the code. The inclusion of automated tests helps you to find these cases early and drastically reduce the time spent troubleshooting. Tests can broadly be broken down into two categories:
