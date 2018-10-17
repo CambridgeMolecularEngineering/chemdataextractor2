@@ -18,6 +18,9 @@ from bs4 import UnicodeDammit
 from lxml.etree import fromstring
 from lxml.html import HTMLParser, Element
 import six
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from time import sleep
 
 from ...text.processors import Substitutor, Discard, Chain, LStrip, RStrip, LAdd
 from ...text.normalize import normalize
@@ -25,7 +28,7 @@ from .. import BLOCK_ELEMENTS
 from ..clean import Cleaner, clean
 from ..entity import Entity, DocumentEntity
 from ..fields import StringField, EntityField, UrlField
-from ..scraper import RssScraper, SearchScraper, UrlScraper
+from ..scraper import RssScraper, SearchScraper, UrlScraper, SeleniumSearchResult
 from ..selector import Selector
 
 
@@ -317,35 +320,57 @@ class RscRssScraper(RssScraper):
     entity = RscRssDocument
 
 
+# Updated by ti250 (17/10/18)
 class RscSearchDocument(Entity):
     """Document information from RSC search results page."""
-    doi = StringField('.title_text_s4_jrnls a::attr("name")', lower=True)
-    title = StringField('.title_text_s4_jrnls a')
-    landing_url = UrlField('.title_text_s4_jrnls a::attr("href")', lower=True)
-    pdf_url = UrlField('a.lnkPDF::attr("href")', lower=True, strip_querystring=True)
-    html_url = UrlField('.search_link_s4_jrnls a::attr("href")', lower=True, strip_querystring=True)
-    journal = StringField('.grey_left_box_text_s4_new a em strong::text')
+    doi = StringField('a::attr("name")', lower=True)
+    title = StringField('.capsule__title')
+    landing_url = UrlField('.capsule__action::attr("href")', lower=True)
+    pdf_url = UrlField('.btn.btn--primary.btn--tiny::attr("href")', lower=True, strip_querystring=True)
+    html_url = UrlField('.btn.btn--tiny::attr("href")', lower=True, strip_querystring=True)
+    journal = StringField('.text--small strong::text')
 
     clean_title = Chain(replace_rsc_img_chars, strip_rsc_html)
 
     process_doi = LAdd('10.1039/')
     process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip)
+    process_landing_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org'))
+    process_pdf_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org/'))
+    process_html_url = Chain(normalize, LStrip(':///en/content/articlepdf/'), LAdd('https://pubs.rsc.org/en/content/articlehtml/'))
 
 
+# Updated by ti250 (17/10/18)
 class RscSearchScraper(SearchScraper):
     """Scraper for RSC search results."""
 
     entity = RscSearchDocument
-    root = '.search_grey_box_middle_s4_jrnls'
+    root = '.capsule.capsule--article'
 
-    def perform_search(self, query, page):
+    def perform_search(self, query, page, driver=None):
+        """Due to RSC not accepting html requests, Selenium is used.
+        By default, the Firefox webdriver is used."""
+        if driver is None:
+            driver = webdriver.Firefox()
         log.debug('Processing query: %s' % query)
-        response = self.http.get('http://pubs.rsc.org/en/results', params={'searchtext': query, 'SortBy': 'Relevance', 'PageSize': 100})
-        selector = Selector.from_html(response)
-        sessionkey = selector.css('#SearchTerm::attr("value")').extract()[0]
-        searchdata = {'searchterm': sessionkey, 'resultcount': 100, 'category': 'journal', 'pageno': page}
-        response = self.http.post('http://pubs.rsc.org/en/search/journalresult', data=searchdata)
-        return response
+
+        url = "http://pubs.rsc.org/en/results?searchtext="
+
+        url = url + query
+        driver.get(url)
+
+        if page != 1:
+            sleep(3)
+            page_string = """document.querySelectorAll("a[class^=paging__btn]")[1].setAttribute("data-pageno", \"""" + str(page) + """\")"""
+            driver.execute_script(page_string)
+            next_button = driver.find_elements_by_css_selector("a[class^=paging__btn]")[1]
+            # Perhaps it's just my computer, but using the Safari Webdriver crashes on click!
+            next_button.click()
+
+        # I would use WebdriverWait but it seems to be that using that
+        # doesn't wait for the page to be fully loaded, perhaps because it's
+        # not actually a new page?
+        sleep(3)
+        return SeleniumSearchResult(driver)
 
 
 class RscLandingSupplement(Entity):
