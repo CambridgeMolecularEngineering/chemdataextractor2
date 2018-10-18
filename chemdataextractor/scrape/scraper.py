@@ -123,7 +123,7 @@ class SearchScraper(GetRequester, HtmlFormat, BaseScraper):
         entities = []
         for root in self.get_roots(selector):
             entity = self.entity(root)
-            print(str(entity.serialize()).encode('utf-8'))
+            log.debug(str(entity.serialize()).encode('utf-8'))
             entity = self.process_entity(entity)
             if entity:
                 entities.append(entity)
