@@ -131,7 +131,7 @@ class SearchScraper(GetRequester, HtmlFormat, BaseScraper):
 
 
 #Added by ti250(17/10/18)
-class SearchResult():
+class SearchResult(object):
     """Class to handle results from a search query to websites,
     regardless of method of scraping used."""
 
@@ -148,7 +148,14 @@ class SearchResult():
 
 
 class SeleniumSearchResult():
+    """
+    Search results when using Selenium for scraping
+    """
+
     def __init__(self, driver):
+        """
+        :param selenium.webdriver driver: driver from which results will be scraped.
+        """
         self.driver = driver
 
     @property
@@ -157,7 +164,14 @@ class SeleniumSearchResult():
 
 
 class ResponseSearchResult():
+    """
+    Search results when using the requests library for scraping
+    """
+
     def __init__(self, response):
+        """
+        :param requests.Response response: HTML response for results
+        """
         self.response = response
 
     @property
