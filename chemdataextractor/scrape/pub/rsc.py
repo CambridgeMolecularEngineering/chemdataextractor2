@@ -18,6 +18,7 @@ from bs4 import UnicodeDammit
 from lxml.etree import fromstring
 from lxml.html import HTMLParser, Element
 import six
+from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -371,10 +372,15 @@ class RscSearchScraper(SearchScraper):
         url = url + query
         driver.get(url)
 
+        # To make sure we don't overload the server
+        sleep(1)
+
         wait = WebDriverWait(driver, self.max_wait_time)
 
         # Update HTML so that the "next" button points to the desired page.
         if page != 1:
+            # To make sure we don't overload the server
+            sleep(1)
             next_button = wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "a[class^=paging__btn]")))[1]
             page_string = """document.querySelectorAll("a[class^=paging__btn]")[1].setAttribute("data-pageno", \"""" + str(page) + """\")"""
             driver.execute_script(page_string)
