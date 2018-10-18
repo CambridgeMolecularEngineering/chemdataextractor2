@@ -15,6 +15,7 @@ import logging
 import unittest
 
 from chemdataextractor.scrape.pub.rsc import rsc_substitute, strip_rsc_html, RscSearchScraper
+from selenium import webdriver
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -48,12 +49,14 @@ class TestStripRscHtml(unittest.TestCase):
         stripped = '<span class="title_heading">Rationale for the sluggish oxidative addition of aryl halides to Au(I)</span>'
         self.assertEqual(strip_rsc_html.clean_html(html), stripped)
 
+
 class TestRscSearchScraper(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
         query_text = "Aspirin"
-        scraper = RscSearchScraper()
+        driver = webdriver.Firefox()
+        scraper = RscSearchScraper(sleep_time=9, driver=driver)
         scrape = scraper.run(query_text)
         scrape_10 = scraper.run(query_text, 10)
         self.results = scrape.serialize()
