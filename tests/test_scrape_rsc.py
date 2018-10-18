@@ -55,7 +55,8 @@ class TestRscSearchScraper(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         query_text = "Aspirin"
-        scraper = RscSearchScraper(sleep_time=9)
+        driver = webdriver.Firefox()
+        scraper = RscSearchScraper(sleep_time=9, driver=driver)
         scrape = scraper.run(query_text)
         scrape_10 = scraper.run(query_text, 10)
         self.results = scrape.serialize()
