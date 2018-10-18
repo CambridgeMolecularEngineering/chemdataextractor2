@@ -346,11 +346,23 @@ class RscSearchScraper(SearchScraper):
     entity = RscSearchDocument
     root = '.capsule.capsule--article'
 
+    def __init__(self, sleep_time=3, driver=None):
+        """
+        :param selenium.webdriver driver: driver from which results will be scraped.
+        :param float sleep_time: Time spent waiting for page to load.
+        """
+        self.sleep_time = sleep_time
+        self.driver = driver
+        super(RscSearchScraper, self).__init__()
+
     def perform_search(self, query, page=1, driver=None):
         """Due to RSC not accepting html requests, Selenium is used.
         By default, the Firefox webdriver is used."""
         if driver is None:
-            driver = webdriver.Firefox()
+            if self.driver is None:
+                driver = webdriver.Firefox()
+            else:
+                driver = self.driver
         log.debug('Processing query: %s' % query)
 
         url = "http://pubs.rsc.org/en/results?searchtext="
@@ -360,13 +372,13 @@ class RscSearchScraper(SearchScraper):
 
         # Update HTML so that the "next" button points to the desired page.
         if page != 1:
-            sleep(3)
+            sleep(self.sleep_time)
             page_string = """document.querySelectorAll("a[class^=paging__btn]")[1].setAttribute("data-pageno", \"""" + str(page) + """\")"""
             driver.execute_script(page_string)
             next_button = driver.find_elements_by_css_selector("a[class^=paging__btn]")[1]
             next_button.click()
 
-        sleep(3)
+        sleep(self.sleep_time)
         return SeleniumSearchResult(driver)
 
 
