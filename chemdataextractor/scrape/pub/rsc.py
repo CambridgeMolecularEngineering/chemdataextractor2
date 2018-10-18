@@ -19,8 +19,9 @@ from lxml.etree import fromstring
 from lxml.html import HTMLParser, Element
 import six
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from time import sleep
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from ...text.processors import Substitutor, Discard, Chain, LStrip, RStrip, LAdd
 from ...text.normalize import normalize
@@ -346,12 +347,12 @@ class RscSearchScraper(SearchScraper):
     entity = RscSearchDocument
     root = '.capsule.capsule--article'
 
-    def __init__(self, sleep_time=3, driver=None):
+    def __init__(self, max_wait_time=30, driver=None):
         """
         :param selenium.webdriver driver: driver from which results will be scraped.
-        :param float sleep_time: Time spent waiting for page to load.
+        :param float max_wait_time: Maximum time spent waiting for the page to load. (seconds)
         """
-        self.sleep_time = sleep_time
+        self.max_wait_time = max_wait_time
         self.driver = driver
         super(RscSearchScraper, self).__init__()
 
@@ -370,15 +371,17 @@ class RscSearchScraper(SearchScraper):
         url = url + query
         driver.get(url)
 
+        wait = WebDriverWait(driver, self.max_wait_time)
+
         # Update HTML so that the "next" button points to the desired page.
         if page != 1:
-            sleep(self.sleep_time)
+            next_button = wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "a[class^=paging__btn]")))[1]
             page_string = """document.querySelectorAll("a[class^=paging__btn]")[1].setAttribute("data-pageno", \"""" + str(page) + """\")"""
             driver.execute_script(page_string)
-            next_button = driver.find_elements_by_css_selector("a[class^=paging__btn]")[1]
             next_button.click()
 
-        sleep(self.sleep_time)
+        # To ensure that we wait until the elements have loaded before scraping the webpage
+        _ = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.capsule.capsule--article')))
         return SeleniumSearchResult(driver)
 
 
