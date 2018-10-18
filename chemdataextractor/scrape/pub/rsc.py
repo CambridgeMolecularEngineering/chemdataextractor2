@@ -346,7 +346,7 @@ class RscSearchScraper(SearchScraper):
     entity = RscSearchDocument
     root = '.capsule.capsule--article'
 
-    def perform_search(self, query, page, driver=None):
+    def perform_search(self, query, page=1, driver=None):
         """Due to RSC not accepting html requests, Selenium is used.
         By default, the Firefox webdriver is used."""
         if driver is None:
