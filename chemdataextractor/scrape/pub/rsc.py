@@ -358,17 +358,14 @@ class RscSearchScraper(SearchScraper):
         url = url + query
         driver.get(url)
 
+        # Update HTML so that the "next" button points to the desired page.
         if page != 1:
             sleep(3)
             page_string = """document.querySelectorAll("a[class^=paging__btn]")[1].setAttribute("data-pageno", \"""" + str(page) + """\")"""
             driver.execute_script(page_string)
             next_button = driver.find_elements_by_css_selector("a[class^=paging__btn]")[1]
-            # Perhaps it's just my computer, but using the Safari Webdriver crashes on click!
             next_button.click()
 
-        # I would use WebdriverWait but it seems to be that using that
-        # doesn't wait for the page to be fully loaded, perhaps because it's
-        # not actually a new page?
         sleep(3)
         return SeleniumSearchResult(driver)
 
