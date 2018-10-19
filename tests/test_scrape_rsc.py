@@ -107,7 +107,7 @@ class TestRscSearchDocument(unittest.TestCase):
         self.assertEqual(self.document['doi'], '10.1039/c6cp06202d')
 
     def test_title(self):
-        self.assertEqual(self.document['title'], ' Incorporation of aspirin modulates the dynamical and phase behavior of the phospholipid membrane')
+        self.assertEqual(self.document['title'], 'Incorporation of aspirin modulates the dynamical and phase behavior of the phospholipid membrane')
 
     def test_landing_url(self):
         self.assertEqual(self.document['landing_url'], 'https://pubs.rsc.org/en/content/articlelanding/2017/cp/c6cp06202d')
@@ -122,4 +122,4 @@ class TestRscSearchDocument(unittest.TestCase):
         self.assertEqual(self.document['journal'], 'Phys. Chem. Chem. Phys.')
 
     def test_abstract(self):
-        self.assertEqual(self.document['abstract'], ' Effect of aspirin on the microscopic dynamics of a membrane has been investigated using quasielastic neutron scattering and neutron spin echo techniques.')
+        self.assertEqual(self.document['abstract'], 'Effect of aspirin on the microscopic dynamics of a membrane has been investigated using quasielastic neutron scattering and neutron spin echo techniques.')

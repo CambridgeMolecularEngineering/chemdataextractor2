@@ -336,11 +336,12 @@ class RscSearchDocument(Entity):
     clean_title = Chain(replace_rsc_img_chars, strip_rsc_html)
 
     process_doi = LAdd('10.1039/')
-    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip, LStrip('\\n'), RStrip('\\n'))
+    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip,
+                          LStrip('\\n'), RStrip('\\n'), LStrip(' '))
     process_landing_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org'))
     process_pdf_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org/'))
     process_html_url = Chain(normalize, LStrip(':///en/content/articlepdf/'), LAdd('https://pubs.rsc.org/en/content/articlehtml/'))
-    process_abstract = Chain(normalize, LStrip('\\n'), RStrip('\\n'))
+    process_abstract = Chain(normalize, LStrip('\\n'), RStrip('\\n'), LStrip(' '))
 
 
 # Updated by ti250 (17/10/18)
@@ -386,7 +387,7 @@ class RscSearchScraper(SearchScraper):
             next_button = wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "a[class^=paging__btn]")))[1]
             page_string = """document.querySelectorAll("a[class^=paging__btn]")[1].setAttribute("data-pageno", \"""" + str(page) + """\")"""
             driver.execute_script(page_string)
-            log.debug(driver.page_source.encode())
+            log.debug(driver.page_source.encode('utf-8'))
             next_button.click()
 
         # To ensure that we wait until the elements have loaded before scraping the webpage
