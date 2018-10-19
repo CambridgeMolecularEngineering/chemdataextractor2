@@ -26,7 +26,7 @@ setup(
     tests_require=['pytest'],
     install_requires=[
         'appdirs', 'beautifulsoup4', 'click', 'cssselect', 'lxml', 'nltk', 'pdfminer.six', 'python-dateutil',
-        'requests', 'six', 'python-crfsuite', 'DAWG', 'PyYAML'
+        'requests', 'six', 'python-crfsuite', 'DAWG', 'PyYAML', 'selenium'
     ],
     classifiers=[
         'Intended Audience :: Developers',
