@@ -331,6 +331,7 @@ class RscSearchDocument(Entity):
     pdf_url = UrlField('.btn.btn--primary.btn--tiny::attr("href")', lower=True, strip_querystring=True)
     html_url = UrlField('.btn.btn--tiny::attr("href")', lower=True, strip_querystring=True)
     journal = StringField('.text--small strong::text')
+    abstract = StringField('.capsule__text')
 
     clean_title = Chain(replace_rsc_img_chars, strip_rsc_html)
 
@@ -339,6 +340,7 @@ class RscSearchDocument(Entity):
     process_landing_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org'))
     process_pdf_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org/'))
     process_html_url = Chain(normalize, LStrip(':///en/content/articlepdf/'), LAdd('https://pubs.rsc.org/en/content/articlehtml/'))
+    process_abstract = normalize
 
 
 # Updated by ti250 (17/10/18)
@@ -384,6 +386,7 @@ class RscSearchScraper(SearchScraper):
             next_button = wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "a[class^=paging__btn]")))[1]
             page_string = """document.querySelectorAll("a[class^=paging__btn]")[1].setAttribute("data-pageno", \"""" + str(page) + """\")"""
             driver.execute_script(page_string)
+            log.debug(driver.page_source.encode())
             next_button.click()
 
         # To ensure that we wait until the elements have loaded before scraping the webpage
