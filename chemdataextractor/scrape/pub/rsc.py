@@ -336,11 +336,11 @@ class RscSearchDocument(Entity):
     clean_title = Chain(replace_rsc_img_chars, strip_rsc_html)
 
     process_doi = LAdd('10.1039/')
-    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip)
+    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip, LStrip('\\n'), RStrip('\\n'))
     process_landing_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org'))
     process_pdf_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org/'))
     process_html_url = Chain(normalize, LStrip(':///en/content/articlepdf/'), LAdd('https://pubs.rsc.org/en/content/articlehtml/'))
-    process_abstract = normalize
+    process_abstract = Chain(normalize, LStrip('\\n'), RStrip('\\n'))
 
 
 # Updated by ti250 (17/10/18)
