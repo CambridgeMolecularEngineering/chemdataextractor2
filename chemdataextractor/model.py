@@ -86,7 +86,10 @@ class FloatType(BaseType):
 
     def process(self, value):
         """Convert value to a float."""
-        return float(value)
+        try:
+            return float(value)
+        except Exception as e:
+            return None
 
 
 class ModelType(BaseType):
@@ -138,6 +141,7 @@ class DictionaryType(BaseType):
 
     def serialize(self, value, primitive=False):
         """Serialize this field."""
+        # TODO: This doesn't work (ti250)
         output = dict()
         for model in self.models:
             output[model.__name__] = [self.field.serialize(v, primitive=primitive) for v in model]
