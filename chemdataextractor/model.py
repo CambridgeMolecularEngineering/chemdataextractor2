@@ -130,6 +130,11 @@ class ListType(BaseType):
         return [self.field.serialize(v, primitive=primitive) for v in value]
 
 
+class DictionaryType(BaseType):
+    # TODO
+    pass
+
+
 class ModelMeta(ABCMeta):
     """"""
 
