@@ -131,8 +131,17 @@ class ListType(BaseType):
 
 
 class DictionaryType(BaseType):
-    # TODO
-    pass
+
+    def __init__(self, dictionary, **kwargs):
+        super(DictionaryType, self).__init__(**kwargs)
+        self.dictionary = dictionary
+
+    def serialize(self, value, primitive=False):
+        """Serialize this field."""
+        output = dict()
+        for model in self.models:
+            output[model.__name__] = [self.field.serialize(v, primitive=primitive) for v in model]
+        return output
 
 
 class ModelMeta(ABCMeta):
