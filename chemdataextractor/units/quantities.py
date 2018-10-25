@@ -149,7 +149,6 @@ class QuantityModel(BaseQuantityModel):
         return False
 
     def same_type_as(self, other):
-
         if self.powers is not None:
             if self.powers == other.powers:
                 return True
@@ -197,7 +196,7 @@ class Unit(object):
         return new_value
 
     def __truediv__(self, other):
-        other_inverted = other**(-1)
+        other_inverted = other**(-1.0)
         new_unit = self * other_inverted
         return new_unit
 
@@ -303,4 +302,3 @@ class DimensionlessUnit(Unit):
 
 class DimensionlessQuantity(QuantityModel):
     pass
-
