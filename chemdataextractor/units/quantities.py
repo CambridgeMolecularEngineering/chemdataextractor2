@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+chemdataextractor.units.quantities.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Base types for making quantity models and units.
+
+Taketomo Isazawa (ti250@cam.ac.uk)
+
+"""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -15,9 +26,16 @@ log = logging.getLogger(__name__)
 
 
 class UnitType(BaseType):
+    """
+    A field representing a Unit of some type.
+    """
 
     def __set__(self, instance, value):
-        """Descriptor for assigning a value to a field in a Model."""
+        """
+        Make sure that any units assigned to models have the same dimensions
+        as the model.
+        """
+
         if hasattr(value, 'quantity'):
             if value.quantity.same_type_as(instance):
                 instance._values[self.name] = self.process(value)
@@ -33,6 +51,10 @@ class UnitType(BaseType):
 
 
 class BaseQuantityModel(BaseModel):
+    """
+    Abstract Base Class for QuantityModels.
+    """
+
     value = FloatType()
     unit = UnitType()
 
@@ -41,12 +63,51 @@ class BaseQuantityModel(BaseModel):
         pass
 
     @abstractmethod
+    def __truediv__(self):
+        pass
+
+    @abstractmethod
+    def __pow__(self):
+        pass
+
+    @abstractmethod
+    def __mul__(self):
+        pass
+
+    @abstractmethod
+    def __eq__(self):
+        pass
+
+    @abstractmethod
     def __hash__(self):
         pass
 
 
 class QuantityModel(BaseQuantityModel):
+    """
+    Class for quantities. All actual quantities should be subclassed from this
+    instead of BaseQuantityModel. (This setup is as we otherwise wouldn't be able
+    to make a list with QuantityModel-type objects as keys)
+    """
     powers = DictionaryType({ModelType(BaseQuantityModel): FloatType()})
+
+    """
+    Operators are implemented so that composite quantities can be created easily
+    on the fly, such as the following code snippet:
+
+    length = LengthModel()
+    length.unit = Meter()
+    length.value = 10
+    time = TimeModel()
+    time.unit = Second()
+    time.value = 2
+    speed = length / time
+    print("Speed in miles per hour is: ", speed.convert_to(Mile() / Hour()))
+
+    Which has an expected output of
+
+    Speed in miles per hour is:  11.184709259696522
+    """
 
     def __truediv__(self, other):
 
@@ -56,19 +117,15 @@ class QuantityModel(BaseQuantityModel):
 
     def __pow__(self, other):
 
+        # Handle case that we have a dimensionless quantity, so we don't get dimensionless units squared.
         if isinstance(self, DimensionlessQuantity) or other == 0:
             new_model = DimensionlessQuantity()
             if self.value is not None:
                 new_model.value = self.value**other
-            if self.unit is not None:
-                new_model.unit = self.unit**other
+            new_model.unit = DimensionlessUnit()
 
         else:
             new_model = QuantityModel()
-            if self.value is not None:
-                new_model.value = self.value**other
-            if self.unit is not None:
-                new_model.unit = self.unit**other
             powers = {}
 
             if self.powers is not None:
@@ -82,6 +139,10 @@ class QuantityModel(BaseQuantityModel):
                 powers[new_key] = other
 
             new_model.powers = powers
+            if self.value is not None:
+                new_model.value = self.value**other
+            if self.unit is not None:
+                new_model.unit = self.unit**other
 
         return new_model
 
@@ -95,6 +156,8 @@ class QuantityModel(BaseQuantityModel):
 
         else:
             new_key = copy.deepcopy(self)
+            # When models are being used as keys, their values and units no longer matter,
+            # so set them to None.
             new_key.value = None
             new_key.unit = None
             powers[new_key] = 1.0
@@ -124,12 +187,15 @@ class QuantityModel(BaseQuantityModel):
                         powers.pop(key)
             else:
                 powers[new_key] = 1.0
+
+        # Handle the case that we have ended up with a dimensionless quantity.
         dimensionless_model = DimensionlessQuantity()
         powers.pop(dimensionless_model, None)
         if len(powers) == 0:
             new_model = dimensionless_model
         else:
             new_model.powers = powers
+
         if self.value is not None and other.value is not None:
             new_model.value = self.value * other.value
         if self.unit is not None and other.unit is not None:
@@ -146,7 +212,20 @@ class QuantityModel(BaseQuantityModel):
                 return True
         return False
 
+    def __hash__(self):
+        string = str(self.__class__.__name__)
+        # TODO(ti250): use the serialize method instead once it's fixed in DictionaryType
+        # string += str(self.serialize())
+        string += str(self.unit)
+        string += str(self.value)
+        string += str(self.powers)
+        return string.__hash__()
+
     def same_type_as(self, other):
+        """
+        A looser version of equality. Doesn't test whether the units and values
+        are the same, just that the dimensions are correct.
+        """
         if self.powers is not None:
             if self.powers == other.powers:
                 return True
@@ -156,25 +235,63 @@ class QuantityModel(BaseQuantityModel):
         return False
 
     def convert_to(self, unit):
-        if unit.quantity == self.unit.quantity:
-            standard_val = self.unit.convert_to_standard(self.value)
-            return unit.convert_from_standard(standard_val)
-        else:
-            raise ValueError("Unit to convert to must have same dimensions as current unit")
+        """
+        Convert from current units to the given units.
+        If no units have been set for this model, assumes that it's in standard units.
 
-    def __hash__(self):
-        string = str(self.__class__.__name__)
-        # string += str(self.serialize())
-        string += str(self.unit)
-        string += str(self.value)
-        string += str(self.powers)
-        return string.__hash__()
+        :param Unit unit: The Unit to convert to
+        :returns: The value as expressed in the new unit
+        :rtype: float
+        """
+        if self.unit:
+            if unit.quantity == self.unit.quantity:
+                standard_val = self.unit.convert_to_standard(self.value)
+                return unit.convert_from_standard(standard_val)
+            else:
+                raise ValueError("Unit to convert to must have same dimensions as current unit")
+        else:
+            return unit.convert_from_standard(standard_val)
 
 
 class Unit(object):
     # TODO: Currently exponent does nothing
+    """
+    Object represeting units. Implement subclasses of this of basic units, e.g.
+    units like meters, seconds, and Kelvins that are already implemented.
+    These can then be combined by simply dividing or multiplying them to create
+    more complex units. Alternatively, one can create these by subclassing Unit
+    and setting the powers parameter as desired. For example, a speed could be
+    represented as either:
 
-    def __init__(self, quantity, exponent=1, powers=None):
+    speedunit = Meter() / Second()
+
+    or
+
+    class SpeedUnit(Unit):
+
+        def__init__(self, exponent=1.0):
+            super(SpeedUnit, self).__init__(LengthModel()/TimeModel(),
+                                            powers={Meter():1.0, Second():-1.0} )
+
+    speedunit = SpeedUnit()
+
+    and either method should produce the same results.
+    """
+
+
+    def __init__(self, quantity, exponent=1.0, powers=None):
+        """
+        Creates a unit object. Subclass this to create concrete units. For examples,
+        see lenghts.py and times.py
+
+        .. note::
+            Any quantity passed into the intialiser should not have units or values
+
+        :param QuantityModel quantity: The model which this unit represents, e.g. Temperature
+        :param float exponent: The exponent of the unit. e.g. km would be meters with an exponent of 3
+        :param Dictionary{Unit : float} powers: For representing any more complicated units, e.g. m/s may have this parameter set to {Meter():1.0, Second():-1.0}
+        """
+
         if quantity.unit is not None or quantity.value is not None:
             raise ValueError('Any quantity passed into a unit should not have any units or values.')
         self.quantity = quantity
@@ -182,16 +299,34 @@ class Unit(object):
         self.powers = powers
 
     def convert_to_standard(self, value):
+        """
+        Converts from this unit to the standard value, usually the SI unit.
+        Overload this in child classes when implementing new units.
+
+        :param float value: The value to convert to standard units
+        """
         new_value = value
         for unit, power in six.iteritems(self.powers):
             new_value = unit.convert_to_standard(new_value**(1 / power))**power
         return new_value
 
     def convert_from_standard(self, value):
+        """
+        Converts to this unit from the standard value, usually the SI unit.
+        Overload this in child classes when implementing new units.
+
+        :param float value: The value to convert from standard units
+        """
         new_value = value
         for unit, power in six.iteritems(self.powers):
             new_value = unit.convert_from_standard(new_value**(1 / power))**power
         return new_value
+
+    """
+    Operators are implemented for the easy creation of complicated units out of
+    simpler, fundamental units. This means that every combination of exponents
+    and units need not be accounted for.
+    """
 
     def __truediv__(self, other):
         other_inverted = other**(-1.0)
@@ -200,6 +335,7 @@ class Unit(object):
 
     def __pow__(self, other):
 
+        # Handle dimensionless units so we don't get things like dimensionless units squared.
         if isinstance(self, DimensionlessUnit) or other == 0:
             new_unit = DimensionlessUnit()
             return new_unit
@@ -218,6 +354,9 @@ class Unit(object):
 
         quantity = self.quantity * other.quantity
         powers = {}
+        # normalised_values is created as searching for keys won't always work
+        # when the different units have different exponents, even though
+        # they are essentially the same unit and they should be unified.
         normalised_values = {}
         if self.powers:
             for key, value in six.iteritems(self.powers):
@@ -268,6 +407,8 @@ class Unit(object):
 
         return Unit(quantity=quantity, powers=powers, exponent=1)
 
+    # eq and hash implemented so Units can be used as keys in dictionaries
+
     def __eq__(self, other):
         if self.powers:
             if self.powers == other.powers and self.exponent == other.exponent:
@@ -286,6 +427,7 @@ class Unit(object):
 
 
 class DimensionlessUnit(Unit):
+    # Special case to handle dimensionless quantities.
 
     def __init__(self):
         self.quantity = DimensionlessQuantity()
@@ -300,4 +442,5 @@ class DimensionlessUnit(Unit):
 
 
 class DimensionlessQuantity(QuantityModel):
+    # Special case to handle dimensionless quantities.
     pass

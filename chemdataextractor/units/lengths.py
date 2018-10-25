@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+chemdataextractor.units.temperatures.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Units and models for lengths.
+
+Taketomo Isazawa (ti250@cam.ac.uk)
+
+"""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
