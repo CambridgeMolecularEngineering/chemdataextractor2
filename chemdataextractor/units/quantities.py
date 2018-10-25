@@ -22,7 +22,6 @@ class UnitType(BaseType):
         """Descriptor for assigning a value to a field in a Model."""
         if hasattr(value, 'quantity'):
             if value.quantity.same_type_as(instance):
-                print(value.quantity.powers, instance.powers)
                 instance._values[self.name] = self.process(value)
             else:
                 instance._values[self.name] = None
@@ -59,33 +58,38 @@ class QuantityModel(BaseQuantityModel):
 
     def __pow__(self, other):
 
-        new_model = QuantityModel()
-        if self.value is not None:
-            new_model.value = self.value**other
-        if self.unit is not None:
-            new_model.unit = self.unit**other
-        powers = {}
-
-        if self.powers is not None:
-            for key, value in six.iteritems(self.powers):
-                powers[key] = value * other
+        if isinstance(self, DimensionlessQuantity) or other == 0:
+            new_model = DimensionlessQuantity()
+            if self.value is not None:
+                new_model.value = self.value**other
+            if self.unit is not None:
+                new_model.unit = self.unit**other
 
         else:
-            new_key = copy.deepcopy(self)
-            new_key.value = None
-            new_key.unit = None
-            powers[new_key] = other
+            new_model = QuantityModel()
+            if self.value is not None:
+                new_model.value = self.value**other
+            if self.unit is not None:
+                new_model.unit = self.unit**other
+            powers = {}
 
-        new_model.powers = powers
+            if self.powers is not None:
+                for key, value in six.iteritems(self.powers):
+                    powers[key] = value * other
+
+            else:
+                new_key = copy.deepcopy(self)
+                new_key.value = None
+                new_key.unit = None
+                powers[new_key] = other
+
+            new_model.powers = powers
+
         return new_model
 
     def __mul__(self, other):
 
         new_model = QuantityModel()
-        if self.value is not None and other.value is not None:
-            new_model.value = self.value * other.value
-        if self.unit is not None and other.unit is not None:
-            new_model.unit = self.unit * other.unit
         powers = {}
 
         if self.powers is not None:
@@ -102,6 +106,12 @@ class QuantityModel(BaseQuantityModel):
                 if self.powers is not None:
                     if key in self.powers:
                         powers[key] += value
+                        if powers[key] == 0:
+                            powers.pop(key)
+                if type(self) == type(key):
+                    powers[key] += value
+                    if powers[key] == 0:
+                        powers.pop(key)
                 else:
                     powers[key] = value
 
@@ -112,10 +122,20 @@ class QuantityModel(BaseQuantityModel):
             if self.powers is not None:
                 if new_key in self.powers:
                     powers[key] += value
+                    if powers[key] == 0:
+                        powers.pop(key)
             else:
                 powers[new_key] = 1.0
-
-        new_model.powers = powers
+        dimensionless_model = DimensionlessQuantity()
+        powers.pop(dimensionless_model, None)
+        if len(powers) == 0:
+            new_model = dimensionless_model
+        else:
+            new_model.powers = powers
+        if self.value is not None and other.value is not None:
+            new_model.value = self.value * other.value
+        if self.unit is not None and other.unit is not None:
+            new_model.unit = self.unit * other.unit
         return new_model
 
     def __eq__(self, other):
@@ -182,6 +202,11 @@ class Unit(object):
         return new_unit
 
     def __pow__(self, other):
+
+        if isinstance(self, DimensionlessUnit) or other == 0:
+            new_unit = DimensionlessUnit()
+            return new_unit
+
         powers = {}
         if self.powers:
             for key, value in six.iteritems(self.powers):
@@ -201,23 +226,28 @@ class Unit(object):
             for key, value in six.iteritems(self.powers):
                 powers[key] = self.powers[key]
                 normalised_key = copy.deepcopy(key)
-                normalised_key.exponent = 1
+                normalised_key.exponent = 1.0
                 normalised_values[normalised_key] = key.exponent
 
         else:
             new_key = copy.deepcopy(self)
             new_key.quantity = None
             powers[new_key] = 1.0
+            normalised_key = copy.deepcopy(new_key)
+            normalised_key.exponent = 1.0
+            normalised_values[normalised_key] = self.exponent
 
         if other.powers:
             for key, value in six.iteritems(other.powers):
                 normalised_key = copy.deepcopy(key)
-                normalised_key.exponent = 1
-                if normalised_key in normalised_values:
+                normalised_key.exponent = 1.0
+                if normalised_key in normalised_values.keys():
                     if key.exponent != normalised_values[normalised_key]:
                         raise NotImplementedError("The case when the two parts of a multiplication are of different magnitudes (e.g. kg/g) is currently unsupported")
                     else:
                         powers[key] += value
+                        if powers[key] == 0:
+                            powers.pop(key)
                 else:
                     powers[key] = value
 
@@ -229,13 +259,20 @@ class Unit(object):
                     raise NotImplementedError("The case when the two parts of a multiplication are of different powers (e.g. kg/g) is currently unsupported")
                 else:
                     powers[other] += 1.0
+                    if powers[key] == 0:
+                        powers.pop(key)
             else:
                 powers[other] = 1.0
+
+        powers.pop(DimensionlessUnit(), None)
+
+        if len(powers) == 0:
+            return DimensionlessUnit()
+
         return Unit(quantity=quantity, powers=powers, exponent=1)
 
     def __eq__(self, other):
-
-        if len(self.powers) != 0:
+        if self.powers:
             if self.powers == other.powers and self.exponent == other.exponent:
                 return True
         else:
@@ -246,7 +283,7 @@ class Unit(object):
     def __hash__(self):
         string = str(self.__class__.__name__)
         string += str(self.quantity)
-        string += str(self.exponent)
+        string += str(float(self.exponent))
         string += str(self.powers)
         return string.__hash__()
 
