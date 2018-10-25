@@ -4,17 +4,15 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import copy
-from abc import ABCMeta, ABC, abstractmethod
-from collections import MutableSequence
-import json
+from abc import abstractmethod
 import logging
 
 import six
 
-from ..utils import python_2_unicode_compatible
-from ..model import BaseModel, BaseType, FloatType, DictionaryType, ModelType, StringType
+from ..model import BaseModel, BaseType, FloatType, DictionaryType, ModelType
 
 log = logging.getLogger(__name__)
+
 
 class UnitType(BaseType):
 
@@ -285,6 +283,7 @@ class Unit(object):
         string += str(float(self.exponent))
         string += str(self.powers)
         return string.__hash__()
+
 
 class DimensionlessUnit(Unit):
 

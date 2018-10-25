@@ -3,15 +3,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import copy
-from abc import ABCMeta, ABC
-from collections import MutableSequence
-import json
 import logging
 
-import six
+from .quantities import QuantityModel, Unit
 
-from .quantities import QuantityModel, Unit, UnitType
+log = logging.getLogger(__name__)
 
 
 class TemperatureModel(QuantityModel):
