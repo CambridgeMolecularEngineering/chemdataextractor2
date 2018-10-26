@@ -45,6 +45,7 @@ class UnitType(BaseType):
             instance._values[self.name] = None
 
     def process(self, value):
+
         if isinstance(value, Unit):
             return value
         return None
@@ -74,8 +75,30 @@ class BaseDimension(BaseModel):
 
 
 class Dimension(BaseDimension):
+    """
+    Class for dimensions. All actual quantities should be subclassed from this
+    instead of BaseDimension. (This setup is as we otherwise wouldn't be able
+    to make a DictionaryType with Dimension-type objects as keys)
+    """
 
-    dimensions = DictionaryType({ModelType(BaseDimension): FloatType()})
+    dimensions = None
+    # {ModelType(BaseDimension): FloatType()}
+
+    """
+    Operators are implemented so that composite dimensions can be created easily
+    on the fly, for use in creating custom QuantityModels:
+
+    class SpeedModel(QuantityModel):
+        dimensions = Length() / Time()
+
+    speed.value = 10
+    speed.unit = Meter() / Second()
+    print("Speed in miles per hour is: ", speed.convert_to(Mile() / Hour()))
+
+    Which has an expected output of
+
+    Speed in miles per hour is:  22.369418519393044
+    """
 
     def __truediv__(self, other):
 
@@ -85,7 +108,7 @@ class Dimension(BaseDimension):
 
     def __pow__(self, other):
 
-        # Handle case that we have a dimensionless quantity, so we don't get dimensionless units squared.
+        # Handle case that we have no dimensions, so we don't get things like dimensionless units squared.
         if isinstance(self, Dimensionless) or other == 0:
             new_model = Dimensionless()
 
@@ -115,10 +138,6 @@ class Dimension(BaseDimension):
 
         else:
             new_key = copy.deepcopy(self)
-            # When models are being used as keys, their values and units no longer matter,
-            # so set them to None.
-            new_key.value = None
-            new_key.unit = None
             dimensions[new_key] = 1.0
 
         if other.dimensions is not None:
@@ -145,7 +164,7 @@ class Dimension(BaseDimension):
             else:
                 dimensions[new_key] = 1.0
 
-        # Handle the case that we have ended up with a dimensionless quantity.
+        # Handle the case that we have ended up with no dimensions.
         dimensionless = Dimensionless()
         dimensions.pop(dimensionless, None)
         if len(dimensions) == 0:
@@ -234,42 +253,10 @@ class QuantityModel(BaseModel):
 
         return new_model
 
-    def __eq__(self, other):
-
-        if self.dimensions is not None:
-            if self.dimensions == other.dimensions and self.value == other.value and self.unit == other.unit:
-                return True
-        else:
-            if type(self) == type(other) and self.value == other.value and self.unit == other.unit:
-                return True
-        return False
-
-    def __hash__(self):
-        string = str(self.__class__.__name__)
-        # TODO(ti250): use the serialize method instead once it's fixed in DictionaryType
-        # string += str(self.serialize())
-        string += str(self.unit)
-        string += str(self.value)
-        string += str(self.dimensions)
-        return string.__hash__()
-
-    def same_type_as(self, other):
-        """
-        A looser version of equality. Doesn't test whether the units and values
-        are the same, just that the dimensions are correct.
-        """
-        if self.dimensions is not None:
-            if self.dimensions == other.dimensions:
-                return True
-        else:
-            if type(self) == type(other):
-                return True
-        return False
-
     def convert_to(self, unit):
         """
         Convert from current units to the given units.
-        If no units have been set for this model, assumes that it's in standard units.
+        Raises AttributeError if the current unit is not set.
 
         :param Unit unit: The Unit to convert to
         :returns: The value as expressed in the new unit
@@ -281,10 +268,11 @@ class QuantityModel(BaseModel):
 
     def convert(self, from_unit, to_unit):
         """
-        Convert from current units to the given units.
+        Convert between the given units.
         If no units have been set for this model, assumes that it's in standard units.
 
-        :param Unit unit: The Unit to convert to
+        :param Unit from_unit: The Unit to convert from
+        :param Unit to_unit: The Unit to convert to
         :returns: The value as expressed in the new unit
         :rtype: float
         """
@@ -313,14 +301,13 @@ class Unit(object):
     class SpeedUnit(Unit):
 
         def__init__(self, exponent=1.0):
-            super(SpeedUnit, self).__init__(LengthModel()/TimeModel(),
+            super(SpeedUnit, self).__init__(Length()/Time(),
                                             powers={Meter():1.0, Second():-1.0} )
 
     speedunit = SpeedUnit()
 
     and either method should produce the same results.
     """
-
 
     def __init__(self, dimensions, exponent=1.0, powers=None):
         """
@@ -330,7 +317,7 @@ class Unit(object):
         .. note::
             Any quantity passed into the intialiser should not have units or values
 
-        :param QuantityModel quantity: The model which this unit represents, e.g. Temperature
+        :param Dimension dimensions: The dimensions this unit is for, e.g. Temperature
         :param float exponent: The exponent of the unit. e.g. km would be meters with an exponent of 3
         :param Dictionary{Unit : float} powers: For representing any more complicated units, e.g. m/s may have this parameter set to {Meter():1.0, Second():-1.0}
         """
@@ -489,5 +476,6 @@ class Dimensionless(Dimension):
 
 
 class DimensionlessModel(QuantityModel):
+    # Special case to handle dimensionless quantities
 
     dimensions = Dimensionless()
