@@ -410,6 +410,8 @@ class Unit(object):
     # eq and hash implemented so Units can be used as keys in dictionaries
 
     def __eq__(self, other):
+        if not isinstance(other, Unit):
+            return False
         if self.powers:
             if self.powers == other.powers and self.exponent == other.exponent:
                 return True
