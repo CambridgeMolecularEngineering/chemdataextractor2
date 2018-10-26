@@ -102,7 +102,7 @@ class Dimension(BaseDimension):
 
     def __truediv__(self, other):
 
-        other_inverted = other**(-1)
+        other_inverted = other**(-1.0)
         new_model = self * other_inverted
         return new_model
 
@@ -193,6 +193,15 @@ class Dimension(BaseDimension):
         string += str(self.dimensions)
         return string.__hash__()
 
+    def __str__(self):
+        string = 'Dimensions of: '
+        if self.dimensions is not None:
+            for key, value in six.iteritems(self.dimensions):
+                string += (type(key).__name__ + '^(' + str(value) + ')  ')
+        else:
+            string += type(self).__name__
+        return string
+
 
 class QuantityModel(BaseModel):
     """
@@ -224,7 +233,7 @@ class QuantityModel(BaseModel):
 
     def __truediv__(self, other):
 
-        other_inverted = other**(-1)
+        other_inverted = other**(-1.0)
         new_model = self * other_inverted
         return new_model
 
@@ -280,6 +289,12 @@ class QuantityModel(BaseModel):
         else:
             raise ValueError("Unit to convert to must have same dimensions as current unit")
         raise AttributeError("Unit to convert from not set")
+
+    def __str__(self):
+        string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.unit.__str__()
+        string += ' and a value of ' + str(self.value)
+        return string
+
 
 
 class MetaUnit(type):
@@ -475,6 +490,18 @@ class Unit(object):
         string += str(float(self.exponent))
         string += str(self.powers)
         return string.__hash__()
+
+    def __str__(self):
+        string = 'Units of: '
+        if self.exponent != 0:
+            string += '(10^' + str(self.exponent) + ') * '
+        if self.powers is not None:
+            for key, value in six.iteritems(self.powers):
+                string += (type(key).__name__ + '^(' + str(value) + ')  ')
+        else:
+            string += type(self).__name__
+        return string
+
 
 
 class DimensionlessUnit(Unit):
