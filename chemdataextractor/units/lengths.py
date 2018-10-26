@@ -16,19 +16,24 @@ from __future__ import unicode_literals
 
 import logging
 
-from .quantities import QuantityModel, Unit
+from .quantities import QuantityModel, Unit, Dimension
 
 log = logging.getLogger(__name__)
 
 
-class LengthModel(QuantityModel):
+class Length(Dimension):
     pass
+
+
+class LengthModel(QuantityModel):
+
+    dimensions = Length()
 
 
 class LengthUnit(Unit):
 
     def __init__(self, exponent=1, powers=None):
-        super(LengthUnit, self).__init__(LengthModel(), exponent, powers)
+        super(LengthUnit, self).__init__(Length(), exponent, powers)
 
 
 class Meter(LengthUnit):

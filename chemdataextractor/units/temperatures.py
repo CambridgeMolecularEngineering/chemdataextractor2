@@ -16,19 +16,24 @@ from __future__ import unicode_literals
 
 import logging
 
-from .quantities import QuantityModel, Unit
+from .quantities import QuantityModel, Unit, Dimension
 
 log = logging.getLogger(__name__)
 
 
-class TemperatureModel(QuantityModel):
+class Temperature(Dimension):
     pass
+
+
+class TemperatureModel(QuantityModel):
+
+    dimensions = Temperature()
 
 
 class TemperatureUnit(Unit):
 
     def __init__(self, exponent=1, powers=None):
-        super(TemperatureUnit, self).__init__(TemperatureModel(), exponent, powers)
+        super(TemperatureUnit, self).__init__(Temperature(), exponent, powers)
 
 
 class Kelvin(TemperatureUnit):

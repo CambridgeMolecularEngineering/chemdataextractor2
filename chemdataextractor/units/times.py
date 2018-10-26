@@ -20,18 +20,21 @@ from .quantities import QuantityModel, Unit
 
 log = logging.getLogger(__name__)
 
+from .quantities import QuantityModel, Unit, Dimension
 
-from .quantities import QuantityModel, Unit, UnitType
+
+class Time(Dimension):
+    pass
 
 
 class TimeModel(QuantityModel):
-    pass
+    dimensions = Time()
 
 
 class TimeUnit(Unit):
 
     def __init__(self, exponent=1, powers=None):
-        super(TimeUnit, self).__init__(TimeModel(), exponent, powers)
+        super(TimeUnit, self).__init__(Time(), exponent, powers)
 
 
 class Second(TimeUnit):
