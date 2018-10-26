@@ -33,7 +33,7 @@ class TimeModel(QuantityModel):
 
 class TimeUnit(Unit):
 
-    def __init__(self, exponent=1, powers=None):
+    def __init__(self, exponent=0.0, powers=None):
         super(TimeUnit, self).__init__(Time(), exponent, powers)
 
 

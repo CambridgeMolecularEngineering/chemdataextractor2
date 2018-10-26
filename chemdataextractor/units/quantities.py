@@ -190,8 +190,6 @@ class Dimension(BaseDimension):
 
     def __hash__(self):
         string = str(self.__class__.__name__)
-        # TODO(ti250): use the serialize method instead once it's fixed in DictionaryType
-        # string += str(self.serialize())
         string += str(self.dimensions)
         return string.__hash__()
 
@@ -284,8 +282,36 @@ class QuantityModel(BaseModel):
         raise AttributeError("Unit to convert from not set")
 
 
+class MetaUnit(type):
+    """
+    Metaclass to ensure that all subclasses of Unit take the exponent into account
+    when converting to standard units.
+    """
+
+    def __new__(cls, name, bases, attrs):
+        instance = type.__new__(cls, name, bases, attrs)
+
+        if hasattr(instance, 'convert_to_standard'):
+            sub_convert_to_standard = getattr(instance, 'convert_to_standard')
+
+            def new_convert_to_standard(self, value):
+                val = value * 10**self.exponent
+                return sub_convert_to_standard(self, val)
+            setattr(instance, 'convert_to_standard', new_convert_to_standard)
+
+        if hasattr(instance, 'convert_from_standard'):
+            sub_convert_from_standard = getattr(instance, 'convert_from_standard')
+
+            def new_convert_from_standard(self, value):
+                val = value * 10**(-1 * self.exponent)
+                return sub_convert_from_standard(self, val)
+            setattr(instance, 'convert_from_standard', new_convert_from_standard)
+
+        return instance
+
+
+@six.add_metaclass(MetaUnit)
 class Unit(object):
-    # TODO: Currently exponent does nothing
     """
     Object represeting units. Implement subclasses of this of basic units, e.g.
     units like meters, seconds, and Kelvins that are already implemented.
@@ -309,7 +335,7 @@ class Unit(object):
     and either method should produce the same results.
     """
 
-    def __init__(self, dimensions, exponent=1.0, powers=None):
+    def __init__(self, dimensions, exponent=0.0, powers=None):
         """
         Creates a unit object. Subclass this to create concrete units. For examples,
         see lenghts.py and times.py
@@ -374,6 +400,7 @@ class Unit(object):
         else:
             new_key = copy.deepcopy(self)
             new_key.dimensions = None
+            new_key.exponent = 0.0
             powers[new_key] = other
         return Unit(self.dimensions**other, powers=powers, exponent=self.exponent * other)
 
@@ -385,54 +412,49 @@ class Unit(object):
         # when the different units have different exponents, even though
         # they are essentially the same unit and they should be unified.
         normalised_values = {}
+        exponent = self.exponent + other.exponent
+
         if self.powers:
             for key, value in six.iteritems(self.powers):
                 powers[key] = self.powers[key]
                 normalised_key = copy.deepcopy(key)
-                normalised_key.exponent = 1.0
+                normalised_key.exponent = 0.0
                 normalised_values[normalised_key] = key.exponent
 
         else:
             new_key = copy.deepcopy(self)
             new_key.dimensions = None
+            new_key.exponent = 0.0
             powers[new_key] = 1.0
-            normalised_key = copy.deepcopy(new_key)
-            normalised_key.exponent = 1.0
-            normalised_values[normalised_key] = self.exponent
+            normalised_values[new_key] = self.exponent
 
         if other.powers:
             for key, value in six.iteritems(other.powers):
                 normalised_key = copy.deepcopy(key)
-                normalised_key.exponent = 1.0
+                normalised_key.exponent = 0.0
                 if normalised_key in normalised_values.keys():
-                    if key.exponent != normalised_values[normalised_key]:
-                        raise NotImplementedError("The case when the two parts of a multiplication are of different magnitudes (e.g. kg/g) is currently unsupported")
-                    else:
-                        powers[key] += value
-                        if powers[key] == 0:
-                            powers.pop(key)
+                    powers[key] += value
+                    if powers[key] == 0:
+                        powers.pop(key)
                 else:
-                    powers[key] = value
+                    powers[normalised_key] = value
 
         else:
             normalised_other = copy.deepcopy(other)
-            normalised_other.exponent = 1
+            normalised_other.exponent = 0.0
             if normalised_other in normalised_values:
-                if other.exponent != normalised_values[normalised_key]:
-                    raise NotImplementedError("The case when the two parts of a multiplication are of different powers (e.g. kg/g) is currently unsupported")
-                else:
-                    powers[other] += 1.0
-                    if powers[key] == 0:
-                        powers.pop(key)
+                powers[normalised_other] += 1.0
+                if powers[normalised_other] == 0:
+                    powers.pop(other)
             else:
-                powers[other] = 1.0
+                powers[normalised_other] = 1.0
 
         powers.pop(DimensionlessUnit(), None)
 
         if len(powers) == 0:
             return DimensionlessUnit()
 
-        return Unit(dimensions=dimensions, powers=powers, exponent=1)
+        return Unit(dimensions=dimensions, powers=powers, exponent=exponent)
 
     # eq and hash implemented so Units can be used as keys in dictionaries
 
@@ -460,7 +482,7 @@ class DimensionlessUnit(Unit):
 
     def __init__(self):
         self.dimensions = Dimensionless()
-        self.exponent = 1
+        self.exponent = 0.0
         self.powers = None
 
     def convert_to_standard(self, value):

@@ -32,7 +32,7 @@ class LengthModel(QuantityModel):
 
 class LengthUnit(Unit):
 
-    def __init__(self, exponent=1, powers=None):
+    def __init__(self, exponent=0.0, powers=None):
         super(LengthUnit, self).__init__(Length(), exponent, powers)
 
 

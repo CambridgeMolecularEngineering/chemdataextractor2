@@ -32,7 +32,7 @@ class TemperatureModel(QuantityModel):
 
 class TemperatureUnit(Unit):
 
-    def __init__(self, exponent=1, powers=None):
+    def __init__(self, exponent=0.0, powers=None):
         super(TemperatureUnit, self).__init__(Temperature(), exponent, powers)
 
 
@@ -48,20 +48,16 @@ class Kelvin(TemperatureUnit):
 class Celsius(TemperatureUnit):
 
     def convert_to_standard(self, value):
-        print('celsius: ', value, ' Kelvin: ', value + 273.15)
         return value + 273.15
 
     def convert_from_standard(self, value):
-        print('kelvin: ', value, 'celsius: ', value - 273.15)
         return value - 273.15
 
 
 class Fahrenheit(TemperatureUnit):
 
     def convert_to_standard(self, value):
-        print('fahrenheit: ', value, 'Kelvin: ', value * (9. / 5.) - 459.67)
         return (value + 459.67) * (5. / 9.)
 
     def convert_from_standard(self, value):
-        print('Kelvin: ', value, 'fahrenheit: ', (value + 459.67) * (5. / 9.))
         return value * (9. / 5.) - 459.67
