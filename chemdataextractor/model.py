@@ -20,7 +20,7 @@ import logging
 
 import six
 
-from .utils import python_2_unicode_compatible
+from utils import python_2_unicode_compatible
 
 
 log = logging.getLogger(__name__)
@@ -134,17 +134,17 @@ class ListType(BaseType):
 
 class DictionaryType(BaseType):
 
-    def __init__(self, dictionary, **kwargs):
+    def __init__(self, model, **kwargs):
         super(DictionaryType, self).__init__(**kwargs)
-        self.dictionary = dictionary
+        self.model = model
 
-    def serialize(self, value, primitive=False):
+    def serialize(self, primitive=False):
         """Serialize this field."""
         # TODO: This doesn't work (ti250)
         output = dict()
-        for model in self.models:
-            output[model.__name__] = [self.field.serialize(v, primitive=primitive) for v in model]
-        return output
+        fields = list(self.model.fields.keys())
+        values = self.model.values()
+        return dict(zip(fields, values))
 
 
 class ModelMeta(ABCMeta):
