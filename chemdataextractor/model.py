@@ -86,10 +86,9 @@ class FloatType(BaseType):
 
     def process(self, value):
         """Convert value to a float."""
-        try:
+        if value is not None:
             return float(value)
-        except Exception as e:
-            return None
+        return None
 
 
 class ModelType(BaseType):
