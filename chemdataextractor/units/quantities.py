@@ -51,6 +51,39 @@ class UnitType(BaseType):
         return None
 
 
+class OptionalRangeType(BaseType):
+    """
+    Values stored in QuantityModels can be a single value or a
+    range. e.g. an IR peak could be written as either a single value or a range
+    of values, between two values. This is a field to allow for either.
+    """
+
+    def __init__(self, value_type, **kwargs):
+        """
+        :param default: (Optional) The default value for this field if none is set.
+        :param bool null: (Optional) Include in serialized output even if value is None. Default False.
+        :param bool required: (Optional) Whether a value is required. Default False.
+        :param bool contextual: (Optional) Whether this value is contextual. Default False.
+        """
+        super(OptionalRangeType, self).__init__(**kwargs)
+        self.value_type = value_type
+
+    def process(self, value):
+        if hasattr(value, '__len__'):
+            if len(value) == 2:
+                result = []
+                for val in value:
+                    result.append(self.value_type.process(val))
+                try:
+                    if result[0] > result[1]:
+                        result = [result[1], result[0]]
+                except NotImplementedError:
+                    pass
+                return result
+        else:
+            return self.value_type.process(value)
+
+
 class BaseDimension(BaseModel):
 
     @abstractmethod
@@ -209,7 +242,7 @@ class QuantityModel(BaseModel):
     instead of BaseQuantityModel. (This setup is as we otherwise wouldn't be able
     to make a list with QuantityModel-type objects as keys)
     """
-    value = FloatType()
+    value = OptionalRangeType(FloatType())
     unit = UnitType()
     dimensions = None
 
@@ -243,7 +276,13 @@ class QuantityModel(BaseModel):
         new_model = QuantityModel()
         new_model.dimensions = self.dimensions ** other
         if self.value is not None:
-            new_model.value = self.value ** other
+            if type(self.value) is list:
+                new_val = []
+                for val in self.value:
+                    new_val.append(val ** other)
+                new_model.value = new_val
+            else:
+                new_model.value = self.value ** other
         if self.unit is not None:
             new_model.unit = self.unit ** other
 
@@ -254,7 +293,22 @@ class QuantityModel(BaseModel):
         new_model = QuantityModel()
         new_model.dimensions = self.dimensions * other.dimensions
         if self.value is not None and other.value is not None:
-            new_model.value = self.value * other.value
+            if type(self.value) is list and type(other.value) is list:
+                # The following always encompasses the whole range because
+                # OptionalRangeType tries to always sort the lists
+                new_val = [self.value[0] * other.value[0],
+                           self.value[1] * other.value[1]]
+                new_model.value = new_val
+            elif type(self.value) is list:
+                new_val = [self.value[0] * other.value,
+                           self.value[1] * other.value]
+                new_model.value = new_val
+            elif type(self.value) is not list and type(other.value) is list:
+                new_val = [self.value * other.value[0],
+                           self.value * other.value[1]]
+                new_model.value = new_val
+            else:
+                new_model.value = self.value * other.value
         if self.unit is not None and other.unit is not None:
             new_model.unit = self.unit * other.unit
 
@@ -283,12 +337,21 @@ class QuantityModel(BaseModel):
         :returns: The value as expressed in the new unit
         :rtype: float
         """
-        if to_unit.dimensions == from_unit.dimensions:
-            standard_val = from_unit.convert_to_standard(self.value)
-            return to_unit.convert_from_standard(standard_val)
+        if self.value is not None:
+            if to_unit.dimensions == from_unit.dimensions:
+                if type(self.value) is list:
+                    standard_vals = [from_unit.convert_to_standard(self.value[0]),
+                                     from_unit.convert_to_standard(self.value[1])]
+                    return [to_unit.convert_from_standard(standard_vals[0]),
+                            to_unit.convert_from_standard(standard_vals[1])]
+                else:
+                    standard_val = from_unit.convert_to_standard(self.value)
+                    return to_unit.convert_from_standard(standard_val)
+            else:
+                raise ValueError("Unit to convert to must have same dimensions as current unit")
+            raise AttributeError("Unit to convert from not set")
         else:
-            raise ValueError("Unit to convert to must have same dimensions as current unit")
-        raise AttributeError("Unit to convert from not set")
+            raise AttributeError("Value for model not set")
 
     def __str__(self):
         string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.unit.__str__()
