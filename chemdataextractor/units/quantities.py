@@ -60,6 +60,7 @@ class OptionalRangeType(BaseType):
 
     def __init__(self, value_type, **kwargs):
         """
+        :param BaseType value_type: The type of the value that may have a range. This type's process function is also called.
         :param default: (Optional) The default value for this field if none is set.
         :param bool null: (Optional) Include in serialized output even if value is None. Default False.
         :param bool required: (Optional) Whether a value is required. Default False.
@@ -75,6 +76,7 @@ class OptionalRangeType(BaseType):
                 for val in value:
                     result.append(self.value_type.process(val))
                 try:
+                    # Try to sort the values if possible
                     if result[0] > result[1]:
                         result = [result[1], result[0]]
                 except NotImplementedError:
