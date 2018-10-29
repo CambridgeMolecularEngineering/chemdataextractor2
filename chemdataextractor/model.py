@@ -132,21 +132,6 @@ class ListType(BaseType):
         return [self.field.serialize(v, primitive=primitive) for v in value]
 
 
-class DictionaryType(BaseType):
-
-    def __init__(self, model, **kwargs):
-        super(DictionaryType, self).__init__(**kwargs)
-        self.model = model
-
-    def serialize(self, primitive=False):
-        """Serialize this field."""
-        # TODO: This doesn't work (ti250)
-        output = dict()
-        fields = list(self.model.fields.keys())
-        values = self.model.values()
-        return dict(zip(fields, values))
-
-
 class ModelMeta(ABCMeta):
     """"""
 

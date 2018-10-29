@@ -3,7 +3,7 @@
 chemdataextractor.units.quantities.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Base types for making quantity models and units.
+Base types for making quantity models, dimensions, and units.
 
 Taketomo Isazawa (ti250@cam.ac.uk)
 
@@ -20,7 +20,7 @@ import logging
 
 import six
 
-from ..model import BaseModel, BaseType, FloatType, DictionaryType, ModelType
+from ..model import BaseModel, BaseType, FloatType
 
 log = logging.getLogger(__name__)
 
@@ -296,7 +296,6 @@ class QuantityModel(BaseModel):
         return string
 
 
-
 class MetaUnit(type):
     """
     Metaclass to ensure that all subclasses of Unit take the exponent into account
@@ -501,7 +500,6 @@ class Unit(object):
         else:
             string += type(self).__name__
         return string
-
 
 
 class DimensionlessUnit(Unit):
