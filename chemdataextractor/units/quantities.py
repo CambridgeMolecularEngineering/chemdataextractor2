@@ -118,7 +118,13 @@ class Dimension(BaseDimension):
 
     dimensions = None
     # {ModelType(BaseDimension): FloatType()}
+
     units_dict = {}
+
+    """
+    Set up units_dict with {element : Unit}, where element is an element from parse.elements.
+    Examples can be seen in temperatures.py
+    """
 
     """
     Operators are implemented so that composite dimensions can be created easily
