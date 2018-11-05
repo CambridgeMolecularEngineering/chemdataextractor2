@@ -13,6 +13,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from ..parse.elements import R
 
 import logging
 
@@ -52,3 +53,6 @@ class Mile(LengthUnit):
 
     def convert_from_standard(self, value):
         return value / 1609.34
+
+units_dict = {R('m(eter(s)?$)?', group=0): Meter, R('mile[s]?$', group=0): Mile}
+Length.units_dict = units_dict

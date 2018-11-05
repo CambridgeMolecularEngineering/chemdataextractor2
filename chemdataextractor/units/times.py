@@ -16,11 +16,11 @@ from __future__ import unicode_literals
 
 import logging
 
-from .quantities import QuantityModel, Unit
+from .quantities import QuantityModel, Unit, Dimension
+from ..parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
+from ..parse.actions import merge, join
 
 log = logging.getLogger(__name__)
-
-from .quantities import QuantityModel, Unit, Dimension
 
 
 class Time(Dimension):
@@ -80,3 +80,9 @@ class Day(TimeUnit):
 
     def convert_from_standard(self, value):
         return value / (60 * 60 * 24)
+
+
+units_dict = {R('d(ay(s)?$)?', group=0): Day, R('y(ear(s)?$)?', group=0): Year,
+              R('h(our(s)?$)?', group=0): Hour, R('s(econd(s)?$)?', group=0): Second}
+Time.units_dict = units_dict
+

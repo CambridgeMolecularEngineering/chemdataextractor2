@@ -17,6 +17,8 @@ from __future__ import unicode_literals
 import logging
 
 from .quantities import QuantityModel, Unit, Dimension
+from ..parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
+from ..parse.actions import merge, join
 
 log = logging.getLogger(__name__)
 
@@ -61,3 +63,9 @@ class Fahrenheit(TemperatureUnit):
 
     def convert_from_standard(self, value):
         return value * (9. / 5.) - 459.67
+
+
+units_dict = {(W('°') + R('[K]\.?$', group=0) | R('K\.?', group=0)).add_action(merge): Kelvin,
+              (W('°') + Optional(R('[C]\.?', group=0))).add_action(merge): Celsius,
+              (Optional(W('°')) + R('[F]\.?', group=0)).add_action(merge): Fahrenheit}
+Temperature.units_dict = units_dict
