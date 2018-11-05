@@ -118,6 +118,7 @@ class Dimension(BaseDimension):
 
     dimensions = None
     # {ModelType(BaseDimension): FloatType()}
+    units_dict = {}
 
     """
     Operators are implemented so that composite dimensions can be created easily
@@ -177,12 +178,11 @@ class Dimension(BaseDimension):
 
         if other.dimensions is not None:
             for key, value in six.iteritems(other.dimensions):
-                if self.dimensions is not None:
-                    if key in self.dimensions:
-                        dimensions[key] += value
-                        if dimensions[key] == 0:
-                            dimensions.pop(key)
-                if type(self) == type(key):
+                if self.dimensions is not None and key in self.dimensions.keys():
+                    dimensions[key] += value
+                    if dimensions[key] == 0:
+                        dimensions.pop(key)
+                elif type(self) == type(key):
                     dimensions[key] += value
                     if dimensions[key] == 0:
                         dimensions.pop(key)
@@ -196,9 +196,12 @@ class Dimension(BaseDimension):
                     dimensions[key] += value
                     if dimensions[key] == 0:
                         dimensions.pop(key)
+            elif self == new_key:
+                dimensions[key] += value
+                if dimensions[key] == 0:
+                    dimensions.pop(key)
             else:
                 dimensions[new_key] = 1.0
-
         # Handle the case that we have ended up with no dimensions.
         dimensionless = Dimensionless()
         dimensions.pop(dimensionless, None)
@@ -206,6 +209,9 @@ class Dimension(BaseDimension):
             new_model = dimensionless
         else:
             new_model.dimensions = dimensions
+
+        for dimension in dimensions.keys():
+            new_model.units_dict.update(dimension.units_dict)
 
         return new_model
 
@@ -419,9 +425,6 @@ class Unit(object):
         Creates a unit object. Subclass this to create concrete units. For examples,
         see lenghts.py and times.py
 
-        .. note::
-            Any quantity passed into the intialiser should not have units or values
-
         :param Dimension dimensions: The dimensions this unit is for, e.g. Temperature
         :param float exponent: The exponent of the unit. e.g. km would be meters with an exponent of 3
         :param Dictionary{Unit : float} powers: For representing any more complicated units, e.g. m/s may have this parameter set to {Meter():1.0, Second():-1.0}
@@ -501,11 +504,12 @@ class Unit(object):
                 normalised_values[normalised_key] = key.exponent
 
         else:
-            new_key = copy.deepcopy(self)
-            new_key.dimensions = None
-            new_key.exponent = 0.0
-            powers[new_key] = 1.0
-            normalised_values[new_key] = self.exponent
+            if not isinstance(self, DimensionlessUnit):
+                new_key = copy.deepcopy(self)
+                new_key.dimensions = None
+                new_key.exponent = 0.0
+                powers[new_key] = 1.0
+                normalised_values[new_key] = self.exponent
 
         if other.powers:
             for key, value in six.iteritems(other.powers):
@@ -519,17 +523,16 @@ class Unit(object):
                     powers[normalised_key] = value
 
         else:
-            normalised_other = copy.deepcopy(other)
-            normalised_other.exponent = 0.0
-            if normalised_other in normalised_values:
-                powers[normalised_other] += 1.0
-                if powers[normalised_other] == 0:
-                    powers.pop(other)
-            else:
-                powers[normalised_other] = 1.0
-
-        powers.pop(DimensionlessUnit(), None)
-
+            if not isinstance(other, DimensionlessUnit):
+                normalised_other = copy.deepcopy(other)
+                normalised_other.exponent = 0.0
+                if normalised_other in normalised_values:
+                    powers[normalised_other] += 1.0
+                    if powers[normalised_other] == 0:
+                        powers.pop(other)
+                else:
+                    powers[normalised_other] = 1.0
+        # powers.pop(DimensionlessUnit(), None)
         if len(powers) == 0:
             return DimensionlessUnit()
 
