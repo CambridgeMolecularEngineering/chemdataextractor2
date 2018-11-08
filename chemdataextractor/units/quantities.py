@@ -248,7 +248,7 @@ class Dimension(BaseDimension):
         return string.__hash__()
 
     def __str__(self):
-        string = 'Dimensions of: '
+        string = ''
         if self.dimensions is not None:
             for key, value in six.iteritems(self.dimensions):
                 string += (type(key).__name__ + '^(' + str(value) + ')  ')
@@ -572,7 +572,7 @@ class Unit(object):
         return string.__hash__()
 
     def __str__(self):
-        string = 'Units of: '
+        string = ''
         if self.exponent != 0:
             string += '(10^' + str(self.exponent) + ') * '
         if self.powers is not None:
