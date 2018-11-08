@@ -54,5 +54,5 @@ class Mile(LengthUnit):
     def convert_from_standard(self, value):
         return value / 1609.34
 
-units_dict = {R('m(eter(s)?$)?', group=0): Meter, R('mile[s]?$', group=0): Mile}
+units_dict = {R('m(eter(s)?)?', group=0): Meter, R('mile[s]?', group=0): Mile}
 Length.units_dict = units_dict
