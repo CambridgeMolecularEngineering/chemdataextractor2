@@ -290,6 +290,6 @@ class QuantityParser(BaseParser):
             if end_unit.dimensions == self.dimensions:
                 return end_unit
             else:
-                raise TypeError('Parsed with Dimensions ' + end_unit.dimensions + ', expected' + self.dimensions)
+                raise TypeError('Parsed with Dimensions ' + str(end_unit.dimensions) + ', expected' + str(self.dimensions))
         else:
             return end_unit
