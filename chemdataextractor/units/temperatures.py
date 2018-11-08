@@ -65,7 +65,7 @@ class Fahrenheit(TemperatureUnit):
         return value * (9. / 5.) - 459.67
 
 
-units_dict = {(W('°') + R('[K]\.?$', group=0) | R('K\.?', group=0)).add_action(merge): Kelvin,
-              (W('°') + Optional(R('[C]\.?', group=0))).add_action(merge): Celsius,
-              (Optional(W('°')) + R('[F]\.?', group=0)).add_action(merge): Fahrenheit}
+units_dict = {R('(°[K]\.?)|(K\.?)$', group=0).add_action(merge): Kelvin,
+              R('°?[C]\.?', group=0).add_action(merge): Celsius,
+              R('°?[F]\.?', group=0).add_action(merge): Fahrenheit}
 Temperature.units_dict = units_dict
