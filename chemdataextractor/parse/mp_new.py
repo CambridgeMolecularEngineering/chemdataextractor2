@@ -52,8 +52,6 @@ class MpParser(QuantityParser):
     dimensions = Temperature
 
     def interpret(self, result, start, end):
-        print(etree.tostring(result, pretty_print=True, encoding='unicode').encode('utf-8'))
-        print('interpreted units:', self.extract_units(first(result.xpath('./mp/units/text()'))))
         compound = Compound(
             melting_points=[
                 MeltingPoint(
