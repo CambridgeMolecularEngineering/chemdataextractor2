@@ -16,7 +16,7 @@ import re
 
 from lxml.builder import E
 
-from ..model import Compound, IrSpectrum, IrPeak
+from ..physicalmodels import Compound, IrSpectrum, IrPeak
 from .base import BaseParser
 from ..utils import first
 from .actions import join, merge, strip_stop

@@ -17,7 +17,7 @@ import logging
 import re
 
 
-from ..model import Compound, NmrSpectrum, NmrPeak
+from ..physicalmodels import Compound, NmrSpectrum, NmrPeak
 from ..utils import first
 from .actions import join, merge, strip_stop, fix_whitespace
 from .base import BaseParser
@@ -74,6 +74,7 @@ def strip_delta(tokens, start, result):
             if child.text.startswith('δ'):
                 child.text = child.text[1:]
     return result
+
 
 shift_range = (Optional(R('^[\-–−‒]$')) + (R('^δ?[\+\-–−‒]?\d+(\.+\d+)?[\-–−‒]\d+(\.+\d+)?\.?$') | (R('^[\+\-–−‒]?\d+(\.+\d+)?$') + R('^[\-–−‒]$') + R('^[\+\-–−‒]?\d+(\.+\d+)?\.?$'))))('shift').add_action(merge)
 shift_value = (Optional(R('^[\-–−‒]$')) + R('^δ?[\+\-–−‒]?\d+(\.+\d+)?\.?$'))('shift').add_action(merge)

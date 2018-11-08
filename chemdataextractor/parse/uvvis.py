@@ -14,7 +14,7 @@ from __future__ import unicode_literals
 import logging
 import re
 
-from ..model import Compound, UvvisSpectrum, UvvisPeak
+from ..physicalmodels import Compound, UvvisSpectrum, UvvisPeak
 from .common import hyphen
 from .base import BaseParser
 from ..utils import first

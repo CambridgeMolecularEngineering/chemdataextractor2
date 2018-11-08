@@ -17,7 +17,7 @@ import re
 from .common import optdelim, hyphen, slash
 from ..utils import first
 from ..parse.base import BaseParser
-from ..model import Compound, QuantumYield, NmrSpectrum, UvvisSpectrum, IrSpectrum, MeltingPoint, GlassTransition, FluorescenceLifetime
+from ..physicalmodels import Compound, QuantumYield, NmrSpectrum, UvvisSpectrum, IrSpectrum, MeltingPoint, GlassTransition, FluorescenceLifetime
 from .actions import join, merge, fix_whitespace
 from .cem import chemical_name
 from .elements import I, T, R, W, ZeroOrMore, Optional, Group, OneOrMore, Any, Not

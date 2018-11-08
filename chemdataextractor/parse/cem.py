@@ -15,7 +15,7 @@ import logging
 import re
 from lxml import etree
 
-from ..model import Compound
+from ..physicalmodels import Compound
 from .actions import join, fix_whitespace
 from .common import roman_numeral, cc, nnp, hyph, nns, nn, cd, ls, optdelim, bcm, icm, rbrct, lbrct, sym, jj, hyphen, quote, \
     dt

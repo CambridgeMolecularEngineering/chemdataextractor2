@@ -14,17 +14,17 @@ from __future__ import unicode_literals
 import logging
 import re
 
-from chemdataextractor.parse.cem import cem, chemical_label, lenient_chemical_label, solvent_name
-from chemdataextractor.parse.common import lbrct, dt, rbrct
+from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
+from .common import lbrct, dt, rbrct
 from ..utils import first
-from ..model import Compound, MeltingPoint
+from ..physicalmodels import Compound, MeltingPoint
 from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
 
-prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct)| R('^m\.?pt?\.?$', re.I) | I('melting') + Optional((I('point') | I('temperature')| I('range'))) | R('^m\.?$', re.I) + R('^pt?\.?$', re.I)).hide() + Optional(lbrct + W('Tm') + rbrct) + Optional(W('=') | I('of') | I('was') | I('is') | I('at')).hide() + Optional(I('in') + I('the') + I('range') + Optional(I('of')) | I('about')).hide()
+prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct) | R('^m\.?pt?\.?$', re.I) | I('melting') + Optional((I('point') | I('temperature') | I('range'))) | R('^m\.?$', re.I) + R('^pt?\.?$', re.I)).hide() + Optional(lbrct + W('Tm') + rbrct) + Optional(W('=') | I('of') | I('was') | I('is') | I('at')).hide() + Optional(I('in') + I('the') + I('range') + Optional(I('of')) | I('about')).hide()
 
 delim = R('^[:;\.,]$')
 

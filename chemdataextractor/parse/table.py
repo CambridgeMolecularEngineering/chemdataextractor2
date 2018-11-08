@@ -17,8 +17,8 @@ from lxml.builder import E
 
 from .common import delim
 from ..utils import first
-from ..model import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition
-from ..model import ElectrochemicalPotential, IrSpectrum, IrPeak
+from ..physicalmodels import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition
+from ..physicalmodels import ElectrochemicalPotential, IrSpectrum, IrPeak
 from .actions import join, merge, fix_whitespace
 from .base import BaseParser
 from .cem import chemical_label, label_before_name, chemical_name, chemical_label_phrase, solvent_name, lenient_chemical_label
