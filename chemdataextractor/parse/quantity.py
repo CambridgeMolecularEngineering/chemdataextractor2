@@ -19,7 +19,7 @@ from abc import abstractproperty
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
-from ..model import Compound, MeltingPoint
+from ..physicalmodels import Compound, MeltingPoint
 from ..units.quantities import DimensionlessUnit
 from .actions import merge, join
 from .base import BaseParser
@@ -33,14 +33,7 @@ exponents_dict = {R('k', group=0): 3., R('M', group=0): 6., R('G', group=0): 9.,
 log = logging.getLogger(__name__)
 
 
-class QuantityParser(BaseParser):
-
-    @abstractproperty
-    def units(self):
-        pass
-
-    dimensions = None
-
+def value(units):
     number = R('^[\+\-–−]?\d+(\.\d+)?$')
     joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('value').add_action(merge)
     spaced_range = (number + Optional(units).hide() + R('^[\-–−~∼˜]$') + number)('value').add_action(merge)
@@ -48,8 +41,14 @@ class QuantityParser(BaseParser):
     value_range = (Optional(R('^[\-–−]$')) + (joined_range | spaced_range | to_range))('value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + R('^[\+\-–−]?\d+(\.\d+)?$'))('value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('value') + Optional(rbrct).hide()
+    return value
 
-    def interpret_value(self, string):
+
+class QuantityParser(BaseParser):
+
+    dimensions = None
+
+    def extract_value(self, string):
         split_by_num = re.split('([\d\.]+(?![\d\.]+))', string)
         values = []
         for value in split_by_num:
@@ -157,17 +156,18 @@ class QuantityParser(BaseParser):
             # Find the elements first, but don't look for the locations
             found_units = {}
             # splitting_symbols is used to split the string into the parts pertaining to each element later
-            splitting_symbols = '(['
+            splitting_symbols = '('
             for unit in units_dict.keys():
                 for result in unit.scan([[element, 'a']]):
                     found_units[result[0].text] = units_dict[unit]
-                    splitting_symbols += '(' + result[0].text + ')'
+                    splitting_symbols += result[0].text + '|'
             # If none found, then return the original string and that no units were found.
             if len(found_units) == 0:
                 units_list.append((None, element, None))
             else:
                 # Split into substrings for each unit
-                splitting_symbols += '])'
+                splitting_symbols = splitting_symbols[:-1]
+                splitting_symbols += ')'
                 split = re.split(splitting_symbols, element)
                 most_recent_unit = None
                 most_recent_key = ''
