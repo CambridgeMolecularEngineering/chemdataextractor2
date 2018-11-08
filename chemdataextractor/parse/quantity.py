@@ -36,10 +36,10 @@ log = logging.getLogger(__name__)
 def value(units):
     number = R('^[\+\-–−]?\d+(\.\d+)?$')
     joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('value').add_action(merge)
-    spaced_range = (number + Optional(units).hide() + R('^[\-–−~∼˜]$') + number)('value').add_action(merge)
+    spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('value').add_action(merge)
     to_range = (number + Optional(units).hide() + I('to') + number)('value').add_action(join)
     value_range = (Optional(R('^[\-–−]$')) + (joined_range | spaced_range | to_range))('value').add_action(merge)
-    value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + R('^[\+\-–−]?\d+(\.\d+)?$'))('value').add_action(merge)
+    value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('value') + Optional(rbrct).hide()
     return value
 
