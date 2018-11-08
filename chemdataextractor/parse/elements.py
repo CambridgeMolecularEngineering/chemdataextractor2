@@ -35,8 +35,7 @@ class ParseException(Exception):
         return cls(parse_exception.tokens, parse_exception.loc, parse_exception.msg, parse_exception.element)
 
     def __str__(self):
-        return ('%s (at token %d)' % (self.msg, self.i)).encode('utf8')
-
+        return ('%s (at token %d)' % (self.msg, self.i))
 
 
 log = logging.getLogger(__name__)
