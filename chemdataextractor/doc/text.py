@@ -23,7 +23,7 @@ from ..parse.context import ContextParser
 from ..parse.cem import ChemicalLabelParser, CompoundHeadingParser, CompoundParser, chemical_name
 from ..parse.table import CaptionContextParser
 from ..parse.ir import IrParser
-from ..parse.mp import MpParser
+from ..parse.mp_new import MpParser
 from ..parse.tg import TgParser
 from ..parse.nmr import NmrParser
 from ..parse.uvvis import UvvisParser

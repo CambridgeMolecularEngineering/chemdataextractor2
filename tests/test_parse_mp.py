@@ -17,7 +17,7 @@ import unittest
 from lxml import etree
 
 from chemdataextractor.doc.text import Sentence, Paragraph
-from chemdataextractor.parse.mp import mp_phrase
+from chemdataextractor.parse.mp_new import mp_phrase
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -207,6 +207,8 @@ class TestParseMp(unittest.TestCase):
         self.do_parse(s, expected)
 
 
+# Edited by ti250 (8/11/2018)
+# Changed format of the expected results for new-style models.
 class TestParseMpCompound(unittest.TestCase):
 
     maxDiff = None
@@ -221,7 +223,7 @@ class TestParseMpCompound(unittest.TestCase):
         s = '4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid (Compound 67): mp 163-164° C.'
         expected = [
             {'labels': [u'67'], 'names': [u'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']},
-            {'labels': ['67'], 'melting_points': [{'units': u'\xb0C', 'value': u'163-164'}], 'names': ['4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']}
+            {'labels': ['67'], 'melting_points': [{'units': u'Celsius^(1.0)', 'value': [163.0, 164.0]}], 'names': ['4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']}
         ]
         self.do_parse(s, expected)
 
@@ -229,7 +231,7 @@ class TestParseMpCompound(unittest.TestCase):
         s = '3-Bromo-2,6-dichloroaniline: mp 71-72° C.'
         expected = [
             {'names': [u'3-Bromo-2,6-dichloroaniline']},
-            {'melting_points': [{'units': u'\xb0C', 'value': u'71-72'}], 'names': ['3-Bromo-2,6-dichloroaniline']}
+            {'melting_points': [{'units': 'Celsius^(1.0)', 'value': [71.0, 72.0]}], 'names': ['3-Bromo-2,6-dichloroaniline']}
         ]
         self.do_parse(s, expected)
 
