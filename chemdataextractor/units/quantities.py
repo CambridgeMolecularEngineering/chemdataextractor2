@@ -50,6 +50,9 @@ class UnitType(BaseType):
             return value
         return None
 
+    def serialize(self, value, primitive=False):
+        return str(value**1.0)
+
 
 class OptionalRangeType(BaseType):
     """
@@ -223,11 +226,15 @@ class Dimension(BaseDimension):
 
     def __eq__(self, other):
 
-        if type(self) != type(other):
-            return False
-
         if self.dimensions is not None:
-            if self.dimensions == other.dimensions:
+            if other.dimensions is not None:
+                if self.dimensions == other.dimensions:
+                    return True
+            else:
+                if self.dimensions == (other**1.0).dimensions:
+                    return True
+        elif other.dimensions is not None:
+            if other.dimensions == (self**1.0).dimensions:
                 return True
         else:
             if type(self) == type(other):
@@ -571,6 +578,7 @@ class Unit(object):
         if self.powers is not None:
             for key, value in six.iteritems(self.powers):
                 string += (type(key).__name__ + '^(' + str(value) + ')  ')
+            string = string[:-2]
         else:
             string += type(self).__name__
         return string
