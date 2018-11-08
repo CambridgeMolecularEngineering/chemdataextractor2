@@ -264,7 +264,7 @@ class QuantityModel(BaseModel):
     to make a list with QuantityModel-type objects as keys)
     """
     value = OptionalRangeType(FloatType())
-    unit = UnitType()
+    units = UnitType()
     dimensions = None
 
     """
@@ -304,8 +304,8 @@ class QuantityModel(BaseModel):
                 new_model.value = new_val
             else:
                 new_model.value = self.value ** other
-        if self.unit is not None:
-            new_model.unit = self.unit ** other
+        if self.units is not None:
+            new_model.units = self.units ** other
 
         return new_model
 
@@ -330,8 +330,8 @@ class QuantityModel(BaseModel):
                 new_model.value = new_val
             else:
                 new_model.value = self.value * other.value
-        if self.unit is not None and other.unit is not None:
-            new_model.unit = self.unit * other.unit
+        if self.units is not None and other.units is not None:
+            new_model.units = self.units * other.units
 
         return new_model
 
@@ -344,8 +344,8 @@ class QuantityModel(BaseModel):
         :returns: The value as expressed in the new unit
         :rtype: float
         """
-        if self.unit:
-            return self.convert(self.unit, unit)
+        if self.units:
+            return self.convert(self.units, unit)
         raise AttributeError("Unit to convert from not set")
 
     def convert(self, from_unit, to_unit):
@@ -375,7 +375,7 @@ class QuantityModel(BaseModel):
             raise AttributeError("Value for model not set")
 
     def __str__(self):
-        string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.unit.__str__()
+        string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.units.__str__()
         string += ' and a value of ' + str(self.value)
         return string
 

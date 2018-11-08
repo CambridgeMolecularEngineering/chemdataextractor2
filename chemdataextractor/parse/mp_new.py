@@ -58,7 +58,7 @@ class MpParser(QuantityParser):
             melting_points=[
                 MeltingPoint(
                     value=self.extract_value(first(result.xpath('./mp/value/text()'))),
-                    unit=self.extract_units(first(result.xpath('./mp/units/text()')))
+                    units=self.extract_units(first(result.xpath('./mp/units/text()')))
                 )
             ]
         )
