@@ -234,6 +234,7 @@ class Dimension(BaseDimension):
         else:
             new_model.dimensions = dimensions
 
+        new_model.units_dict = {}
         for dimension in dimensions.keys():
             new_model.units_dict.update(dimension.units_dict)
 
