@@ -129,6 +129,21 @@ class Dimension(BaseDimension):
     Examples can be seen in temperatures.py
     """
 
+    @classmethod
+    def composite_dimension(cls, with_dimensions):
+        """
+        Creates a new Dimension subclass composed of the dimensions given.
+        .. note::
+            This returns a subclass of Dimension, not an instance of a subclass of Dimension.
+        :param Dimension with_dimensions: The dimensions for the new unit subclass to be created
+        :returns: The new composite dimension
+        :rtype: subclass of Dimension
+        """
+        new_dimension = type(str(with_dimensions), (cls, ), {})
+        new_dimension.dimensions = with_dimensions.dimensions
+        new_dimension.units_dict = copy.copy(with_dimensions.units_dict)
+        return new_dimension
+
     """
     Operators are implemented so that composite dimensions can be created easily
     on the fly, for use in creating custom QuantityModels:
@@ -432,6 +447,24 @@ class Unit(object):
 
     and either method should produce the same results.
     """
+
+    @classmethod
+    def composite_unit(cls, with_units):
+        """
+        Creates a new Unit subclass composed of the units given.
+        .. note::
+            This returns a subclass of Unit, not an instance of a subclass of Unit.
+        :param Unit with_units: The units for the new unit subclass to be created
+        :returns: The new composite unit
+        :rtype: subclass of Unit
+        """
+        new_unit = type(str(with_units), (cls, ), {})
+
+        def new_initializer(self, exponent=with_units.exponent):
+            Unit.__init__(with_units.dimensions, exponent, powers=with_units.powers)
+
+        new_unit.__init__ = new_initializer
+        return new_unit
 
     def __init__(self, dimensions, exponent=0.0, powers=None):
         """
