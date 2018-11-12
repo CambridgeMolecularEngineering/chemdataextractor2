@@ -23,7 +23,7 @@ from ..physicalmodels import Compound, MeltingPoint
 from ..units.quantities import DimensionlessUnit
 from .actions import merge, join
 from .base import BaseParser
-from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 from fractions import Fraction
 
 
@@ -33,15 +33,23 @@ exponents_dict = {R('k', group=0): 3., R('M', group=0): 6., R('G', group=0): 9.,
 log = logging.getLogger(__name__)
 
 
-def value(units):
+def value(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('units').add_action(merge)):
+    """
+    Returns an Element for values with given units. By default, uses tags to guess that a unit exists.
+
+    :param BaseParserElement units: A parser element for the units that are to be looked for. Default option looks for nouns.
+    :returns: An Element to look for values and units.
+    :rtype: BaseParserElement
+    """
     number = R('^[\+\-–−]?\d+(\.\d+)?$')
     joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('value').add_action(merge)
     spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('value').add_action(merge)
     to_range = (number + Optional(units).hide() + I('to') + number)('value').add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (joined_range | spaced_range | to_range))('value').add_action(merge)
+    plusminus_range = (number + R('±') + number)('value').add_action(join)
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('value') + Optional(rbrct).hide()
-    return value
+    return value + units
 
 
 class QuantityParser(BaseParser):
@@ -49,9 +57,18 @@ class QuantityParser(BaseParser):
     dimensions = None
 
     def extract_value(self, string):
+        string = string.replace(" ", "")
         split_by_num = re.split('([\d\.]+(?![\d\.]+))', string)
+        print(str(split_by_num).encode())
         values = []
-        for value in split_by_num:
+        for index, value in enumerate(split_by_num):
+            if value == '±':
+                center_value = values[-1]
+                float_err = float(split_by_num[index + 1])
+                values = []
+                values.append(center_value - float_err)
+                values.append(center_value + float_err)
+                break
             try:
                 float_val = float(value)
                 values.append(float_val)

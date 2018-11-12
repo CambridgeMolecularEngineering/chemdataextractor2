@@ -23,7 +23,7 @@ from ..physicalmodels import Compound, MeltingPoint
 from ..units.temperatures import Temperature
 from .actions import merge, join
 from .quantity import QuantityParser, value
-from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ delim = R('^[:;\.,]$')
 # TODO: Consider allowing degree symbol to be optional. The prefix should be restrictive enough to stop false positives.
 units = ((W('°') + Optional(R('^[CFK]\.?$'))) | W('K\.?'))('units').add_action(merge)
 
-mp = (prefix + Optional(delim).hide() + value(units) + units)('mp')
+mp = (prefix + Optional(delim).hide() + value(units))('mp')
 
 bracket_any = lbrct + OneOrMore(Not(mp) + Not(rbrct) + Any()) + rbrct
 
