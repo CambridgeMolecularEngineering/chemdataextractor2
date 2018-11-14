@@ -15,7 +15,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import unittest
-import numpy as np
 
 
 from chemdataextractor.parse.quantity import QuantityParser
@@ -37,17 +36,19 @@ class TestUnitClass(unittest.TestCase):
     def test_to_range(self):
         test_string = '1500.3 to 1600.2'
         extracted = self.qp.extract_value(test_string)
-        np.testing.assert_almost_equal(extracted, [1500.3, 1600.2])
+        self.assertLess(abs(extracted[0] - 1500.3), 10**(-6.0))
+        self.assertLess(abs(extracted[1] - 1600.2), 10**(-6.0))
 
     def test_err_range(self):
         test_string = '1600.4±2.4'
         extracted = self.qp.extract_value(test_string)
-        np.testing.assert_almost_equal(extracted, [1598.0, 1602.8])
+        self.assertLess(abs(extracted[0] - 1598.0), 10**(-6.0))
+        self.assertLess(abs(extracted[1] - 1602.8), 10**(-6.0))
 
     def test_single_value(self):
         test_string = '500.8'
         extracted = self.qp.extract_value(test_string)
-        np.testing.assert_almost_equal(extracted, 500.8)
+        self.assertEqual(extracted, 500.8)
 
     def test_unit_mm(self):
         self.qp.dimensions = Length()**2 / Time()
