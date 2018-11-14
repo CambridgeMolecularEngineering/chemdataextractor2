@@ -217,13 +217,13 @@ class Dimension(BaseDimension):
             new_key = copy.deepcopy(other)
             if self.dimensions is not None:
                 if new_key in self.dimensions:
-                    dimensions[key] += value
-                    if dimensions[key] == 0:
-                        dimensions.pop(key)
+                    dimensions[new_key] += 1.0
+                    if dimensions[new_key] == 0:
+                        dimensions.pop(new_key)
             elif self == new_key:
-                dimensions[key] += value
-                if dimensions[key] == 0:
-                    dimensions.pop(key)
+                dimensions[new_key] += 1.0
+                if dimensions[new_key] == 0:
+                    dimensions.pop(new_key)
             else:
                 dimensions[new_key] = 1.0
         # Handle the case that we have ended up with no dimensions.
@@ -528,7 +528,6 @@ class Unit(object):
                 powers[key] = self.powers[key] * other
         else:
             new_key = copy.deepcopy(self)
-            new_key.dimensions = None
             new_key.exponent = 0.0
             powers[new_key] = other
         return Unit(self.dimensions**other, powers=powers, exponent=self.exponent * other)
@@ -553,7 +552,6 @@ class Unit(object):
         else:
             if not isinstance(self, DimensionlessUnit):
                 new_key = copy.deepcopy(self)
-                new_key.dimensions = None
                 new_key.exponent = 0.0
                 powers[new_key] = 1.0
                 normalised_values[new_key] = self.exponent
