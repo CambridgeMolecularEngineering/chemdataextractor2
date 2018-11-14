@@ -322,6 +322,11 @@ class QuantityModel(BaseModel):
                 new_model.value = self.value ** other
         if self.units is not None:
             new_model.units = self.units ** other
+        if isinstance(new_model.dimensions, Dimensionless):
+            dimensionless_model = DimensionlessModel()
+            dimensionless_model.value = new_model.value
+            dimensionless_model.units = new_model.units
+            return dimensionless_model
 
         return new_model
 
@@ -348,6 +353,11 @@ class QuantityModel(BaseModel):
                 new_model.value = self.value * other.value
         if self.units is not None and other.units is not None:
             new_model.units = self.units * other.units
+        if isinstance(new_model.dimensions, Dimensionless):
+            dimensionless_model = DimensionlessModel()
+            dimensionless_model.value = new_model.value
+            dimensionless_model.units = new_model.units
+            return dimensionless_model
 
         return new_model
 
