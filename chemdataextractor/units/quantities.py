@@ -589,7 +589,14 @@ class Unit(object):
         if not isinstance(other, Unit):
             return False
         if self.powers:
-            if self.powers == other.powers and self.exponent == other.exponent:
+            if other.powers:
+                if self.powers == other.powers and self.exponent == other.exponent:
+                    return True
+            else:
+                if self.powers == (other**1.0).powers:
+                    return True
+        elif other.powers:
+            if other.powers == (self**1.0).dimensions:
                 return True
         else:
             if type(self) == type(other) and self.exponent == other.exponent and self.dimensions == other.dimensions:
