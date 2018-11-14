@@ -19,6 +19,8 @@ from .common import delim
 from ..utils import first
 from ..physicalmodels import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition
 from ..physicalmodels import ElectrochemicalPotential, IrSpectrum, IrPeak
+from ..units.temperatures import Temperature
+from .quantity import QuantityParser, value
 from .actions import join, merge, fix_whitespace
 from .base import BaseParser
 from .cem import chemical_label, label_before_name, chemical_name, chemical_label_phrase, solvent_name, lenient_chemical_label
@@ -570,9 +572,10 @@ class FluorescenceLifetimeCellParser(BaseParser):
             yield c
 
 
-class MeltingPointHeadingParser(BaseParser):
+class MeltingPointHeadingParser(QuantityParser):
     """"""
     root = melting_point_heading
+    dimensions = Temperature
 
     def interpret(self, result, start, end):
         """"""
@@ -580,7 +583,7 @@ class MeltingPointHeadingParser(BaseParser):
         c = Compound()
         if melting_point_units:
             c.melting_points.append(
-                MeltingPoint(units=melting_point_units)
+                MeltingPoint(units=self.extract_units(melting_point_units))
             )
         yield c
 
@@ -588,6 +591,7 @@ class MeltingPointHeadingParser(BaseParser):
 class MeltingPointCellParser(BaseParser):
     """"""
     root = melting_point_cell
+    dimensions = Temperature
 
     def interpret(self, result, start, end):
         """"""
@@ -595,8 +599,8 @@ class MeltingPointCellParser(BaseParser):
         for mp in result.xpath('./temp'):
             c.melting_points.append(
                 MeltingPoint(
-                    value=first(mp.xpath('./value/text()')),
-                    units=first(mp.xpath('./units/text()'))
+                    value=self.extract_value(first(mp.xpath('./value/text()'))),
+                    units=self.extract_units(first(mp.xpath('./units/text()')))
                 )
             )
         if c.melting_points:
