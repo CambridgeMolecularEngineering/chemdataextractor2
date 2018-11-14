@@ -47,7 +47,9 @@ mp_phrase = cem_mp_phrase | to_give_mp_phrase | obtained_mp_phrase
 
 
 class MpParser(QuantityParser):
-    """"""
+    """
+    MpParser rewritten to be based on QuantityParser
+    """
     root = mp_phrase
     dimensions = Temperature()
 
