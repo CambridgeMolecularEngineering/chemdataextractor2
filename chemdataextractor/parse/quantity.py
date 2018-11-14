@@ -57,6 +57,19 @@ class QuantityParser(BaseParser):
     dimensions = None
 
     def extract_value(self, string):
+        """
+        Takes a string and returns a float or a list representing the string given.
+
+        Usage::
+            qp = QuantityParser()
+            test_string = '150 to 160'
+            end_value = qp.extract_value(test_string)
+            print(end_value) # [150., 160.]
+
+        :param str string: A representation of the values as a string
+        :returns: The string expressed as a float or a list of floats depending on whether it was a range.
+        :rtype: float or list(float)
+        """
         string = string.replace(" ", "")
         split_by_num = re.split('([\d\.]+(?![\d\.]+))', string)
         values = []
