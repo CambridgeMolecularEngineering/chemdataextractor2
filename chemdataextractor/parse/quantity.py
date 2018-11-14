@@ -59,7 +59,6 @@ class QuantityParser(BaseParser):
     def extract_value(self, string):
         string = string.replace(" ", "")
         split_by_num = re.split('([\d\.]+(?![\d\.]+))', string)
-        print(str(split_by_num).encode())
         values = []
         for index, value in enumerate(split_by_num):
             if value == '±':
@@ -298,7 +297,12 @@ class QuantityParser(BaseParser):
                 for exponent in exponents_dict.keys():
                     for result in exponent.scan([[original_string, 'a']]):
                         exp = exponents_dict[exponent]
-            powers[power[0](exponent=exp)] = power[2]
+            try:
+                powers[power[0](exponent=exp)] = power[2]
+            except TypeError as e:
+                log.debug(e)
+                powers = {}
+                break
         end_unit = DimensionlessUnit()
         for unit, power in powers.items():
             log.debug(unit, '^', power)

@@ -49,17 +49,22 @@ mp_phrase = cem_mp_phrase | to_give_mp_phrase | obtained_mp_phrase
 class MpParser(QuantityParser):
     """"""
     root = mp_phrase
-    dimensions = Temperature
+    dimensions = Temperature()
 
     def interpret(self, result, start, end):
-        compound = Compound(
-            melting_points=[
-                MeltingPoint(
-                    value=self.extract_value(first(result.xpath('./mp/value/text()'))),
-                    units=self.extract_units(first(result.xpath('./mp/units/text()')))
-                )
-            ]
-        )
+        try:
+            units = self.extract_units(first(result.xpath('./mp/units/text()')), strict=True)
+            compound = Compound(
+                melting_points=[
+                    MeltingPoint(
+                        value=self.extract_value(first(result.xpath('./mp/value/text()'))),
+                        units=units
+                    )
+                ]
+            )
+        except TypeError as e:
+            log.debug(e)
+            compound = Compound()
         cem_el = first(result.xpath('./cem'))
         if cem_el is not None:
             compound.names = cem_el.xpath('./name/text()')
