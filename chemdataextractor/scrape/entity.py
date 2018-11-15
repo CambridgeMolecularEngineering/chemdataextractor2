@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.entity
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 An entity to extract.
 
 """

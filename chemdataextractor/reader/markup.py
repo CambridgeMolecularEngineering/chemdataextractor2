@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.markup
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 XML and HTML readers based on lxml.
 
 """

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-ChemDataExtractor
-~~~~~~~~~~~~~~~~~
 
 """
 
@@ -22,5 +20,12 @@ __copyright__ = 'Copyright 2017 Matt Swain and contributors'
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
+# jm2111
+# all messages with effective level higher or equal to warning will be shown
+# in every module/file set:
+#     log = logging.getLogger(__name__)
+#     log.setLevel(logging.DEBUG)
+# to change the effective level of the module logger
+logging.basicConfig(format='%(levelname)-10s in %(filename)-20s--> %(message)s', level=logging.WARNING)
 
 from .doc.document import Document

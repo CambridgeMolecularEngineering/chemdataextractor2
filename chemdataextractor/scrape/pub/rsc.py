@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.rsc
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for scraping documents from The Royal Society of Chemistry.
 
 """

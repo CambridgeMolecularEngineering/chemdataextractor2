@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.plaintext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Plain text document reader.
 
 """

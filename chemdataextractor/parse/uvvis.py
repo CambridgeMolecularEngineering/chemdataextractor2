@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.uvvis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 UV-vis text parser.
 
 """

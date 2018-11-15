@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.csstranslator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Extend cssselect to improve handling of pseudo-elements.
 
 This is derived from csstranslator.py in the Scrapy project. The original file is available at:

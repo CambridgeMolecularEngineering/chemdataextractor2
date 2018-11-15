@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.selector
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tool for selecting content from HTML or XML using CSS or XPath expressions.
 
 """

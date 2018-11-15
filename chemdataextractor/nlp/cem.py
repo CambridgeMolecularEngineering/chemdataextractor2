@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp.cem
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Named entity recognition (NER) for Chemical entity mentions (CEM).
 
 """
@@ -124,7 +121,7 @@ STOP_TOKENS = {
     'references', 'safety', 'pharmacology', 'coffee', 'research', 'bibliography', 'tobacco', 'palestine', 'doctrine',
     'napoleon', 'azərbaycanca', 'euskara', 'latviešu', 'nordfriisk', 'नेपाल भाषा', 'children', 'overdose', 'chocolate',
     'systematic', 'google', 'literature', 'books', 'docking', 'chromatography', 'libraries', 'retention', 'index',
-    'danielle', 'claire', 'rachel', 'zhang', 'linkedin', 'magazine', 'america', 'ireland',
+    'danielle', 'claire', 'rachel', 'zhang', 'linkedin', 'magazine', 'america', 'ireland', 'besides',
 
 }
 

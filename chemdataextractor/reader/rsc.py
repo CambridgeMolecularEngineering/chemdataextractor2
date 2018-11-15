@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.rsc
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Readers for documents from the RSC.
 
 """

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.text.unwrap
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for unwrapping hard-wrapped text. Most useful for text extracted from PDFs.
 
 """

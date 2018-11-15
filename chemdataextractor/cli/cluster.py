@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli.cluster
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Word clusters command-line interface.
 
 """

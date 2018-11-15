@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.biblio
-~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for dealing with bibliographic information.
 
 """

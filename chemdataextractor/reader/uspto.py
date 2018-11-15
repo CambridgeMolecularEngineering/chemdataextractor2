@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.uspto
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Readers for USPTO patents.
 
 """

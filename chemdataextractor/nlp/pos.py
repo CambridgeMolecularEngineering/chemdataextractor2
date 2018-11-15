@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp.pos
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Part-of-speech tagging.
 
 """

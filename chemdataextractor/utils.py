@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.utils
-~~~~~~~~~~~~~~~~~~~~~~~
-
 Miscellaneous utility functions.
 
 """
@@ -18,6 +15,7 @@ import os
 
 import six
 
+import re
 
 log = logging.getLogger(__name__)
 
@@ -95,3 +93,41 @@ def ensure_dir(path):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+
+
+def SplitString(string,pattern):
+    """Splits a string based on the groups provided in the regex pattern.
+
+    Usage::
+
+        cn_title, cn_label, *rest = SplitString(cn_title_string,cn_title_regex_pattern)
+
+    :type string: str
+    :type pattern: str or chemdataextractor.parse.elements.R
+    :type return: list(str)
+
+    :param pattern: Regex pattern used for the split, can be string OR Regex class object
+    :param string: String to be split
+
+    :return: A list of all groups found in the string using the regex pattern
+
+    :raises: TypeError: If pattern is not a string or a Regex object
+
+    jm2111@cam.ac.uk
+    """
+
+    assert isinstance(string, str)
+
+    if isinstance(pattern,str) == False:
+        try:
+            pattern = pattern.regex.pattern
+        except TypeError as e:
+            print(e.args)
+
+    if isinstance(pattern, str):
+        prog = re.compile(pattern)
+        result = prog.search(string)
+        if result:
+            return result.groups()
+        else:
+            return None

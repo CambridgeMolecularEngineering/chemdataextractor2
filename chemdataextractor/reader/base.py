@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 
 """
 

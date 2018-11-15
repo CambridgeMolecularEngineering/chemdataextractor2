@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.text
-~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for processing text.
 
 """
@@ -230,7 +227,8 @@ def get_encoding(input_string, guesses=None, is_html=False):
 
 
 def levenshtein(s1, s2, allow_substring=False):
-    """Return the Levenshtein distance between two strings.
+    """
+    Return the Levenshtein distance between two strings.
 
     The Levenshtein distance (a.k.a "edit difference") is the number of characters that need to be substituted,
     inserted or deleted to transform s1 into s2.
@@ -242,7 +240,8 @@ def levenshtein(s1, s2, allow_substring=False):
     :param string s2: The second string
     :param bool allow_substring: Whether to allow s1 to be a substring of s2
     :returns: Levenshtein distance.
-    :rtype int
+    :type: int
+
     """
     len1, len2 = len(s1), len(s2)
     lev = []

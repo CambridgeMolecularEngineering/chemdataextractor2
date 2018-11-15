@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.doc.text
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Text-based document elements.
 
 """
@@ -27,6 +24,7 @@ from ..parse.mp import MpParser
 from ..parse.tg import TgParser
 from ..parse.nmr import NmrParser
 from ..parse.uvvis import UvvisParser
+from ..parse.cn import CNParser
 from ..nlp.lexicon import ChemLexicon
 from ..nlp.cem import CemTagger, IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS
 from ..nlp.abbrev import ChemAbbreviationDetector
@@ -266,7 +264,8 @@ class Heading(Text):
 
 class Paragraph(Text):
 
-    parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(), TgParser(), ContextParser()]
+    # jm2111, ORDER is important
+    parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(), TgParser(), ContextParser(),CNParser()]
 
     def _repr_html_(self):
         return '<p class="cde-paragraph">' + self.text + '</p>'

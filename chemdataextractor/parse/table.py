@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 
 """
@@ -14,17 +11,19 @@ from __future__ import unicode_literals
 import logging
 import re
 from lxml.builder import E
+from lxml import etree
 
 from .common import delim
-from ..utils import first
-from ..model import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition
+from ..utils import first, SplitString
+from ..model import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition, CoordinationNumber
 from ..model import ElectrochemicalPotential, IrSpectrum, IrPeak
 from .actions import join, merge, fix_whitespace
 from .base import BaseParser
-from .cem import chemical_label, label_before_name, chemical_name, chemical_label_phrase, solvent_name, lenient_chemical_label
-from .elements import R, I, W, Optional, ZeroOrMore, Any, OneOrMore, Start, End, Group, Not
+from .cem import chemical_label, label_before_name, chemical_name, chemical_label_phrase, solvent_name, lenient_chemical_label, cem
+from .elements import R, I, W, Optional, ZeroOrMore, And, Any, OneOrMore, Start, End, Group, Not, PreviousToken
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.WARNING)
 
 
 delims = ZeroOrMore(delim)
@@ -198,6 +197,33 @@ melting_point_heading = (melting_point_title.hide() + delims.hide() + Optional(t
 melting_point_cell = (
     temp_with_optional_units + ZeroOrMore(delims.hide() + temp_with_optional_units)
 )('melting_point_cell')
+
+########################################################################################################################
+# COORDINATION NUMBER RULES FOR TABLES
+# jm2111
+# ---------------------------------------------------------------------------------------------------------------------#
+# will recognize the error first if present, if the error is not recognized/present
+# it might recognize several coordination numbers in one cell (which micht be desired)
+# different types of errors are preserved in the output: 8.2(2) and 8.4(±0.5)
+coordination_number_error = (Optional(W('(')) + Optional(W('±')) + R('^[\d.]+$') + Optional(W(')')))('cn_error')
+coordination_number = (R('^[\d.]+$') + Optional(coordination_number_error))('cn_value').add_action(merge)
+
+element_symbols = R('^(X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr){1,2}$')('elements')
+coordination_number_label = (element_symbols + Optional(W('-').hide() + (element_symbols)))('cn_label').add_action(merge)
+
+# if the label is merged with the title (Ex. 'NAsAs' or 'NAs-As') the whole token will be associated with the title and interpretation will be done in the parser
+coordination_number_title_alt1 = R('^(N|n|k)\s?((X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr)\-?(X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr))?$')
+coordination_number_title_alt2 = (R('^(N|n|k)(X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr)$') + Optional(W('-')) + Optional(element_symbols)).add_action(merge)
+coordination_number_title = (coordination_number_title_alt1 | coordination_number_title_alt2)('cn_title')
+
+coordination_number_heading = ((coordination_number_title) + Optional(W('-').hide()) + Optional(coordination_number_label))('coordination_number_heading')
+coordination_number_cell = (coordination_number)('coordination_number_cell')
+
+# if the labels are in separate cells:
+# coordination_number_label_heading = R('^Label$')('cn_label_heading')
+# coordination_number_label_cell = (coordination_number_label)('cn_label_cell')
+#######################################################################################################################
+
 
 glass_transition_title = R('^T(g\.)$', re.I) | W('T') + R('^(g\.)?$')
 glass_transition_heading = (glass_transition_title.hide() + delims.hide() + Optional(temp_units))('glass_transition_heading')
@@ -601,6 +627,96 @@ class MeltingPointCellParser(BaseParser):
             )
         if c.melting_points:
             yield c
+
+
+### JURAJ ######################################################################
+################################################################################
+##
+## -----------------------------------------------------------------------------
+
+class CNHeadingParser(BaseParser):
+    """Coordination number table parsers for default table layout.
+
+    Recognizes::
+
+        'NAs-As', 'NAsAs', 'N AsAs', 'N As-As', 'N-AsAs', 'N-As-As'
+
+    and splits it into::
+
+        cn_title = 'N'
+        cn_label = 'AsAs'
+
+    Python 3 compatible
+
+    jm2111@cam.ac.uk
+    """
+    root = coordination_number_heading
+    def interpret(self, result, start, end):
+        """"""
+
+        cn_title = first(result.xpath('./cn_title/text()'))
+        cn_label = first(result.xpath('./cn_label/text()'))
+
+        if not cn_label:
+            cn_title, cn_label, *rest = SplitString(cn_title,coordination_number_title_alt1)
+            if not cn_label:
+                log.warning("Coordination number without a label was recognized.")
+            else:
+                cn_label = re.sub('-','',cn_label)
+
+        log.debug("\n    "
+                  "etree:    {}\n    "
+                  "cn_title: {}\n    "
+                  "cn_label: {}".format(etree.tostring(result),cn_title,cn_label))
+
+        c = Compound()
+        if cn_label:
+            c.coordination_numbers.append(
+                CoordinationNumber(
+                    label = cn_label
+                )
+            )
+        yield c
+
+class CNCellParser(BaseParser):
+    """"""
+    root = coordination_number_cell
+    def interpret(self, result, start, end):
+        """"""
+        log.debug(etree.tostring(result))
+        c = Compound()
+        for cn in result.xpath('text()'):
+            c.coordination_numbers.append(
+                CoordinationNumber(
+                    value=cn
+                )
+            )
+        if c.coordination_numbers:
+            yield c
+
+# class CNLabelHeadingParser(BaseParser):
+#     """Parse the CN label heading if in separate cell"""
+#     root = coordination_number_label_heading
+#     def interpret(self, result, start, end):
+#         """Parses the heading of the CN labels"""
+#         log.debug(etree.tostring(result))
+#         c = Compound()
+#         yield c
+#
+# class CNLabelCellParser(BaseParser):
+#     """Parses CN labels in separate cells"""
+#     root = coordination_number_label_cell
+#     def interpret(self, result, start, end):
+#         c = Compound()
+#         log.debug(etree.tostring(result))
+#         label = result.xpath('text()')
+#         if label:
+#             c.coordination_numbers.append(CoordinationNumber(label=label))
+#         if c.coordination_numbers:
+#             yield c
+
+
+################################################################################
 
 
 class GlassTransitionHeadingParser(BaseParser):

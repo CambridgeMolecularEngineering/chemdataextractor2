@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli.pos
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Part of speech tagging commands.
 
 """

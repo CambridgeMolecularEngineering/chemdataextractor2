@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.clean
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for cleaning up XML/HTML by removing tags entirely or replacing with their contents.
 
 """
@@ -155,6 +152,7 @@ class Cleaner(object):
                     el.tail = re.sub(r'\s*\n\s*', '\n', el.tail)
                     el.tail = re.sub(r'[ \t]+', ' ', el.tail)
                     # el.tail = re.sub(r'\s+', ' ', el.tail)
+
 
     def clean_html(self, html):
         """Apply ``Cleaner`` to HTML string or document and return a cleaned string or document."""

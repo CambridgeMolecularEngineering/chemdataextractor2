@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp.corpus
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for reading and writing text corpora.
 
 """
@@ -165,6 +162,7 @@ genia_evaluation = LazyCorpusLoader(
     sent_tokenizer=RegexpTokenizer('====================\n', gaps=True)
 )
 
+#:
 medpost = LazyCorpusLoader(
     'medpost',
     TaggedCorpusReader,
@@ -172,6 +170,7 @@ medpost = LazyCorpusLoader(
     'tag_.+\.pos',
 )
 
+#:
 medpost_training = LazyCorpusLoader(
     'medpost_training',
     TaggedCorpusReader,
@@ -179,6 +178,7 @@ medpost_training = LazyCorpusLoader(
     'medpost-pos-training.txt',
 )
 
+#:
 medpost_evaluation = LazyCorpusLoader(
     'medpost_evaluation',
     TaggedCorpusReader,
@@ -186,6 +186,7 @@ medpost_evaluation = LazyCorpusLoader(
     'medpost-pos-evaluation.txt',
 )
 
+#:
 cde_tokensc = LazyCorpusLoader(
     'cde_tokensc',
     PlaintextCorpusReader,
@@ -196,6 +197,7 @@ cde_tokensc = LazyCorpusLoader(
     para_block_reader=read_line_block
 )
 
+#:
 chemdner_training = LazyCorpusLoader(
     'chemdner_training',
     PlaintextCorpusReader,
