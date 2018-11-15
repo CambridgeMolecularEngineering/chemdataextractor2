@@ -529,7 +529,7 @@ class Unit(object):
 
         # Handle dimensionless units so we don't get things like dimensionless units squared.
         if isinstance(self, DimensionlessUnit) or other == 0:
-            new_unit = DimensionlessUnit()
+            new_unit = DimensionlessUnit(exponent=self.exponent * other)
             return new_unit
 
         powers = {}
@@ -589,7 +589,7 @@ class Unit(object):
                     powers[normalised_other] = 1.0
         # powers.pop(DimensionlessUnit(), None)
         if len(powers) == 0:
-            return DimensionlessUnit()
+            return DimensionlessUnit(exponent=exponent)
 
         return Unit(dimensions=dimensions, powers=powers, exponent=exponent)
 
@@ -636,9 +636,9 @@ class Unit(object):
 class DimensionlessUnit(Unit):
     # Special case to handle dimensionless quantities.
 
-    def __init__(self):
+    def __init__(self, exponent = 0.0):
         self.dimensions = Dimensionless()
-        self.exponent = 0.0
+        self.exponent = exponent
         self.powers = None
 
     def convert_to_standard(self, value):
