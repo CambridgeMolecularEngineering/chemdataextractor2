@@ -121,7 +121,7 @@ STOP_TOKENS = {
     'references', 'safety', 'pharmacology', 'coffee', 'research', 'bibliography', 'tobacco', 'palestine', 'doctrine',
     'napoleon', 'azərbaycanca', 'euskara', 'latviešu', 'nordfriisk', 'नेपाल भाषा', 'children', 'overdose', 'chocolate',
     'systematic', 'google', 'literature', 'books', 'docking', 'chromatography', 'libraries', 'retention', 'index',
-    'danielle', 'claire', 'rachel', 'zhang', 'linkedin', 'magazine', 'america', 'ireland', 'besides',
+    'danielle', 'claire', 'rachel', 'zhang', 'linkedin', 'magazine', 'america', 'ireland',
 
 }
 

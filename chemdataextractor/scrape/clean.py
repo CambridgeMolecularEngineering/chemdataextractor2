@@ -153,7 +153,6 @@ class Cleaner(object):
                     el.tail = re.sub(r'[ \t]+', ' ', el.tail)
                     # el.tail = re.sub(r'\s+', ' ', el.tail)
 
-
     def clean_html(self, html):
         """Apply ``Cleaner`` to HTML string or document and return a cleaned string or document."""
         result_type = type(html)

@@ -432,11 +432,6 @@ class ElectrochemicalPotential(BaseModel):
     apparatus = StringType(contextual=True)
 
 
-# jm2111
-class CoordinationNumber(BaseModel):
-    value = StringType()
-    label = StringType(contextual=True)
-
 class Compound(BaseModel):
     names = ListType(StringType())
     labels = ListType(StringType())
@@ -449,8 +444,6 @@ class Compound(BaseModel):
     quantum_yields = ListType(ModelType(QuantumYield))
     fluorescence_lifetimes = ListType(ModelType(FluorescenceLifetime))
     electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
-    # jm2111
-    coordination_numbers = ListType(ModelType(CoordinationNumber))
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""
@@ -511,4 +504,3 @@ class Compound(BaseModel):
         if self.names or self.labels:
             return True
         return False
-

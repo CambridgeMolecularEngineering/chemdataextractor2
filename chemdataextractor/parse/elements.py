@@ -604,30 +604,6 @@ class Hide(ParseElementEnhance):
         return self
 
 
-class PreviousToken(Regex):
-    """
-    Use the previous token again, if the pattern is to be found in the same token that was previously used.
-    This is a redundant class and doesn't serve a purpose in the real code.
-    The purpose of it's creation was to deal with the Regex(group=_) functionality in combination with the '+' operator,
-    that natively looks for the next token.
-    It is recommended that problems like that are solved through interpretation of the full token in the parser and
-    not during parsing.
-
-    jm2111
-
-    Example::
-
-        coordination_number_title = R('string',group=1)('cn_title')
-        coordination_number_label = PreviousToken('string',group=2)('cn_label')
-        coordination_number_heading = (coordination_number_title + coordination_number_label)('coordination_number_heading')
-
-    """
-    def __init__(self, pattern, flags=0, group=None):
-        super().__init__(pattern, flags=flags, group=group)
-
-    def _parse_tokens(self, tokens, i, actions=True):
-        result, i = super()._parse_tokens(tokens, i=i-1, actions=actions)
-        return result,i
 
 
 
