@@ -17,7 +17,7 @@ install:
   - conda update -q conda
   - conda config --add channels chemdataextractor
   - conda info -a
-  - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION appdirs beautifulsoup4 click cssselect dawg lxml nltk pdfminer.six python-dateutil requests six python-crfsuite pyyaml pytest sphinx m2r nbsphinx nbsphinx_link pandoc
+  - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION appdirs beautifulsoup4 click cssselect dawg lxml nltk pdfminer.six python-dateutil requests six python-crfsuite pyyaml pytest sphinx m2r nbsphinx nbsphinx-link pandoc
   - source activate cde
   - python setup.py install
   - cde data download
