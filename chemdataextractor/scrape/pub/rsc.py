@@ -15,6 +15,11 @@ from bs4 import UnicodeDammit
 from lxml.etree import fromstring
 from lxml.html import HTMLParser, Element
 import six
+from time import sleep
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from ...text.processors import Substitutor, Discard, Chain, LStrip, RStrip, LAdd
 from ...text.normalize import normalize
@@ -22,7 +27,7 @@ from .. import BLOCK_ELEMENTS
 from ..clean import Cleaner, clean
 from ..entity import Entity, DocumentEntity
 from ..fields import StringField, EntityField, UrlField
-from ..scraper import RssScraper, SearchScraper, UrlScraper
+from ..scraper import RssScraper, SearchScraper, UrlScraper, SeleniumSearchResult
 from ..selector import Selector
 
 
@@ -314,35 +319,77 @@ class RscRssScraper(RssScraper):
     entity = RscRssDocument
 
 
+# Updated by ti250 (17/10/18)
 class RscSearchDocument(Entity):
     """Document information from RSC search results page."""
-    doi = StringField('.title_text_s4_jrnls a::attr("name")', lower=True)
-    title = StringField('.title_text_s4_jrnls a')
-    landing_url = UrlField('.title_text_s4_jrnls a::attr("href")', lower=True)
-    pdf_url = UrlField('a.lnkPDF::attr("href")', lower=True, strip_querystring=True)
-    html_url = UrlField('.search_link_s4_jrnls a::attr("href")', lower=True, strip_querystring=True)
-    journal = StringField('.grey_left_box_text_s4_new a em strong::text')
+    doi = StringField('a::attr("name")', lower=True)
+    title = StringField('.capsule__title')
+    landing_url = UrlField('.capsule__action::attr("href")', lower=True)
+    pdf_url = UrlField('.btn.btn--primary.btn--tiny::attr("href")', lower=True, strip_querystring=True)
+    html_url = UrlField('.btn.btn--tiny::attr("href")', lower=True, strip_querystring=True)
+    journal = StringField('.text--small strong::text')
+    abstract = StringField('.capsule__text')
 
     clean_title = Chain(replace_rsc_img_chars, strip_rsc_html)
 
     process_doi = LAdd('10.1039/')
-    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip)
+    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip,
+                          LStrip('\\n'), RStrip('\\n'), LStrip(' '))
+    process_landing_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org'))
+    process_pdf_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org/'))
+    process_html_url = Chain(normalize, LStrip(':///en/content/articlepdf/'), LAdd('https://pubs.rsc.org/en/content/articlehtml/'))
+    process_abstract = Chain(normalize, LStrip('\\n'), RStrip('\\n'), LStrip(' '))
 
 
+# Updated by ti250 (17/10/18)
 class RscSearchScraper(SearchScraper):
     """Scraper for RSC search results."""
 
     entity = RscSearchDocument
-    root = '.search_grey_box_middle_s4_jrnls'
+    root = '.capsule.capsule--article'
 
-    def perform_search(self, query, page):
+    def __init__(self, max_wait_time=30, driver=None):
+        """
+        :param selenium.webdriver driver: driver from which results will be scraped.
+        :param float max_wait_time: Maximum time spent waiting for the page to load. (seconds)
+        """
+        self.max_wait_time = max_wait_time
+        self.driver = driver
+        super(RscSearchScraper, self).__init__()
+
+    def perform_search(self, query, page=1, driver=None):
+        """Due to RSC not accepting html requests, Selenium is used.
+        By default, the Firefox webdriver is used."""
+        if driver is None:
+            if self.driver is None:
+                driver = webdriver.Firefox()
+            else:
+                driver = self.driver
         log.debug('Processing query: %s' % query)
-        response = self.http.get('http://pubs.rsc.org/en/results', params={'searchtext': query, 'SortBy': 'Relevance', 'PageSize': 100})
-        selector = Selector.from_html(response)
-        sessionkey = selector.css('#SearchTerm::attr("value")').extract()[0]
-        searchdata = {'searchterm': sessionkey, 'resultcount': 100, 'category': 'journal', 'pageno': page}
-        response = self.http.post('http://pubs.rsc.org/en/search/journalresult', data=searchdata)
-        return response
+
+        url = "http://pubs.rsc.org/en/results?searchtext="
+
+        url = url + query
+        driver.get(url)
+
+        # To make sure we don't overload the server
+        sleep(1)
+
+        wait = WebDriverWait(driver, self.max_wait_time)
+
+        # Update HTML so that the "next" button points to the desired page.
+        if page != 1:
+            # To make sure we don't overload the server
+            sleep(1)
+            next_button = wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "a[class^=paging__btn]")))[1]
+            page_string = """document.querySelectorAll("a[class^=paging__btn]")[1].setAttribute("data-pageno", \"""" + str(page) + """\")"""
+            driver.execute_script(page_string)
+            log.debug(driver.page_source.encode('utf-8'))
+            next_button.click()
+
+        # To ensure that we wait until the elements have loaded before scraping the webpage
+        _ = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.capsule.capsule--article')))
+        return SeleniumSearchResult(driver)
 
 
 class RscLandingSupplement(Entity):

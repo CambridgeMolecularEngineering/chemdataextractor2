@@ -98,6 +98,7 @@ class RssScraper(XmlFormat, UrlScraper):
     }
 
 
+#Updated by ti250(17/10/18)
 class SearchScraper(GetRequester, HtmlFormat, BaseScraper):
     """Scraper that takes a search query as input."""
 
@@ -107,7 +108,7 @@ class SearchScraper(GetRequester, HtmlFormat, BaseScraper):
 
     @abstractmethod
     def perform_search(self, query, page):
-        """Override to implement search. Take query input and return a response."""
+        """Override to implement search. Take query input and return a SearchResult."""
         return
 
     def run(self, query, page=1):
@@ -115,15 +116,64 @@ class SearchScraper(GetRequester, HtmlFormat, BaseScraper):
         if not query:
             return
         response = self.perform_search(query, page)
-        selector = self.process_response(response)
+        selector = response.selector
         entities = []
         for root in self.get_roots(selector):
             entity = self.entity(root)
+            log.debug(str(entity.serialize()).encode('utf-8'))
             entity = self.process_entity(entity)
             if entity:
                 entities.append(entity)
         return EntityList(*entities)
 
+
+#Added by ti250(17/10/18)
+class SearchResult(object):
+    """Class to handle results from a search query to websites,
+    regardless of method of scraping used."""
+
+    @property
+    @abstractmethod
+    def selector(self):
+        """
+        Process the result of the search, giving a selector
+
+        :returns: The result of the search
+        :rtype: selector
+        """
+        return
+
+
+class SeleniumSearchResult():
+    """
+    Search results when using Selenium for scraping
+    """
+
+    def __init__(self, driver):
+        """
+        :param selenium.webdriver driver: driver from which results will be scraped.
+        """
+        self.driver = driver
+
+    @property
+    def selector(self):
+        return Selector.from_html_text(self.driver.page_source)
+
+
+class ResponseSearchResult():
+    """
+    Search results when using the requests library for scraping
+    """
+
+    def __init__(self, response):
+        """
+        :param requests.Response response: HTML response for results
+        """
+        self.response = response
+
+    @property
+    def selector(self):
+        return Selector.from_html(self.response)
 
 
 # TODO: Consider removing the necessity to sublass UrlScraper, RssScraper by allowing entity, root to be passed as constructor arguments
