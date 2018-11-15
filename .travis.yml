@@ -24,4 +24,4 @@ install:
   - cde data download
 script:
   - pytest
-  - sphinx-build -b html ./chemdataextractor-development/documentation/ ./chemdataextractor-development/documentation/_build/html
+  - sphinx-build -b html ./documentation/ ./documentation/_build/html/
