@@ -100,13 +100,13 @@ html_theme_options = {
     "page_width": "128ch",
     'github_user': 'CambridgeMolecularEngineering',
     'github_repo': 'chemdataextractor',
-    'logo': 'logo_long.PNG',
+    'logo': 'logo.png',
     'logo_text_align': 'match-parent',
     'logo_name': 'true',
     'github_banner': 'true',
     'github_button': 'true',
     'travis_button': 'true',
-    'touch_icon': 'logo.PNG',
+    'touch_icon': 'logo.png',
     'description': 'Extract chemical information from scientific documents.'
 }
 
