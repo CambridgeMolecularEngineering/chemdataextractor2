@@ -275,8 +275,7 @@ class QuantityParser(BaseParser):
         i = 0
         while i in range(len(powers)):
             if powers[i][1] == '(':
-                returned = self._remove_brackets(powers[i + 1:],
-                                           base_power=powers[i][2])
+                returned = self._remove_brackets(powers[i + 1:], base_power=powers[i][2])
                 current_powers = current_powers + returned[0]
                 i = i + returned[1] + 2
 
