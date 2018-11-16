@@ -209,7 +209,7 @@ class Any(BaseParserElement):
 
 
 class Word(BaseParserElement):
-    """Match token text exactly. Not case-sensitive."""
+    """Match token text exactly. Case-sensitive."""
 
     def __init__(self, match):
         super(Word, self).__init__()
@@ -604,16 +604,7 @@ class Hide(ParseElementEnhance):
         return self
 
 
-
-
-
-
-
-
-
-
 # Abbreviations
-# difference between Word and IWord - one is case sensitive
 W = Word
 I = IWord
 R = Regex
