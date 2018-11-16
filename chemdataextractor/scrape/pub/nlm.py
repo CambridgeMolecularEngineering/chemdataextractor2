@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.nlm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for scraping documents from NLM Journal Archiving and Interchange DTD XML files.
 
 """

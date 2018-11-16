@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.errors
-~~~~~~~~~~~~~~~~~~~~~~~~
-
 Error classes for ChemDataExtractor.
 
 """

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.ir
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 IR spectrum text parser.
 
 """

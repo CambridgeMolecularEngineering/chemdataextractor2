@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.data
-~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for loading and caching data files.
 
 """

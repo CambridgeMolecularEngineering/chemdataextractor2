@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.doc.text
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Text-based document elements.
 
 """
@@ -266,6 +263,7 @@ class Heading(Text):
 
 class Paragraph(Text):
 
+    # order is important
     parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(), TgParser(), ContextParser()]
 
     def _repr_html_(self):

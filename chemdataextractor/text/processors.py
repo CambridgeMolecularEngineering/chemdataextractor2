@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.text.processors
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Text processors.
 
 """
@@ -169,3 +166,5 @@ def unapostrophe(text):
     """Strip apostrophe and 's' from the end of a string."""
     text = re.sub(r'[%s]s?$' % ''.join(APOSTROPHES), '', text)
     return text
+
+

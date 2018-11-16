@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.springer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for scraping documents from Springer, Biomed Central and Chemistry Central XML files.
 
 """

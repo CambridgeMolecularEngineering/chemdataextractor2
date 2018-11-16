@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli.data
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Data and model management interface.
 
 """

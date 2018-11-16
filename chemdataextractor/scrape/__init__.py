@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape
-~~~~~~~~~~~~~~~~~~~~~~~~
-
 Declarative scraping framework for extracting structured data from HTML and XML documents.
 
 """

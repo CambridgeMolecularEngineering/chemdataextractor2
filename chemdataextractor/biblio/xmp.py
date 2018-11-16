@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.biblio.xmp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Parse metadata stored as XMP (Extensible Metadata Platform).
 
 This is commonly embedded within PDF documents, and can be extracted using the PDFMiner framework.

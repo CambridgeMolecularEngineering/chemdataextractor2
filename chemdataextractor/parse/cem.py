@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.cem
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Chemical entity mention parser elements.
 
 """

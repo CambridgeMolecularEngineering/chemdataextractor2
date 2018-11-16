@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp.cem
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Named entity recognition (NER) for Chemical entity mentions (CEM).
 
 """

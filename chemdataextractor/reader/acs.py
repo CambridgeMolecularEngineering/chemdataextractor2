@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.acs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Readers for documents from the ACS.
 
 """

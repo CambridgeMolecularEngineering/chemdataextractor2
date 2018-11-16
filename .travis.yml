@@ -1,7 +1,5 @@
 language: python
 python:
-  - "2.7"
-  - "3.5"
   - "3.6"
 before_install:
   - wget https://github.com/mozilla/geckodriver/releases/download/v0.11.1/geckodriver-v0.11.1-linux64.tar.gz
@@ -22,8 +20,9 @@ install:
   - conda update -q conda
   - conda config --add channels chemdataextractor
   - conda info -a
-  - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION appdirs beautifulsoup4 click cssselect dawg lxml nltk pdfminer.six python-dateutil requests six python-crfsuite pyyaml pytest
+  - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION appdirs beautifulsoup4 click cssselect dawg lxml nltk pdfminer.six python-dateutil requests six python-crfsuite pyyaml pytest sphinx pandoc
   - source activate cde
+  - pip install nbsphinx nbsphinx-link m2r ipython ipykernel
   - python setup.py install
   - cde data download
 before_script:
@@ -32,3 +31,4 @@ before_script:
   - sleep 3
 script:
   - pytest
+  - sphinx-build -b html ./documentation/ ./documentation/_build/html/

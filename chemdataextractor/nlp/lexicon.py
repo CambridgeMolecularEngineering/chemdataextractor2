@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp.lexicon
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Cache features of previously seen words.
 
 """
@@ -45,7 +42,7 @@ class Lexeme(object):
         self.first = first
         #: Three-character suffix
         self.suffix = suffix
-        #: Word shape. Derived by replacing every number with `d', every greek letter with `g', and every latin letter with `X' or `x' for uppercase and lowercase respectively.
+        #: Word shape. Derived by replacing every number with 'd', every greek letter with 'g', and every latin letter with 'X' or 'x' for uppercase and lowercase respectively.
         self.shape = shape
         #: Lexeme length.
         self.length = length
