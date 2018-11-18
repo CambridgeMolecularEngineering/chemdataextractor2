@@ -109,9 +109,13 @@ class QuantityParser(BaseParser):
         :returns: The string expressed as a Unit
         :rtype: chemdataextractor.quantities.Unit
         """
+        # Split string at numbers, /s, and brackets, so we have the units tokenized into the right units for later processing stages.
         split_string = self._split(string)
+        # Find the units by matching strings, e.g. K for Kelvin, m for Meter
         unit_types = self._find_unit_types(split_string)
+        # Find the powers associated with each unit
         powers = self._find_powers(unit_types)
+        # Deal with things like kilo, mega, or milli that modify the magnitude of the units found
         end_unit = self._find_units(powers, strict)
         return end_unit
 
@@ -244,6 +248,7 @@ class QuantityParser(BaseParser):
         powers = []
         i = 0
 
+        # Go through list of found units/substrings and associate a power with each of them. Ignores brackets in the loop, which are handled in _remove_brackets
         while i in range(len(units_list)):
 
             element = units_list[i][1]
@@ -252,6 +257,7 @@ class QuantityParser(BaseParser):
             if element[0] == '/':
                 power = power * -1.0
                 element = re.split('/', element)[1]
+            # Look for strings involving numbers.
             found_power = re.search('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
             if found_power is not None:
                 power = power * float(sum(Fraction(s) for s in found_power.group(0).split()))
@@ -271,20 +277,24 @@ class QuantityParser(BaseParser):
         :returns: A tuple, where the first element is a list containing tuples of the found units and the string split by the units, in the format (units found, string in which this occured, power associated with the unit, string which matched with the unit's definition). The second element of the tuple is just used for _remove_brackets, should be ignored.
         :rtype: tuple(list((chemdataextractor.quantities.Unit, str, str, str)), int)
         """
+        # This function assumes that the brackets match up correctly.
         current_powers = []
         i = 0
         while i in range(len(powers)):
             if powers[i][1] == '(':
+                # Call self with the substrings beyond the opening brackets. base_power is set in case the opening bracket had a division operator before it.
                 returned = self._remove_brackets(powers[i + 1:], base_power=powers[i][2])
                 current_powers = current_powers + returned[0]
                 i = i + returned[1] + 2
 
             elif powers[i][1] == ')':
+                # Go back to the function that called this if there's a closing bracket.
                 corrected = []
                 for current_power in current_powers:
                     corrected.append((current_power[0], current_power[1], current_power[2] * powers[i][2], current_power[3]))
                 return (corrected, i)
             else:
+                # If it's not a bracket, then just append that element
                 current_powers.append((powers[i][0], powers[i][1], powers[i][2] * base_power, powers[i][3]))
                 i += 1
         return (current_powers, i)
@@ -302,13 +312,16 @@ class QuantityParser(BaseParser):
         for power in powers_cleaned:
             original_string = power[1]
             matched = power[3]
+            # Remove the first occurence of the matched string.
             if matched is not None:
                 original_string = re.sub(matched, '', original_string, 1)
             exp = 0.
+            # If there's still a string left, use that to calculate the exponent, e.g. 3 for kilo
             if original_string != '':
                 for exponent in exponents_dict.keys():
                     for result in exponent.scan([[original_string, 'a']]):
                         exp = exponents_dict[exponent]
+            # To handle cases when the units given by parsing don't match with what's expected.
             try:
                 powers[power[0](exponent=exp)] = power[2]
             except TypeError as e:
