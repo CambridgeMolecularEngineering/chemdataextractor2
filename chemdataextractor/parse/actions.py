@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.actions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Actions to perform during parsing.
 
 """
@@ -65,8 +62,10 @@ def fix_whitespace(tokens, start, result):
     """Fix whitespace around hyphens and commas. Can be used to remove whitespace tokenization artefacts."""
     for e in result:
         for child in e.iter():
-            child.text = child.text.replace(' , ', ', ')
-            for hyphen in HYPHENS:
-                child.text = child.text.replace(' %s ' % hyphen, '%s' % hyphen)
-            child.text = re.sub(r'- (.) -', r'-\1-', child.text)
+            # if check added by Juraj, it has to exist
+            if child.text:
+                child.text = child.text.replace(' , ', ', ')
+                for hyphen in HYPHENS:
+                    child.text = child.text.replace(' %s ' % hyphen, '%s' % hyphen)
+                child.text = re.sub(r'- (.) -', r'-\1-', child.text)
     return result

@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp.tag
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tagger implementations. Used for part-of-speech tagging and named entity recognition.
 
 """

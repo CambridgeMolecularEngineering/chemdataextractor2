@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.config
-~~~~~~~~~~~~~~~~~~~~~~~~
-
 Config file reader/writer.
 
 """

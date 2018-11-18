@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.biblio.person
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for parsing people's names from strings into various name components.
 
 """

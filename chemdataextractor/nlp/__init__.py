@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp
-~~~~~~~~~~~~~~~~~~~~~
-
 Chemistry-aware natural language processing framework.
 
 """

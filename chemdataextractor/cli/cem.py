@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli.cem
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Chemical entity mention (CEM) commands.
 
 """

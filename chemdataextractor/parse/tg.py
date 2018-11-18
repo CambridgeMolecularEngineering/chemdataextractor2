@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.tg
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Glass transition temperature parser.
 
 """

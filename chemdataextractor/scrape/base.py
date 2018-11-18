@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Abstract base classes that define the interface for Scrapers, Fields, Crawlers, etc.
 
 """

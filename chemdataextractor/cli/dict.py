@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli.dict
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Commands for building a dictionary-based chemical named entity recognizer.
 
 """

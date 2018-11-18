@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.nlm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Readers for NLM Journal Archiving and Interchange DTD XML files. (i.e. from PubMed Central)
 
 """

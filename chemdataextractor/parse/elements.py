@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.elements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Parser elements.
 
 """
@@ -37,9 +34,7 @@ class ParseException(Exception):
     def __str__(self):
         return ('%s (at token %d)' % (self.msg, self.i))
 
-
 log = logging.getLogger(__name__)
-
 
 XML_SAFE_TAGS = {
     '-LRB-': 'LRB',
@@ -250,7 +245,7 @@ class Any(BaseParserElement):
 
 
 class Word(BaseParserElement):
-    """Match token text exactly."""
+    """Match token text exactly. Case-sensitive."""
 
     def __init__(self, match):
         super(Word, self).__init__()
@@ -383,7 +378,10 @@ class ParseExpression(BaseParserElement):
 
 
 class And(ParseExpression):
-    """Match all in the given order."""
+    """
+    Match all in the given order.
+    Can probably be replaced by the plus operator '+'?
+    """
 
     def __init__(self, exprs):
         super(And, self).__init__(exprs)
@@ -403,7 +401,10 @@ class And(ParseExpression):
 
 
 class Or(ParseExpression):
-    """Match the longest."""
+    """
+    Match the longest.
+    Can probably be replaced by the pipe operator '|'.
+    """
 
     def _parse_tokens(self, tokens, i, actions=True):
         furthest_exception_i = -1
@@ -502,7 +503,15 @@ class ParseElementEnhance(BaseParserElement):
 
 
 class FollowedBy(ParseElementEnhance):
-    """Check ahead if matches."""
+    """
+    Check ahead if matches.
+
+    Example::
+
+        Tn + FollowedBy('Neel temperature')
+        Tn will match only if followed by 'Neel temperature', but 'Neel temperature' will not be part of the output/tree
+
+    """
 
     def _parse_tokens(self, tokens, i, actions=True):
         self.expr.try_parse(tokens, i)
@@ -510,7 +519,15 @@ class FollowedBy(ParseElementEnhance):
 
 
 class Not(ParseElementEnhance):
-    """Check ahead to disallow a match with the given parse expression."""
+    """
+    Check ahead to disallow a match with the given parse expression.
+
+    Example::
+
+        Tn + Not('some_string')
+        Tn will match if not followed by 'some_string'
+
+    """
 
     def _parse_tokens(self, tokens, i, actions=True):
         try:
@@ -557,6 +574,10 @@ class OneOrMore(ParseElementEnhance):
 
 
 class Optional(ParseElementEnhance):
+    """
+    Can be present but doesn't need to be.
+    If present, will be added to the result/tree.
+    """
 
     def __init__(self, expr):
         super(Optional, self).__init__(expr)
@@ -571,7 +592,11 @@ class Optional(ParseElementEnhance):
 
 
 class Group(ParseElementEnhance):
-    """"""
+    """
+    For nested tags; will group argument and give it a label, preserving the original sub-tags.
+    Otherwise, the default behaviour would be to rename the outermost tag in the argument.
+    Usage: Group(some_text)('new_tag) where 'some_text' is a previously tagged expression
+    """
 
     def _parse_tokens(self, tokens, i, actions=True):
         results, i = self.expr.parse(tokens, i, actions)
@@ -602,7 +627,10 @@ class SkipTo(ParseElementEnhance):
 
 
 class Hide(ParseElementEnhance):
-    """Converter for ignoring the results of a parsed expression."""
+    """
+    Converter for ignoring the results of a parsed expression.
+    It wouldn't appear in the generated xml element tree, but it would still be part of the rule.
+    """
 
     def _parse_tokens(self, tokens, i, actions=True):
         results, i = super(Hide, self)._parse_tokens(tokens, i)

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli.tokenize
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tokenizer command line interface.
 
 """

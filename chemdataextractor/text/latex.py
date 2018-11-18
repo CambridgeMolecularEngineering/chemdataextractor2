@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.text.latex
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for converting LaTeX to unicode.
 
 """

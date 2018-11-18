@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli.chemdner
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Command line tools for dealing with CHEMDNER corpus.
 
 """

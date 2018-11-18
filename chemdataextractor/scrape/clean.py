@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.clean
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for cleaning up XML/HTML by removing tags entirely or replacing with their contents.
 
 """

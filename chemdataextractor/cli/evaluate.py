@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli.evaluate
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Commands for running evaluations.
 
 """

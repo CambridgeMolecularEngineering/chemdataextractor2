@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse
-~~~~~~~~~~~~~~~~~~~~~~~
-
 Parse text using rule-based grammars.
 
 """

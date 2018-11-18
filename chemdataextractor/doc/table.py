@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.doc.table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Table document elements.
 
 """

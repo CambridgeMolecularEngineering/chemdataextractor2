@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.cli
-~~~~~~~~~~~~~~~~~~~~~
-
 ChemDataExtractor command line interface.
 
 Once installed, ChemDataExtractor provides a command-line tool that can be used by typing 'cde' in a terminal.

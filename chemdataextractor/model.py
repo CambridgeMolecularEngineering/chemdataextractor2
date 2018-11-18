@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.model
-~~~~~~~~~~~~~~~~~~~~~~~
-
 Data model for extracted information.
 
 """

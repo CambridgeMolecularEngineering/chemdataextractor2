@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.text.normalize
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for normalizing text.
 
 """
