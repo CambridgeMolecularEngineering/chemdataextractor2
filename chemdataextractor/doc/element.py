@@ -111,6 +111,16 @@ class CaptionedElement(BaseElement):
     def cems(self):
         """Return a list of chemical entity mentions for this element."""
         return self.caption.cems
+    
+    @property
+    def definitions(self):
+        """Return a list of all specifier definitions in the caption
+        
+        Returns:
+            list-- The specifier definitions
+        """
+
+        return self.caption.definitions
 
     def serialize(self):
         """Convert Text element to python dictionary."""

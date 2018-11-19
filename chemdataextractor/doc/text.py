@@ -21,6 +21,7 @@ import six
 from ..model import ModelList
 from ..parse.context import ContextParser
 from ..parse.cem import ChemicalLabelParser, CompoundHeadingParser, CompoundParser, chemical_name
+from ..parse.definitions import specifier_definition
 from ..parse.table import CaptionContextParser
 from ..parse.ir import IrParser
 from ..parse.mp import MpParser
@@ -34,8 +35,10 @@ from ..nlp.tag import NoneTagger
 from ..nlp.pos import ChemCrfPosTagger
 from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_tokenize
 from ..text import CONTROL_RE
-from ..utils import memoized_property, python_2_unicode_compatible
+from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
+
+from lxml import etree
 
 
 log = logging.getLogger(__name__)
@@ -103,6 +106,13 @@ class BaseText(BaseElement):
     def tags(self):
         """Return a list of tags."""
         return
+    
+    @abstractproperty
+    def definitions(self):
+        """Return a list of all specifier definitions
+        """
+        return
+
 
     def serialize(self):
         """Convert Text element to python dictionary."""
@@ -211,6 +221,13 @@ class Text(collections.Sequence, BaseText):
     def cems(self):
         """Return a list of part of speech tags for each sentence in this text passage."""
         return [cem for sent in self.sentences for cem in sent.cems]
+    
+    @property
+    def definitions(self):
+        """
+        Return a list of tagged definitions for each sentence in this text passage
+        """
+        return [definition for sent in self.sentences for definition in sent.definitions]
 
     @property
     def tagged_tokens(self):
@@ -296,6 +313,10 @@ class Caption(Text):
 
     def _repr_html_(self):
         return '<caption class="cde-caption">' + self.text + '</caption>'
+    
+    @memoized_property
+    def definitions(self):
+        return [definition for sent in self.sentences for definition in sent.definitions]
 
 
 class Sentence(BaseText):
@@ -487,6 +508,35 @@ class Sentence(BaseText):
                 else:
                     spans.append(split_span)
         return spans
+    
+    @memoized_property
+    def definitions(self):
+        """
+        Return specifier definitions from this sentence
+
+        A definition consists of:
+
+        a) A type -- the tag of the definition phrase 
+        b) A definition -- The quantitity being defined e.g. "Curie Temperature"
+        c) A specifier -- The symbol used to define the quantity e.g. "Tc"
+        d) Start -- The index of the starting point of the definition
+        e) End -- The index of the end point of the definition
+
+        :return: list -- The specifier definitions
+        """
+        defs = []
+        for result in specifier_definition.scan(self.tagged_tokens):
+            print(etree.tostring(result[0]))
+            definition = result[0]
+            start = result[1]
+            end = result[2]
+            new_def = {
+                       'definition': first(definition.xpath('./phrase/text()')),
+                       'specifier': first(definition.xpath('./specifier/text()')),
+                       'start': start,
+                       'end': end}
+            defs.append(new_def)
+        return defs
 
     @memoized_property
     def tags(self):

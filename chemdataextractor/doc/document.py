@@ -353,6 +353,13 @@ class Document(BaseDocument):
     def cems(self):
         """"""
         return list(set([n for el in self.elements for n in el.cems]))
+    
+    @property
+    def definitions(self):
+        """
+        Return a list of all recognised definitions within this Document
+        """
+        return list([defn for el in self.elements for defn in el.definitions])
 
     def serialize(self):
         """Convert Document to python dictionary."""
