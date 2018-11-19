@@ -524,7 +524,6 @@ class Sentence(BaseText):
         """
         defs = []
         for result in specifier_definition.scan(self.tagged_tokens):
-            print(etree.tostring(result[0]))
             definition = result[0]
             start = result[1]
             end = result[2]
