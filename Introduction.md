@@ -453,7 +453,7 @@ To the download the HTML articles we can simply use the [requests](http://docs.p
 
 Each journal / publisher is different, and so you will likely have to write multiple different tools to get papers from multiple sources.
 
-### 6.21 Scraping Specific Publishers
+### 6.2.1 Scraping Specific Publishers
 
 In order to scrape from most publishers, you will need an account and an API key. Once you have these, you may scrape 
 HTML articles and other metadata, within the limits of that specific publisher.
