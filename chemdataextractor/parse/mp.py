@@ -14,7 +14,7 @@ import re
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
-from ..physicalmodels import Compound, MeltingPoint
+from ..model import Compound, MeltingPoint
 from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore

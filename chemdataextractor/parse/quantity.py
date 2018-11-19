@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.quantity
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Parser for finding quantities and units
 
-Taketomo Isazawa (ti250@cam.ac.uk)
+:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
 """
 
 from __future__ import absolute_import
@@ -19,18 +16,23 @@ from abc import abstractproperty
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
-from ..physicalmodels import Compound, MeltingPoint
-from ..units.quantities import DimensionlessUnit
+from ..model import Compound, MeltingPoint
+from ..parse.units.quantity import DimensionlessUnit
 from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 from fractions import Fraction
 
-
-exponents_dict = {R('k', group=0): 3., R('M', group=0): 6., R('G', group=0): 9., R('T', group=0): 12.,
-                  R('m', group=0): -3., R('µ', group=0): -6., R('n', group=0): -9., R('p', group=0): -12.}
-
 log = logging.getLogger(__name__)
+
+exponents_dict = {R('k', group=0): 3., 
+                  R('M', group=0): 6., 
+                  R('G', group=0): 9., 
+                  R('T', group=0): 12.,
+                  R('m', group=0): -3., 
+                  R('µ', group=0): -6., 
+                  R('n', group=0): -9., 
+                  R('p', group=0): -12.}
 
 
 def value(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('units').add_action(merge)):
@@ -67,9 +69,10 @@ class QuantityParser(BaseParser):
             print(end_value) # [150., 160.]
 
         :param str string: A representation of the values as a string
-        :returns: The string expressed as a float or a list of floats depending on whether it was a range.
-        :rtype: float or list(float)
+        :returns: The string expressed as a float or a list of floats if it was a value range.
+        :rtype: list(float)
         """
+        # Remove whitespace
         string = string.replace(" ", "")
         split_by_num = re.split('([\d\.]+(?![\d\.]+))', string)
         values = []
@@ -77,7 +80,6 @@ class QuantityParser(BaseParser):
             if value == '±':
                 center_value = values[-1]
                 float_err = float(split_by_num[index + 1])
-                values = []
                 values.append(center_value - float_err)
                 values.append(center_value + float_err)
                 break
@@ -86,10 +88,6 @@ class QuantityParser(BaseParser):
                 values.append(float_val)
             except ValueError:
                 pass
-        if len(values) == 1:
-            values = values[0]
-        elif len(values) == 0:
-            values = None
         return values
 
     def extract_units(self, string, strict=False):

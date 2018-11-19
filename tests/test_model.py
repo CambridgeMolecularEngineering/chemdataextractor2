@@ -14,7 +14,7 @@ from __future__ import unicode_literals
 import logging
 import unittest
 
-from chemdataextractor.physicalmodels import Compound, MeltingPoint, UvvisSpectrum, UvvisPeak
+from chemdataextractor.model import Compound, MeltingPoint, UvvisSpectrum, UvvisPeak
 
 
 logging.basicConfig(level=logging.DEBUG)

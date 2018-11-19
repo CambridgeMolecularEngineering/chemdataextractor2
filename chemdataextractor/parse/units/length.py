@@ -13,11 +13,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from ..parse.elements import R
 
+from ..elements import R
+from .quantity import QuantityModel, Unit, Dimension
 import logging
-
-from .quantities import QuantityModel, Unit, Dimension
 
 log = logging.getLogger(__name__)
 

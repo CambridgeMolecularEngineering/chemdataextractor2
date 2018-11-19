@@ -16,9 +16,9 @@ from __future__ import unicode_literals
 
 import logging
 
-from .quantities import QuantityModel, Unit, Dimension
-from ..parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
-from ..parse.actions import merge, join
+from .quantity import QuantityModel, Unit, Dimension
+from ..elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
+from ..actions import merge, join
 
 log = logging.getLogger(__name__)
 

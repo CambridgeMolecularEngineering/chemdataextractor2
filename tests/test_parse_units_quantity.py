@@ -17,9 +17,12 @@ import logging
 import unittest
 
 
-from chemdataextractor.units.quantities import Dimensionless, DimensionlessUnit, DimensionlessModel, QuantityModel
-from chemdataextractor.units.times import Second, Minute, Hour, Time, TimeModel
-from chemdataextractor.units.lengths import Meter, Mile, Length, LengthModel
+from chemdataextractor.parse.units.quantity import Dimensionless, DimensionlessUnit, DimensionlessModel, QuantityModel
+from chemdataextractor.parse.units.time import Second, Minute, Hour, Time, TimeModel
+from chemdataextractor.parse.units.length import Meter, Mile, Length, LengthModel
+from chemdataextractor.parse.units.temperature import Temperature, TemperatureModel, Kelvin, Celsius, Fahrenheit
+import numpy as np
+
 
 
 logging.basicConfig(level=logging.DEBUG)

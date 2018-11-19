@@ -15,12 +15,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import unittest
+import numpy as np
 
 
 from chemdataextractor.parse.quantity import QuantityParser
-from chemdataextractor.units.temperatures import Temperature, Celsius, Kelvin
-from chemdataextractor.units.lengths import Length, Meter, Mile
-from chemdataextractor.units.times import Time, Second, Hour
+from chemdataextractor.parse.units.temperature import Temperature, Celsius, Kelvin
+from chemdataextractor.parse.units.length import Length, Meter, Mile
+from chemdataextractor.parse.units.time import Time, Second, Hour
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -42,13 +43,13 @@ class TestUnitClass(unittest.TestCase):
     def test_err_range(self):
         test_string = '1600.4±2.4'
         extracted = self.qp.extract_value(test_string)
-        self.assertLess(abs(extracted[0] - 1598.0), 10**(-6.0))
-        self.assertLess(abs(extracted[1] - 1602.8), 10**(-6.0))
+        expected = [1600.4, 1598, 1602.8]
+        np.testing.assert_almost_equal(expected, extracted)
 
     def test_single_value(self):
         test_string = '500.8'
         extracted = self.qp.extract_value(test_string)
-        self.assertEqual(extracted, 500.8)
+        self.assertEqual(extracted[0], 500.8)
 
     def test_unit_mm(self):
         self.qp.dimensions = Length()**2 / Time()

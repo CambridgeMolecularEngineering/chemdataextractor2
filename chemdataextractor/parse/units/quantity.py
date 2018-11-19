@@ -13,14 +13,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from abc import abstractmethod
+from ...base_model import BaseModel, BaseType, FloatType
 
 import copy
-from abc import abstractmethod
 import logging
-
 import six
 
-from ..model import BaseModel, BaseType, FloatType
+
 
 log = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class OptionalRangeType(BaseType):
 class BaseDimension(BaseModel):
 
     @abstractmethod
-    def __truediv__(self):
+    def __truediv__(self, a):
         pass
 
     @abstractmethod
@@ -100,11 +100,11 @@ class BaseDimension(BaseModel):
         pass
 
     @abstractmethod
-    def __mul__(self):
+    def __mul__(self, a):
         pass
 
     @abstractmethod
-    def __eq__(self):
+    def __eq__(self, a):
         pass
 
     @abstractmethod

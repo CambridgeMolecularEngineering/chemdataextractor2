@@ -22,7 +22,7 @@ from .text import Paragraph, Citation, Footnote, Heading, Title
 from .table import Table
 from .figure import Figure
 from ..errors import ReaderError
-from ..model import ModelList
+from ..base_model import ModelList
 from ..text import get_encoding
 
 

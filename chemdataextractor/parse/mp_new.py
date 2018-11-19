@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.parse.mp_new
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Melting Point parser using the QuantityParser framework
 
 """
@@ -19,8 +16,8 @@ from lxml import etree
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
-from ..physicalmodels import Compound, MeltingPoint
-from ..units.temperatures import Temperature
+from ..model import Compound, MeltingPoint
+from ..parse.units.temperature import Temperature
 from .actions import merge, join
 from .quantity import QuantityParser, value
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore

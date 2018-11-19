@@ -17,9 +17,9 @@ from lxml.builder import E
 
 from .common import delim
 from ..utils import first
-from ..physicalmodels import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition
-from ..physicalmodels import ElectrochemicalPotential, IrSpectrum, IrPeak
-from ..units.temperatures import Temperature
+from ..model import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition
+from ..model import ElectrochemicalPotential, IrSpectrum, IrPeak
+from ..parse.units.temperature import Temperature
 from .quantity import QuantityParser, value
 from .actions import join, merge, fix_whitespace
 from .base import BaseParser
@@ -588,7 +588,7 @@ class MeltingPointHeadingParser(QuantityParser):
         yield c
 
 
-class MeltingPointCellParser(BaseParser):
+class MeltingPointCellParser(QuantityParser):
     """"""
     root = melting_point_cell
     dimensions = Temperature
@@ -631,11 +631,11 @@ class GlassTransitionCellParser(BaseParser):
         for tg in result.xpath('./temp'):
             c.glass_transitions.append(
                 GlassTransition(
-                    value=first(mp.xpath('./value/text()')),
-                    units=first(mp.xpath('./units/text()'))
+                    value=first(tg.xpath('./value/text()')),
+                    units=first(tg.xpath('./units/text()'))
                 )
             )
-        if c.glass_transition:
+        if c.glass_transitions:
             yield c
 
 class ElectrochemicalPotentialHeadingParser(BaseParser):

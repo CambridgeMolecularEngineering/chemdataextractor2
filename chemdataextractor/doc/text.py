@@ -15,7 +15,7 @@ import re
 
 import six
 
-from ..model import ModelList
+from ..base_model import ModelList
 from ..parse.context import ContextParser
 from ..parse.cem import ChemicalLabelParser, CompoundHeadingParser, CompoundParser, chemical_name
 from ..parse.table import CaptionContextParser

@@ -39,3 +39,4 @@ docs/_build/
 
 # PyCharm
 .idea/
+.vscode/settings.json

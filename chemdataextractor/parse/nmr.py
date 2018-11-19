@@ -14,7 +14,7 @@ import logging
 import re
 
 
-from ..physicalmodels import Compound, NmrSpectrum, NmrPeak
+from ..model import Compound, NmrSpectrum, NmrPeak
 from ..utils import first
 from .actions import join, merge, strip_stop, fix_whitespace
 from .base import BaseParser
