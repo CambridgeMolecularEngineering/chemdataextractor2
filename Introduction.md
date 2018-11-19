@@ -453,6 +453,46 @@ To the download the HTML articles we can simply use the [requests](http://docs.p
 
 Each journal / publisher is different, and so you will likely have to write multiple different tools to get papers from multiple sources.
 
+### 6.21 Scraping Specific Publishers
+
+In order to scrape from most publishers, you will need an account and an API key. Once you have these, you may scrape 
+HTML articles and other metadata, within the limits of that specific publisher.
+
+NOTE: Although it may be possible to scrape content from a publisher without an API key, it is very important that you do 
+not attempt to do so without an account and your own key. If you do this, the publishers may prevent us scraping 
+from them in the future.
+
+***Elsevier*** 
+
+First, create an account at <https://dev.elsevier.com/user/login> . Once you've done this, head over to 
+<https://dev.elsevier.com/>, and in the `My API Key` section, select `Create API Key`. You will be asked to give your 
+key a label. This is just a name for your specific API key and can be whatever you wish. A toy example of scraping a 
+DOI and its corresponding HTML using an Elsevier API key is shown below:
+
+```python
+
+import requests
+
+api_key = 'f3ce402d195b94e7c11393e5ea8e25130'
+params = {'APIKey': api_key}
+base_url = 'https://api.elsevier.com/content'
+
+# DOI Retrieval
+search_url = '{}/search/scidir?query='.format(base_url)
+keyword_to_search = 'plasmonics'
+query_url = '{}{}'.format(search_url, keyword_to_search)
+
+doi_request = requests.get(query_url, params=params)
+doi = doi_request.json()['search-results']['entry'][1]['prism:doi']
+
+# Article Retrieval
+article_url = '{}/article/doi/{}'.format(base_url, doi)
+article_request = requests.get(article_url, params=params)
+article = article_request.content
+```
+
+More information can be found at <https://dev.elsevier.com/technical_documentation.html>.
+
 ## 6.3 Document Readers
 
 The document readers present in the ```chemdataextractor.reader``` package are a set of tools for identifying the elements of scientific docucments. The HTML and XML from each publisher is slightly different, meaning we once again need multiple different readers. New users are often confused about the structure of these readers, and so this section attempts to explain their functionality more clearly. 
