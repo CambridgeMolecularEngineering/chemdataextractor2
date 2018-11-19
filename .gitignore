@@ -39,3 +39,7 @@ docs/_build/
 
 # PyCharm
 .idea/
+.pytest_cache/v/cache/lastfailed
+.pytest_cache/v/cache/nodeids
+main.py
+.vscode/settings.json

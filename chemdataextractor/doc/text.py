@@ -514,13 +514,11 @@ class Sentence(BaseText):
         """
         Return specifier definitions from this sentence
 
-        A definition consists of:
-
-        a) A type -- the tag of the definition phrase 
-        b) A definition -- The quantitity being defined e.g. "Curie Temperature"
-        c) A specifier -- The symbol used to define the quantity e.g. "Tc"
-        d) Start -- The index of the starting point of the definition
-        e) End -- The index of the end point of the definition
+        A definition consists of: 
+        a) A definition -- The quantitity being defined e.g. "Curie Temperature"
+        b) A specifier -- The symbol used to define the quantity e.g. "Tc"
+        c) Start -- The index of the starting point of the definition
+        d) End -- The index of the end point of the definition
 
         :return: list -- The specifier definitions
         """
