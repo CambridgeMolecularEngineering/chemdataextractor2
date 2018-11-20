@@ -17,7 +17,7 @@ from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
 from ..model import Compound, MeltingPoint
-from ..parse.units.temperature import Temperature
+from ..parse.units.temperature import Temperature, Kelvin
 from .actions import merge, join
 from .quantity import QuantityParser, value
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
@@ -52,13 +52,17 @@ class MpParser(QuantityParser):
 
     def interpret(self, result, start, end):
         try:
-            units = self.extract_units(first(result.xpath('./mp/units/text()')), strict=True)
+            raw_value = first(result.xpath('./mp/value/text()'))
+            raw_units = first(result.xpath('./mp/units/text()'))
             compound = Compound(
                 melting_points=[
                     MeltingPoint(
-                        value=self.extract_value(first(result.xpath('./mp/value/text()'))),
-                        units=units
-                    )
+                        raw_value=raw_value,
+                        raw_units=raw_units,
+                        value=self.extract_value(raw_value),
+                        error=self.extract_error(raw_value),
+                        units=self.extract_units(raw_units, strict=True)
+                    ).convert_to(Kelvin())
                 ]
             )
         except TypeError as e:

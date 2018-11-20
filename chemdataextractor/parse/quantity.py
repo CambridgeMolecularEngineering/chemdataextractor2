@@ -58,6 +58,30 @@ class QuantityParser(BaseParser):
 
     dimensions = None
 
+    def extract_error(self, string):
+        """Extract the error from a string
+
+        Usage::
+            qp = QuantityParser()
+            test_string = '150±5'
+            end_value = qp.extract_error(test_string)
+            print(end_value) # 5
+        
+        Arguments:
+            string {[type]} -- [description]
+        """
+        string = string.replace(" ", "")
+        split_by_num_and_error = [r for r in re.split('(\d+\.?(?:\d+)?)|(±)', string) if r]
+        error = None
+        for index, value in enumerate(split_by_num_and_error):
+            if value == '±':
+                try:
+                    error = float(split_by_num_and_error[index + 1])
+                except ValueError:
+                    pass
+
+        return error
+
     def extract_value(self, string):
         """
         Takes a string and returns a float or a list representing the string given.
@@ -74,15 +98,10 @@ class QuantityParser(BaseParser):
         """
         # Remove whitespace
         string = string.replace(" ", "")
-        split_by_num = re.split('([\d\.]+(?![\d\.]+))', string)
+        string = string.split("±")[0]
+        split_by_num = [r for r in re.split('(\d+\.?(\d+)?)', string) if r]
         values = []
         for index, value in enumerate(split_by_num):
-            if value == '±':
-                center_value = values[-1]
-                float_err = float(split_by_num[index + 1])
-                values.append(center_value - float_err)
-                values.append(center_value + float_err)
-                break
             try:
                 float_val = float(value)
                 values.append(float_val)

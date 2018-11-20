@@ -1,1 +1,8 @@
-{}
+{
+  "tests/test_extract.py::TestExtract::test_melting_point_heading_salt": true,
+  "tests/test_parse_cem.py::TestParseDocument::test_consecutive_headings2": true,
+  "tests/test_parse_mp.py::TestParseMpCompound::test_mpc1": true,
+  "tests/test_parse_mp.py::TestParseMpCompound::test_mpc2": true,
+  "tests/test_parse_quantity.py::TestUnitClass::test_err_range": true,
+  "tests/test_parse_quantity.py::TestUnitClass::test_to_range": true
+}

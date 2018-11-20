@@ -23,20 +23,10 @@ from ..actions import merge, join
 log = logging.getLogger(__name__)
 
 
-class Temperature(Dimension):
-    pass
-
-
-class TemperatureModel(QuantityModel):
-
-    dimensions = Temperature()
-
-
 class TemperatureUnit(Unit):
 
     def __init__(self, exponent=0.0, powers=None):
         super(TemperatureUnit, self).__init__(Temperature(), exponent, powers)
-
 
 class Kelvin(TemperatureUnit):
 
@@ -45,7 +35,6 @@ class Kelvin(TemperatureUnit):
 
     def convert_from_standard(self, value):
         return value
-
 
 class Celsius(TemperatureUnit):
 
@@ -63,6 +52,15 @@ class Fahrenheit(TemperatureUnit):
 
     def convert_from_standard(self, value):
         return value * (9. / 5.) - 459.67
+
+
+class Temperature(Dimension):
+    pass
+
+
+class TemperatureModel(QuantityModel):
+
+    dimensions = Temperature()
 
 
 units_dict = {R('°?[K]\.?', group=0): Kelvin,

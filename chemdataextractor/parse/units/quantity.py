@@ -14,7 +14,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from abc import abstractmethod
-from ...base_model import BaseModel, BaseType, FloatType
+from ...base_model import BaseModel, BaseType, FloatType, StringType
 
 import copy
 import logging
@@ -279,8 +279,11 @@ class QuantityModel(BaseModel):
     instead of BaseQuantityModel. (This setup is as we otherwise wouldn't be able
     to make a list with QuantityModel-type objects as keys)
     """
+    raw_value = StringType()
+    raw_units = StringType()
     value = OptionalRangeType(FloatType())
     units = UnitType()
+    error = FloatType()
     dimensions = None
 
     """
