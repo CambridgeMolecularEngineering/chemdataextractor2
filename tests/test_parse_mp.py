@@ -223,7 +223,7 @@ class TestParseMpCompound(unittest.TestCase):
         s = '4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid (Compound 67): mp 163-164° C.'
         expected = [
             {'labels': [u'67'], 'names': [u'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']},
-            {'labels': ['67'], 'melting_points': [{'units': u'Celsius^(1.0)', 'value': [163.0, 164.0]}], 'names': ['4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']}
+            {'labels': ['67'], 'melting_points': [{'raw_value': '163-164', 'raw_units': '°C', 'units': u'Kelvin^(1.0)','value': [436.15, 437.15]}], 'names': ['4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']}
         ]
         self.do_parse(s, expected)
 
@@ -231,7 +231,7 @@ class TestParseMpCompound(unittest.TestCase):
         s = '3-Bromo-2,6-dichloroaniline: mp 71-72° C.'
         expected = [
             {'names': [u'3-Bromo-2,6-dichloroaniline']},
-            {'melting_points': [{'units': 'Celsius^(1.0)', 'value': [71.0, 72.0]}], 'names': ['3-Bromo-2,6-dichloroaniline']}
+            {'melting_points': [{'raw_value': '71-72', 'raw_units': '°C', 'units': 'Kelvin^(1.0)', 'value': [344.15, 345.15]}], 'names': ['3-Bromo-2,6-dichloroaniline']}
         ]
         self.do_parse(s, expected)
 

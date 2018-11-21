@@ -20,7 +20,7 @@ from ..utils import first
 from ..model import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition
 from ..model import ElectrochemicalPotential, IrSpectrum, IrPeak
 from ..parse.units.temperature import Temperature
-from .quantity import QuantityParser, value
+from .quantity import QuantityParser, value_element
 from .actions import join, merge, fix_whitespace
 from .base import BaseParser
 from .cem import chemical_label, label_before_name, chemical_name, chemical_label_phrase, solvent_name, lenient_chemical_label

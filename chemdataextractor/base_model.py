@@ -85,6 +85,7 @@ class FloatType(BaseType):
         """Convert value to a float."""
         if value is not None:
             return float(value)
+
         return None
 
 

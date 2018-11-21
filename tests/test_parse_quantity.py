@@ -37,14 +37,16 @@ class TestUnitClass(unittest.TestCase):
     def test_to_range(self):
         test_string = '1500.3 to 1600.2'
         extracted = self.qp.extract_value(test_string)
-        self.assertLess(abs(extracted[0] - 1500.3), 10**(-6.0))
-        self.assertLess(abs(extracted[1] - 1600.2), 10**(-6.0))
+        self.assertAlmostEqual(extracted[0], 1500.3)
+        self.assertAlmostEqual(extracted[1], 1600.2)
 
     def test_err_range(self):
-        test_string = '1600.4±2.4'
-        extracted = self.qp.extract_value(test_string)
-        expected = [1600.4, 1598, 1602.8]
-        np.testing.assert_almost_equal(expected, extracted)
+        test_string = '1600.4± 2.4'
+        extracted_value = self.qp.extract_value(test_string)
+        extracted_error = self.qp.extract_error(test_string)
+        expected_value, expected_error = 1600.4, 2.4
+        self.assertAlmostEqual(extracted_value[0], expected_value)
+        self.assertAlmostEqual(extracted_error, expected_error)
 
     def test_single_value(self):
         test_string = '500.8'

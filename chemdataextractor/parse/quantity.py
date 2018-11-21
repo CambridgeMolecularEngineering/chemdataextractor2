@@ -22,6 +22,7 @@ from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 from fractions import Fraction
+from ..base_model import ListType
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ exponents_dict = {R('k', group=0): 3.,
                   R('p', group=0): -12.}
 
 
-def value(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('units').add_action(merge)):
+def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('units').add_action(merge)):
     """
     Returns an Element for values with given units. By default, uses tags to guess that a unit exists.
 
@@ -99,7 +100,7 @@ class QuantityParser(BaseParser):
         # Remove whitespace
         string = string.replace(" ", "")
         string = string.split("±")[0]
-        split_by_num = [r for r in re.split('(\d+\.?(\d+)?)', string) if r]
+        split_by_num = [r for r in re.split('(\d+\.?(?:\d+)?)', string) if r]
         values = []
         for index, value in enumerate(split_by_num):
             try:
@@ -107,6 +108,7 @@ class QuantityParser(BaseParser):
                 values.append(float_val)
             except ValueError:
                 pass
+
         return values
 
     def extract_units(self, string, strict=False):

@@ -19,7 +19,7 @@ from ..utils import first
 from ..model import Compound, MeltingPoint
 from ..parse.units.temperature import Temperature, Kelvin
 from .actions import merge, join
-from .quantity import QuantityParser, value
+from .quantity import QuantityParser, value_element
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ delim = R('^[:;\.,]$')
 # TODO: Consider allowing degree symbol to be optional. The prefix should be restrictive enough to stop false positives.
 units = ((W('°') + Optional(R('^[CFK]\.?$'))) | W('K\.?'))('units').add_action(merge)
 
-mp = (prefix + Optional(delim).hide() + value(units))('mp')
+mp = (prefix + Optional(delim).hide() + value_element(units))('mp')
 
 bracket_any = lbrct + OneOrMore(Not(mp) + Not(rbrct) + Any()) + rbrct
 
@@ -54,6 +54,7 @@ class MpParser(QuantityParser):
         try:
             raw_value = first(result.xpath('./mp/value/text()'))
             raw_units = first(result.xpath('./mp/units/text()'))
+            print(raw_value, raw_units)
             compound = Compound(
                 melting_points=[
                     MeltingPoint(
@@ -65,6 +66,8 @@ class MpParser(QuantityParser):
                     ).convert_to(Kelvin())
                 ]
             )
+
+            print(etree.tostring(result))
         except TypeError as e:
             log.debug(e)
             compound = Compound()
@@ -72,4 +75,5 @@ class MpParser(QuantityParser):
         if cem_el is not None:
             compound.names = cem_el.xpath('./name/text()')
             compound.labels = cem_el.xpath('./label/text()')
+
         yield compound

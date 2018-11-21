@@ -14,7 +14,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from abc import abstractmethod
-from ...base_model import BaseModel, BaseType, FloatType, StringType
+from ...base_model import BaseModel, BaseType, FloatType, StringType, ListType
 
 import copy
 import logging
@@ -281,7 +281,7 @@ class QuantityModel(BaseModel):
     """
     raw_value = StringType()
     raw_units = StringType()
-    value = OptionalRangeType(FloatType())
+    value = ListType(FloatType())
     units = UnitType()
     error = FloatType()
     dimensions = None
@@ -374,10 +374,18 @@ class QuantityModel(BaseModel):
         :rtype: float
         """
         if self.units:
-            return self.convert(self.units, unit)
-        raise AttributeError("Unit to convert from not set")
+            converted_values = self.convert_value(self.units, unit)
+            self.value = [v for v in converted_values]
+            self.units = unit
+            if self.error:
+                converted_error = self.convert_error(self.units, unit)
+                self.error = converted_error
 
-    def convert(self, from_unit, to_unit):
+
+        return self
+        #raise AttributeError("Unit to convert from not set")
+
+    def convert_value(self, from_unit, to_unit):
         """
         Convert between the given units.
         If no units have been set for this model, assumes that it's in standard units.
@@ -402,6 +410,11 @@ class QuantityModel(BaseModel):
             raise AttributeError("Unit to convert from not set")
         else:
             raise AttributeError("Value for model not set")
+
+    def convet_error(self, from_unit, to_unit):
+        """
+        Converts error between given units"""
+
 
     def __str__(self):
         string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.units.__str__()
