@@ -56,10 +56,10 @@ class Second(TimeUnit):
 
 class Hour(TimeUnit):
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         return value * 60 * 60
 
-    def convert_from_standard(self, value):
+    def convert_value_from_standard(self, value):
         return value / (60.0**2)
 
     def convert_error_to_standard(self, error):
