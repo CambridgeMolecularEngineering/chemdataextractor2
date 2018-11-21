@@ -53,21 +53,37 @@ class MetaUnit(type):
     def __new__(cls, name, bases, attrs):
         instance = type.__new__(cls, name, bases, attrs)
 
-        if hasattr(instance, 'convert_to_standard'):
-            sub_convert_to_standard = getattr(instance, 'convert_to_standard')
+        if hasattr(instance, 'convert_value_to_standard'):
+            sub_convert_to_standard = getattr(instance, 'convert_value_to_standard')
 
             def new_convert_to_standard(self, value):
                 val = value * 10**self.exponent
                 return sub_convert_to_standard(self, val)
-            setattr(instance, 'convert_to_standard', new_convert_to_standard)
+            setattr(instance, 'convert_value_to_standard', new_convert_to_standard)
 
-        if hasattr(instance, 'convert_from_standard'):
-            sub_convert_from_standard = getattr(instance, 'convert_from_standard')
+        if hasattr(instance, 'convert_value_from_standard'):
+            sub_convert_from_standard = getattr(instance, 'convert_value_from_standard')
 
             def new_convert_from_standard(self, value):
                 val = value * 10**(-1 * self.exponent)
                 return sub_convert_from_standard(self, val)
-            setattr(instance, 'convert_from_standard', new_convert_from_standard)
+            setattr(instance, 'convert_value_from_standard', new_convert_from_standard)
+
+        if hasattr(instance, 'convert_error_to_standard'):
+            sub_convert_err_to_standard = getattr(instance, 'convert_error_to_standard')
+
+            def new_convert_err_to_standard(self, value):
+                val = value * 10**self.exponent
+                return sub_convert_err_to_standard(self, val)
+            setattr(instance, 'convert_error_to_standard', new_convert_err_to_standard)
+
+        if hasattr(instance, 'convert_error_from_standard'):
+            sub_convert_err_from_standard = getattr(instance, 'convert_error_from_standard')
+
+            def new_convert_err_from_standard(self, value):
+                val = value * 10**(-1 * self.exponent)
+                return sub_convert_err_from_standard(self, val)
+            setattr(instance, 'convert_error_from_standard', new_convert_err_from_standard)
 
         return instance
 
@@ -135,7 +151,6 @@ class Unit(object):
 
         :param float value: The value to convert to standard units
         """
-
         for unit, power in six.iteritems(self.powers):
             value = unit.convert_value_to_standard(value**(1 / power))**power
         return value
