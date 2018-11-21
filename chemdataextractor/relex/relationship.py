@@ -35,23 +35,23 @@ class ChemicalRelationship(object):
         # Generate all possible valid candidate relationships
         # i.e. every combination of entities that contains at least one of each
         
-            #print(compound, value, units, specifier)
-            if compounds and specifiers and values and units:
-                all_entities = compounds + specifiers + values + units
-                combs = [m for r in range(4, len(all_entities) + 1)
-                        for m in combinations(all_entities, r)]
+            # #print(compound, value, units, specifier)
+            # if compounds and specifiers and values and units:
+            #     all_entities = compounds + specifiers + values + units
+            #     combs = [m for r in range(4, len(all_entities) + 1)
+            #             for m in combinations(all_entities, r)]
                 
-                i = 0
-                print(s)
-                candidates = {}
-                for c in combs:
-                    if not any(i in compounds for i in c):
-                        continue
-                    if not any(i in specifiers for i in c):
-                        continue
-                    if not any(i in values for i in c):
-                        continue
-                    if not any(i in units for i in c):
-                        continue
+            #     i = 0
+            #     print(s)
+            #     candidates = {}
+            #     for c in combs:
+            #         if not any(i in compounds for i in c):
+            #             continue
+            #         if not any(i in specifiers for i in c):
+            #             continue
+            #         if not any(i in values for i in c):
+            #             continue
+            #         if not any(i in units for i in c):
+            #             continue
 
 
