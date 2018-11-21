@@ -26,7 +26,7 @@ from ..base_model import ListType
 
 log = logging.getLogger(__name__)
 
-exponents_dict = {R('k', group=0): 3.,
+magnitudes_dict = {R('k', group=0): 3.,
                   R('M', group=0): 6.,
                   R('G', group=0): 9.,
                   R('T', group=0): 12.,
@@ -225,7 +225,7 @@ class QuantityParser(BaseParser):
                 most_recent_key = ''
                 prev_key = ''
                 current_string = ''
-                # Iterate through the substrings to find the occurences of the units. prev_key is used to deal with cases like mm, where if you have two occurences of the same symbol, it's likely that the first letter was a modifier, hopefully an exponent, on the first.
+                # Iterate through the substrings to find the occurences of the units. prev_key is used to deal with cases like mm, where if you have two occurences of the same symbol, it's likely that the first letter was a modifier, hopefully an magnitude, on the first.
                 for index, string in enumerate(split):
                     if string in found_units.keys():
                         if most_recent_unit is not None:
@@ -335,14 +335,14 @@ class QuantityParser(BaseParser):
             if matched is not None:
                 original_string = re.sub(matched, '', original_string, 1)
             exp = 0.
-            # If there's still a string left, use that to calculate the exponent, e.g. 3 for kilo
+            # If there's still a string left, use that to calculate the magnitude, e.g. 3 for kilo
             if original_string != '':
-                for exponent in exponents_dict.keys():
-                    for result in exponent.scan([[original_string, 'a']]):
-                        exp = exponents_dict[exponent]
+                for magnitude in magnitudes_dict.keys():
+                    for result in magnitude.scan([[original_string, 'a']]):
+                        exp = magnitudes_dict[magnitude]
             # To handle cases when the units given by parsing don't match with what's expected.
             try:
-                powers[power[0](exponent=exp)] = power[2]
+                powers[power[0](magnitude=exp)] = power[2]
             except TypeError as e:
                 log.debug(e)
                 powers = {}

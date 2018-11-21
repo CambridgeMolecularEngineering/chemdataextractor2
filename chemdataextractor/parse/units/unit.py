@@ -46,7 +46,7 @@ class UnitType(BaseType):
 
 class MetaUnit(type):
     """
-    Metaclass to ensure that all subclasses of Unit take the exponent into account
+    Metaclass to ensure that all subclasses of Unit take the magnitude into account
     when converting to standard units.
     """
 
@@ -57,7 +57,7 @@ class MetaUnit(type):
             sub_convert_to_standard = getattr(instance, 'convert_value_to_standard')
 
             def new_convert_to_standard(self, value):
-                val = value * 10**self.exponent
+                val = value * 10**self.magnitude
                 return sub_convert_to_standard(self, val)
             setattr(instance, 'convert_value_to_standard', new_convert_to_standard)
 
@@ -65,7 +65,7 @@ class MetaUnit(type):
             sub_convert_from_standard = getattr(instance, 'convert_value_from_standard')
 
             def new_convert_from_standard(self, value):
-                val = value * 10**(-1 * self.exponent)
+                val = value * 10**(-1 * self.magnitude)
                 return sub_convert_from_standard(self, val)
             setattr(instance, 'convert_value_from_standard', new_convert_from_standard)
 
@@ -73,7 +73,7 @@ class MetaUnit(type):
             sub_convert_err_to_standard = getattr(instance, 'convert_error_to_standard')
 
             def new_convert_err_to_standard(self, value):
-                val = value * 10**self.exponent
+                val = value * 10**self.magnitude
                 return sub_convert_err_to_standard(self, val)
             setattr(instance, 'convert_error_to_standard', new_convert_err_to_standard)
 
@@ -81,7 +81,7 @@ class MetaUnit(type):
             sub_convert_err_from_standard = getattr(instance, 'convert_error_from_standard')
 
             def new_convert_err_from_standard(self, value):
-                val = value * 10**(-1 * self.exponent)
+                val = value * 10**(-1 * self.magnitude)
                 return sub_convert_err_from_standard(self, val)
             setattr(instance, 'convert_error_from_standard', new_convert_err_from_standard)
 
@@ -104,7 +104,7 @@ class Unit(object):
 
     class SpeedUnit(Unit):
 
-        def__init__(self, exponent=1.0):
+        def__init__(self, magnitude=1.0):
             super(SpeedUnit, self).__init__(Length()/Time(),
                                             powers={Meter():1.0, Second():-1.0} )
 
@@ -125,23 +125,23 @@ class Unit(object):
         """
         new_unit = type(str(with_units), (cls, ), {})
 
-        def new_initializer(self, exponent=with_units.exponent):
-            Unit.__init__(with_units.dimensions, exponent, powers=with_units.powers)
+        def new_initializer(self, magnitude=with_units.magnitude):
+            Unit.__init__(with_units.dimensions, magnitude, powers=with_units.powers)
 
         new_unit.__init__ = new_initializer
         return new_unit
 
-    def __init__(self, dimensions, exponent=0.0, powers=None):
+    def __init__(self, dimensions, magnitude=0.0, powers=None):
         """
         Creates a unit object. Subclass this to create concrete units. For examples,
         see lenghts.py and times.py
 
         :param Dimension dimensions: The dimensions this unit is for, e.g. Temperature
-        :param float exponent: The exponent of the unit. e.g. km would be meters with an exponent of 3
+        :param float magnitude: The magnitude of the unit. e.g. km would be meters with an magnitude of 3
         :param Dictionary{Unit : float} powers: For representing any more complicated units, e.g. m/s may have this parameter set to {Meter():1.0, Second():-1.0}
         """
         self.dimensions = dimensions
-        self.exponent = exponent
+        self.magnitude = magnitude
         self.powers = powers
 
     def convert_value_to_standard(self, value):
@@ -195,7 +195,7 @@ class Unit(object):
 
     """
     Operators are implemented for the easy creation of complicated units out of
-    simpler, fundamental units. This means that every combination of exponents
+    simpler, fundamental units. This means that every combination of magnitudes
     and units need not be accounted for.
     """
 
@@ -208,7 +208,7 @@ class Unit(object):
 
         # Handle dimensionless units so we don't get things like dimensionless units squared.
         if isinstance(self, DimensionlessUnit) or other == 0:
-            new_unit = DimensionlessUnit(exponent=self.exponent * other)
+            new_unit = DimensionlessUnit(magnitude=self.magnitude * other)
             return new_unit
 
         powers = {}
@@ -217,38 +217,38 @@ class Unit(object):
                 powers[key] = self.powers[key] * other
         else:
             new_key = copy.deepcopy(self)
-            new_key.exponent = 0.0
+            new_key.magnitude = 0.0
             powers[new_key] = other
-        return Unit(self.dimensions**other, powers=powers, exponent=self.exponent * other)
+        return Unit(self.dimensions**other, powers=powers, magnitude=self.magnitude * other)
 
     def __mul__(self, other):
 
         dimensions = self.dimensions * other.dimensions
         powers = {}
         # normalised_values is created as searching for keys won't always work
-        # when the different units have different exponents, even though
+        # when the different units have different magnitudes, even though
         # they are essentially the same unit and they should be unified.
         normalised_values = {}
-        exponent = self.exponent + other.exponent
+        magnitude = self.magnitude + other.magnitude
 
         if self.powers:
             for key, value in six.iteritems(self.powers):
                 powers[key] = self.powers[key]
                 normalised_key = copy.deepcopy(key)
-                normalised_key.exponent = 0.0
-                normalised_values[normalised_key] = key.exponent
+                normalised_key.magnitude = 0.0
+                normalised_values[normalised_key] = key.magnitude
 
         else:
             if not isinstance(self, DimensionlessUnit):
                 new_key = copy.deepcopy(self)
-                new_key.exponent = 0.0
+                new_key.magnitude = 0.0
                 powers[new_key] = 1.0
-                normalised_values[new_key] = self.exponent
+                normalised_values[new_key] = self.magnitude
 
         if other.powers:
             for key, value in six.iteritems(other.powers):
                 normalised_key = copy.deepcopy(key)
-                normalised_key.exponent = 0.0
+                normalised_key.magnitude = 0.0
                 if normalised_key in normalised_values.keys():
                     powers[key] += value
                     if powers[key] == 0:
@@ -259,7 +259,7 @@ class Unit(object):
         else:
             if not isinstance(other, DimensionlessUnit):
                 normalised_other = copy.deepcopy(other)
-                normalised_other.exponent = 0.0
+                normalised_other.magnitude = 0.0
                 if normalised_other in normalised_values:
                     powers[normalised_other] += 1.0
                     if powers[normalised_other] == 0:
@@ -268,9 +268,9 @@ class Unit(object):
                     powers[normalised_other] = 1.0
         # powers.pop(DimensionlessUnit(), None)
         if len(powers) == 0:
-            return DimensionlessUnit(exponent=exponent)
+            return DimensionlessUnit(magnitude=magnitude)
 
-        return Unit(dimensions=dimensions, powers=powers, exponent=exponent)
+        return Unit(dimensions=dimensions, powers=powers, magnitude=magnitude)
 
     # eq and hash implemented so Units can be used as keys in dictionaries
 
@@ -279,7 +279,7 @@ class Unit(object):
             return False
         if self.powers:
             if other.powers:
-                if self.powers == other.powers and self.exponent == other.exponent:
+                if self.powers == other.powers and self.magnitude == other.magnitude:
                     return True
             else:
                 if self.powers == (other**1.0).powers:
@@ -288,21 +288,21 @@ class Unit(object):
             if other.powers == (self**1.0).dimensions:
                 return True
         else:
-            if type(self) == type(other) and self.exponent == other.exponent and self.dimensions == other.dimensions:
+            if type(self) == type(other) and self.magnitude == other.magnitude and self.dimensions == other.dimensions:
                 return True
         return False
 
     def __hash__(self):
         string = str(self.__class__.__name__)
         string += str(self.dimensions)
-        string += str(float(self.exponent))
+        string += str(float(self.magnitude))
         string += str(self.powers)
         return string.__hash__()
 
     def __str__(self):
         string = ''
-        if self.exponent != 0:
-            string += '(10^' + str(self.exponent) + ') * '
+        if self.magnitude != 0:
+            string += '(10^' + str(self.magnitude) + ') * '
         if self.powers is not None:
             for key, value in six.iteritems(self.powers):
                 string += (type(key).__name__ + '^(' + str(value) + ')  ')
@@ -315,9 +315,9 @@ class Unit(object):
 class DimensionlessUnit(Unit):
     """Special case to handle dimensionless quantities."""
 
-    def __init__(self, exponent = 0.0):
+    def __init__(self, magnitude = 0.0):
         self.dimensions = Dimensionless()
-        self.exponent = exponent
+        self.magnitude = magnitude
         self.powers = None
 
     def convert_to_standard(self, value):

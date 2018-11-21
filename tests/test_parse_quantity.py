@@ -57,7 +57,7 @@ class TestUnitClass(unittest.TestCase):
         self.qp.dimensions = Length()**2 / Time()
         test_string = 'mm2/s'
         extracted = self.qp.extract_units(test_string, strict=True)
-        expected = (Meter(exponent=-3.0) ** 2.) / Second()
+        expected = (Meter(magnitude=-3.0) ** 2.) / Second()
         log.debug(extracted, expected)
         self.assertEqual(extracted, expected)
 
@@ -65,7 +65,7 @@ class TestUnitClass(unittest.TestCase):
         self.qp.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
         test_string = '(km/s)1/2Kh2'
         extracted = self.qp.extract_units(test_string, strict=True)
-        expected = ((Meter(exponent=3.0) / Second()) ** 0.5) * (Kelvin() * Hour()**2)
+        expected = ((Meter(magnitude=3.0) / Second()) ** 0.5) * (Kelvin() * Hour()**2)
         log.debug(extracted, expected)
         self.assertEqual(extracted, expected)
 
@@ -73,6 +73,6 @@ class TestUnitClass(unittest.TestCase):
         self.qp.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
         test_string = 'Kh2/(km/s)-1/2'
         extracted = self.qp.extract_units(test_string, strict=True)
-        expected = ((Meter(exponent=3.0) / Second()) ** 0.5) * (Kelvin() * Hour()**2)
+        expected = ((Meter(magnitude=3.0) / Second()) ** 0.5) * (Kelvin() * Hour()**2)
         log.debug(extracted, expected)
         self.assertEqual(extracted, expected)

@@ -41,21 +41,21 @@ class SpeedModel(QuantityModel):
 class TestUnitClass(unittest.TestCase):
 
     def test_division(self):
-        speed = Meter(exponent=1.0) / Second(exponent=1.0)
+        speed = Meter(magnitude=1.0) / Second(magnitude=1.0)
         self.assertEqual(speed.dimensions, Length() / Time())
-        self.assertEqual(speed.exponent, 0.0)
+        self.assertEqual(speed.magnitude, 0.0)
         self.assertEqual(speed.powers, {Meter(): 1.0, Second(): -1.0})
 
     def test_pow(self):
-        meters_cubed = Meter(exponent=2.0) ** 3.0
+        meters_cubed = Meter(magnitude=2.0) ** 3.0
         self.assertEqual(meters_cubed.dimensions, Length()**3.0)
-        self.assertEqual(meters_cubed.exponent, 6.0)
+        self.assertEqual(meters_cubed.magnitude, 6.0)
         self.assertEqual(meters_cubed.powers, {Meter(): 3.0})
 
     def test_mul(self):
-        meterseconds = Meter(exponent=1.0) * Second(exponent=2.0)
+        meterseconds = Meter(magnitude=1.0) * Second(magnitude=2.0)
         self.assertEqual(meterseconds.dimensions, Length() * Time())
-        self.assertEqual(meterseconds.exponent, 3.0)
+        self.assertEqual(meterseconds.magnitude, 3.0)
         self.assertEqual(meterseconds.powers, {Meter(): 1.0, Second(): 1.0})
 
     def test_convert_value_to_standard_temp(self):
@@ -121,19 +121,19 @@ class TestQuantity(unittest.TestCase):
     def test_division(self):
         distance = LengthModel()
         distance.value = [60.0]
-        distance.units = Meter(exponent=3.0)
+        distance.units = Meter(magnitude=3.0)
         time = TimeModel()
         time.value = [60.0]
         time.units = Minute()
         speed = distance / time
         self.assertEqual(speed.value, [1.])
-        self.assertEqual(speed.units, Meter(exponent=3.0) / Minute())
+        self.assertEqual(speed.units, Meter(magnitude=3.0) / Minute())
         self.assertEqual(speed.dimensions, Length() / Time())
 
     def test_pow(self):
         length = LengthModel()
         length.value = [10.0]
-        length.units = Meter(exponent=-2.0)
+        length.units = Meter(magnitude=-2.0)
         volume = length**3.0
         self.assertEqual(volume.units, Meter(-2.0)**3.0)
         self.assertEqual(volume.dimensions, Length()**3.0)
@@ -142,43 +142,43 @@ class TestQuantity(unittest.TestCase):
     def test_mul(self):
         speed = SpeedModel()
         speed.value = [100.0]
-        speed.units = Meter(exponent=3.0) / Hour()
+        speed.units = Meter(magnitude=3.0) / Hour()
         time = TimeModel()
         time.value = [3.0]
         time.units = Hour()
         distance = speed * time
         self.assertEqual(distance.value, [300.0])
-        self.assertEqual(distance.units, (Meter(exponent=3.0))**1.0)
+        self.assertEqual(distance.units, (Meter(magnitude=3.0))**1.0)
         self.assertEqual(distance.dimensions, Length())
 
     def test_mul_range_val(self):
         speed = SpeedModel()
         speed.value = [100.0, 200.0]
-        speed.units = Meter(exponent=3.0) / Hour()
+        speed.units = Meter(magnitude=3.0) / Hour()
         time = TimeModel()
         time.value = [3.0]
         time.units = Hour()
         distance = speed * time
         self.assertEqual(distance.value, [300.0, 600.0])
-        self.assertEqual(distance.units, (Meter(exponent=3.0))**1.0)
+        self.assertEqual(distance.units, (Meter(magnitude=3.0))**1.0)
         self.assertEqual(distance.dimensions, Length())
 
     def test_mul_range_range(self):
         speed = SpeedModel()
         speed.value = [100.0, 200.0]
-        speed.units = Meter(exponent=3.0) / Hour()
+        speed.units = Meter(magnitude=3.0) / Hour()
         time = TimeModel()
         time.value = [3.0, 9.0]
         time.units = Hour()
         distance = speed * time
         self.assertEqual(distance.value, [300.0, 1800.0])
-        self.assertEqual(distance.units, (Meter(exponent=3.0))**1.0)
+        self.assertEqual(distance.units, (Meter(magnitude=3.0))**1.0)
         self.assertEqual(distance.dimensions, Length())
 
     def test_convert(self):
         speed = SpeedModel()
         speed.value = [100.0]
-        speed.units = Meter(exponent=3.0) / Hour()
+        speed.units = Meter(magnitude=3.0) / Hour()
         print(speed.units)
         for unit, power in six.iteritems(speed.units.powers):
             print(unit, power)

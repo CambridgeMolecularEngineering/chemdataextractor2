@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 
 class TemperatureUnit(Unit):
 
-    def __init__(self, exponent=0.0, powers=None):
-        super(TemperatureUnit, self).__init__(Temperature(), exponent, powers)
+    def __init__(self, magnitude=0.0, powers=None):
+        super(TemperatureUnit, self).__init__(Temperature(), magnitude, powers)
 
 class Kelvin(TemperatureUnit):
 

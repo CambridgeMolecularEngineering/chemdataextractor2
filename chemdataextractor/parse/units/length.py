@@ -34,8 +34,8 @@ class LengthModel(QuantityModel):
 
 class LengthUnit(Unit):
 
-    def __init__(self, exponent=0.0, powers=None):
-        super(LengthUnit, self).__init__(Length(), exponent, powers)
+    def __init__(self, magnitude=0.0, powers=None):
+        super(LengthUnit, self).__init__(Length(), magnitude, powers)
 
 
 class Meter(LengthUnit):
