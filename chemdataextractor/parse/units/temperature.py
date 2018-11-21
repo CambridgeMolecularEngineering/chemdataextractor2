@@ -30,10 +30,10 @@ class TemperatureUnit(Unit):
 
 class Kelvin(TemperatureUnit):
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         return value
 
-    def convert_from_standard(self, value):
+    def convert_value_from_standard(self, value):
         return value
 
     def convert_error_to_standard(self, error):
@@ -57,14 +57,19 @@ class Celsius(TemperatureUnit):
         return error
 
 
-
 class Fahrenheit(TemperatureUnit):
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         return (value + 459.67) * (5. / 9.)
 
-    def convert_from_standard(self, value):
+    def convert_value_from_standard(self, value):
         return value * (9. / 5.) - 459.67
+
+    def convert_error_to_standard(self, error):
+        return error * (5. / 9.)
+
+    def convert_error_from_standard(self, error):
+        return error * (9. / 5.)
 
 
 class Temperature(Dimension):

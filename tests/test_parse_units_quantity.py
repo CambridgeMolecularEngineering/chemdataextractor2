@@ -17,7 +17,12 @@ import logging
 import unittest
 
 
-from chemdataextractor.parse.units.quantity import Dimensionless, DimensionlessUnit, DimensionlessModel, QuantityModel
+#from chemdataextractor.parse.units.quantity import Dimensionless, DimensionlessUnit, DimensionlessModel, QuantityModel
+from chemdataextractor.parse.units.quantity_model import QuantityModel, DimensionlessModel
+from chemdataextractor.parse.units.dimensions import Dimensionless
+from chemdataextractor.parse.units.unit import DimensionlessUnit
+
+
 from chemdataextractor.parse.units.time import Second, Minute, Hour, Time, TimeModel
 from chemdataextractor.parse.units.length import Meter, Mile, Length, LengthModel
 from chemdataextractor.parse.units.temperature import Temperature, TemperatureModel, Kelvin, Celsius, Fahrenheit
@@ -53,15 +58,38 @@ class TestUnitClass(unittest.TestCase):
         self.assertEqual(meterseconds.exponent, 3.0)
         self.assertEqual(meterseconds.powers, {Meter(): 1.0, Second(): 1.0})
 
-    def test_convert_to_standard(self):
+    def test_convert_value_to_standard_temp(self):
+        temp = Celsius()
+        val = temp.convert_value_from_standard(400)
+        self.assertAlmostEqual(val, 126.85)
+
+    def test_unit_convert_value_to_standard(self):
         speed = Mile() / Hour()
-        standard_val = speed.convert_to_standard(60.0)
+        standard_val = speed.convert_value_to_standard(60.0)
         self.assertLess(abs(26.8224 - standard_val), 10**(-3.5))
 
-    def test_convert_from_standard(self):
+    def test_unit_convert_value_from_standard(self):
         speed = Mile() / Hour()
-        val = speed.convert_from_standard(26.8224)
+        val = speed.convert_value_from_standard(26.8224)
         self.assertLess(abs(60.0 - val), 10**(-3.5))
+
+    def test_unit_convert_error_to_standard(self):
+        unusual_temp_unit = Celsius() / Fahrenheit()
+        standard_val = unusual_temp_unit.convert_error_to_standard(5.0)
+        print(standard_val)
+        self.assertLess(abs(26.8224 - standard_val), 10**(-3.5))
+
+    # Need to have the updated error functions in length and time
+    def test_unit_convert_error_to_standard(self):
+        speed = Mile() / Hour()
+        standard_err = speed.convert_error_to_standard(60.0)
+        self.assertAlmostEqual(standard_err, 26.8224)
+
+    # Need to have the updated error functions in length and time
+    def test_unit_convert_error_from_standard(self):
+        speed = Mile() / Hour()
+        standard_err = speed.convert_error_from_standard(26.8224)
+        self.assertAlmostEqual(standard_err, 60.)
 
     def test_dimensionless(self):
         dimensionless_div = Meter() / Meter()
@@ -150,10 +178,11 @@ class TestQuantity(unittest.TestCase):
 
     def test_convert(self):
         speed = SpeedModel()
-        speed.value = 100.0
+        speed.value = [100.0]
         speed.units = Meter(exponent=3.0) / Hour()
-        converted = speed.convert_to(Mile() / Second())
-        self.assertLess(abs(converted - 0.0172603109), 10**(-5))
+        speed.convert_to(Mile() / Second())
+        print(speed.value)
+        self.assertLess(abs(speed.value[0] - 0.0172603109), 10**(-5))
 
     def test_dimensionless(self):
         speed = SpeedModel()

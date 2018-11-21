@@ -54,41 +54,6 @@ class UnitType(BaseType):
         return str(value**1.0)
 
 
-class OptionalRangeType(BaseType):
-    """
-    Values stored in QuantityModels can be a single value or a
-    range. e.g. an IR peak could be written as either a single value or a range
-    of values, between two values. This is a field to allow for either.
-    """
-
-    def __init__(self, value_type, **kwargs):
-        """
-        :param BaseType value_type: The type of the value that may have a range. This type's process function is also called.
-        :param default: (Optional) The default value for this field if none is set.
-        :param bool null: (Optional) Include in serialized output even if value is None. Default False.
-        :param bool required: (Optional) Whether a value is required. Default False.
-        :param bool contextual: (Optional) Whether this value is contextual. Default False.
-        """
-        super(OptionalRangeType, self).__init__(**kwargs)
-        self.value_type = value_type
-
-    def process(self, value):
-        if hasattr(value, '__len__'):
-            if len(value) == 2:
-                result = []
-                for val in value:
-                    result.append(self.value_type.process(val))
-                try:
-                    # Try to sort the values if possible
-                    if result[0] > result[1]:
-                        result = [result[1], result[0]]
-                except NotImplementedError:
-                    pass
-                return result
-        else:
-            return self.value_type.process(value)
-
-
 class BaseDimension(BaseModel):
 
     @abstractmethod
@@ -411,9 +376,26 @@ class QuantityModel(BaseModel):
         else:
             raise AttributeError("Value for model not set")
 
-    def convet_error(self, from_unit, to_unit):
+    def convert_error(self, from_unit, to_unit):
         """
-        Converts error between given units"""
+        Converts error between given units
+        If no units have been set for this model, assumes that it's in standard units.
+
+        :param Unit from_unit: The Unit to convert from
+        :param Unit to_unit: The Unit to convert to
+        :returns: The error as expressed in the new unit
+        :rtype: float
+        """
+
+        if self.error is not None:
+            if to_unit.dimensions == from_unit.dimensions:
+                standard_error = from_unit.convert_error_to_standard(self.error)
+                return to_unit.convert_error_from_standard(self.error)
+            else:
+                raise ValueError("Unit to convert to must have same dimensions as current unit")
+            raise AttributeError("Unit to convert from not set")
+        else:
+            raise AttributeError("Value for model not set")
 
 
     def __str__(self):
@@ -506,29 +488,55 @@ class Unit(object):
         self.exponent = exponent
         self.powers = powers
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         """
         Converts from this unit to the standard value, usually the SI unit.
         Overload this in child classes when implementing new units.
 
         :param float value: The value to convert to standard units
         """
-        new_value = value
-        for unit, power in six.iteritems(self.powers):
-            new_value = unit.convert_to_standard(new_value**(1 / power))**power
-        return new_value
 
-    def convert_from_standard(self, value):
+        for unit, power in six.iteritems(self.powers):
+            value = unit.convert_value_to_standard(value**(1 / power))**power
+        return value
+
+    def convert_value_from_standard(self, value):
         """
         Converts to this unit from the standard value, usually the SI unit.
         Overload this in child classes when implementing new units.
 
         :param float value: The value to convert from standard units
         """
-        new_value = value
         for unit, power in six.iteritems(self.powers):
-            new_value = unit.convert_from_standard(new_value**(1 / power))**power
-        return new_value
+            value = unit.convert_value_from_standard(value**(1 / power))**power
+        return value
+
+    def convert_error_to_standard(self, error):
+        """
+        Converts from this error to the standard value, usually the SI unit.
+        Overload this in child classes when implementing new units
+
+        :param float error: The error to convert to standard units
+        :return float error: The error converted to standard units:
+        """
+
+        for unit, power in six.iteritems(self.powers):
+            error = unit.convert_error_to_standard(error**(1 / power))**power
+        return error
+
+    def convert_error_from_standard(self, error):
+        """
+        Converts to this error from the standard value, usually the SI unit.
+        Overload this in child classes when implementing new units
+
+        :param float error: The error to convert from standard units
+        :return float error: The error converted from standard units:
+        """
+
+        for unit, power in six.iteritems(self.powers):
+            error = unit.convert_error_from_standard(error**(1 / power))**power
+        return error
+
 
     """
     Operators are implemented for the easy creation of complicated units out of
@@ -650,7 +658,7 @@ class Unit(object):
 
 
 class DimensionlessUnit(Unit):
-    # Special case to handle dimensionless quantities.
+    """Special case to handle dimensionless quantities."""
 
     def __init__(self, exponent = 0.0):
         self.dimensions = Dimensionless()
@@ -665,11 +673,10 @@ class DimensionlessUnit(Unit):
 
 
 class Dimensionless(Dimension):
-    # Special case to handle dimensionless quantities.
+    """Special case to handle dimensionless quantities."""
     pass
 
 
 class DimensionlessModel(QuantityModel):
-    # Special case to handle dimensionless quantities
-
+    """ Special case to handle dimensionless quantities"""
     dimensions = Dimensionless()
