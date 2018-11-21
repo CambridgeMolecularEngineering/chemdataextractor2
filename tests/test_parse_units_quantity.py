@@ -19,7 +19,7 @@ import unittest
 
 #from chemdataextractor.parse.units.quantity import Dimensionless, DimensionlessUnit, DimensionlessModel, QuantityModel
 from chemdataextractor.parse.units.quantity_model import QuantityModel, DimensionlessModel
-from chemdataextractor.parse.units.dimensions import Dimensionless
+from chemdataextractor.parse.units.dimension import Dimensionless
 from chemdataextractor.parse.units.unit import DimensionlessUnit
 
 

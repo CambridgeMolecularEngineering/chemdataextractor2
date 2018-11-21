@@ -14,8 +14,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from .quantity_model import QuantityModel
+from .unit import Unit
+from .dimension import Dimension
 from ..elements import R
-from .quantity import QuantityModel, Unit, Dimension
 import logging
 
 log = logging.getLogger(__name__)
@@ -43,10 +45,10 @@ class Meter(LengthUnit):
 
     def convert_value_from_standard(self, value):
         return value
-    
+
     def convert_error_to_standard(self, error):
         return error
-    
+
     def convert_error_from_standard(self, error):
         return error
 
@@ -58,10 +60,10 @@ class Mile(LengthUnit):
 
     def convert_value_from_standard(self, value):
         return value * 0.000621371
-    
+
     def convert_error_to_standard(self, error):
         return error * 1609.34
-    
+
     def convert_error_from_standard(self, error):
         return error * 0.000621371
 

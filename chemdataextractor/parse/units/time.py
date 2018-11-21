@@ -16,7 +16,9 @@ from __future__ import unicode_literals
 
 import logging
 
-from .quantity import QuantityModel, Unit, Dimension
+from .quantity_model import QuantityModel
+from .unit import Unit
+from .dimension import Dimension
 from ..elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 from ..actions import merge, join
 
@@ -44,10 +46,10 @@ class Second(TimeUnit):
 
     def convert_value_from_standard(self, value):
         return value
-    
+
     def convert_error_to_standard(self, error):
         return error
-    
+
     def convert_error_from_standard(self, error):
         return error
 
@@ -59,10 +61,10 @@ class Hour(TimeUnit):
 
     def convert_from_standard(self, value):
         return value / (60.0**2)
-    
+
     def convert_error_to_standard(self, error):
         return error * 60 * 60
-    
+
     def convert_error_from_standard(self, error):
         return error / (60.0 * 60.0)
 
@@ -75,7 +77,7 @@ class Minute(TimeUnit):
 
     def convert_value_from_standard(self, value):
         return value / 60.0
-    
+
     def convert_error_to_standard(self, error):
         return error * 60.0
 
@@ -99,13 +101,13 @@ class Day(TimeUnit):
 
     def convert_value_from_standard(self, value):
         return value / (60 * 60 * 24)
-    
+
     def convert_error_to_standard(self, error):
         return error * 60 * 60.0 * 24.0
-    
+
     def convert_error_from_standard(self, error):
         return error / (60 * 60.0 * 24.0)
-    
+
 
 
 

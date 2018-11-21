@@ -12,7 +12,7 @@ Taketomo Isazawa (ti250@cam.ac.uk)
 import six
 import copy
 from abc import abstractmethod
-from .dimensions import Dimensionless
+from .dimension import Dimensionless
 from ...base_model import BaseModel, BaseType, FloatType, StringType, ListType
 
 

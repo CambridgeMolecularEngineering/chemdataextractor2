@@ -16,7 +16,9 @@ from __future__ import unicode_literals
 
 import logging
 
-from .quantity import QuantityModel, Unit, Dimension
+from .quantity_model import QuantityModel
+from .unit import Unit
+from .dimension import Dimension
 from ..elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 from ..actions import merge, join
 

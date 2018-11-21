@@ -17,7 +17,7 @@ from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
 from ..model import Compound, MeltingPoint
-from ..parse.units.quantity import DimensionlessUnit
+from ..parse.units.unit import DimensionlessUnit
 from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
@@ -26,13 +26,13 @@ from ..base_model import ListType
 
 log = logging.getLogger(__name__)
 
-exponents_dict = {R('k', group=0): 3., 
-                  R('M', group=0): 6., 
-                  R('G', group=0): 9., 
+exponents_dict = {R('k', group=0): 3.,
+                  R('M', group=0): 6.,
+                  R('G', group=0): 9.,
                   R('T', group=0): 12.,
-                  R('m', group=0): -3., 
-                  R('µ', group=0): -6., 
-                  R('n', group=0): -9., 
+                  R('m', group=0): -3.,
+                  R('µ', group=0): -6.,
+                  R('n', group=0): -9.,
                   R('p', group=0): -12.}
 
 
@@ -67,7 +67,7 @@ class QuantityParser(BaseParser):
             test_string = '150±5'
             end_value = qp.extract_error(test_string)
             print(end_value) # 5
-        
+
         Arguments:
             string {[type]} -- [description]
         """
