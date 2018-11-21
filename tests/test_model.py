@@ -40,7 +40,7 @@ class TestModel(unittest.TestCase):
     def test_is_contextual(self):
         """Test is_contextual method returns expected result."""
         self.assertEqual(Compound(names=['Coumarin 343']).is_contextual, False)
-        self.assertEqual(Compound(melting_points=[MeltingPoint(value=240)]).is_contextual, False)
+        self.assertEqual(Compound(melting_points=[MeltingPoint(value=[240])]).is_contextual, False)
         self.assertEqual(Compound(melting_points=[MeltingPoint(units='K')]).is_contextual, True)
         self.assertEqual(Compound(melting_points=[MeltingPoint(apparatus='Some apparatus')]).is_contextual, True)
         self.assertEqual(Compound(labels=['3a'], melting_points=[MeltingPoint(apparatus='Some apparatus')]).is_contextual, False)
