@@ -13,6 +13,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+import six
 import logging
 import unittest
 
@@ -26,13 +27,12 @@ from chemdataextractor.parse.units.unit import DimensionlessUnit
 from chemdataextractor.parse.units.time import Second, Minute, Hour, Time, TimeModel
 from chemdataextractor.parse.units.length import Meter, Mile, Length, LengthModel
 from chemdataextractor.parse.units.temperature import Temperature, TemperatureModel, Kelvin, Celsius, Fahrenheit
-import numpy as np
 
 
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
-
+places = 3
 
 class SpeedModel(QuantityModel):
     dimensions = Length() / Time()
@@ -61,7 +61,7 @@ class TestUnitClass(unittest.TestCase):
     def test_convert_value_to_standard_temp(self):
         temp = Celsius()
         val = temp.convert_value_from_standard(400)
-        self.assertAlmostEqual(val, 126.85)
+        self.assertAlmostEqual(val, 126.85, places=places)
 
     def test_unit_convert_value_to_standard(self):
         speed = Mile() / Hour()
@@ -71,25 +71,24 @@ class TestUnitClass(unittest.TestCase):
     def test_unit_convert_value_from_standard(self):
         speed = Mile() / Hour()
         val = speed.convert_value_from_standard(26.8224)
-        self.assertLess(abs(60.0 - val), 10**(-3.5))
+        self.assertAlmostEqual(val, 60.0, places=places)
 
     def test_unit_convert_error_to_standard(self):
         unusual_temp_unit = Celsius() / Fahrenheit()
         standard_val = unusual_temp_unit.convert_error_to_standard(5.0)
-        print(standard_val)
-        self.assertLess(abs(26.8224 - standard_val), 10**(-3.5))
+        self.assertAlmostEqual(standard_val, 26.8224, places=places)
 
     # Need to have the updated error functions in length and time
     def test_unit_convert_error_to_standard(self):
         speed = Mile() / Hour()
         standard_err = speed.convert_error_to_standard(60.0)
-        self.assertAlmostEqual(standard_err, 26.8224)
+        self.assertAlmostEqual(standard_err, 26.8224, places=places)
 
     # Need to have the updated error functions in length and time
     def test_unit_convert_error_from_standard(self):
         speed = Mile() / Hour()
         standard_err = speed.convert_error_from_standard(26.8224)
-        self.assertAlmostEqual(standard_err, 60.)
+        self.assertAlmostEqual(standard_err, 60., places)
 
     def test_dimensionless(self):
         dimensionless_div = Meter() / Meter()
@@ -121,34 +120,34 @@ class TestQuantity(unittest.TestCase):
 
     def test_division(self):
         distance = LengthModel()
-        distance.value = 60.0
+        distance.value = [60.0]
         distance.units = Meter(exponent=3.0)
         time = TimeModel()
-        time.value = 60.0
+        time.value = [60.0]
         time.units = Minute()
         speed = distance / time
-        self.assertEqual(speed.value, 1.)
+        self.assertEqual(speed.value, [1.])
         self.assertEqual(speed.units, Meter(exponent=3.0) / Minute())
         self.assertEqual(speed.dimensions, Length() / Time())
 
     def test_pow(self):
         length = LengthModel()
-        length.value = 10.0
+        length.value = [10.0]
         length.units = Meter(exponent=-2.0)
         volume = length**3.0
         self.assertEqual(volume.units, Meter(-2.0)**3.0)
         self.assertEqual(volume.dimensions, Length()**3.0)
-        self.assertEqual(volume.value, 1000.0)
+        self.assertEqual(volume.value, [1000.0])
 
     def test_mul(self):
         speed = SpeedModel()
-        speed.value = 100.0
+        speed.value = [100.0]
         speed.units = Meter(exponent=3.0) / Hour()
         time = TimeModel()
-        time.value = 3.0
+        time.value = [3.0]
         time.units = Hour()
         distance = speed * time
-        self.assertEqual(distance.value, 300.0)
+        self.assertEqual(distance.value, [300.0])
         self.assertEqual(distance.units, (Meter(exponent=3.0))**1.0)
         self.assertEqual(distance.dimensions, Length())
 
@@ -157,7 +156,7 @@ class TestQuantity(unittest.TestCase):
         speed.value = [100.0, 200.0]
         speed.units = Meter(exponent=3.0) / Hour()
         time = TimeModel()
-        time.value = 3.0
+        time.value = [3.0]
         time.units = Hour()
         distance = speed * time
         self.assertEqual(distance.value, [300.0, 600.0])
@@ -180,16 +179,18 @@ class TestQuantity(unittest.TestCase):
         speed = SpeedModel()
         speed.value = [100.0]
         speed.units = Meter(exponent=3.0) / Hour()
+        print(speed.units)
+        for unit, power in six.iteritems(speed.units.powers):
+            print(unit, power)
         speed.convert_to(Mile() / Second())
-        print(speed.value)
-        self.assertLess(abs(speed.value[0] - 0.0172603109), 10**(-5))
+        self.assertAlmostEqual(speed.value[0], 0.0172603109, places=places)
 
     def test_dimensionless(self):
         speed = SpeedModel()
-        speed.value = 100.0
+        speed.value = [100.0]
         speed.units = Meter() / Second()
         speed2 = SpeedModel()
-        speed2.value = 10.0
+        speed2.value = [10.0]
         speed2.units = Meter() / Second()
         dimensionless_div = speed / speed2
         self.assertTrue(isinstance(dimensionless_div, DimensionlessModel))

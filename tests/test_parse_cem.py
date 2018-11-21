@@ -405,9 +405,10 @@ class TestParseDocument(unittest.TestCase):
             Paragraph('The product had a melting point of 70-75° C. and has structural formula VII.')
         )
         results = [r.serialize() for r in d.records]
+        print(results)
         self.assertEqual(results, [
             {'labels': [u'VII'], 'roles': [u'formula']},
-            {'melting_points': [{'units': u'Celsius^(1.0)', 'value': [70.0, 75.0]}],
+            {'melting_points': [{'units': u'Kelvin^(1.0)', 'value': [343.15, 348.15], 'raw_value': '70-75', 'raw_units': '\xb0C.'}],
              'names': [u'5-Bromo-6-pentadecyl-2-hydroxybenzoic acid', u'DBAA'], 'roles': ['product']}])  # example-3?
 
 
