@@ -395,13 +395,20 @@ class QuantityModel(BaseModel):
         :returns: The value as expressed in the new unit
         :rtype: float
         """
-        if self.value is not None:
+        if not self.value:
+            raise AttributeError("Value for model not set")
+        
+        if to_unit.dimensions != from_unit.dimensions:
+            raise AttributeError("Units must have the same dimensions")
+        
+        if isinstance(self.value, list):
+
             if to_unit.dimensions == from_unit.dimensions:
                 if type(self.value) is list:
-                    standard_vals = [from_unit.convert_to_standard(self.value[0]),
-                                     from_unit.convert_to_standard(self.value[1])]
-                    return [to_unit.convert_from_standard(standard_vals[0]),
-                            to_unit.convert_from_standard(standard_vals[1])]
+                    standard_vals = [from_unit.convert_value_to_standard(self.value[0]),
+                                     from_unit.convert_value_to_standard(self.value[1])]
+                    return [to_unit.convert_error_from_standard(standard_vals[0]),
+                            to_unit.convert_error_from_standard(standard_vals[1])]
                 else:
                     standard_val = from_unit.convert_to_standard(self.value)
                     return to_unit.convert_from_standard(standard_val)
@@ -411,9 +418,10 @@ class QuantityModel(BaseModel):
         else:
             raise AttributeError("Value for model not set")
 
-    def convet_error(self, from_unit, to_unit):
+    def convert_error(self, from_unit, to_unit):
         """
         Converts error between given units"""
+        pass
 
 
     def __str__(self):
@@ -506,7 +514,7 @@ class Unit(object):
         self.exponent = exponent
         self.powers = powers
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         """
         Converts from this unit to the standard value, usually the SI unit.
         Overload this in child classes when implementing new units.
@@ -514,11 +522,11 @@ class Unit(object):
         :param float value: The value to convert to standard units
         """
         new_value = value
-        for unit, power in six.iteritems(self.powers):
+        for unit, power in six.iteritems(self.powers):  # {meters: 1, seconds: -1}
             new_value = unit.convert_to_standard(new_value**(1 / power))**power
         return new_value
 
-    def convert_from_standard(self, value):
+    def convert_value_from_standard(self, value):
         """
         Converts to this unit from the standard value, usually the SI unit.
         Overload this in child classes when implementing new units.

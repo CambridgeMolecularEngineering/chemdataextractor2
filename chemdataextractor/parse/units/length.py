@@ -38,20 +38,32 @@ class LengthUnit(Unit):
 
 class Meter(LengthUnit):
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         return value
 
-    def convert_from_standard(self, value):
+    def convert_value_from_standard(self, value):
         return value
+    
+    def convert_error_to_standard(self, error):
+        return error
+    
+    def convert_error_from_standard(self, error):
+        return error
 
 
 class Mile(LengthUnit):
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         return value * 1609.34
 
-    def convert_from_standard(self, value):
-        return value / 1609.34
+    def convert_value_from_standard(self, value):
+        return value * 0.000621371
+    
+    def convert_error_to_standard(self, error):
+        return error * 1609.34
+    
+    def convert_error_from_standard(self, error):
+        return error * 0.000621371
 
 units_dict = {R('m(eter(s)?)?', group=0): Meter, R('mile[s]?', group=0): Mile}
 Length.units_dict = units_dict

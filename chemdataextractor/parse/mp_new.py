@@ -63,7 +63,7 @@ class MpParser(QuantityParser):
                         value=self.extract_value(raw_value),
                         error=self.extract_error(raw_value),
                         units=self.extract_units(raw_units, strict=True)
-                    ).convert_to(Kelvin())
+                    ).convert_to(Kelvin()) 
                 ]
             )
 
