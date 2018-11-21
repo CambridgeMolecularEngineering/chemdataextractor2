@@ -39,11 +39,17 @@ class TimeUnit(Unit):
 
 class Second(TimeUnit):
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         return value
 
-    def convert_from_standard(self, value):
+    def convert_value_from_standard(self, value):
         return value
+    
+    def convert_error_to_standard(self, error):
+        return error
+    
+    def convert_error_from_standard(self, error):
+        return error
 
 
 class Hour(TimeUnit):
@@ -52,16 +58,29 @@ class Hour(TimeUnit):
         return value * 60 * 60
 
     def convert_from_standard(self, value):
-        return value / (60**2)
+        return value / (60.0**2)
+    
+    def convert_error_to_standard(self, error):
+        return error * 60 * 60
+    
+    def convert_error_from_standard(self, error):
+        return error / (60.0 * 60.0)
+
 
 
 class Minute(TimeUnit):
 
-    def convert_to_standard(self, value):
-        return value * 60
+    def convert_value_to_standard(self, value):
+        return value * 60.0
 
-    def convert_from_standard(self, value):
-        return value / 60
+    def convert_value_from_standard(self, value):
+        return value / 60.0
+    
+    def convert_error_to_standard(self, error):
+        return error * 60.0
+
+    def convert_error_from_standard(self, error):
+        return error / 60.0
 
 
 class Year(TimeUnit):
@@ -75,11 +94,19 @@ class Year(TimeUnit):
 
 class Day(TimeUnit):
 
-    def convert_to_standard(self, value):
+    def convert_value_to_standard(self, value):
         return value * 60 * 60 * 24
 
-    def convert_from_standard(self, value):
+    def convert_value_from_standard(self, value):
         return value / (60 * 60 * 24)
+    
+    def convert_error_to_standard(self, error):
+        return error * 60 * 60.0 * 24.0
+    
+    def convert_error_from_standard(self, error):
+        return error / (60 * 60.0 * 24.0)
+    
+
 
 
 units_dict = {R('d(ay(s)?)?', group=0): Day, R('y(ear(s)?)?', group=0): Year,
