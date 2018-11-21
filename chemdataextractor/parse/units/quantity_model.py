@@ -83,22 +83,22 @@ class QuantityModel(BaseModel):
         new_model = QuantityModel()
         new_model.dimensions = self.dimensions * other.dimensions
         if self.value is not None and other.value is not None:
-            if type(self.value) is list and type(other.value) is list:
+            if len(self.value) == 2 and len(other.value) == 2:
                 # The following always encompasses the whole range because
                 # OptionalRangeType tries to always sort the lists
                 new_val = [self.value[0] * other.value[0],
                            self.value[1] * other.value[1]]
                 new_model.value = new_val
-            elif type(self.value) is list:
-                new_val = [self.value[0] * other.value,
-                           self.value[1] * other.value]
+            elif len(self.value) == 2:
+                new_val = [self.value[0] * other.value[0],
+                           self.value[1] * other.value[0]]
                 new_model.value = new_val
-            elif type(self.value) is not list and type(other.value) is list:
-                new_val = [self.value * other.value[0],
-                           self.value * other.value[1]]
+            elif len(self.value) == 2 and len(other.value) == 2:
+                new_val = [self.value[0] * other.value[0],
+                           self.value[0] * other.value[1]]
                 new_model.value = new_val
             else:
-                new_model.value = self.value * other.value
+                new_model.value = [self.value[0] * other.value[0]]
         if self.units is not None and other.units is not None:
             new_model.units = self.units * other.units
         if isinstance(new_model.dimensions, Dimensionless):
@@ -120,7 +120,7 @@ class QuantityModel(BaseModel):
         """
         if self.units:
             converted_values = self.convert_value(self.units, unit)
-            self.value = [v for v in converted_values]
+            self.value = converted_values
             self.units = unit
             if self.error:
                 converted_error = self.convert_error(self.units, unit)
@@ -141,14 +141,14 @@ class QuantityModel(BaseModel):
         """
         if self.value is not None:
             if to_unit.dimensions == from_unit.dimensions:
-                if type(self.value) is list:
-                    standard_vals = [from_unit.convert_to_standard(self.value[0]),
-                                     from_unit.convert_to_standard(self.value[1])]
-                    return [to_unit.convert_from_standard(standard_vals[0]),
-                            to_unit.convert_from_standard(standard_vals[1])]
+                if len(self.value) == 2:
+                    standard_vals = [from_unit.convert_value_to_standard(self.value[0]),
+                                     from_unit.convert_value_to_standard(self.value[1])]
+                    return [to_unit.convert_value_from_standard(standard_vals[0]),
+                            to_unit.convert_value_from_standard(standard_vals[1])]
                 else:
-                    standard_val = from_unit.convert_to_standard(self.value)
-                    return to_unit.convert_from_standard(standard_val)
+                    standard_val = from_unit.convert_value_to_standard(self.value[0])
+                    return [to_unit.convert_value_from_standard(standard_val)]
             else:
                 raise ValueError("Unit to convert to must have same dimensions as current unit")
             raise AttributeError("Unit to convert from not set")
@@ -169,7 +169,7 @@ class QuantityModel(BaseModel):
         if self.error is not None:
             if to_unit.dimensions == from_unit.dimensions:
                 standard_error = from_unit.convert_error_to_standard(self.error)
-                return to_unit.convert_error_from_standard(self.error)
+                return to_unit.convert_error_from_standard(standard_error)
             else:
                 raise ValueError("Unit to convert to must have same dimensions as current unit")
             raise AttributeError("Unit to convert from not set")
