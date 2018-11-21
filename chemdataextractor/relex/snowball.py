@@ -5,8 +5,8 @@ from itertools import combinations
 
 class Snowball(object):
     
-    def __init__(self, parser):
-        self.parser = parser
+    def __init__(self, relationship):
+        self.relationship = relationship
     
     def update(self, sentence, relation):
         with open('sentence.txt', 'a+') as wf:
@@ -16,6 +16,38 @@ class Snowball(object):
             for el in relation:
                 wf.write(str(el) + ',')
             wf.write('\n')
+        return
+    
+    def get_candidate_relations(self, r):
+        """Retrieve candidate relationships from a tagged sentence
+        
+        Arguments:
+            r {[type]} -- [description]
+        """
+
+
+
+    def parse(self, filename):
+        """Parse the sentences of a file
+        
+        Arguments:
+            f {[type]} -- [description]
+        """
+        f = open(filename, 'rb')
+        d = Document().from_file(f)
+        for p in d.paragraphs:
+            for s in p.sentences:
+                candidate_dict = {}
+                candidates = self.relationship.get_candidates(s.tagged_tokens)
+                for i, candidate in enumerate(candidates):
+                    candidates[str(i)] = candidate
+                    print("Candidate " + str(i) + candidate)
+                res = input("...: ")
+                if res in candidate_dict.keys():
+                    self.update(s, candidates[res])
+                else:
+                    continue
+        f.close()
 
     
     def train(self, corpus):
@@ -27,51 +59,11 @@ class Snowball(object):
         for file_name in os.listdir(corpus):
             print(file_name)
             try:
-                f = open(corpus + file_name, 'rb')
-                # test = ['Sr2FeMoO6, which exhibits an exceptionally high ferromagnetic Curie temperature of 416 K']
-                d = Document().from_file(f)
-                for p in d.paragraphs:
-                    for s in p.sentences:
-                        #print(s)
-                        for result in self.parser.scan(s.tagged_tokens):
-                            #print(etree.tostring(result[0]))
-                            compounds = result[0].xpath('./cem/name/text()')
-                            specifiers = result[0].xpath('./specifier/text()')
-                            values = result[0].xpath('./value/text()')
-                            units = result[0].xpath('./units/text()')
-
-                            #print(compound, value, units, specifier)
-                            if compounds and specifiers and values and units:
-                                all_entities = compounds + specifiers + values + units
-                                combs = [m for r in range(4, len(all_entities) + 1)
-                                        for m in combinations(all_entities, r)]
-                                
-                                i = 0
-                                print(s)
-                                candidates = {}
-                                for c in combs:
-                                    if not any(i in compounds for i in c):
-                                        continue
-                                    if not any(i in specifiers for i in c):
-                                        continue
-                                    if not any(i in values for i in c):
-                                        continue
-                                    if not any(i in units for i in c):
-                                        continue
-                                    candidates[str(i)] = c
-                                    print("Candidate " + str(i))
-                                    print(c)
-                                    i += 1
-
-                                res = input("...: ")
-                                if res == 'n':
-                                    continue
-                                elif res in candidates.keys():
-                                    self.update(s, candidates[res])
-                                else:
-                                    continue
+                f = os.path.join(corpus, file_name)
+                self.parse(f)
             except Exception as e:
                 print(e)
                 continue
+        return
 
 
