@@ -1,0 +1,4 @@
+Cluster set contains 1 clusters.
+Cluster 0 contains 1 phrases
+	 here BiFeO3 and LaFeO3 have curie temperature Tc of 600 and 700 K , respectively
+The cluster centroid pattern is: here name_1 and name_2 have specifier_1 of value_1 and value_2  units_1, respectively with confidence score 1.0

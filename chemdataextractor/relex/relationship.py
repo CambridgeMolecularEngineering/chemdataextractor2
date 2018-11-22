@@ -1,3 +1,4 @@
+import copy
 class ChemicalRelationship(object):
 
     def __init__(self, entities, parser):
@@ -14,21 +15,22 @@ class ChemicalRelationship(object):
         for result in self.parser.scan(tokens):
             entities_dict = {} 
             for e in self.entities:
-                text = result[0].xpath('./' + e + '/text()')
+                text = result[0].xpath('./' + e.name + '/text()')
                 if not text:
                     continue
                 
-                entity = (result[0].xpath('./' + e + '/text()'), result[1], result[2])
+                entity = (result[0].xpath('./' + e.name + '/text()'), result[1], result[2])
 
                 if e not in entities_dict.keys():
-                    entities_dict[e] = []
+                    entities_dict[e.name] = []
                     
                 if entity not in entities_dict[e]:
-                    entities_dict[e].append(entity)
+                    entities_dict[e.name].append(entity)
 
         # check all required entities are present
-        if not all(e in entities_dict.keys() for e in self.entities):
+        if not all(e.name in entities_dict.keys() for e in self.entities):
             return []
+
         
 
 
@@ -55,3 +57,28 @@ class ChemicalRelationship(object):
             #             continue
 
 
+class Relationship(object):
+
+    def __init__(self, entities, confidence):
+        self.entities = copy.copy(entities)
+        self.confidence = confidence
+    
+    def __len__(self):
+        return len(self.entities)
+    
+    def __getitem__(self, idx):
+        return self.entities[idx]
+    
+    def __setitem__(self, idx, value):
+        self.entities[idx] = value
+    
+    def __repr__(self):
+        return '(' + ','.join([i.text for i in self.entities]) + ')'
+    
+    def __eq__(self, other):
+        # compare the text of all entities
+        other_entities = other.entities
+        for entity in self.entities:
+            if not entity.text in [i.text for i in other_entities]:
+                return False
+        return True
