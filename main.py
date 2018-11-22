@@ -5,6 +5,7 @@ import re
 from chemdataextractor.parse import R, I, W, Optional, merge, join, OneOrMore, Any, ZeroOrMore
 from chemdataextractor.parse.cem import cem, chemical_label
 from chemdataextractor.parse.base import BaseParser
+from chemdataextractor.parse.common import lrb, rrb
 from chemdataextractor.utils import first
 from chemdataextractor.doc import Paragraph, Heading
 from lxml import etree
@@ -16,8 +17,10 @@ class CurieTemperature(BaseModel):
 
 Compound.curie_temperatures = ListType(ModelType(CurieTemperature))
 
-
-specifier = ((I('Curie') + I('temperature')) | R('^T(C|c)(urie)?'))('specifier').add_action(join)
+curie_words = I('Curie') + I('temperature')
+curie_symbols = Optional(lrb.hide()) + R('^T(C|c)(urie)?') + Optional(rrb.hide())
+curie_combined = ((curie_words + curie_symbols).add_action(join) | (curie_symbols + curie_words).add_action(join))
+specifier = (curie_combined | curie_words | curie_symbols)('specifier').add_action(join)
 units = (R('^[CFK]\.?$'))('units').add_action(merge)
 value = (R('^\d+(\.\,\d+)?$'))('value')
 entities = (cem |chemical_label('label') | specifier | value + units)

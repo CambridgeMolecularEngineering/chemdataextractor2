@@ -55,14 +55,18 @@ class Snowball(object):
             for s in p.sentences:
                 candidate_dict = {}
                 candidates = self.relationship.get_candidates(s.tagged_tokens)
-                # for i, candidate in enumerate(candidates):
-                #     candidates[str(i)] = candidate
-                #     print("Candidate " + str(i) + candidate)
-                # # res = input("...: ")
-                # if res in candidate_dict.keys():
-                #     self.update(s, candidates[res])
-                # else:
-                #     continue
+                for i, candidate in enumerate(candidates):
+                    output = ""
+                    for ent in list(candidate):
+                        output += ent.specifier + " : " + ent.text + ", "
+
+                    output = output[:-2] + "}"
+                    print("Candidate " + str(i) + " { " + output)
+                res = input("...: ")
+                if res in candidate_dict.keys():
+                    self.update(s, candidates[res])
+                else:
+                    continue
 
     
     def train(self, corpus):
