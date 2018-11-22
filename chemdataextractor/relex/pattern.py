@@ -52,24 +52,22 @@ class Pattern:
     def generate_cde_element(self):
         """Create a CDE parse element from the this extraction pattern
         """
-        final_phrase = None
+        elements = []
         prefix_tokens = self.elements['prefix']['tokens']
         for token in prefix_tokens:
-            if not final_phrase:
-                final_phrase = I(token)
-            else:
-                final_phrase += I(token)
+            elements.append(I(token))
 
-        final_phrase += self.entities[0].tag
-
+        elements.append(self.entities[0].tag)
+        
         for middle in range(0, self.number_of_entities -1):
             middle_tokens = self.elements['middle_' + str(middle+1)]['tokens']
             for token in middle_tokens:
-                final_phrase += I(token)
-            final_phrase += self.entities[middle+1].tag
+                elements.append(I(token))
+            elements.append(self.entities[middle+1].tag)
         
         suffix_tokens = self.elements['suffix']['tokens']
         for token in suffix_tokens:
-            final_phrase += I(token)
+            elements.append(I(token))
         
+        final_phrase = And(exprs=elements)
         return (final_phrase)('phrase')

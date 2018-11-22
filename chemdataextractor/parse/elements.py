@@ -308,11 +308,11 @@ class ParseExpression(BaseParserElement):
             if all(isinstance(expr, six.text_type) for expr in exprs):
                 exprs = map(Word, exprs)
             self.exprs = list(exprs)
-        # else:
-        #     try:
-        #         self.exprs = list(exprs)
-        #     except TypeError:
-        #         self.exprs = [exprs]
+        else:
+            try:
+                self.exprs = list(exprs)
+            except TypeError:
+                self.exprs = [exprs]
 
     def __getitem__(self, i):
         return self.exprs[i]

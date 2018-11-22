@@ -71,7 +71,7 @@ def match(pi, pj, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
 
 class Snowball(object):
     
-    def __init__(self, relationship, tc=0.9, update_param=1, tsim=0.9, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
+    def __init__(self, relationship, tc=0.9, update_param=1, tsim=0.9, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1, prefix_length=1, suffix_length=1):
         self.relationship = relationship
         self.relations = []
         self.phrases = []
@@ -88,6 +88,8 @@ class Snowball(object):
         self.prefix_weight = prefix_weight
         self.middle_weight = middle_weight
         self.suffix_weight = suffix_weight
+        self.prefix_length = prefix_length
+        self.suffix_length = suffix_length
 
     
     def update(self, sentence_tokens, relations=[]):
@@ -97,21 +99,9 @@ class Snowball(object):
             sentence {[type]} -- [description]
             relation {[type]} -- [description]
         """
-        
-        specifier = (I('Curie') + I('temperature') + R('^T(C|c)(urie)?'))('specifier').add_action(join)
-        units = (R('^[CFK]\.?$'))('units').add_action(merge)
-        value = (R('^\d+(\.\,\d+)?$'))('value')
-        # Create a phrase object from the sentence
-        # Relations is a list of (text, tag, start, end) tuples describing the relationships present in the sentences
-        s = Sentence('here BiFeO3 and LaFeO3 have curie temperature Tc of 600 and 700 K, respectively')
-        r1 = Relationship([Entity('BiFeO3', chemical_name, 1, 2), Entity('curie temperature Tc', specifier, 5, 8), Entity('600', value, 9, 10), Entity('K', units, 12, 13)], confidence=1.0)
-        r2 = Relationship([Entity('LaFeO3', chemical_name, 3, 4), Entity('curie temperature Tc', specifier, 5, 8), Entity('700', value, 11, 12), Entity('K', units, 12, 13)], confidence=1.0)
-        relations = [r1, r2]
-        # relations = Relationship([Entity('BiFeO3', chemical_name, 1, 2), Entity('Curie Temperature Tc', specifier, 6, 9), Entity('600', value, 11, 12), Entity('K', units, 15, 16)])]
-        new_phrase = Phrase(s.raw_tokens, relations)
+        new_phrase = Phrase(sentence_tokens, relations, self.prefix_length, self.suffix_length) 
         print("Created Phrase", new_phrase)
         self.cluster(new_phrase)
-        print(self.clusters)
         self.update_confidence_scores()
         self.save()
         return
@@ -157,19 +147,7 @@ class Snowball(object):
 
         with open(save_dir + self.save_file_name + '_relations.txt', 'w+') as f:
             for r in self.relations:
-                if r.found:
-                    rel_str = "(" + r.compound + ", " + r.value + \
-                        ", " + r.units + ", " + str(r.confidence) + ")"
-                    f.write(rel_str + "\n")
-                    for p in r.phrases:
-                        for elem in p.as_tokens():
-                            if isinstance(elem, list):
-                                for el in elem:
-                                    f.write(el + ' ')
-                            else:
-                                f.write(elem + ' ')
-                        f.write('\n')
-                    f.write('\n')
+                f.write(str(r) + "\n")
 
         return
     
@@ -229,7 +207,6 @@ class Snowball(object):
         return
 
 
-
     def parse(self, filename):
         """Parse the sentences of a file
         
@@ -241,16 +218,26 @@ class Snowball(object):
         for p in d.paragraphs:
             for s in p.sentences:
                 candidate_dict = {}
-                candidates = self.relationship.get_candidates(s.tagged_tokens)
-                for i, candidate in enumerate(candidates):
-                    candidates[str(i)] = candidate
-                    print("Candidate " + str(i) + candidate)
-                res = input("...: ")
-                if res in candidate_dict.keys():
-                    self.update(s.raw_tokens, candidates[res])
-                else:
-                    continue
+                candidate_relationships = self.relationship.get_candidates(s.tagged_tokens)
+                if len(candidate_relationships) > 0:
+                    print("\n\n")
+                    print(s)
+                    for i, candidate in enumerate(candidate_relationships):
+                        candidate_dict[str(i)] = candidate
+                        print("Candidate " + str(i)  + ' ' + str(candidate) + '\n')
+
+                    res = input("...: ")
+                    chosen_candidate_idx= res.split(',')
+                    chosen_candidates = []
+                    for cci in chosen_candidate_idx:
+                        if cci in candidate_dict.keys():
+                            cc = candidate_dict[cci]
+                            cc.confidence = 1.0
+                            chosen_candidates.append(cc)
+                    if chosen_candidates:
+                        self.update(s.raw_tokens, chosen_candidates)
         f.close()
+        return
 
     
     def train(self, corpus):
@@ -263,7 +250,9 @@ class Snowball(object):
             print(file_name)
             try:
                 f = os.path.join(corpus, file_name)
+                print(f)
                 self.parse(f)
+
             except Exception as e:
                 print(e)
                 continue

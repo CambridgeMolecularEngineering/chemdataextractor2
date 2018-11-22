@@ -8,7 +8,7 @@ import re
 
 class Phrase:
 
-    def __init__(self, sentence_tokens, relations):
+    def __init__(self, sentence_tokens, relations, prefix_length, suffix_length):
         """
         :param sentence: String of the sentence used to create phrase(s)
         :param matches: Dict containing relations and the associated compound/value/unit/specifier regex matches
@@ -22,6 +22,8 @@ class Phrase:
         self.elements = {}
         self.entities = []
         self.order = []
+        self.prefix_length = prefix_length
+        self.suffix_length = suffix_length
         if sentence_tokens and relations:
             self.create()
     
@@ -48,17 +50,16 @@ class Phrase:
         combined_entity_list = []
         for relation in relations:
             for entity in relation:
-
                 if entity in combined_entity_list:
-                    new_tag_name = entity.tag.name + '_' + str(entity_counter[entity.tag.name])
-                    entity.tag.name = new_tag_name
                     continue
                 else: 
                     if entity.tag.name not in entity_counter.keys():
-                            entity_counter[entity.tag.name] = 1
+                        entity_counter[entity.tag.name] = 1
                     else:
                         entity_counter[entity.tag.name] += 1
+                    
                     new_tag_name = entity.tag.name + '_' + str(entity_counter[entity.tag.name])
+
                     entity.tag.name = new_tag_name
                     combined_entity_list.append(entity)
 
@@ -69,16 +70,13 @@ class Phrase:
         # Determine the entitiy ordering
         sorted_entity_list = sorted(combined_entity_list, key=lambda t: t.start)
 
-        print(sorted_entity_list)
         self.entities = sorted_entity_list
         
         # Create ordering
         self.order = [e.tag for e in self.entities]
-        print(self.order)
-        print(self.entities)
 
         # Create the phrase elements, prefix, middles, suffix
-        self.elements['prefix'] = {'tokens': [t for t in sentence[:sorted_entity_list[0].start]]}
+        self.elements['prefix'] = {'tokens': [t for t in sentence[sorted_entity_list[0].start - self.prefix_length:sorted_entity_list[0].start]]}
 
 
         for m in range(0, number_of_middles):
@@ -86,7 +84,7 @@ class Phrase:
             next_entitiy_start = sorted_entity_list[m+1].start
             self.elements['middle_' + str(m+1)] = {'tokens': [t for t in sentence[prev_entity_end:next_entitiy_start]]}
 
-        self.elements['suffix'] = {'tokens': [t for t in sentence[sorted_entity_list[-1].end:]]}
+        self.elements['suffix'] = {'tokens': [t for t in sentence[sorted_entity_list[-1].end:sorted_entity_list[-1].end+self.suffix_length]]}
 
         return
 

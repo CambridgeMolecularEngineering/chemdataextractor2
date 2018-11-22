@@ -1,60 +1,101 @@
+from .entity import Entity
+from itertools import combinations, product
+from collections import Counter
 import copy
+
+
+def KnuthMorrisPratt(text, pattern):
+
+    '''Yields all starting positions of copies of the pattern in the text.
+Calling conventions are similar to string.find, but its arguments can be
+lists or iterators, not just strings, it returns all matches, not just
+the first one, and it does not need the whole text in memory at once.
+Whenever it yields, it will have read the text exactly up to and including
+the match that caused the yield.'''
+
+    # allow indexing into pattern and protect against change during yield
+    pattern = list(pattern)
+
+    # build table of shift amounts
+    shifts = [1] * (len(pattern) + 1)
+    shift = 1
+    for pos in range(len(pattern)):
+        while shift <= pos and pattern[pos] != pattern[pos-shift]:
+            shift += shifts[pos-shift]
+        shifts[pos+1] = shift
+
+    # do the actual search
+    startPos = 0
+    matchLen = 0
+    for c in text:
+        while matchLen == len(pattern) or \
+              matchLen >= 0 and pattern[matchLen] != c:
+            startPos += shifts[matchLen]
+            matchLen -= shifts[matchLen]
+        matchLen += 1
+        if matchLen == len(pattern):
+            yield startPos
+
 class ChemicalRelationship(object):
 
     def __init__(self, entities, parser):
         self.entities = entities
         self.parser = parser
-    
-    def get_candidiates(self, tokens):
+
+    def get_candidates(self, tokens):
         """Find all candidate relationships of this type within a sentence
         
         Arguments:
             tokens {[type]} -- [description]
         """
+        candidate_relationships = []
         # Scan the tagged tokens with the parser
+        detected = []
         for result in self.parser.scan(tokens):
-            entities_dict = {} 
             for e in self.entities:
-                text = result[0].xpath('./' + e.name + '/text()')
-                if not text:
-                    continue
-                
-                entity = (result[0].xpath('./' + e.name + '/text()'), result[1], result[2])
+                text_list = result[0].xpath('./' + e.name + '/text()')
+                for i, text in enumerate(text_list):
+                    if not text:
+                        continue
+                    detected.append((text, e))
 
-                if e not in entities_dict.keys():
-                    entities_dict[e.name] = []
-                    
-                if entity not in entities_dict[e]:
-                    entities_dict[e.name].append(entity)
+        entities_dict = {}
+        
+        if not detected:
+            return []
+
+        # Find duplicate results
+        occurrences = Counter(elem[0] for elem in detected)
+        duplicates = [k for k, v in occurrences.items() if v > 1]
+        detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
+        for text, tag in detected:
+            text_length = len(text.split(' '))
+            toks = [tok[0] for tok in tokens]
+            start_indices = [s for s in KnuthMorrisPratt(toks, text.split(' '))]
+            
+            # Add specifier to dictionary  if it doesn't exist
+            if tag.name not in entities_dict.keys():
+                entities_dict[tag.name] = []
+
+            # Keeps separate entities if tokens are duplicated
+            entities = [Entity(text, tag, index, index+text_length) for index in start_indices]
+
+            # Add entities to dictionary if new
+            for entity in entities:
+                if entity not in entities_dict[tag.name]:
+                    entities_dict[tag.name].append(entity)
 
         # check all required entities are present
         if not all(e.name in entities_dict.keys() for e in self.entities):
             return []
 
-        
+        # Construct all valid combinations of entities
+        all_entities = [e for e in entities_dict.values()]
+        candidates = list(product(*all_entities))
+        for candidate in candidates:
+            candidate_relationships.append(Relationship(candidate, confidence=0))
 
-
-        # Generate all possible valid candidate relationships
-        # i.e. every combination of entities that contains at least one of each
-        
-            # #print(compound, value, units, specifier)
-            # if compounds and specifiers and values and units:
-            #     all_entities = compounds + specifiers + values + units
-            #     combs = [m for r in range(4, len(all_entities) + 1)
-            #             for m in combinations(all_entities, r)]
-                
-            #     i = 0
-            #     print(s)
-            #     candidates = {}
-            #     for c in combs:
-            #         if not any(i in compounds for i in c):
-            #             continue
-            #         if not any(i in specifiers for i in c):
-            #             continue
-            #         if not any(i in values for i in c):
-            #             continue
-            #         if not any(i in units for i in c):
-            #             continue
+        return candidate_relationships
 
 
 class Relationship(object):
@@ -73,7 +114,7 @@ class Relationship(object):
         self.entities[idx] = value
     
     def __repr__(self):
-        return '(' + ','.join([i.text for i in self.entities]) + ')'
+        return '(' + ','.join([str(i) for i in self.entities]) + ')'
     
     def __eq__(self, other):
         # compare the text of all entities
@@ -82,3 +123,6 @@ class Relationship(object):
             if not entity.text in [i.text for i in other_entities]:
                 return False
         return True
+    
+    def __str__(self):
+        return self.__repr__()

@@ -194,6 +194,7 @@ class Cluster:
         for phrase in self.phrases:
             sentence = Sentence(phrase.full_sentence)
             relations = phrase.relations
+            print(relations)
             pattern_element = self.pattern.generate_cde_element()
             print(sentence)
 
@@ -218,7 +219,7 @@ class Cluster:
                 for fr in found_relations:
                     if fr in relations:
                         total_matches += 1
-                print(total_matches)
+        
         self.pattern.confidence = float(total_matches / total_relations)
         return
         
