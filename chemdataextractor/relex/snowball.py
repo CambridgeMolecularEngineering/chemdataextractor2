@@ -26,7 +26,6 @@ class Snowball(object):
         """
 
 
-
     def parse(self, filename):
         """Parse the sentences of a file
         
@@ -49,6 +48,22 @@ class Snowball(object):
                     continue
         f.close()
 
+    def parse_string(self, s):
+        """ Parses an individual string"""
+        d = Document().from_string(s.encode('utf-8'))
+        for p in d.paragraphs:
+            for s in p.sentences:
+                candidate_dict = {}
+                candidates = self.relationship.get_candidates(s.tagged_tokens)
+                # for i, candidate in enumerate(candidates):
+                #     candidates[str(i)] = candidate
+                #     print("Candidate " + str(i) + candidate)
+                # # res = input("...: ")
+                # if res in candidate_dict.keys():
+                #     self.update(s, candidates[res])
+                # else:
+                #     continue
+
     
     def train(self, corpus):
         """train the snowball algorithm on a specified corpus
@@ -61,6 +76,9 @@ class Snowball(object):
             try:
                 f = os.path.join(corpus, file_name)
                 self.parse(f)
+
+
+
             except Exception as e:
                 print(e)
                 continue

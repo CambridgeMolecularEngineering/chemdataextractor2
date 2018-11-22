@@ -20,15 +20,17 @@ Compound.curie_temperatures = ListType(ModelType(CurieTemperature))
 specifier = ((I('Curie') + I('temperature')) | R('^T(C|c)(urie)?'))('specifier').add_action(join)
 units = (R('^[CFK]\.?$'))('units').add_action(merge)
 value = (R('^\d+(\.\,\d+)?$'))('value')
-entities = (cem |  chemical_label | specifier | value + units)
+entities = (cem |chemical_label('label') | specifier | value + units)
 
 curie_temperature_phrase = (entities + OneOrMore(entities | Any()))('curie_temperature')
 
-curie_temp_entities = ['cem', 'label', 'specifier', 'value', 'units']
+curie_temp_entities = ['label', 'specifier', 'value', 'units']
 curie_temp_relationship = ChemicalRelationship(curie_temp_entities, curie_temperature_phrase)
 
 if __name__ == '__main__':
     curie_temp_snowball = Snowball(curie_temp_relationship)
-    curie_temp_snowball.train(corpus='//Users/cj/Desktop/Work/Cambridge/Project/RelationExtraction/curie/training_set/')
+    test_sentence = 'For instance, for 3a the Curie temperature (Tc) has been increased from 313 K (H phase) to 360 K (ZB phase). '
+    curie_temp_snowball.parse_string(test_sentence)
+    #curie_temp_snowball.train(corpus='/home/edward/Documents/snowball/training_set/tiny_set/')
 
 
