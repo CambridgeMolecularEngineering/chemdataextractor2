@@ -25,14 +25,22 @@ from ..nlp.tokenize import FineWordTokenizer
 from ..utils import memoized_property
 from .element import CaptionedElement
 from .text import Sentence
+from ..config import Config
 
 
 log = logging.getLogger(__name__)
 
+TABLE_PARSERS = {
+    'CompoundTableParser': (CompoundHeadingParser(), CompoundCellParser()),
+    'UvvisAbsQuantumYieldTableParser': (UvvisAbsEmiQuantumYieldHeadingParser(), UvvisAbsEmiQuantumYieldCellParser()),
+    'UvvisEmiQuantumYieldTableParser': (UvvisEmiQuantumYieldHeadingParser(), UvvisEmiQuantumYieldCellParser()),
+    'UvvisAbsHeadingTableParser': (UvvisEmiHeadingParser(), UvvisEmiCellParser()),
+    'UvvisAbsHeadingTableParser': (UvvisAbsHeadingParser(), UvvisAbsCellParser(), UvvisAbsDisallowedHeadingParser()),
+}
+
 
 class Table(CaptionedElement):
 
-    #: Table cell parsers
     parsers = [
         (CompoundHeadingParser(), CompoundCellParser()),
         (UvvisAbsEmiQuantumYieldHeadingParser(), UvvisAbsEmiQuantumYieldCellParser()),
@@ -56,6 +64,19 @@ class Table(CaptionedElement):
         self.headings = headings if headings is not None else []  # list(list(Cell))
         self.rows = rows if rows is not None else []  # list(list(Cell))
         self.footnotes = footnotes if footnotes is not None else []
+
+    def set_parsers(self):
+
+        #: Table cell parsers
+        try:
+            c = self.document.config
+            conf_parsers = c['PARSERS']['Table']
+            parsers = []
+            for p in conf_parsers:
+                parsers.append(TABLE_PARSERS[p])
+        except KeyError:
+            pass
+        return self
 
     @property
     def document(self):

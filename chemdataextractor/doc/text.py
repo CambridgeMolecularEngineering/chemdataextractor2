@@ -34,6 +34,7 @@ from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_
 from ..text import CONTROL_RE
 from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
+from ..config import Config
 
 from lxml import etree
 
@@ -56,6 +57,18 @@ class BaseText(BaseElement):
         self.abbreviation_detector = abbreviation_detector if abbreviation_detector is not None else self.abbreviation_detector
         self.pos_tagger = pos_tagger if pos_tagger is not None else self.pos_tagger
         self.ner_tagger = ner_tagger if ner_tagger is not None else self.ner_tagger
+
+        # Assign parsers by config file
+        # if self.document.config:
+        #     try:
+        #         conf_parsers = self.document.config['PARSERS']['Paragraph']
+        #         parsers = []
+        #         for p in conf_parsers:
+        #             parsers.append(eval(p))
+        #         self.parsers = parsers
+        #     except KeyError:
+        #         pass
+
         self.parsers = parsers if parsers is not None else self.parsers
 
     def __repr__(self):
@@ -135,6 +148,8 @@ class Text(collections.Sequence, BaseText):
         """"""
         super(Text, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, parsers=None, **kwargs)
         self.sentence_tokenizer = sentence_tokenizer if sentence_tokenizer is not None else self.sentence_tokenizer
+        if callable(getattr(self, 'set_parsers', None)):
+            self.set_parsers()
 
     def __getitem__(self, index):
         return self.sentences[index]
@@ -265,7 +280,22 @@ class Text(collections.Sequence, BaseText):
 
 
 class Title(Text):
-    parsers = [CompoundParser()]
+
+    def set_parsers(self):
+        parsers = [CompoundParser()]
+
+        if self.document is not None:
+            try:
+                c = self.document.config
+                conf_parsers = c['PARSERS']['Title']
+                parsers = []
+                for p in conf_parsers:
+                    parsers.append(eval(p))
+            except KeyError:
+                pass
+        self.parsers = parsers
+
+        return self
 
     def _repr_html_(self):
         return '<h1 class="cde-title">' + self.text + '</h1>'
@@ -280,11 +310,27 @@ class Heading(Text):
 
 class Paragraph(Text):
 
-    # order is important
-    parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(), TgParser(), ContextParser()]
-
     def _repr_html_(self):
         return '<p class="cde-paragraph">' + self.text + '</p>'
+
+    def set_parsers(self):
+        parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(),
+                   TgParser(), ContextParser()]
+        if self.document is not None:
+            try:
+                c = self.document.config
+                conf_parsers = c['PARSERS']['Paragraph']
+                parsers = []
+                for p in conf_parsers:
+                    parsers.append(eval(p))
+            except KeyError:
+                pass
+
+        self.parsers = parsers
+
+        return self
+
+
 
 
 class Footnote(Text):

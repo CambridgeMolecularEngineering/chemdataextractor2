@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractproperty
 import collections
 import io
+import os
 import json
 import logging
 
@@ -24,6 +25,7 @@ from .figure import Figure
 from ..errors import ReaderError
 from ..model import ModelList
 from ..text import get_encoding
+from ..config import Config
 
 
 log = logging.getLogger(__name__)
@@ -59,7 +61,7 @@ class BaseDocument(six.with_metaclass(ABCMeta, collections.Sequence)):
 class Document(BaseDocument):
     """A document to extract data from. Contains a list of document elements."""
 
-    def __init__(self, *elements):
+    def __init__(self, *elements, config=Config()):
         """Initialize a Document manually by passing one or more Document elements (Paragraph, Heading, Table, etc.)
 
         Strings that are passed to this constructor are automatically wrapped into Paragraph elements.
@@ -78,6 +80,10 @@ class Document(BaseDocument):
                 element = Paragraph(element.decode(encoding))
             element.document = self
             self._elements.append(element)
+        self.config = config
+        for element in elements:
+            if callable(getattr(element, 'set_parsers', None)):
+                element.set_parsers()
         log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
 
     @classmethod
@@ -320,6 +326,11 @@ class Document(BaseDocument):
         """Return all Footnote Elements in this Document."""
         # TODO: Elements (e.g. Tables) can contain nested Footnotes
         return [el for el in self.elements if isinstance(el, Footnote)]
+
+    @property
+    def titles(self):
+        """Returns all Title Elements in this Document"""
+        return [el for el in self.elements if isinstance(el, Title)]
 
     @property
     def headings(self):
