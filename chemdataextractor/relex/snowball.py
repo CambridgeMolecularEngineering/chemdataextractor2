@@ -81,8 +81,6 @@ class Snowball(object):
                 f = os.path.join(corpus, file_name)
                 self.parse(f)
 
-
-
             except Exception as e:
                 print(e)
                 continue

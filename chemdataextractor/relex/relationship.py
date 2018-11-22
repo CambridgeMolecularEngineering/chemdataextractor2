@@ -1,7 +1,7 @@
 from .entity import Entity
 from itertools import combinations, product
 from collections import Counter
-from .entity import Relationship
+
 
 class ChemicalRelationship(object):
 
@@ -34,7 +34,7 @@ class ChemicalRelationship(object):
         occurrences = Counter(elem[0] for elem in detected)
         duplicates = [k for k, v in occurrences.items() if v > 1]
 
-        detected = list(set(detected))  # Remove duplicate entries (they are handled by indexing)
+        detected = list(set(detected))  # Remove duplicate entries ( handled by indexing)
         for text, specifier in detected:
             indices = [i for i, token in enumerate(tokens) for word in text.split(' ') if word in token]
 

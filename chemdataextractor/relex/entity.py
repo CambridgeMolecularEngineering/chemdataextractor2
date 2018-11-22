@@ -11,23 +11,3 @@ class Entity(object):
 
     def __str__(self):
         return self.text
-
-class Relationship(object):
-    """ Relationship object, consisting of all generated entity combinations"""
-
-    def __init__(self, entities):
-        self.entities = entities
-
-
-#
-# class DummyRelationship(object):
-#     def __init__(self, iterable=(), **kwargs):
-#         self.__dict__.update(iterable, **kwargs)
-#
-#
-# class Relationship(DummyRelationship):
-#     """ Proposed relationship between entities"""
-#     def __init__(self, iterable=(), **kwargs):
-#         super().__init__(iterable, **kwargs)
-
-
