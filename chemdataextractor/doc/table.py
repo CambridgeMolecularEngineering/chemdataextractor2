@@ -25,7 +25,6 @@ from ..nlp.tokenize import FineWordTokenizer
 from ..utils import memoized_property
 from .element import CaptionedElement
 from .text import Sentence
-from ..config import Config
 
 
 log = logging.getLogger(__name__)
@@ -41,41 +40,40 @@ TABLE_PARSERS = {
 
 class Table(CaptionedElement):
 
-    parsers = [
-        (CompoundHeadingParser(), CompoundCellParser()),
-        (UvvisAbsEmiQuantumYieldHeadingParser(), UvvisAbsEmiQuantumYieldCellParser()),
-        (UvvisEmiQuantumYieldHeadingParser(), UvvisEmiQuantumYieldCellParser()),
-        (UvvisEmiHeadingParser(), UvvisEmiCellParser()),
-        (UvvisAbsHeadingParser(), UvvisAbsCellParser(), UvvisAbsDisallowedHeadingParser()),
-        (IrHeadingParser(), IrCellParser()),
-        (ExtinctionHeadingParser(), ExtinctionCellParser()),
-        (QuantumYieldHeadingParser(), QuantumYieldCellParser()),
-        (FluorescenceLifetimeHeadingParser(), FluorescenceLifetimeCellParser()),
-        (ElectrochemicalPotentialHeadingParser(), ElectrochemicalPotentialCellParser()),
-        (MeltingPointHeadingParser(), MeltingPointCellParser()),
-        (GlassTransitionHeadingParser(), GlassTransitionCellParser()),
-        (SolventHeadingParser(), SolventCellParser()),
-        (SolventInHeadingParser(),),
-        (TempInHeadingParser(),)
-    ]
-
     def __init__(self, caption, label=None, headings=None, rows=None, footnotes=None, **kwargs):
         super(Table, self).__init__(caption=caption, label=label, **kwargs)
         self.headings = headings if headings is not None else []  # list(list(Cell))
         self.rows = rows if rows is not None else []  # list(list(Cell))
         self.footnotes = footnotes if footnotes is not None else []
 
-    def set_parsers(self):
+        self.parsers = [
+            (CompoundHeadingParser(), CompoundCellParser()),
+            (UvvisAbsEmiQuantumYieldHeadingParser(), UvvisAbsEmiQuantumYieldCellParser()),
+            (UvvisEmiQuantumYieldHeadingParser(), UvvisEmiQuantumYieldCellParser()),
+            (UvvisEmiHeadingParser(), UvvisEmiCellParser()),
+            (UvvisAbsHeadingParser(), UvvisAbsCellParser(), UvvisAbsDisallowedHeadingParser()),
+            (IrHeadingParser(), IrCellParser()),
+            (ExtinctionHeadingParser(), ExtinctionCellParser()),
+            (QuantumYieldHeadingParser(), QuantumYieldCellParser()),
+            (FluorescenceLifetimeHeadingParser(), FluorescenceLifetimeCellParser()),
+            (ElectrochemicalPotentialHeadingParser(), ElectrochemicalPotentialCellParser()),
+            (MeltingPointHeadingParser(), MeltingPointCellParser()),
+            (GlassTransitionHeadingParser(), GlassTransitionCellParser()),
+            (SolventHeadingParser(), SolventCellParser()),
+            (SolventInHeadingParser(),),
+            (TempInHeadingParser(),)
+        ]
+        self.set_parsers()
 
+    def set_parsers(self):
         #: Table cell parsers
-        try:
-            c = self.document.config
-            conf_parsers = c['PARSERS']['Table']
-            parsers = []
-            for p in conf_parsers:
-                parsers.append(TABLE_PARSERS[p])
-        except KeyError:
-            pass
+        if self.document:
+            try:
+                c = self.document.config
+                conf_parsers = c['PARSERS'][self.__class__.__name__]
+                self.parsers =[TABLE_PARSERS[p] for p in conf_parsers]
+            except KeyError:
+                pass
         return self
 
     @property

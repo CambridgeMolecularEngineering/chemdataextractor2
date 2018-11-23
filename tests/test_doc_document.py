@@ -13,10 +13,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import unittest
-import os
 
 from chemdataextractor.doc.document import Document
-from chemdataextractor.config import Config
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -71,8 +69,6 @@ class TestDocument(unittest.TestCase):
         defs = d.definitions
         expected = [{'definition': 'Curie temperature', 'specifier': 'TC', 'start': 4, 'end': 9}, {'definition': 'uv - vis absorption maximum', 'specifier': 'λmax', 'start': 4, 'end': 11}, {'definition': 'melting point', 'specifier': 'Tm', 'start': 3, 'end': 7}]
         self.assertEqual(defs, expected)
-
-
 
 
 if __name__ == '__main__':

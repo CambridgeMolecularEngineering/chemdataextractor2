@@ -12,14 +12,13 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractproperty
 import collections
 import io
-import os
 import json
 import logging
 
 import six
 
 from ..utils import python_2_unicode_compatible
-from .text import Paragraph, Citation, Footnote, Heading, Title
+from .text import Paragraph, Citation, Footnote, Heading, Title, Caption
 from .table import Table
 from .figure import Figure
 from ..errors import ReaderError
@@ -341,6 +340,11 @@ class Document(BaseDocument):
     def paragraphs(self):
         """Return all Paragraph Elements in this Document."""
         return [el for el in self.elements if isinstance(el, Paragraph)]
+
+    @property
+    def captions(self):
+        """Return all Caption Elements in this Document."""
+        return [el for el in self.elements if isinstance(el, Caption)]
 
     @property
     def captioned_elements(self):

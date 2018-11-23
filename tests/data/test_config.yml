@@ -5,3 +5,7 @@ PARSERS:
     Paragraph: [CompoundParser, ChemicalLabelParser, NmrParser]
     Table: [CompoundTableParser, UvvisAbsQuantumYieldTableParser, UvvisEmiQuantumYieldTableParser]
     Title: [NmrParser]
+    Heading: [NmrParser]
+    Footnote: [ChemicalLabelParser]
+    Caption: [NmrParser]
+
