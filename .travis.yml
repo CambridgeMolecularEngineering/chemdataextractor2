@@ -31,4 +31,4 @@ before_script:
   - sleep 3
 script:
   - pytest
-  - sphinx-build -b html ./documentation/ ./documentation/_build/html/
+  - sphinx-build -b html ./docs/ ./docs/_build/html/
