@@ -45,3 +45,5 @@ docs/_build/
 .pytest_cache/v/cache/nodeids
 main.py
 geckodriver.log
+.pytest_cache/v/cache/lastfailed
+.pytest_cache/v/cache/nodeids
