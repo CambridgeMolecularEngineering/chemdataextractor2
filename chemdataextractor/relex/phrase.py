@@ -9,10 +9,17 @@ import re
 class Phrase:
 
     def __init__(self, sentence_tokens, relations, prefix_length, suffix_length):
+        """Phrase Object
+
+        Class for handling which relations and entities appear in a sentence, the base type used for clustering and generating extraction patterns
+        
+        Arguments:
+            sentence_tokens {[list} -- The sentence tokens from which to generate the Phrase    
+            relations {list} -- List of Relation objects to be tagged in the sentence
+            prefix_length {int} -- Number of tokens to assign to the prefix
+            suffix_length {int} -- Number of tokens to assign to the suffix
         """
-        :param sentence: String of the sentence used to create phrase(s)
-        :param matches: Dict containing relations and the associated compound/value/unit/specifier regex matches
-        """
+
         self.sentence_tokens = sentence_tokens
         self.full_sentence = ' '.join(sentence_tokens)
 
@@ -46,10 +53,12 @@ class Phrase:
         sentence = self.sentence_tokens
         relations = self.relations
         entity_counter = {}
-        print("Creating phrase")
+        # print("Creating phrase")
         combined_entity_list = []
         for relation in relations:
+            # print(relation)
             for entity in relation:
+                # print(entity)
                 if entity in combined_entity_list:
                     continue
                 else: 
@@ -58,8 +67,8 @@ class Phrase:
                     else:
                         entity_counter[entity.tag.name] += 1
                     
-                    new_tag_name = entity.tag.name + '_' + str(entity_counter[entity.tag.name])
-
+                    new_tag_name = entity.tag.name.split('_')[0] + '_' + str(entity_counter[entity.tag.name])
+                    # print(new_tag_name)
                     entity.tag.name = new_tag_name
                     combined_entity_list.append(entity)
 
@@ -73,7 +82,7 @@ class Phrase:
         self.entities = sorted_entity_list
         
         # Create ordering
-        self.order = [e.tag for e in self.entities]
+        self.order = [e.tag.name for e in self.entities]
 
         # Create the phrase elements, prefix, middles, suffix
         self.elements['prefix'] = {'tokens': [t for t in sentence[sorted_entity_list[0].start - self.prefix_length:sorted_entity_list[0].start]]}
@@ -90,53 +99,6 @@ class Phrase:
 
     def reset_vectors(self):
         """ Set all element vectors to None"""
-        for element in self.elements:
-            for element_num in self.elements[element].keys():
-                self.elements[element][element_num]['vector'] = None
+        for element in self.elements.keys():
+            self.elements[element]['vector'] = None
         return
-
-    def as_string(self):
-        """
-
-        :return: phrase object as a string
-        """
-        output_string = ''
-        output_string += ' '.join(self.elements['prefix']['1']['tokens']) + ' '
-        output_string += self.entities[0][1] + ' '
-        for i in range(0, self.number_of_entities - 1):
-            if str(i+1) in self.elements['middles'].keys():
-                output_string += ' '.join(
-                    self.elements['middles'][str(i + 1)]['tokens']) + ' '
-            output_string += self.entities[i + 1][1] + ' '
-        output_string += ' '.join(self.elements['suffix']['1']['tokens'])
-
-        # replace troublesome characters
-        output_string = output_string.replace('\n', ' ')
-        # Possibly a hidden non breaking space
-        output_string = output_string.replace(u'\u00A0', ' ')
-        output_string = output_string.replace(u'\u2212', '-')
-        output_string = output_string.replace(u'\u2009 ', ' ')
-
-        output_string.replace('  ', ' ')
-
-        return output_string
-
-    def retrieve_relations(self):
-        """ Use the entity tags to recover the related entities from this phrase """
-        retrieved_relations = []
-        number_of_units = self.order.count('3')
-        # print(number_of_units)
-        for i in self.entities:
-            # print(i)
-            for j in self.entities:
-                # print(j)
-                if i[1].startswith('<CEM') and j[1].startswith('<VALUE') and i[1][4] == j[1][6] and number_of_units == 1:
-                    unit_index = self.order.index('3')
-                    retrieved_relations.append(
-                        [i[0], j[0], self.entities[unit_index][0]])
-                elif i[1].startswith('<CEM') and j[1].startswith('<VALUE') and i[1][4] == j[1][6] and number_of_units != 1:
-                    for k in self.entities:
-                        if k[1].startswith('<UNIT') and k[1][5] == j[1][6] and k[1][5] == i[1][4]:
-                            retrieved_relations.append([i[0], j[0], k[0]])
-        # print(retrieved_relations)
-        return retrieved_relations

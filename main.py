@@ -23,56 +23,25 @@ curie_combined = ((curie_words + curie_symbols).add_action(join) | (curie_symbol
 specifier = (curie_combined | curie_words | curie_symbols)('specifier').add_action(join)
 units = (R('^[CFK]\.?$'))('units').add_action(merge)
 value = (R('^\d+(\.\,\d+)?$'))('value')
-entities = (chemical_name | specifier | value + units)
 
+entities = (chemical_name | specifier | value + units)
 curie_temperature_phrase = (entities + OneOrMore(entities | Any()))('curie_temperature')
 
 curie_temp_entities = [chemical_name, specifier, value, units]
-curie_temp_relationship = ChemicalRelationship(curie_temp_entities, curie_temperature_phrase)
+curie_temp_relationship = ChemicalRelationship(curie_temp_entities, curie_temperature_phrase, name='curie_temperatures')
 
-
-def KnuthMorrisPratt(text, pattern):
-
-    '''Yields all starting positions of copies of the pattern in the text.
-Calling conventions are similar to string.find, but its arguments can be
-lists or iterators, not just strings, it returns all matches, not just
-the first one, and it does not need the whole text in memory at once.
-Whenever it yields, it will have read the text exactly up to and including
-the match that caused the yield.'''
-
-    # allow indexing into pattern and protect against change during yield
-    pattern = list(pattern)
-
-    # build table of shift amounts
-    shifts = [1] * (len(pattern) + 1)
-    shift = 1
-    for pos in range(len(pattern)):
-        while shift <= pos and pattern[pos] != pattern[pos-shift]:
-            shift += shifts[pos-shift]
-        shifts[pos+1] = shift
-
-    # do the actual search
-    startPos = 0
-    matchLen = 0
-    for c in text:
-        while matchLen == len(pattern) or \
-              matchLen >= 0 and pattern[matchLen] != c:
-            startPos += shifts[matchLen]
-            matchLen -= shifts[matchLen]
-        matchLen += 1
-        if matchLen == len(pattern):
-            yield startPos
 
 if __name__ == '__main__':
     curie_temp_snowball = Snowball(curie_temp_relationship)
-    curie_temp_snowball.train(corpus='//Users/cj/Desktop/Work/Cambridge/Project/magnetic_materials_discovery/case_studies_paper/data/papers/')
+    curie_temp_snowball.train(corpus='tests/data/relex/curie_training_set/')
 
-    # test = ['curie', 'temperature']
-    # text = ['this', 'is', 'a', 'curie', 'temperature', 'test']
+    # Once trained, extract from a new sentence
+    # curie_temp_snowball = Snowball.load('chemdataextractor/relex/data/curie.pkl')
+    # curie_temp_snowball.model = CurieTemperature
+    curie_temp_snowball.save_file_name = 'curie_2'
+    test_sentence = Sentence('BiFeO3 is ferromagnetic with a curie temperature of 1103 K and')
+    rels = curie_temp_snowball.extract(test_sentence)
 
-    # for s in KnuthMorrisPratt(text, test):
-    #     print(s)
-
-    # Test sentence
-    # s = Sentence('that MnO and NiO have curie temperature Tc of 100 and 300 K respectively')
-    # records = curie_temp_snowball.extract(s)
+    # print("found:", rels)
+    # # or get CDE records using a specific model
+    # cde_records = curie_temp_snowball.records(test_sentence)

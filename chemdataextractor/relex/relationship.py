@@ -1,52 +1,44 @@
-from .entity import Entity
-from itertools import combinations, product
-from collections import Counter
+# -*- coding: utf-8 -*-
+"""
+Chemdataextractor.relex.relationship
+
+Classes for defining new chemical relationships
+"""
 import copy
+from collections import Counter
+from itertools import combinations, product
 
+from .entity import Entity
+from .utils import KnuthMorrisPratt
 
-def KnuthMorrisPratt(text, pattern):
-
-    '''Yields all starting positions of copies of the pattern in the text.
-Calling conventions are similar to string.find, but its arguments can be
-lists or iterators, not just strings, it returns all matches, not just
-the first one, and it does not need the whole text in memory at once.
-Whenever it yields, it will have read the text exactly up to and including
-the match that caused the yield.'''
-
-    # allow indexing into pattern and protect against change during yield
-    pattern = list(pattern)
-
-    # build table of shift amounts
-    shifts = [1] * (len(pattern) + 1)
-    shift = 1
-    for pos in range(len(pattern)):
-        while shift <= pos and pattern[pos] != pattern[pos-shift]:
-            shift += shifts[pos-shift]
-        shifts[pos+1] = shift
-
-    # do the actual search
-    startPos = 0
-    matchLen = 0
-    for c in text:
-        while matchLen == len(pattern) or \
-              matchLen >= 0 and pattern[matchLen] != c:
-            startPos += shifts[matchLen]
-            matchLen -= shifts[matchLen]
-        matchLen += 1
-        if matchLen == len(pattern):
-            yield startPos
 
 class ChemicalRelationship(object):
+    """Base ChemicalRelationship class
+    
+    Used to define a new relationship model based on entities
+    """
 
-    def __init__(self, entities, parser):
-        self.entities = entities
+
+    def __init__(self, entities, parser, name):
+        """Create the new relationship
+        
+        Arguments:
+            entities {list(chemdataextractor elements)} -- List of CDE parse elements that define how to identify the entities
+            parser {Parserelement} -- A phrase describing how to find all entities in a single sentence
+            name {str} -- What to call this relationship
+        """
+
+        self.entities = copy.copy(entities)
         self.parser = parser
+        self.name = name
 
     def get_candidates(self, tokens):
         """Find all candidate relationships of this type within a sentence
         
         Arguments:
-            tokens {[type]} -- [description]
+            tokens {list} -- List of sentence tokens, tagged using CDE
+        Returns
+            relations {list} -- list of relations found in the text
         """
         candidate_relationships = []
         # Scan the tagged tokens with the parser
@@ -64,9 +56,6 @@ class ChemicalRelationship(object):
         if not detected:
             return []
 
-        # Find duplicate results
-        occurrences = Counter(elem[0] for elem in detected)
-        duplicates = [k for k, v in occurrences.items() if v > 1]
         detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
         for text, tag in detected:
             text_length = len(text.split(' '))
@@ -77,9 +66,7 @@ class ChemicalRelationship(object):
             if tag.name not in entities_dict.keys():
                 entities_dict[tag.name] = []
 
-            # Keeps separate entities if tokens are duplicated
             entities = [Entity(text, tag, index, index+text_length) for index in start_indices]
-
             # Add entities to dictionary if new
             for entity in entities:
                 if entity not in entities_dict[tag.name]:
@@ -93,14 +80,26 @@ class ChemicalRelationship(object):
         all_entities = [e for e in entities_dict.values()]
         candidates = list(product(*all_entities))
         for candidate in candidates:
-            candidate_relationships.append(Relationship(candidate, confidence=0))
+            candidate_relationships.append(Relation(candidate, confidence=0))
 
         return candidate_relationships
 
 
-class Relationship(object):
+class Relation(object):
+    """Relation class
+
+    Essentially a placeholder for a number of entities
+    """
+
 
     def __init__(self, entities, confidence):
+        """Init
+        
+        Arguments:
+            entities {list} -- List of Entity objects that are present in this relationship
+            confidence {float} -- The confidence of the relation
+        """
+
         self.entities = copy.copy(entities)
         self.confidence = confidence
     
@@ -114,7 +113,7 @@ class Relationship(object):
         self.entities[idx] = value
     
     def __repr__(self):
-        return '(' + ','.join([str(i) for i in self.entities]) + ')'
+        return '<' + ', '.join([str(i) for i in self.entities]) + '>'
     
     def __eq__(self, other):
         # compare the text of all entities

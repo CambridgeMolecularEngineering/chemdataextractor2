@@ -1,77 +1,62 @@
+# -*- coding: utf-8 -*-
+"""
+Chemdataextractor.relex.snowball
+
+The Snowball Relationship Extraction algorithm
+"""
+import copy
+import os
+import pickle
+from itertools import combinations
+
+import numpy as np
+from lxml import etree
+
+from chemdataextractor.parse import (Any, I, OneOrMore, Optional, R, W,
+                                     ZeroOrMore, join, merge)
+
 from ..doc.document import Document, Paragraph
 from ..doc.text import Sentence
-import os
+from ..model import Compound
 from ..parse.cem import chemical_name
-from lxml import etree
-from .phrase import Phrase
 from .cluster import Cluster
-from itertools import combinations
-import numpy as np
-import copy
-from .relationship import Relationship
 from .entity import Entity
-from chemdataextractor.parse import R, I, W, Optional, merge, join, OneOrMore, Any, ZeroOrMore
-import pickle
-
-def match(pi, pj, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
-    """ Compute match between phrases using a dot product of vectors
-    :param pi Phrase or pattern
-    :param pj phrase or pattern
-    # add weights to dot products to put more emphasis on matching the middles
-    """
-
-    if pi.order != pj.order:
-        return 0
-
-    #print(pi.as_string(), pj.as_string())
-
-    number_of_middles_i = pi.number_of_entities - 1
-    number_of_middles_j = pj.number_of_entities - 1
-    if number_of_middles_i != number_of_middles_j:
-        return 0
-
-    prefix_i = pi.elements['prefix']['1']['vector']
-    middles_i = [pi.elements['middles'][m]['vector']
-                 for m in pi.elements['middles'].keys()]
-    suffix_i = pi.elements['suffix']['1']['vector']
-
-    prefix_j = pj.elements['prefix']['1']['vector']
-    middles_j = [pj.elements['middles'][m]['vector']
-                 for m in pj.elements['middles'].keys()]
-    suffix_j = pj.elements['suffix']['1']['vector']
-
-    if len(prefix_i) == 0 and len(prefix_j) == 0:
-        prefix_dot_prod = 1.0
-    else:
-        prefix_dot_prod = np.dot(prefix_i, prefix_j)
-
-    middle_dot_prod = []
-    for i in range(0, len(middles_i)):
-        if len(middles_i[i]) == 0 and len(middles_j[i]) == 0:
-            middle_dot_prod.append(1.0)
-        elif len(middles_i[i]) != len(middles_j[i]):
-            middle_dot_prod.append(0)
-        else:
-            #print(i, pi.elements['middles'], pj.elements['middles'])
-            #print(middles_i, middles_j)
-            m_dot = np.dot(middles_i[i], middles_j[i])
-            middle_dot_prod.append(m_dot)
-
-    if len(suffix_i) == 0 and len(suffix_j) == 0:
-        suffix_dot_prod = 1.0
-    else:
-        suffix_dot_prod = np.dot(suffix_i, suffix_j)
-
-    sim = (prefix_weight * prefix_dot_prod) + ((middle_weight/number_of_middles_j)
-                                               * sum(middle_dot_prod)) + (suffix_weight * suffix_dot_prod)
-    return sim
-
-    
+from .phrase import Phrase
+from .relationship import Relation
+from .utils import match
 
 
 class Snowball(object):
+    """Main Snowball class
+
+    ::Usage: Define a ChemicalRelationship (see relex.relationship)
+        ```snowball = Snowball(relationship=my_relationhip)```
+        Then train the system on a corpus
+        ```snowball.train(corpus)```
+        This will generate an online training system
     
-    def __init__(self, relationship, tc=0.9, update_param=1, tsim=0.9, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1, prefix_length=1, suffix_length=1):
+    ::params:
+    For full detail see the associated paper: https://www.nature.com/articles/sdata2018111
+        tc: The minimum confidence of a relationship in order to be accepted
+        tsim: Minimum similarity between sentences in order for them to be clustered
+        prefix_weight: The weight of the sentence prefix in the similarity calculation
+        middle_weight: weight of middles in similarity calcs
+        suffix_weight: weight of the suffix in similarity calcs
+        prefix_length: Number of tokens to use in the phrase prefix
+        suffix_length: number of tokens to use in phrase suffix
+        learning_rate: How fast new confidences update based on new data (1 means new confidence is always taken, 0 means no update, )
+    """
+
+    
+    def __init__(self, relationship, 
+                        tc=0.95, 
+                        tsim=0.95, 
+                        prefix_weight=0.1, 
+                        middle_weight=0.8, 
+                        suffix_weight=0.1, 
+                        prefix_length=1, 
+                        suffix_length=1, 
+                        learning_rate=0.5):
         self.relationship = relationship
         self.relations = []
         self.phrases = []
@@ -79,42 +64,62 @@ class Snowball(object):
         self.cluster_counter = 0
         self.sentences = []
         self.save_dir = 'chemdataextractor/relex/data/'
-        self.save_file_name = 'test'
+        self.save_file_name = relationship.name
 
         # params
+        if not 0 <= tc <= 1.0:
+            raise ValueError("Tc must be between 0 and 1")
+        
+        if not 0 <= tsim <= 1.0:
+            raise ValueError("Tsim must be between 0 and 1")
+        
+        if not 0 <= learning_rate <= 1.0:
+            raise ValueError("Learning rate must be between 0 and 1")
+        
+        if not 0 <= prefix_weight <= 1.0:
+            raise ValueError("Prefix weight must be between 0 and 1")
+        
+        if not 0 <= middle_weight <= 1.0:
+            raise ValueError("middle_weight must be between 0 and 1")
+        
+        if not 0 <= suffix_weight <= 1.0:
+            raise ValueError("suffix weight must be between 0 and 1")
+
         self.minimum_relation_confidence = tc
-        self.update_param = update_param
         self.minimum_cluster_similarity_score = tsim
         self.prefix_weight = prefix_weight
         self.middle_weight = middle_weight
         self.suffix_weight = suffix_weight
         self.prefix_length = prefix_length
         self.suffix_length = suffix_length
+        self.learning_rate=learning_rate
 
-    
+    @classmethod
+    def load(cls, path):
+        """Load a snowball instance from file
+        
+        Arguments:
+            path {str} -- path to the pkl file
+        
+        Returns:
+            self -- A Snowball Instance
+        """
+
+        f = open(path, 'rb')
+        return pickle.load(f)
+
     def update(self, sentence_tokens, relations=[]):
         """Update the learned extraction pattern clusters based on the incoming sentence and relation
         
         Arguments:
-            sentence {[type]} -- [description]
-            relation {[type]} -- [description]
+            sentence_tokens {list} -- the sentence tokenised
+            relation {list} -- The Relation objects that are in the sentence
         """
         new_phrase = Phrase(sentence_tokens, relations, self.prefix_length, self.suffix_length) 
-        print("Created Phrase", new_phrase)
         self.cluster(new_phrase)
-        self.update_confidence_scores()
         self.save()
         return
-    
-    def update_confidence_scores(self):
-        """Determine the confidence scores for all patterns in all clusters
-            Do this by comparing all patterns to all previously seen sentences and determining the number of correct matches
-        """
-        for cluster in self.clusters:
-            cluster.update_pattern_confidence()
-        return
 
-    
     def save(self):
         """ Write all snowball settings to file for loading later"""
         save_dir = self.save_dir
@@ -144,26 +149,46 @@ class Snowball(object):
                 p = c.pattern
                 f.write(str(p.to_string()) +
                         " with confidence score " + str(p.confidence) + "\n\n")
-
-        with open(save_dir + self.save_file_name + '_relations.txt', 'w+') as f:
-            for r in self.relations:
-                f.write(str(r) + "\n")
+        
+        with open(save_dir + self.save_file_name + '_relations.txt', 'w+') as wf:
+            for c in self.clusters:
+                for phrase in c.phrases:
+                    for relation in phrase.relations:
+                        wf.write(str(relation) + " Confidence:  " + str(relation.confidence) + '\n')
 
         return
     
     def cluster(self, phrase):
+        """Assign a phrase object to a cluster
+        
+        Arguments:
+            phrase {Phrase} -- The Phrase to cluster
+        """
+
         # If no clusters, create a new one
         if len(self.clusters) == 0:
-            cluster0 = Cluster(str(self.cluster_counter))
+            cluster0 = Cluster(str(self.cluster_counter), learning_rate=self.learning_rate)
             cluster0.add_phrase(phrase)
             self.clusters.append(cluster0) 
         else:
+            # Use a single pass classification algorithm to classify
             self.classify(phrase)
         return
+    
+    def delete_cluster(self, idx):
+        """Delete all data associated with a cluster
+        
+        Arguments:
+            idx {int} -- Cluster to delete
+        """
+        to_del = self.clusters[idx]
+        del to_del
+        return
+
 
     def classify(self, phrase):
         """
-        Assign a phrase to clusters based on similarity score
+        Assign a phrase to clusters based on similarity score using single pass classification
         :param phrase: Phrase object
         :return:
         """
@@ -189,29 +214,84 @@ class Snowball(object):
             # Create a new cluster
             self.cluster_counter += 1
             # create a new cluster
-            new_cluster = Cluster(str(self.cluster_counter))
+            new_cluster = Cluster(str(self.cluster_counter), learning_rate=self.learning_rate)
             new_cluster.add_phrase(phrase)
             self.clusters.append(new_cluster)
         return
 
     
     def extract(self, s):
-        """Retrieve candidate relationships from a sentence
+        """Retrieve probabilistic relationships from a sentence
         
         Arguments:
-            r {[type]} -- [description]
+            s {Sentence} -- The Sentence object to extract from
+        Returns:
+            relations -- The Relations found in the sentence
         """
-        # Create a new phrase object 
+        # Use the default tagger to find candidate relationships
         candidate_relations = self.relationship.get_candidates(s.tagged_tokens)
+        # print(candidate_relations)
+        num_candidates = len(candidate_relations)
+        all_combs = [i for r in range(1, num_candidates+1) for i in combinations(candidate_relations, r) ]
+        # Create a candidate phrase for each possible combination
+        all_candidate_phrases = []
+        for combination in all_combs:
+            rels = [r for r in combination]
+            new_rels = copy.copy(rels)
+
+            candidate_phrase = Phrase(s.raw_tokens, new_rels, self.prefix_length, self.suffix_length)
+            all_candidate_phrases.append(candidate_phrase)
+
+        # Only pick the phrase with the best confidence score
+        best_candidate_phrase = None
+        best_candidate_cluster = None
+        best_candidate_phrase_score = 0
+
+        for candidate_phrase in all_candidate_phrases:
+            # For each cluster
+            # Compare the candidate phrase to the cluster extraction patter
+            best_match_score = 0
+            best_match_cluster = None
+            confidence_term = 1
+
+            for cluster in self.clusters:
+                if candidate_phrase.order != cluster.order:
+                    continue
+
+                cluster.vectorise(candidate_phrase)
+                cluster.vectorise(cluster.pattern)
+
+                match_score = cluster.get_phrase_match_score(candidate_phrase)
+                if match_score >= self.minimum_cluster_similarity_score:
+                    confidence_term *= (1.0 - (match_score * cluster.pattern.confidence))
+                if match_score > best_match_score:
+                    best_match_cluster = cluster
+                    best_match_score = match_score
+                candidate_phrase.reset_vectors()
+
+            # Confidence in the relationships we found
+            phrase_confidence_score = 1.0 - confidence_term
+
+            if phrase_confidence_score > best_candidate_phrase_score:
+                best_candidate_phrase = candidate_phrase
+                best_candidate_phrase_score = phrase_confidence_score
+                best_candidate_cluster = best_match_cluster
+
         
-        return
+        if best_candidate_phrase and best_candidate_phrase_score >= self.minimum_relation_confidence:
+            for candidate_relation in best_candidate_phrase.relations:
+                candidate_relation.confidence = phrase_confidence_score
+            # update the knowlegde base
+            best_candidate_cluster.add_phrase(best_candidate_phrase)
+            self.save()
+            return best_candidate_phrase.relations
 
 
     def parse(self, filename):
         """Parse the sentences of a file
         
         Arguments:
-            f {[type]} -- [description]
+            f {str} -- the file path to parse
         """
         f = open(filename, 'rb')
         d = Document().from_file(f)
@@ -222,6 +302,7 @@ class Snowball(object):
                 if len(candidate_relationships) > 0:
                     print("\n\n")
                     print(s)
+                    print('\n')
                     for i, candidate in enumerate(candidate_relationships):
                         candidate_dict[str(i)] = candidate
                         print("Candidate " + str(i)  + ' ' + str(candidate) + '\n')
@@ -244,18 +325,10 @@ class Snowball(object):
         """train the snowball algorithm on a specified corpus
         
         Arguments:
-            corpus {[type]} -- [description]
+            corpus {str} -- path to a corpus of documents
         """
         for file_name in os.listdir(corpus):
             print(file_name)
-            try:
-                f = os.path.join(corpus, file_name)
-                print(f)
-                self.parse(f)
-
-            except Exception as e:
-                print(e)
-                continue
+            f = os.path.join(corpus, file_name)
+            self.parse(f)
         return
-
-

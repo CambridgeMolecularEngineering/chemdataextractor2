@@ -8,31 +8,22 @@ from ..parse.elements import I, W, R, Any, And, Start, OneOrMore, Group
 
 
 class Pattern:
-    """ Pattern object, fundamentally the same as a phrase"""
+    """ Pattern object, fundamentally the same as a phrase except assigned a confidence"""
 
     def __init__(self, entities=None,
                  elements=None,
                  label=None,
                  sentences=None,
-                 order=None, relations=None):
-        """
-
-        :param entities: Dict containing the associated entities
-        :param elements: Dict containing tokens and vectors for this pattern
-        :param label: string associating this pattern to a cluster
-        :param relations: known relations
-        :param sentences: known sentences
-        :param order: order of entities in the pattern
-        :param specifier_regex:
-        :param value_regex:
-        :param unit_regex:
-        """
+                 order=None, 
+                 relations=None, confidence=0):
         self.cluster_label = label
         self.elements = elements
         self.entities = entities
         self.number_of_entities = len(order)
         self.order = order
         self.relations = relations
+        self.confidence = confidence
+        self.phrase_element = self.generate_cde_element()
 
     def __repr__(self):
         return self.to_string()
@@ -44,7 +35,7 @@ class Pattern:
         for i in range(0, self.number_of_entities - 1):
             output_string += ' '.join(self.elements['middle_' + str(i+1)]['tokens']) + ' '
             output_string += self.entities[i + 1].tag.name + ' '
-        output_string = output_string[:-1]
+        output_string = output_string
         output_string += ' '.join(self.elements['suffix']['tokens'])
 
         return output_string
@@ -70,4 +61,5 @@ class Pattern:
             elements.append(I(token))
         
         final_phrase = And(exprs=elements)
-        return (final_phrase)('phrase')
+        phrase_element = (final_phrase)('phrase')
+        return phrase_element

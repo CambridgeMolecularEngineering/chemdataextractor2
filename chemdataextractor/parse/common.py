@@ -73,7 +73,7 @@ icm = T('I-CM')
 roman_numeral = R('^(I|II|III|IV|V|VI|VII|VIII|IX|XI|XII|XIII|XIV)$', re.I)
 
 # Punctuation delimiter that is hidden
-delim = R('^[,:;\.\[\]\(\)\{\}/]$')
+delim = R('^[,:;\.\[\]\(\)\{\}/]$').hide()
 optdelim = Optional(delim)
 
 # CEM: optdelim = Optional(R('^[;:,\.\(\)]$').hide())

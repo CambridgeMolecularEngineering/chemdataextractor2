@@ -4,48 +4,41 @@ chemdataextractor.relex.cluster
 Cluster of phrase objects and associated cluster dictionaries
 """
 from collections import OrderedDict
-from .pattern import Pattern
-import numpy as np
-from scipy import spatial
-from lxml import etree
-from ..doc import Sentence
-from .entity import Entity
-from .relationship import Relationship
-from ..utils import first
 
-def mode_rows(a):
-    """
-    Find the modal row of a 2d array
-    :param a: The 2d array to process
-    :type a: np.array()
-    :return: The most frequent row
-    """
-    a = np.ascontiguousarray(a)
-    void_dt = np.dtype((np.void, a.dtype.itemsize * np.prod(a.shape[1:])))
-    _, ids, count = np.unique(a.view(void_dt).ravel(),
-                              return_index=True,
-                              return_counts=True)
-    largest_count_id = ids[count.argmax()]
-    most_frequent_row = a[largest_count_id]
-    return most_frequent_row
+import numpy as np
+from lxml import etree
+from scipy import spatial
+
+from ..doc import Sentence
+from ..utils import first
+from .entity import Entity
+from .pattern import Pattern
+from .relationship import Relation
+from .utils import match, mode_rows
 
 
 class Cluster:
     """
-    Base Snowball Cluster
+    Base Snowball Cluster, used to combine similar phrases
     """
 
-    def __init__(self, label=None, order=None):
+    def __init__(self, label=None, order=None, learning_rate=0.5):
+        """Create a new cluster
+        
+        Keyword Arguments:
+            label {str} -- The label of this cluster (default: {None})
+            order {list} -- The order of entities that all phrases in this cluster must share (default: {None})
+            learning_rate {float} -- How quickly to update confidences based on new information (default: {0.5})
         """
-        :param label: String to identify this cluster
-        :type label: str
-        """
+
         self.label = label
         self.phrases = []
         self.pattern = None
         self.entities = []
         self.dictionaries = {}
         self.order = None
+        self.old_pattern_confidence = 1.0
+        self.learning_rate = 0.5
 
     def add_phrase(self, phrase):
         """ Add phrase to this cluster,
@@ -60,6 +53,7 @@ class Cluster:
         self.update_dictionaries(phrase)
         self.update_weights()
         self.update_pattern()
+        self.update_pattern_confidence()
         return
 
     def update_dictionaries(self, phrase):
@@ -120,7 +114,7 @@ class Cluster:
         :type sentences: List of str"""
 
         vectors = {}
-        print("Updating pattern")
+        # print("Updating pattern")
 
 
         pattern_elements = {}
@@ -153,8 +147,9 @@ class Cluster:
                                entities=self.entities,
                                label=self.label,
                                order=self.order,
-                               relations=phrase.relations)
-        print(self.pattern)
+                               relations=phrase.relations,
+                               confidence=0) 
+        # print(self.pattern)
         return
 
     def vectorise(self, phrase):
@@ -186,46 +181,55 @@ class Cluster:
     def update_pattern_confidence(self):
         """Determine the confidence of this centroid pattern
         """
-
+        # print("updating pattern confidence")
+        # print("Old confidence:", self.old_pattern_confidence)
         total_matches = 0
         total_relations = sum([len(phrase.relations) for phrase in self.phrases])
-        print("Total relations in cluster: %d" % total_relations)
+        # print("Total relations in cluster: %d" % total_relations)
         # compare the centroid pattern to all sentences found in the phrases
         for phrase in self.phrases:
+            # print("Phrase", phrase)
             sentence = Sentence(phrase.full_sentence)
             relations = phrase.relations
-            print(relations)
-            pattern_element = self.pattern.generate_cde_element()
-            print(sentence)
-
-            for res in pattern_element.scan(sentence.tagged_tokens):
-                match = res[0]
-                print(etree.tostring(match))
-                match_tokens = [i for i in match.xpath('./*/text()')]
-                print(match_tokens)
-                found_relations = []
-                for pattern_relation in self.pattern.relations:
-                    found_entities = []
-                    for pattern_entity in pattern_relation.entities:
-                        entity_text = first(match.xpath('./' + pattern_entity.tag.name + '/text()'))
-                        found_entity = Entity(entity_text, pattern_entity.tag, 0, 0)
-                        found_entities.append(found_entity)
-                    found_relation = Relationship(found_entities, confidence=0)
-                    found_relations.append(found_relation)
-                
-            
-                print("Found relations", found_relations)
-                print("Phrase relations", relations)
-                for fr in found_relations:
-                    if fr in relations:
-                        total_matches += 1
+            found_relations = self.get_relations(sentence.tagged_tokens)
+            # print("Found relations", found_relations)
+            for fr in found_relations:
+                if fr in relations:
+                    total_matches += 1
         
-        self.pattern.confidence = float(total_matches / total_relations)
+        new_pattern_confidence = float(total_matches / total_relations)
+        # print("new confidence", new_pattern_confidence)
+        # Make sure new cluster begins with confidence 1.0
+        if len(self.phrases) == 1:
+            self.pattern.confidence = new_pattern_confidence
+            self.old_pattern_confidence = self.pattern.confidence
+        else:
+            self.pattern.confidence = self.learning_rate*new_pattern_confidence + (1.0 - self.learning_rate)*self.old_pattern_confidence
+            self.old_pattern_confidence = self.pattern.confidence
         return
         
+    def get_relations(self, tokens):
+        """Retrueve relations from a set of tokens using this clusters extraction patter
         
+        Arguments:
+            tokens {list} -- Tokens to extract from
+        
+        Returns:
+            Relations -- The found Relations
+        """
 
-
-
-
-
+        relations = []
+        for res in self.pattern.phrase_element.scan(tokens):
+            match = res[0]
+            for pattern_relation in self.pattern.relations:
+                found_entities = []
+                for pattern_entity in pattern_relation.entities:
+                    entity_text = first(match.xpath('./' + pattern_entity.tag.name + '/text()'))
+                    found_entity = Entity(entity_text, pattern_entity.tag, 0, 0)
+                    found_entities.append(found_entity)
+                found_relation = Relation(found_entities, confidence=0)
+                relations.append(found_relation)
+        return relations
+    
+    def get_phrase_match_score(self, phrase):
+        return match(phrase, self.pattern)
