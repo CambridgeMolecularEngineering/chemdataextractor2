@@ -81,8 +81,8 @@ class Document(BaseDocument):
             self._elements.append(element)
         self.config = config
         for element in elements:
-            if callable(getattr(element, 'set_parsers', None)):
-                element.set_parsers()
+            if callable(getattr(element, 'set_config', None)):
+                element.set_config()
         log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
 
     @classmethod

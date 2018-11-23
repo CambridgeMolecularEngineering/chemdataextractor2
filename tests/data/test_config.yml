@@ -9,3 +9,13 @@ PARSERS:
     Footnote: [ChemicalLabelParser]
     Caption: [NmrParser]
 
+POS_TAGGER: CrfPosTagger
+
+NER_TAGGER: CiDictCemTagger
+
+LEXICON: Lexicon
+
+SENTENCE_TOKENIZER: SentenceTokenizer
+
+WORD_TOKENIZER: WordTokenizer
+

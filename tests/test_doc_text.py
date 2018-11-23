@@ -25,6 +25,7 @@ from chemdataextractor.parse.uvvis import UvvisParser
 from chemdataextractor.parse.mp import MpParser
 from chemdataextractor.parse.tg import TgParser
 from chemdataextractor.parse.context import ContextParser
+from chemdataextractor.nlp import *
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -69,4 +70,20 @@ class TestText(unittest.TestCase):
         self.assertEqual(type(heading_p[0]), CompoundHeadingParser)
         self.assertEqual(type(caption_p[0]), CompoundParser)
 
+    def test_set_cem(self):
+        d = Document(Title('Test'), config=self.get_config())
+        title = d.titles[0]
+        self.assertEqual(type(title.pos_tagger), CrfPosTagger)
+        self.assertEqual(type(title.ner_tagger), CiDictCemTagger)
+        self.assertEqual(type(title.lexicon), Lexicon)
+        self.assertEqual(type(title.sentence_tokenizer), SentenceTokenizer)
+        self.assertEqual(type(title.word_tokenizer), WordTokenizer)
 
+    def test_no_cem_set(self):
+        d = Document(Title('Test'))
+        title = d.titles[0]
+        self.assertEqual(type(title.pos_tagger), ChemCrfPosTagger)
+        self.assertEqual(type(title.ner_tagger), CemTagger)
+        self.assertEqual(type(title.lexicon), ChemLexicon)
+        self.assertEqual(type(title.sentence_tokenizer), ChemSentenceTokenizer)
+        self.assertEqual(type(title.word_tokenizer), ChemWordTokenizer)

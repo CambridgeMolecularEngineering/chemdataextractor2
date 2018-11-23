@@ -25,16 +25,15 @@ from ..parse.mp import MpParser
 from ..parse.tg import TgParser
 from ..parse.nmr import NmrParser
 from ..parse.uvvis import UvvisParser
-from ..nlp.lexicon import ChemLexicon
-from ..nlp.cem import CemTagger, IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS
+from ..nlp.lexicon import ChemLexicon, Lexicon
+from ..nlp.cem import CemTagger, IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
 from ..nlp.abbrev import ChemAbbreviationDetector
 from ..nlp.tag import NoneTagger
-from ..nlp.pos import ChemCrfPosTagger
-from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_tokenize
+from ..nlp.pos import ChemCrfPosTagger, CrfPosTagger, ApPosTagger, ChemApPosTagger
+from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_tokenize, SentenceTokenizer, WordTokenizer, FineWordTokenizer
 from ..text import CONTROL_RE
 from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
-from ..config import Config
 
 from lxml import etree
 
@@ -111,7 +110,6 @@ class BaseText(BaseElement):
         """
         return
 
-
     def serialize(self):
         """Convert Text element to python dictionary."""
         data = {'type': self.__class__.__name__, 'content': self.text}
@@ -143,8 +141,36 @@ class Text(collections.Sequence, BaseText):
     def __len__(self):
         return len(self.sentences)
 
-    def set_parsers(self):
+    def set_config(self):
+        """ Loads settings from """
 
+        if self.document is None:
+            pass
+        else:
+            c = self.document.config
+            if 'SENTENCE_TOKENIZER' in c.keys():
+                self.sentence_tokenizer = eval(c['SENTENCE_TOKENIZER'])()
+            if 'WORD_TOKENIZER' in c.keys():
+                self.word_tokenizer = eval(c['WORD_TOKENIZER'])()
+            if 'POS_TAGGER' in c.keys():
+                self.pos_tagger = eval(c['POS_TAGGER'])()
+            if 'NER_TAGGER' in c.keys():
+                self.ner_tagger = eval(c['NER_TAGGER'])()
+            if 'LEXICON' in c.keys():
+                self.lexicon = eval(c['LEXICON'])()
+            if 'PARSERS' in c.keys():
+                self.set_parsers_trial(c['PARSERS'])
+
+    def set_parsers_trial(self, p_dict):
+        """ Sets parsers from config when defined"""
+
+        class_type = self.__class__.__name__
+        if class_type in p_dict:
+            conf_parsers = p_dict[class_type]
+            self.parsers = [eval(p)() for p in conf_parsers]
+
+    def set_parsers(self):
+        """ Sets parsers from config when defined"""
         if self.document is not None:
             try:
                 c = self.document.config
@@ -281,7 +307,6 @@ class Title(Text):
         super(Title, self).__init__(text, **kwargs)
         default_parsers = [CompoundParser()]
         self.parsers = default_parsers
-        self.set_parsers()
 
     def _repr_html_(self):
         return '<h1 class="cde-title">' + self.text + '</h1>'
@@ -293,7 +318,6 @@ class Heading(Text):
         super(Heading, self).__init__(text, **kwargs)
         default_parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
         self.parsers = default_parsers
-        self.set_parsers()
 
     def _repr_html_(self):
         return '<h2 class="cde-title">' + self.text + '</h2>'
@@ -306,7 +330,6 @@ class Paragraph(Text):
         default_parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(),
                TgParser(), ContextParser()]
         self.parsers = default_parsers
-        self.set_parsers()
 
     def _repr_html_(self):
         return '<p class="cde-paragraph">' + self.text + '</p>'
@@ -318,7 +341,6 @@ class Footnote(Text):
         super(Footnote, self).__init__(text, **kwargs)
         default_parsers = [ContextParser(), CaptionContextParser()]
         self.parsers = default_parsers
-        self.set_parsers()
 
     def _repr_html_(self):
         return '<p class="cde-footnote">' + self.text + '</p>'
@@ -341,7 +363,6 @@ class Caption(Text):
         super(Caption, self).__init__(text, **kwargs)
         default_parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
         self.parsers = default_parsers
-        self.set_parsers()
 
     def _repr_html_(self):
         return '<caption class="cde-caption">' + self.text + '</caption>'
