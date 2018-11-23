@@ -1,4 +1,4 @@
-# Example Config
+# Example Config for testing
 
 PARSERS:
 
@@ -18,4 +18,3 @@ LEXICON: Lexicon
 SENTENCE_TOKENIZER: SentenceTokenizer
 
 WORD_TOKENIZER: WordTokenizer
-

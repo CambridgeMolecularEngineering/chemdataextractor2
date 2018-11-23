@@ -142,7 +142,10 @@ class Text(collections.Sequence, BaseText):
         return len(self.sentences)
 
     def set_config(self):
-        """ Loads settings from """
+        """ Load settings from configuration file
+
+        .. note:: Called when Document instance is created
+        """
 
         if self.document is None:
             pass
@@ -159,25 +162,18 @@ class Text(collections.Sequence, BaseText):
             if 'LEXICON' in c.keys():
                 self.lexicon = eval(c['LEXICON'])()
             if 'PARSERS' in c.keys():
-                self.set_parsers_trial(c['PARSERS'])
+                self.set_parsers(c['PARSERS'])
 
-    def set_parsers_trial(self, p_dict):
-        """ Sets parsers from config when defined"""
+    def set_parsers(self, p_dict):
+        """ Sets parsers from config when defined
+
+        :param dict[str: str] p_dict : Dictionary of parsers
+        """
 
         class_type = self.__class__.__name__
         if class_type in p_dict:
             conf_parsers = p_dict[class_type]
             self.parsers = [eval(p)() for p in conf_parsers]
-
-    def set_parsers(self):
-        """ Sets parsers from config when defined"""
-        if self.document is not None:
-            try:
-                c = self.document.config
-                conf_parsers = c['PARSERS'][self.__class__.__name__]
-                self.parsers = [eval(p)() for p in conf_parsers]
-            except KeyError:
-                pass
 
     @memoized_property
     def sentences(self):

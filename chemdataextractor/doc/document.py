@@ -80,6 +80,8 @@ class Document(BaseDocument):
             element.document = self
             self._elements.append(element)
         self.config = config
+
+        # Sets parameters from configuration file
         for element in elements:
             if callable(getattr(element, 'set_config', None)):
                 element.set_config()
