@@ -1,0 +1,25 @@
+Cluster set contains 8 clusters.
+Cluster 0 contains 1 phrases
+	 Cobalt is a ferromagnetic transition metal exhibiting a high Curie temperature of 1388 K ( ferromagnetic – paramagnetic transition ) and a high saturation magnetization ( 1422 emu cm−3 ) at room temperature.2 The technological applications of Co nanoparticles in the field of ultrahigh - density data recording and data storage are well documented in the literature.1 Recently , Co has also been used in MRI agents,3 a field which has primarily been dominated by iron oxides ( Fe3O4 ) because of their stability and biocompatibility albeit the oxides show much less saturation magnetization ( 84 emu cm−3)4 in comparison to cobalt .
+The cluster centroid pattern is:  name_1 is a ferromagnetic transition metal exhibiting a high specifier_1 of value_1  units_1 ( with confidence score 1.0
+Cluster 1 contains 1 phrases
+	 The DC susceptibility curves of the EuS nanocrystals show a transition temperature TC at around 15 K ( estimated from the inflection point of the curves ) and a thermal irreversibility below Tir = 14 K .
+The cluster centroid pattern is: the name_1 nanocrystals show a transition temperature specifier_1 at around value_1  units_1 ( with confidence score 1.0
+Cluster 2 contains 1 phrases
+	 The much smaller value of TB compared to the Curie temperature ( 627 K ) of bulk Ni suggests that the thickness of the Ni shell is very small .
+The cluster centroid pattern is: the specifier_1  value_1  units_1 ) of bulk name_1 suggests with confidence score 1.0
+Cluster 3 contains 1 phrases
+	 CoS2 is ferromagnetic with a Curie temperature of 116 K and Co9S8 is antiferromagnetic with a Néel temperature above the decomposition temperature.28 The magnetic susceptibility of Ni3S2 was found to be temperature - independent , which is consistent with Pauli paramagnetism .
+The cluster centroid pattern is:  name_1 is ferromagnetic with a specifier_1 of value_1  units_1 and with confidence score 1.0
+Cluster 4 contains 1 phrases
+	 These novel properties are of great potential application in highly efficient bioseparation / drug delivery , highly sensitive bio-sensing , magnetic resonance imaging ( MRI ) contrast enhancement , and magnetic fluid hyperthermia.1 – 3 In the family of magnetic NPs , magnetite ( Fe3O4 ) has recently attracted much attention due to its high Curie temperature ( Tc ∼ 850 K ) , good biocompatibility , high magnetic moment , and relatively good air - stability .
+The cluster centroid pattern is: , name_1 has recently attracted much attention due to its high specifier_1 ∼ value_1  units_1 ) with confidence score 1.0
+Cluster 5 contains 1 phrases
+	 Magnetite ( Fe3O4 ) is probably the most studied half metal because of it high Curie temperature ( ∼ 858 K ) , which is critical for device applications.120 Moreover , the lack of toxicity in Fe3O4 also promises applications in medical and biological areas , such as drug delivery and magnetic resonance imaging.121 Previously , Fe3O4 nanowires,120,122nanotubes,123,124 and core / shell nanowires125,126 have been synthesized , and their magneto - transport properties were studied .
+The cluster centroid pattern is:  name_1 is probably the most studied half metal because of it high specifier_1 ∼ value_1  units_1 ) with confidence score 1.0
+Cluster 6 contains 1 phrases
+	 As another notable spintronic material , CrO2 has a high spin polarization ( > 95 % )118 and a Curie temperature of 395 K .
+The cluster centroid pattern is: , name_1 has a high spin polarization ( > 95 % )118 and a specifier_1 of value_1  units_1 . with confidence score 1.0
+Cluster 7 contains 1 phrases
+	 Multiferroic materials show simultaneous ferroelectric and magnetic orders , promising novel applications.142 Among them , BiFeO3 ( BFO ) has received the most attention , due to its high ferroelectric Curie temperature ( ∼ 1103 K ) and the AFM Neel temperature ( ∼ 647 K ) .
+The cluster centroid pattern is: , name_1 ( name_2 ) has received the most attention , due to its high ferroelectric specifier_1 ∼ value_1  units_1 ) with confidence score 1.0

@@ -59,6 +59,17 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(d[2].text, 'A third paragraph.')
         self.assertEqual([e.text for e in d], els)
 
+    def test_document_definitions(self):
+        """Test getting defintions from a document
+        """
+        els = ['Here we define the Curie temperature (TC).',
+               'Next we have the uv-vis absorption maximum, λmax',
+               'Finally, the melting point, Tm']
+        d = Document(*els)
+        defs = d.definitions
+        expected = [{'definition': 'Curie temperature', 'specifier': 'TC', 'start': 4, 'end': 9}, {'definition': 'uv - vis absorption maximum', 'specifier': 'λmax', 'start': 4, 'end': 11}, {'definition': 'melting point', 'specifier': 'Tm', 'start': 3, 'end': 7}]
+        self.assertEqual(defs, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

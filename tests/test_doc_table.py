@@ -13,10 +13,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import unittest
+import os
 
+from chemdataextractor.doc.document import Document
 from chemdataextractor.doc.table import Table, Cell
 from chemdataextractor.doc.text import Caption
-
+from chemdataextractor.config import Config
+from chemdataextractor.parse.table import *
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -126,6 +129,55 @@ class TestTable(unittest.TestCase):
         #     print(record.to_primitive())
 
         self.assertEqual(gold, [record.serialize() for record in t.records])
+
+    def test_table_parsers_from_config(self):
+
+        test_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data', 'test_config.yml')
+        c = Config(test_config_path)
+
+        t = Table(
+            caption=Caption('Spectroscopic properties of Coumarins in acetonitrile at 298 K.'),
+            headings=[[Cell('')]],
+            rows=[[Cell('Coumarin 343'), Cell('398'), Cell('40 800'), Cell('492'), Cell('0.52')]]
+        )
+
+        d = Document(t, config=c)
+        table_p = d.tables[0].parsers
+        for parser in table_p[0]:
+            self.assertIn(type(parser), [CompoundHeadingParser, CompoundCellParser])
+
+    def test_default_table_parsers(self):
+
+        t = Table(
+            caption=Caption('Spectroscopic properties of Coumarins in acetonitrile at 298 K.'),
+            headings=[[Cell('')]],
+            rows=[[Cell('Coumarin 343'), Cell('398'), Cell('40 800'), Cell('492'), Cell('0.52')]]
+        )
+
+        d = Document(t)
+        table_p = d.tables[0].parsers
+
+        gold =[CompoundHeadingParser, CompoundCellParser,
+            UvvisAbsEmiQuantumYieldHeadingParser, UvvisAbsEmiQuantumYieldCellParser,
+            UvvisEmiQuantumYieldHeadingParser, UvvisEmiQuantumYieldCellParser,
+            UvvisEmiHeadingParser, UvvisEmiCellParser,
+            UvvisAbsHeadingParser, UvvisAbsCellParser, UvvisAbsDisallowedHeadingParser,
+            IrHeadingParser, IrCellParser,
+            ExtinctionHeadingParser, ExtinctionCellParser,
+            QuantumYieldHeadingParser, QuantumYieldCellParser,
+            FluorescenceLifetimeHeadingParser, FluorescenceLifetimeCellParser,
+            ElectrochemicalPotentialHeadingParser, ElectrochemicalPotentialCellParser,
+            MeltingPointHeadingParser, MeltingPointCellParser,
+            GlassTransitionHeadingParser, GlassTransitionCellParser,
+            SolventHeadingParser, SolventCellParser,
+            SolventInHeadingParser,
+            TempInHeadingParser
+        ]
+
+        for subparsers in table_p:
+            for parser in subparsers:
+                self.assertIn(type(parser), gold)
+
 
 if __name__ == '__main__':
     unittest.main()

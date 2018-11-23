@@ -169,6 +169,32 @@ class TestParseCem(unittest.TestCase):
             '<cem_phrase><cem><role>to yield</role><name>5-hydroxy-2-methyl-1,4-dihydroanthracene-9,10-dione</name></cem></cem_phrase>'
         ]
         self.do_parse(s, expected)
+    
+    def test_inorganic_chemical_formula_1(self):
+        s = 'Y2Ba2Cu4O7'
+        expected = ['<cem_phrase><cem><name>Y2Ba2Cu4O7</name></cem></cem_phrase>']
+        self.do_parse(s, expected)
+    
+    def test_inorganic_chemical_formula_2(self):
+        s = 'La0.7Sr0.3MnO3'
+        expected = ['<cem_phrase><cem><name>La0.7Sr0.3MnO3</name></cem></cem_phrase>']
+        self.do_parse(s, expected)
+    
+    def test_inorganic_chemical_formula_3(self):
+        s = 'La1+xSrxMnO3'
+        expected = ['<cem_phrase><cem><name>La1+xSrxMnO3</name></cem></cem_phrase>']
+        self.do_parse(s, expected)
+    
+    def test_inorganic_chemical_formula_4(self):
+        s = '(La,Sr)MnO3'
+        expected = ['<cem_phrase><cem><name>(La,Sr)MnO3</name></cem></cem_phrase>']
+        self.do_parse(s, expected)
+    
+    def test_inorganic_chemical_formula_5(self):
+        s = 'Ba0.55K0.45As2Fe2+δ'
+        expected = ['<cem_phrase><cem><name>Ba0.55K0.45As2Fe2+δ</name></cem></cem_phrase>']
+        self.do_parse(s, expected)
+    
 
 
 class TestParseCemHeading(unittest.TestCase):

@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from abc import abstractproperty
+from abc import abstractproperty, abstractmethod
 import collections
 import logging
 import re
@@ -18,21 +18,24 @@ import six
 from ..base_model import ModelList
 from ..parse.context import ContextParser
 from ..parse.cem import ChemicalLabelParser, CompoundHeadingParser, CompoundParser, chemical_name
+from ..parse.definitions import specifier_definition
 from ..parse.table import CaptionContextParser
 from ..parse.ir import IrParser
 from ..parse.mp_new import MpParser
 from ..parse.tg import TgParser
 from ..parse.nmr import NmrParser
 from ..parse.uvvis import UvvisParser
-from ..nlp.lexicon import ChemLexicon
-from ..nlp.cem import CemTagger, IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS
+from ..nlp.lexicon import ChemLexicon, Lexicon
+from ..nlp.cem import CemTagger, IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
 from ..nlp.abbrev import ChemAbbreviationDetector
 from ..nlp.tag import NoneTagger
-from ..nlp.pos import ChemCrfPosTagger
-from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_tokenize
+from ..nlp.pos import ChemCrfPosTagger, CrfPosTagger, ApPosTagger, ChemApPosTagger
+from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_tokenize, SentenceTokenizer, WordTokenizer, FineWordTokenizer
 from ..text import CONTROL_RE
-from ..utils import memoized_property, python_2_unicode_compatible
+from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
+
+from lxml import etree
 
 
 log = logging.getLogger(__name__)
@@ -100,6 +103,12 @@ class BaseText(BaseElement):
     def tags(self):
         """Return a list of tags."""
         return
+    
+    @abstractproperty
+    def definitions(self):
+        """Return a list of all specifier definitions
+        """
+        return
 
     def serialize(self):
         """Convert Text element to python dictionary."""
@@ -131,6 +140,40 @@ class Text(collections.Sequence, BaseText):
 
     def __len__(self):
         return len(self.sentences)
+
+    def set_config(self):
+        """ Load settings from configuration file
+
+        .. note:: Called when Document instance is created
+        """
+
+        if self.document is None:
+            pass
+        else:
+            c = self.document.config
+            if 'SENTENCE_TOKENIZER' in c.keys():
+                self.sentence_tokenizer = eval(c['SENTENCE_TOKENIZER'])()
+            if 'WORD_TOKENIZER' in c.keys():
+                self.word_tokenizer = eval(c['WORD_TOKENIZER'])()
+            if 'POS_TAGGER' in c.keys():
+                self.pos_tagger = eval(c['POS_TAGGER'])()
+            if 'NER_TAGGER' in c.keys():
+                self.ner_tagger = eval(c['NER_TAGGER'])()
+            if 'LEXICON' in c.keys():
+                self.lexicon = eval(c['LEXICON'])()
+            if 'PARSERS' in c.keys():
+                self.set_parsers(c['PARSERS'])
+
+    def set_parsers(self, p_dict):
+        """ Sets parsers from config when defined
+
+        :param dict[str: str] p_dict : Dictionary of parsers
+        """
+
+        class_type = self.__class__.__name__
+        if class_type in p_dict:
+            conf_parsers = p_dict[class_type]
+            self.parsers = [eval(p)() for p in conf_parsers]
 
     @memoized_property
     def sentences(self):
@@ -208,6 +251,13 @@ class Text(collections.Sequence, BaseText):
     def cems(self):
         """Return a list of part of speech tags for each sentence in this text passage."""
         return [cem for sent in self.sentences for cem in sent.cems]
+    
+    @property
+    def definitions(self):
+        """
+        Return a list of tagged definitions for each sentence in this text passage
+        """
+        return [definition for sent in self.sentences for definition in sent.definitions]
 
     @property
     def tagged_tokens(self):
@@ -248,14 +298,22 @@ class Text(collections.Sequence, BaseText):
 
 
 class Title(Text):
-    parsers = [CompoundParser()]
+
+    def __init__(self, text, **kwargs):
+        super(Title, self).__init__(text, **kwargs)
+        default_parsers = [CompoundParser()]
+        self.parsers = default_parsers
 
     def _repr_html_(self):
         return '<h1 class="cde-title">' + self.text + '</h1>'
 
 
 class Heading(Text):
-    parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
+
+    def __init__(self, text, **kwargs):
+        super(Heading, self).__init__(text, **kwargs)
+        default_parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
+        self.parsers = default_parsers
 
     def _repr_html_(self):
         return '<h2 class="cde-title">' + self.text + '</h2>'
@@ -263,8 +321,11 @@ class Heading(Text):
 
 class Paragraph(Text):
 
-    # order is important
-    parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(), TgParser(), ContextParser()]
+    def __init__(self, text, **kwargs):
+        super(Paragraph, self).__init__(text, **kwargs)
+        default_parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(),
+               TgParser(), ContextParser()]
+        self.parsers = default_parsers
 
     def _repr_html_(self):
         return '<p class="cde-paragraph">' + self.text + '</p>'
@@ -272,7 +333,10 @@ class Paragraph(Text):
 
 class Footnote(Text):
 
-    parsers = [ContextParser(), CaptionContextParser()]
+    def __init__(self, text, **kwargs):
+        super(Footnote, self).__init__(text, **kwargs)
+        default_parsers = [ContextParser(), CaptionContextParser()]
+        self.parsers = default_parsers
 
     def _repr_html_(self):
         return '<p class="cde-footnote">' + self.text + '</p>'
@@ -290,10 +354,18 @@ class Citation(Text):
 
 
 class Caption(Text):
-    parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
+
+    def __init__(self, text, **kwargs):
+        super(Caption, self).__init__(text, **kwargs)
+        default_parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
+        self.parsers = default_parsers
 
     def _repr_html_(self):
         return '<caption class="cde-caption">' + self.text + '</caption>'
+    
+    @memoized_property
+    def definitions(self):
+        return [definition for sent in self.sentences for definition in sent.definitions]
 
 
 class Sentence(BaseText):
@@ -485,6 +557,32 @@ class Sentence(BaseText):
                 else:
                     spans.append(split_span)
         return spans
+    
+    @memoized_property
+    def definitions(self):
+        """
+        Return specifier definitions from this sentence
+
+        A definition consists of: 
+        a) A definition -- The quantitity being defined e.g. "Curie Temperature"
+        b) A specifier -- The symbol used to define the quantity e.g. "Tc"
+        c) Start -- The index of the starting point of the definition
+        d) End -- The index of the end point of the definition
+
+        :return: list -- The specifier definitions
+        """
+        defs = []
+        for result in specifier_definition.scan(self.tagged_tokens):
+            definition = result[0]
+            start = result[1]
+            end = result[2]
+            new_def = {
+                       'definition': first(definition.xpath('./phrase/text()')),
+                       'specifier': first(definition.xpath('./specifier/text()')),
+                       'start': start,
+                       'end': end}
+            defs.append(new_def)
+        return defs
 
     @memoized_property
     def tags(self):

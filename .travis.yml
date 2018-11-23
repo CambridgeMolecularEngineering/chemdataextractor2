@@ -20,7 +20,7 @@ install:
   - conda update -q conda
   - conda config --add channels chemdataextractor
   - conda info -a
-  - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION appdirs beautifulsoup4 click cssselect dawg lxml nltk pdfminer.six python-dateutil numpy requests six python-crfsuite pyyaml pytest sphinx pandoc
+  - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION appdirs beautifulsoup4 click cssselect dawg lxml nltk numpy scipy pdfminer.six python-dateutil requests six python-crfsuite pyyaml pytest sphinx pandoc
   - source activate cde
   - pip install nbsphinx nbsphinx-link m2r ipython ipykernel
   - python setup.py install
@@ -31,4 +31,4 @@ before_script:
   - sleep 3
 script:
   - pytest
-  - sphinx-build -b html ./documentation/ ./documentation/_build/html/
+  - sphinx-build -b html ./docs/ ./docs/_build/html/
