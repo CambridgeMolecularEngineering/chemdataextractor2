@@ -71,6 +71,5 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(defs, expected)
 
 
-
 if __name__ == '__main__':
     unittest.main()
