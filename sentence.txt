@@ -1,6 +1,0 @@
-For Sr2Fe1−xZnxReO6 the Curie temperature TC decreases from 417 K to 215 K as illustrated in Fig. 10 .
-Therefore , the peak at 86 K in ZFC curve can be characterized as the Curie temperature ( TC ) for the as-synthesized CoCr2O4 sample .
-The DC susceptibility curves of the EuS nanocrystals show a transition temperature TC at around 15 K ( estimated from the inflection point of the curves ) and a thermal irreversibility below Tir = 14 K .
-The much smaller value of TB compared to the Curie temperature ( 627 K ) of bulk Ni suggests that the thickness of the Ni shell is very small .
-CoS2 is ferromagnetic with a Curie temperature of 116 K and Co9S8 is antiferromagnetic with a Néel temperature above the decomposition temperature.28 The magnetic susceptibility of Ni3S2 was found to be temperature - independent , which is consistent with Pauli paramagnetism .
-These novel properties are of great potential application in highly efficient bioseparation / drug delivery , highly sensitive bio-sensing , magnetic resonance imaging ( MRI ) contrast enhancement , and magnetic fluid hyperthermia.1 – 3 In the family of magnetic NPs , magnetite ( Fe3O4 ) has recently attracted much attention due to its high Curie temperature ( Tc ∼ 850 K ) , good biocompatibility , high magnetic moment , and relatively good air - stability .

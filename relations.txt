@@ -1,6 +1,0 @@
-Sr2Fe1−xZnxReO6,Curie temperature,TC,417,215,K,K,
-CoCr2O4,Curie temperature,TC,86,K,
-EuS,TC,15,K,
-Ni,Curie temperature,627,K,
-CoS2,Curie temperature,116,K,
-magnetite ( Fe3O4 ),Curie temperature,Tc,850,K,
