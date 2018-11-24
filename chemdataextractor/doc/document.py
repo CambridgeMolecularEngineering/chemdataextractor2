@@ -18,12 +18,13 @@ import logging
 import six
 
 from ..utils import python_2_unicode_compatible
-from .text import Paragraph, Citation, Footnote, Heading, Title
+from .text import Paragraph, Citation, Footnote, Heading, Title, Caption
 from .table import Table
 from .figure import Figure
 from ..errors import ReaderError
 from ..model import ModelList
 from ..text import get_encoding
+from ..config import Config
 
 
 log = logging.getLogger(__name__)
@@ -59,7 +60,7 @@ class BaseDocument(six.with_metaclass(ABCMeta, collections.Sequence)):
 class Document(BaseDocument):
     """A document to extract data from. Contains a list of document elements."""
 
-    def __init__(self, *elements):
+    def __init__(self, *elements, config=Config()):
         """Initialize a Document manually by passing one or more Document elements (Paragraph, Heading, Table, etc.)
 
         Strings that are passed to this constructor are automatically wrapped into Paragraph elements.
@@ -78,6 +79,12 @@ class Document(BaseDocument):
                 element = Paragraph(element.decode(encoding))
             element.document = self
             self._elements.append(element)
+        self.config = config
+
+        # Sets parameters from configuration file
+        for element in elements:
+            if callable(getattr(element, 'set_config', None)):
+                element.set_config()
         log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
 
     @classmethod
@@ -322,6 +329,11 @@ class Document(BaseDocument):
         return [el for el in self.elements if isinstance(el, Footnote)]
 
     @property
+    def titles(self):
+        """Returns all Title Elements in this Document"""
+        return [el for el in self.elements if isinstance(el, Title)]
+
+    @property
     def headings(self):
         """Return all Heading Elements in this Document."""
         return [el for el in self.elements if isinstance(el, Heading)]
@@ -330,6 +342,11 @@ class Document(BaseDocument):
     def paragraphs(self):
         """Return all Paragraph Elements in this Document."""
         return [el for el in self.elements if isinstance(el, Paragraph)]
+
+    @property
+    def captions(self):
+        """Return all Caption Elements in this Document."""
+        return [el for el in self.elements if isinstance(el, Caption)]
 
     @property
     def captioned_elements(self):
