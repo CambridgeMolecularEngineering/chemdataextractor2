@@ -44,6 +44,7 @@ class UnitType(BaseType):
     def serialize(self, value, primitive=False):
         return str(value**1.0)
 
+
 class MetaUnit(type):
     """
     Metaclass to ensure that all subclasses of Unit take the magnitude into account
@@ -57,7 +58,7 @@ class MetaUnit(type):
             sub_convert_to_standard = getattr(instance, 'convert_value_to_standard')
 
             def new_convert_to_standard(self, value):
-                val = value * 10**self.magnitude
+                val = value * 10 ** (self.magnitude + self.base_magnitude)
                 return sub_convert_to_standard(self, val)
             setattr(instance, 'convert_value_to_standard', new_convert_to_standard)
 
@@ -65,7 +66,7 @@ class MetaUnit(type):
             sub_convert_from_standard = getattr(instance, 'convert_value_from_standard')
 
             def new_convert_from_standard(self, value):
-                val = value * 10**(-1 * self.magnitude)
+                val = value * 10**(-1 * (self.magnitude + self.base_magnitude))
                 return sub_convert_from_standard(self, val)
             setattr(instance, 'convert_value_from_standard', new_convert_from_standard)
 
@@ -73,7 +74,7 @@ class MetaUnit(type):
             sub_convert_err_to_standard = getattr(instance, 'convert_error_to_standard')
 
             def new_convert_err_to_standard(self, value):
-                val = value * 10**self.magnitude
+                val = value * 10**(self.magnitude + self.base_magnitude)
                 return sub_convert_err_to_standard(self, val)
             setattr(instance, 'convert_error_to_standard', new_convert_err_to_standard)
 
@@ -81,7 +82,7 @@ class MetaUnit(type):
             sub_convert_err_from_standard = getattr(instance, 'convert_error_from_standard')
 
             def new_convert_err_from_standard(self, value):
-                val = value * 10**(-1 * self.magnitude)
+                val = value * 10**(-1 * (self.magnitude + self.base_magnitude))
                 return sub_convert_err_from_standard(self, val)
             setattr(instance, 'convert_error_from_standard', new_convert_err_from_standard)
 
@@ -113,6 +114,8 @@ class Unit(object):
     and either method should produce the same results.
     """
 
+    base_magnitude = 0.0
+
     @classmethod
     def composite_unit(cls, with_units):
         """
@@ -123,12 +126,13 @@ class Unit(object):
         :returns: The new composite unit
         :rtype: subclass of Unit
         """
-        new_unit = type(str(with_units), (cls, ), {})
 
-        def new_initializer(self, magnitude=with_units.magnitude):
-            Unit.__init__(with_units.dimensions, magnitude, powers=with_units.powers)
+        def new_initializer(self, magnitude=0.0):
+            Unit.__init__(self, with_units.dimensions, magnitude, powers=with_units.powers)
 
+        new_unit = type(str(with_units), (Unit,), {})
         new_unit.__init__ = new_initializer
+        new_unit.base_magnitude = with_units.magnitude
         return new_unit
 
     def __init__(self, dimensions, magnitude=0.0, powers=None):
