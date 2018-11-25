@@ -20,13 +20,14 @@ import unittest
 
 #from chemdataextractor.parse.units.quantity import Dimensionless, DimensionlessUnit, DimensionlessModel, QuantityModel
 from chemdataextractor.parse.units.quantity_model import QuantityModel, DimensionlessModel
-from chemdataextractor.parse.units.dimension import Dimensionless
-from chemdataextractor.parse.units.unit import DimensionlessUnit
+from chemdataextractor.parse.units.dimension import Dimensionless, Dimension
+from chemdataextractor.parse.units.unit import DimensionlessUnit, Unit
 
 
 from chemdataextractor.parse.units.time import Second, Minute, Hour, Time, TimeModel
 from chemdataextractor.parse.units.length import Meter, Mile, Length, LengthModel
 from chemdataextractor.parse.units.temperature import Temperature, TemperatureModel, Kelvin, Celsius, Fahrenheit
+from chemdataextractor.parse.units.mass import Mass, Gram
 
 
 
@@ -94,6 +95,15 @@ class TestUnitClass(unittest.TestCase):
         dimensionless_div = Meter() / Meter()
         dimensionless = DimensionlessUnit()
         self.assertEqual(dimensionless, dimensionless_div)
+
+    def test_composite_unit(self):
+        Newton = Unit.composite_unit(Gram(magnitude=3.0) * Meter() * (Second()) ** (-2.0))
+        newton = Newton()
+        force = Dimension.composite_dimension(Mass() * Length() * Time() ** (-2.0))()
+        self.assertEqual(newton.magnitude, 0.0)
+        self.assertEqual(newton.dimensions, force)
+        self.assertEqual(newton.powers, {Second(): -2.0, Meter(): 1.0, Gram(): 1.0})
+        self.assertEqual(newton.base_magnitude, 3.0)
 
 
 class TestDimensions(unittest.TestCase):
