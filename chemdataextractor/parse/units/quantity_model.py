@@ -176,6 +176,41 @@ class QuantityModel(BaseModel):
         else:
             raise AttributeError("Value for model not set")
 
+    def is_equal(self, other):
+        """
+        Tests whether the two quantities are physically equal, i.e. whether they represent the same value just in different units.
+
+        :param QuantityModel other: The quantity being compared with
+        :returns: Whether the two quantities are equal
+        :rtype: bool
+        """
+        if self.value is None or other.value is None:
+            raise AttributeError("Value for model not set")
+        if self.units is None or other.units is None:
+            raise AttributeError("Units not set")
+        converted_value = self.convert_value(self.units, other.units)
+
+        min_converted_value = converted_value[0]
+        max_converted_value = converted_value[0]
+        if len(converted_value) == 2:
+            max_converted_value = converted_value[1]
+        if self.error is not None:
+            converted_error = self.convert_error(self.units, other.units)
+            min_converted_value = min_converted_value - converted_error
+            max_converted_value = max_converted_value + converted_error
+
+        min_other_value = other.value[0]
+        max_other_value = other.value[0]
+        if len(other.value) == 2:
+            max_other_value = other.value[1]
+        if other.error is not None:
+            min_other_value = min_other_value - other.error
+            max_other_value = max_other_value + other.error
+        if min_converted_value <= max_other_value or max_converted_value >= min_other_value:
+            return True
+        return False
+
+
 
     def __str__(self):
         string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.units.__str__()
