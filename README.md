@@ -14,6 +14,10 @@ Features
 - Rule-based parsing grammars for property and spectra extraction
 - Table parser for extracting tabulated data
 - Document processing to resolve data interdependencies
+- NEW: Configuration file for speciying specific parse configurations
+- NEW: Symbol definition resolution
+- NEW: Probabilistic Chemical Relationship Extraction
+- NEW: Improved inorganic comound name identification
 
 
 Development
