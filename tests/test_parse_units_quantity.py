@@ -128,6 +128,16 @@ class TestDimensions(unittest.TestCase):
 
 class TestQuantity(unittest.TestCase):
 
+    def test_equality(self):
+        distance1 = LengthModel()
+        distance1.value = [50.0, 60.0]
+        distance1.units = Meter()
+        distance2 = LengthModel()
+        distance2.value = [48.0]
+        distance2.units = Meter()
+        distance2.error = 2.1
+        self.assertTrue(distance1.is_equal(distance2))
+
     def test_division(self):
         distance = LengthModel()
         distance.value = [60.0]
