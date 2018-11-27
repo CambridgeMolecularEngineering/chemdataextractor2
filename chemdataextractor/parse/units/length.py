@@ -67,5 +67,19 @@ class Mile(LengthUnit):
     def convert_error_from_standard(self, error):
         return error * 0.000621371
 
-units_dict = {R('m(eter(s)?)?', group=0): Meter, R('mile[s]?', group=0): Mile}
+class Angstrom(LengthUnit):
+
+    def convert_value_to_standard(self, value):
+        return value * 10**(-10)
+
+    def convert_value_from_standard(self, value):
+        return value / 10**(-10)
+
+    def convert_error_to_standard(self, error):
+        return error * 10**(-10)
+
+    def convert_error_from_standard(self, error):
+        return error / 10**(-10)
+
+units_dict = {R('m(eter(s)?)?', group=0): Meter, R('mile[s]?', group=0): Mile, R('Å', group=0): Angstrom}
 Length.units_dict = units_dict
