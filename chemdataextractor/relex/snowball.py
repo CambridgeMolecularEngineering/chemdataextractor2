@@ -129,7 +129,7 @@ class Snowball(object):
         with open(save_dir + self.save_file_name + '.pkl', 'wb') as f:
             pickle.dump(self, f)
 
-        with open(save_dir + self.save_file_name + '_clusters.txt', 'w+') as f:
+        with open(save_dir + self.save_file_name + '_clusters.txt', 'w+', encoding='utf-8') as f:
             s = "Cluster set contains " + \
                 str(len(self.clusters)) + " clusters."
             f.write(s + "\n")
@@ -144,13 +144,13 @@ class Snowball(object):
                 f.write(str(p.to_string()) +
                         " with confidence score " + str(p.confidence) + "\n")
 
-        with open(save_dir + self.save_file_name + '_patterns.txt', 'w+') as f:
+        with open(save_dir + self.save_file_name + '_patterns.txt', 'w+', encoding='utf-8') as f:
             for c in self.clusters:
                 p = c.pattern
                 f.write(str(p.to_string()) +
                         " with confidence score " + str(p.confidence) + "\n\n")
         
-        with open(save_dir + self.save_file_name + '_relations.txt', 'w+') as wf:
+        with open(save_dir + self.save_file_name + '_relations.txt', 'w+', encoding='utf-8') as wf:
             for c in self.clusters:
                 for phrase in c.phrases:
                     for relation in phrase.relations:

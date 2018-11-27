@@ -1,0 +1,24 @@
+Cluster set contains 7 clusters.
+Cluster 0 contains 1 phrases
+	 Cobalt is a ferromagnetic transition metal exhibiting a high Curie temperature of 1388 K ( ferromagnetic–paramagnetic transition ) and a high saturation magnetization ( 1422 emu cm−3 ) at room temperature .
+The cluster centroid pattern is:  name_1 is a ferromagnetic transition metal exhibiting a high specifier_1 of value_1  units_1 ( with confidence score 1.0
+Cluster 1 contains 1 phrases
+	 In what concerns the other range ( > 40 K ) , we observe a maximum at 60 K ( Fig. 6b ) , probably related to a EuO - like environment located at the surface of the nanocrystals , since EuO has a Tc at 69 K .
+The cluster centroid pattern is: since name_1 has a specifier_1 at value_1  units_1 . with confidence score 1.0
+Cluster 2 contains 1 phrases
+	 The much smaller value of TB compared to the Curie temperature ( 627 K ) of bulk Ni suggests that the thickness of the Ni shell is very small .
+The cluster centroid pattern is: the specifier_1  value_1  units_1 ) of bulk Ni suggests that the thickness of the name_1 shell with confidence score 1.0
+Cluster 3 contains 2 phrases
+	 CoS2 is ferromagnetic with a Curie temperature of 116 K and Co9S8 is antiferromagnetic with a Néel temperature above the decomposition temperature .
+	 BiFeO3 is highly ferromagnetic with a curie temperature of 1103 K and that is extremely interesting
+The cluster centroid pattern is:  name_1 is ferromagnetic with a specifier_1 of value_1  units_1 and with confidence score 0.75
+Cluster 4 contains 2 phrases
+	 In the family of magnetic NPs , magnetite ( Fe3O4 ) has recently attracted much attention due to its high Curie temperature ( Tc ∼ 850 K ) , good biocompatibility , high magnetic moment , and relatively good air - stability .
+	 Magnetite ( Fe3O4 ) is probably the most studied half metal because of it high Curie temperature ( ∼ 858 K ) , which is critical for device applications .
+The cluster centroid pattern is: ( name_1 ) has recently attracted much attention due to its high specifier_1 ∼ value_1  units_1 ) with confidence score 0.75
+Cluster 5 contains 1 phrases
+	 As another notable spintronic material , CrO2 has a high spin polarization ( > 95 % ) and a Curie temperature of 395 K .
+The cluster centroid pattern is: , name_1 has a high spin polarization ( > 95 % ) and a specifier_1 of value_1  units_1 . with confidence score 1.0
+Cluster 6 contains 1 phrases
+	 Among them , BiFeO3 ( BFO ) has received the most attention , due to its high ferroelectric Curie temperature ( ∼ 1103 K ) and the AFM Neel temperature ( ∼ 647 K ) .
+The cluster centroid pattern is: , name_2 ( name_1 ) has received the most attention , due to its high ferroelectric specifier_1 ∼ value_1  units_1 ) with confidence score 1.0
