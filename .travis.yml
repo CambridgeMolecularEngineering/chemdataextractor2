@@ -33,4 +33,4 @@ before_script:
   - sleep 3
 script:
   - pytest
-  - if [[ $TRAVIS_PYTHON_VERSION >= 3.0]]; then sphinx-build -b html ./docs/ ./docs/_build/html/
+  - if [[ $TRAVIS_PYTHON_VERSION >= "3.6"]]; then sphinx-build -b html ./docs/ ./docs/_build/html/
