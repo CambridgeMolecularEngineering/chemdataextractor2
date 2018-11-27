@@ -115,7 +115,6 @@ class Dimension(BaseDimension):
         return new_model
 
     def __mul__(self, other):
-
         new_model = Dimension()
         dimensions = {}
 
@@ -146,6 +145,8 @@ class Dimension(BaseDimension):
                     dimensions[new_key] += 1.0
                     if dimensions[new_key] == 0:
                         dimensions.pop(new_key)
+                else:
+                    dimensions[new_key] = 1.0
             elif self == new_key:
                 dimensions[new_key] += 1.0
                 if dimensions[new_key] == 0:
@@ -163,10 +164,12 @@ class Dimension(BaseDimension):
         new_model.units_dict = {}
         for dimension in dimensions.keys():
             new_model.units_dict.update(dimension.units_dict)
-
         return new_model
 
     def __eq__(self, other):
+
+        if not isinstance(other, BaseDimension):
+            return False
 
         if self.dimensions is not None:
             if other.dimensions is not None:
