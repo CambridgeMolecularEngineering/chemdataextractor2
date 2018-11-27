@@ -26,7 +26,8 @@ from ..base_model import ListType
 
 log = logging.getLogger(__name__)
 
-magnitudes_dict = {R('k', group=0): 3.,
+magnitudes_dict = {R('c', group=0): 2.,
+                  R('k', group=0): 3.,
                   R('M', group=0): 6.,
                   R('G', group=0): 9.,
                   R('T', group=0): 12.,
@@ -71,6 +72,9 @@ class QuantityParser(BaseParser):
         Arguments:
             string {[type]} -- [description]
         """
+        string = string.replace("-", "-")
+        string = string.replace("–", "-")
+        string = string.replace("−", "-")
         string = string.replace(" ", "")
         split_by_num_and_error = [r for r in re.split('(\d+\.?(?:\d+)?)|(±)', string) if r]
         error = None
@@ -97,6 +101,9 @@ class QuantityParser(BaseParser):
         :returns: The string expressed as a float or a list of floats if it was a value range.
         :rtype: list(float)
         """
+        string = string.replace("-", "-")
+        string = string.replace("–", "-")
+        string = string.replace("−", "-")
         # Remove whitespace
         string = string.replace(" ", "")
         string = string.split("±")[0]
@@ -128,6 +135,10 @@ class QuantityParser(BaseParser):
         :returns: The string expressed as a Unit
         :rtype: chemdataextractor.quantities.Unit
         """
+        string = string.replace("-", "-")
+        string = string.replace("–", "-")
+        string = string.replace("−", "-")
+        string = string.replace(' ', '')
         # Split string at numbers, /s, and brackets, so we have the units tokenized into the right units for later processing stages.
         split_string = self._split(string)
         # Find the units by matching strings, e.g. K for Kelvin, m for Meter
