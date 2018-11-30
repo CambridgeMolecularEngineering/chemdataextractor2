@@ -139,7 +139,7 @@ class Document(BaseDocument):
             if not reader.detect(fstring, fname=fname):
                 continue
             try:
-                d = reader.readstring(eval(fstring))
+                d = reader.readstring(fstring)
                 log.debug('Parsed document with %s' % reader.__class__.__name__)
                 return d
             except ReaderError:
