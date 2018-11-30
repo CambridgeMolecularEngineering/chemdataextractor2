@@ -22,7 +22,7 @@ from .text import Paragraph, Citation, Footnote, Heading, Title, Caption
 from .table import Table
 from .figure import Figure
 from ..errors import ReaderError
-from ..base_model import ModelList
+from ..model.base import ModelList
 from ..text import get_encoding
 from ..config import Config
 
@@ -139,7 +139,7 @@ class Document(BaseDocument):
             if not reader.detect(fstring, fname=fname):
                 continue
             try:
-                d = reader.readstring(fstring)
+                d = reader.readstring(eval(fstring))
                 log.debug('Parsed document with %s' % reader.__class__.__name__)
                 return d
             except ReaderError:
@@ -169,7 +169,7 @@ class Document(BaseDocument):
                 el_records = el.records
                 if len(el_records) == 1 and el_records[0].is_id_only:
                     title_record = el_records[0]
-            
+
             # Reset head_def_record unless consecutive heading with no records
             if isinstance(el, Heading) and head_def_record is not None:
                 if not (i == head_def_record_i + 1 and len(el.records) == 0):
@@ -367,7 +367,7 @@ class Document(BaseDocument):
     def cems(self):
         """"""
         return list(set([n for el in self.elements for n in el.cems]))
-    
+
     @property
     def definitions(self):
         """
