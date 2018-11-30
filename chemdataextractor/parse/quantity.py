@@ -17,12 +17,12 @@ from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
 from ..model import Compound, MeltingPoint
-from ..parse.units.unit import DimensionlessUnit
+from ..model.units.unit import DimensionlessUnit
 from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 from fractions import Fraction
-from ..base_model import ListType
+from ..model.base import ListType
 
 log = logging.getLogger(__name__)
 

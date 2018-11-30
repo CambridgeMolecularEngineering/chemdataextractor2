@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 import logging
 import six
 
-from .base_model import BaseModel, StringType, ListType, ModelType
-from .parse.units.temperature import TemperatureModel
+from .base import BaseModel, StringType, ListType, ModelType
+from .units.temperature import TemperatureModel
 
 log = logging.getLogger(__name__)
 

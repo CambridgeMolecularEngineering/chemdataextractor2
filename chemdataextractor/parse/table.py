@@ -19,7 +19,7 @@ from .common import delim
 from ..utils import first
 from ..model import Compound, UvvisSpectrum, UvvisPeak, QuantumYield, FluorescenceLifetime, MeltingPoint, GlassTransition
 from ..model import ElectrochemicalPotential, IrSpectrum, IrPeak
-from ..parse.units.temperature import Temperature
+from ..model.units.temperature import Temperature
 from .quantity import QuantityParser, value_element
 from .actions import join, merge, fix_whitespace
 from .base import BaseParser

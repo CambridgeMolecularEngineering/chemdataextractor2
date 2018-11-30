@@ -3,7 +3,7 @@
 chemdataextractor.units.temperatures.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Units and models for temperatures.
+Units and models for masses.
 
 Taketomo Isazawa (ti250@cam.ac.uk)
 
@@ -14,76 +14,76 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import logging
-
 from .quantity_model import QuantityModel
 from .unit import Unit
 from .dimension import Dimension
-from ..elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
-from ..actions import merge, join
+from ...parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
+from ...parse.actions import merge, join
+import logging
 
 log = logging.getLogger(__name__)
 
 
-class TemperatureUnit(Unit):
-
-    def __init__(self, magnitude=0.0, powers=None):
-        super(TemperatureUnit, self).__init__(Temperature(), magnitude, powers)
-
-class Kelvin(TemperatureUnit):
-
-    def convert_value_to_standard(self, value):
-        return value
-
-    def convert_value_from_standard(self, value):
-        return value
-
-    def convert_error_to_standard(self, error):
-        return error
-
-    def convert_error_from_standard(self, error):
-        return error
-
-class Celsius(TemperatureUnit):
-
-    def convert_value_to_standard(self, value):
-        return value + 273.15
-
-    def convert_value_from_standard(self, value):
-        return value - 273.15
-
-    def convert_error_to_standard(self, error):
-        return error
-
-    def convert_error_from_standard(self, error):
-        return error
-
-
-class Fahrenheit(TemperatureUnit):
-
-    def convert_value_to_standard(self, value):
-        return (value + 459.67) * (5. / 9.)
-
-    def convert_value_from_standard(self, value):
-        return value * (9. / 5.) - 459.67
-
-    def convert_error_to_standard(self, error):
-        return error * (5. / 9.)
-
-    def convert_error_from_standard(self, error):
-        return error * (9. / 5.)
-
-
-class Temperature(Dimension):
+class Mass(Dimension):
     pass
 
 
-class TemperatureModel(QuantityModel):
+class MassModel(QuantityModel):
 
-    dimensions = Temperature()
+    dimensions = Mass()
 
 
-units_dict = {R('°?[K]\.?', group=0): Kelvin,
-              R('°?[C]\.?', group=0): Celsius,
-              R('°?[F]\.?', group=0): Fahrenheit}
-Temperature.units_dict = units_dict
+class MassUnit(Unit):
+
+    def __init__(self, magnitude=0.0, powers=None):
+        super(MassUnit, self).__init__(Mass(), magnitude, powers)
+
+
+class Gram(MassUnit):
+
+    def convert_value_to_standard(self, value):
+        return value
+
+    def convert_value_from_standard(self, value):
+        return value
+
+    def convert_error_to_standard(self, error):
+        return error
+
+    def convert_error_from_standard(self, error):
+        return error
+
+
+class Pound(MassUnit):
+
+    def convert_value_to_standard(self, value):
+        return value * 453.592
+
+    def convert_value_from_standard(self, value):
+        return value / 453.592
+
+    def convert_error_to_standard(self, error):
+        return error * 453.592
+
+    def convert_error_from_standard(self, error):
+        return error / 453.592
+
+
+class Tonne(MassUnit):
+
+    def convert_value_to_standard(self, value):
+        return value * 1000000.
+
+    def convert_value_from_standard(self, value):
+        return value / 1000000.
+
+    def convert_error_to_standard(self, error):
+        return error * 1000000.
+
+    def convert_error_from_standard(self, error):
+        return error / 1000000.
+
+
+units_dict = {R('g(ram(s)?)?', group=0): Gram, R('pound[s]?', group=0): Pound, R('lb[s]?', group=0): Pound,
+R('t(onne)?', group=0): Tonne}
+Mass.units_dict = units_dict

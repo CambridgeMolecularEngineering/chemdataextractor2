@@ -13,7 +13,7 @@ import six
 import copy
 from abc import abstractmethod
 from .dimension import Dimensionless
-from ...base_model import BaseModel, BaseType, FloatType, StringType, ListType
+from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 
 
 class UnitType(BaseType):
@@ -126,6 +126,7 @@ class Unit(object):
         :returns: The new composite unit
         :rtype: subclass of Unit
         """
+        # TODO: units produced in this way can't be pickled.
 
         def new_initializer(self, magnitude=0.0):
             Unit.__init__(self, with_units.dimensions, magnitude, powers=with_units.powers)

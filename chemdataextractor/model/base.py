@@ -17,7 +17,7 @@ import logging
 
 import six
 
-from .utils import python_2_unicode_compatible
+from ..utils import python_2_unicode_compatible
 
 
 log = logging.getLogger(__name__)

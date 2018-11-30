@@ -19,9 +19,9 @@ import numpy as np
 
 
 from chemdataextractor.parse.quantity import QuantityParser
-from chemdataextractor.parse.units.temperature import Temperature, Celsius, Kelvin
-from chemdataextractor.parse.units.length import Length, Meter, Mile
-from chemdataextractor.parse.units.time import Time, Second, Hour
+from chemdataextractor.model.units.temperature import Temperature, Celsius, Kelvin
+from chemdataextractor.model.units.length import Length, Meter, Mile
+from chemdataextractor.model.units.time import Time, Second, Hour
 
 
 logging.basicConfig(level=logging.DEBUG)

@@ -19,8 +19,8 @@ import logging
 from .quantity_model import QuantityModel
 from .unit import Unit
 from .dimension import Dimension
-from ..elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
-from ..actions import merge, join
+from ...parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
+from ...parse.actions import merge, join
 
 log = logging.getLogger(__name__)
 

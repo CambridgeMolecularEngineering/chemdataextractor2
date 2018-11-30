@@ -12,7 +12,7 @@ Taketomo Isazawa (ti250@cam.ac.uk)
 import six
 import copy
 from abc import abstractmethod
-from ...base_model import BaseModel, BaseType, FloatType, StringType, ListType
+from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 
 
 class BaseDimension(BaseModel):

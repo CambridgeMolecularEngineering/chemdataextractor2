@@ -19,15 +19,15 @@ import unittest
 
 
 #from chemdataextractor.parse.units.quantity import Dimensionless, DimensionlessUnit, DimensionlessModel, QuantityModel
-from chemdataextractor.parse.units.quantity_model import QuantityModel, DimensionlessModel
-from chemdataextractor.parse.units.dimension import Dimensionless, Dimension
-from chemdataextractor.parse.units.unit import DimensionlessUnit, Unit
+from chemdataextractor.model.units.quantity_model import QuantityModel, DimensionlessModel
+from chemdataextractor.model.units.dimension import Dimensionless, Dimension
+from chemdataextractor.model.units.unit import DimensionlessUnit, Unit
 
 
-from chemdataextractor.parse.units.time import Second, Minute, Hour, Time, TimeModel
-from chemdataextractor.parse.units.length import Meter, Mile, Length, LengthModel
-from chemdataextractor.parse.units.temperature import Temperature, TemperatureModel, Kelvin, Celsius, Fahrenheit
-from chemdataextractor.parse.units.mass import Mass, Gram
+from chemdataextractor.model.units.time import Second, Minute, Hour, Time, TimeModel
+from chemdataextractor.model.units.length import Meter, Mile, Length, LengthModel
+from chemdataextractor.model.units.temperature import Temperature, TemperatureModel, Kelvin, Celsius, Fahrenheit
+from chemdataextractor.model.units.mass import Mass, Gram
 
 
 
