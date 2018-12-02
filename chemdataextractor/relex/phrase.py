@@ -47,7 +47,7 @@ class Phrase:
         output_string += ' '.join(self.elements['suffix']['tokens'])
 
         return output_string
-
+    
     def create(self):
         """ Create a phrase from known relations"""
         sentence = self.sentence_tokens
@@ -86,28 +86,33 @@ class Phrase:
 
         # Create the phrase elements, prefix, middles, suffix
         
-        ''' If any of the elements (prefix / middles / suffix) is empty, change its previous empty list [] to be ['<Blank>']
-         So that the elements could be assigned a correct similarity later
-         Modification made by jz449'''
+        """ Assign each empty element a token '<Blank>' so that the similarity calculation could be performed correctly.
+            Modification made by jz449
+        E.g. Before: {'prefix' : {'tokens' : []}}
+             After:  {'prefix' : {'tokens' : ['<Blank>']}}
+            
+        """
         
-        prefix_tokens = [t for t in sentence[sorted_entity_list[0].start - prefix_length:sorted_entity_list[0].start]]
+        prefix_tokens = [t for t in sentence[sorted_entity_list[0].start - self.prefix_length:sorted_entity_list[0].start]]
         if len(prefix_tokens) == 0:
             prefix_tokens = ['<Blank>']
-        elements['prefix'] = {'tokens': prefix_tokens}
+        self.elements['prefix'] = {'tokens': prefix_tokens}
+
+
 
         for m in range(0, number_of_middles):
             prev_entity_end = sorted_entity_list[m].end
-            next_entitiy_start = sorted_entity_list[m + 1].start
+            next_entitiy_start = sorted_entity_list[m+1].start
             middle_tokens = [t for t in sentence[prev_entity_end:next_entitiy_start]]
             if len(middle_tokens) == 0:
                 middle_tokens = ['<Blank>']
-            elements['middle_' + str(m + 1)] = {'tokens': middle_tokens}
-
-        suffix_tokens = [t for t in sentence[sorted_entity_list[-1].end:sorted_entity_list[-1].end + suffix_length]]
+            self.elements['middle_' + str(m+1)] = {'tokens': middle_tokens}
+            
+        suffix_tokens = [t for t in sentence[sorted_entity_list[-1].end:sorted_entity_list[-1].end+self.suffix_length]]
         if len(suffix_tokens) == 0:
             suffix_tokens = ['<Blank>']
-        elements['suffix'] = {'tokens': suffix_tokens}
-        
+        self.elements['suffix'] = {'tokens': suffix_tokens}
+
         return
 
     def reset_vectors(self):
