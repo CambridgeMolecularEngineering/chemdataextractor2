@@ -189,7 +189,11 @@ class Dimension(BaseDimension):
 
     def __hash__(self):
         string = str(self.__class__.__name__)
-        string += str(self.dimensions)
+        # TODO: Should use the dimensions as part of the hash as well, but does not seem to work.
+        # Can't just hash the dictionary as that would lead to two units that are actually equal hashing to different values depending on the order in which the dictionary is iterated through, which is not neccesarily deterministic. Better to have it this way, as it's okay for two hashes to clash.
+        # if self.dimensions is not None:
+        #     for key in sorted(str(six.iteritems(self.dimensions))):
+        #         string += (str(key))
         return string.__hash__()
 
     def __str__(self):

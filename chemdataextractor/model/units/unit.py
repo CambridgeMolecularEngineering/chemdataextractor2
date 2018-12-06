@@ -298,10 +298,15 @@ class Unit(object):
         return False
 
     def __hash__(self):
+        print('hashing units!')
         string = str(self.__class__.__name__)
-        string += str(self.dimensions)
+        string += str(self.dimensions.__hash__())
         string += str(float(self.magnitude))
-        string += str(self.powers)
+        # TODO: Should use the powers as part of the hash as well, but does not seem to work.
+        # Can't just hash the dictionary as that would lead to two units that are actually equal hashing to different values depending on the order in which the dictionary is iterated through, which is not neccesarily deterministic. Better to have it this way, as it's okay for two hashes to clash.
+        # if self.powers is not None:
+        #     for key in sorted(str(six.iteritems(self.powers))):
+        #         string += str(key)
         return string.__hash__()
 
     def __str__(self):

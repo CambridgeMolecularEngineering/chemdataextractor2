@@ -105,6 +105,11 @@ class TestUnitClass(unittest.TestCase):
         self.assertEqual(newton.powers, {Second(): -2.0, Meter(): 1.0, Gram(): 1.0})
         self.assertEqual(newton.base_magnitude, 3.0)
 
+    def test_units_hashing(self):
+        unit1 = Kelvin(magnitude=2.0) * Meter(magnitude=1.0) / Second(magnitude=1.0)
+        unit2 = (Second(magnitude=1.0) ** (-1.0)) * Meter(magnitude=1.0) * Kelvin(magnitude=2.0)
+        self.assertEqual(unit1.__hash__(), unit2.__hash__())
+
 
 class TestDimensions(unittest.TestCase):
 
@@ -124,6 +129,11 @@ class TestDimensions(unittest.TestCase):
         dimensionless_div = Length() / Length()
         dimensionless = Dimensionless()
         self.assertEqual(dimensionless, dimensionless_div)
+
+    def test_dimensions_hashing(self):
+        dimension1 = Temperature() * Length() / Time()
+        dimension2 = (Time() ** (-1)) * Length() * Temperature()
+        self.assertEqual(dimension1.__hash__(), dimension2.__hash__())
 
 
 class TestQuantity(unittest.TestCase):
