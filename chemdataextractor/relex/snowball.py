@@ -308,15 +308,16 @@ class Snowball(object):
                         print("Candidate " + str(i)  + ' ' + str(candidate) + '\n')
 
                     res = input("...: ")
-                    chosen_candidate_idx= res.split(',')
-                    chosen_candidates = []
-                    for cci in chosen_candidate_idx:
-                        if cci in candidate_dict.keys():
-                            cc = candidate_dict[cci]
-                            cc.confidence = 1.0
-                            chosen_candidates.append(cc)
-                    if chosen_candidates:
-                        self.update(s.raw_tokens, chosen_candidates)
+                    if res:
+                      chosen_candidate_idx= res.split(',')
+                      chosen_candidates = []
+                      for cci in chosen_candidate_idx:
+                          if cci in candidate_dict.keys():
+                              cc = candidate_dict[cci]
+                              cc.confidence = 1.0
+                              chosen_candidates.append(cc)
+                      if chosen_candidates:
+                          self.update(s.raw_tokens, chosen_candidates)
         f.close()
         return
 
