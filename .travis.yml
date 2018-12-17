@@ -24,7 +24,7 @@ install:
   - conda info -a
   - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION appdirs beautifulsoup4 click cssselect dawg lxml nltk numpy scipy pdfminer.six python-dateutil requests six python-crfsuite pyyaml pytest sphinx pandoc
   - source activate cde
-  - pip install nbsphinx nbsphinx-link m2r ipython ipykernel
+  - pip install nbsphinx==0.3.5 nbsphinx-link m2r ipython ipykernel
   - python setup.py install
   - cde data download
 before_script:
