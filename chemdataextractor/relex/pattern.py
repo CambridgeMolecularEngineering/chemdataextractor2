@@ -3,6 +3,13 @@
 chemdataextractor.relex.pattern.py
 Extraction pattern object
 """
+
+"""
+   Modify generate_cde_element() function to adapt the changes of phrase.py.
+   If any prefix/middle/suffix are empty (blank), do not add it to the resulting phrase.
+   Modified by jz449
+"""
+
 import re
 from ..parse.elements import I, W, R, Any, And, Start, OneOrMore, Group
 
@@ -46,6 +53,8 @@ class Pattern:
         elements = []
         prefix_tokens = self.elements['prefix']['tokens']
         for token in prefix_tokens:
+            if token == '<Blank>':
+                continue
             elements.append(I(token))
 
         elements.append(self.entities[0].tag)
@@ -53,11 +62,15 @@ class Pattern:
         for middle in range(0, self.number_of_entities -1):
             middle_tokens = self.elements['middle_' + str(middle+1)]['tokens']
             for token in middle_tokens:
+                if token == '<Blank>':
+                    continue
                 elements.append(I(token))
             elements.append(self.entities[middle+1].tag)
         
         suffix_tokens = self.elements['suffix']['tokens']
         for token in suffix_tokens:
+            if token == '<Blank>':
+                continue
             elements.append(I(token))
         
         final_phrase = And(exprs=elements)
