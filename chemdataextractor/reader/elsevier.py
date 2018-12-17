@@ -22,7 +22,7 @@ from ..scrape import BLOCK_ELEMENTS
 class CleanerElsevier(Cleaner):
     """Some modifications for cleaning Elsevier XML documents"""
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(CleanerElsevier, self).__init__(**kwargs)
 
     def __call__(self, doc):
         """Clean the document."""
