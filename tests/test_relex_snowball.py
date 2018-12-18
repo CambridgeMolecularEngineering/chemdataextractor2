@@ -10,6 +10,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import io
+import sys
 import logging
 import os
 import unittest
@@ -58,13 +59,20 @@ class TestSnowball(unittest.TestCase):
     maxDiff = None
     training_corpus = 'tests/data/relex/curie_training/'
     snowball_pkl = 'tests/data/relex/curie_temperatures.pkl'
+    snowball_pkl_py2 = 'tests/data/relex/curie_temperatures_py2.pkl'
 
     def test_load_snowball(self):
-        sb = Snowball.load(self.snowball_pkl)
+        if sys.version_info[0] == 2:
+            sb = Snowball.load(self.snowball_pkl_py2)
+        else:
+            sb = Snowball.load(self.snowball_pkl)
         self.assertIsInstance(sb, Snowball)
-    
+
     def test_extract(self):
-        curie_temp_snowball = Snowball.load(self.snowball_pkl)
+        if sys.version_info[0] == 2:
+            curie_temp_snowball = Snowball.load(self.snowball_pkl_py2)
+        else:
+            curie_temp_snowball = Snowball.load(self.snowball_pkl)
         curie_temp_snowball.save_file_name = 'curie_test_output'
         test_sentence = Sentence('BiFeO3 is ferromagnetic with a curie temperature of 1103 K and this is very interesting')
         result = curie_temp_snowball.extract(test_sentence)
