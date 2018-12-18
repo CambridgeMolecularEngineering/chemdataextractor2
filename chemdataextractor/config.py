@@ -10,6 +10,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import io
 import os
+import sys
 from collections import MutableMapping
 
 import appdirs
@@ -63,10 +64,15 @@ class Config(MutableMapping):
             self._path = os.environ.get('CHEMDATAEXTRACTOR_CONFIG')
         # Use OS-dependent config directory given by appdirs
         if not self._path:
-            self._path = os.path.join(appdirs.user_config_dir('ChemDataExtractor'), 'chemdataextractor.yml')
+            if sys.version_info[0] == 2:
+                self._path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'python2_config.yml')
+            else:
+                self._path = os.path.join(appdirs.user_config_dir('ChemDataExtractor'), 'chemdataextractor.yml')
         if os.path.isfile(self.path):
             with io.open(self.path, encoding='utf8') as f:
                 self._data = yaml.safe_load(f)
+                if self._data is None:
+                    self._data = {}
 
     @property
     def path(self):
