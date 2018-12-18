@@ -22,7 +22,7 @@ from ..scrape import BLOCK_ELEMENTS
 class CleanerElsevier(Cleaner):
     """Some modifications for cleaning Elsevier XML documents"""
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(CleanerElsevier, self).__init__(**kwargs)
 
     def __call__(self, doc):
         """Clean the document."""
@@ -113,9 +113,9 @@ def elsevier_xml_whitespace(document):
     """ Remove whitespace in xml.text or xml.tails for all elements, if it is only whitespace """
     # selects all tags and checks if the text or tail are spaces
     for el in document.xpath('//*'):
-        if str(el.text).isspace():
+        if six.text_type(el.text).isspace():
             el.text = ''
-        if str(el.tail).isspace():
+        if six.text_type(el.tail).isspace():
             el.tail = ''
     # DEBUG, check the document
     # print(etree.tostring(document, pretty_print=True))
