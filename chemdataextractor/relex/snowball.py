@@ -7,12 +7,13 @@ The Snowball Relationship Extraction algorithm
 import copy
 import os
 import pickle
+import six
 from itertools import combinations
 
 import numpy as np
-from lxml import etree
+import io
 
-from chemdataextractor.parse import (Any, I, OneOrMore, Optional, R, W,
+from ..parse import (Any, I, OneOrMore, Optional, R, W,
                                      ZeroOrMore, join, merge)
 
 from ..doc.document import Document, Paragraph
@@ -34,7 +35,7 @@ class Snowball(object):
         Then train the system on a corpus
         ```snowball.train(corpus)```
         This will generate an online training system
-    
+
     ::params:
     For full detail see the associated paper: https://www.nature.com/articles/sdata2018111
         tc: The minimum confidence of a relationship in order to be accepted
@@ -47,15 +48,15 @@ class Snowball(object):
         learning_rate: How fast new confidences update based on new data (1 means new confidence is always taken, 0 means no update, )
     """
 
-    
-    def __init__(self, relationship, 
-                        tc=0.95, 
-                        tsim=0.95, 
-                        prefix_weight=0.1, 
-                        middle_weight=0.8, 
-                        suffix_weight=0.1, 
-                        prefix_length=1, 
-                        suffix_length=1, 
+
+    def __init__(self, relationship,
+                        tc=0.95,
+                        tsim=0.95,
+                        prefix_weight=0.1,
+                        middle_weight=0.8,
+                        suffix_weight=0.1,
+                        prefix_length=1,
+                        suffix_length=1,
                         learning_rate=0.5):
         self.relationship = relationship
         self.relations = []
@@ -69,19 +70,19 @@ class Snowball(object):
         # params
         if not 0 <= tc <= 1.0:
             raise ValueError("Tc must be between 0 and 1")
-        
+
         if not 0 <= tsim <= 1.0:
             raise ValueError("Tsim must be between 0 and 1")
-        
+
         if not 0 <= learning_rate <= 1.0:
             raise ValueError("Learning rate must be between 0 and 1")
-        
+
         if not 0 <= prefix_weight <= 1.0:
             raise ValueError("Prefix weight must be between 0 and 1")
-        
+
         if not 0 <= middle_weight <= 1.0:
             raise ValueError("middle_weight must be between 0 and 1")
-        
+
         if not 0 <= suffix_weight <= 1.0:
             raise ValueError("suffix weight must be between 0 and 1")
 
@@ -92,15 +93,15 @@ class Snowball(object):
         self.suffix_weight = suffix_weight
         self.prefix_length = prefix_length
         self.suffix_length = suffix_length
-        self.learning_rate=learning_rate
+        self.learning_rate = learning_rate
 
     @classmethod
     def load(cls, path):
         """Load a snowball instance from file
-        
+
         Arguments:
             path {str} -- path to the pkl file
-        
+
         Returns:
             self -- A Snowball Instance
         """
@@ -110,12 +111,12 @@ class Snowball(object):
 
     def update(self, sentence_tokens, relations=[]):
         """Update the learned extraction pattern clusters based on the incoming sentence and relation
-        
+
         Arguments:
             sentence_tokens {list} -- the sentence tokenised
             relation {list} -- The Relation objects that are in the sentence
         """
-        new_phrase = Phrase(sentence_tokens, relations, self.prefix_length, self.suffix_length) 
+        new_phrase = Phrase(sentence_tokens, relations, self.prefix_length, self.suffix_length)
         self.cluster(new_phrase)
         self.save()
         return
@@ -129,38 +130,38 @@ class Snowball(object):
         with open(save_dir + self.save_file_name + '.pkl', 'wb') as f:
             pickle.dump(self, f)
 
-        with open(save_dir + self.save_file_name + '_clusters.txt', 'w+', encoding='utf-8') as f:
+        with io.open(save_dir + self.save_file_name + '_clusters.txt', 'w+', encoding='utf-8') as f:
             s = "Cluster set contains " + \
-                str(len(self.clusters)) + " clusters."
+                six.text_type(len(self.clusters)) + " clusters."
             f.write(s + "\n")
             for c in self.clusters:
-                s = "Cluster " + str(c.label) + " contains " + str(
+                s = "Cluster " + six.text_type(c.label) + " contains " + six.text_type(
                     len(c.phrases)) + " phrases"
                 f.write(s + "\n")
                 for phrase in c.phrases:
                     f.write("\t " + phrase.full_sentence + "\n")
-                f.write("The cluster centroid pattern is: ")
+                f.write(u"The cluster centroid pattern is: ")
                 p = c.pattern
-                f.write(str(p.to_string()) +
-                        " with confidence score " + str(p.confidence) + "\n")
+                f.write(six.text_type(p.to_string()) +
+                        " with confidence score " + six.text_type(p.confidence) + "\n")
 
-        with open(save_dir + self.save_file_name + '_patterns.txt', 'w+', encoding='utf-8') as f:
+        with io.open(save_dir + self.save_file_name + '_patterns.txt', 'w+', encoding='utf-8') as f:
             for c in self.clusters:
                 p = c.pattern
-                f.write(str(p.to_string()) +
+                f.write(six.text_type(p.to_string()) +
                         " with confidence score " + str(p.confidence) + "\n\n")
-        
-        with open(save_dir + self.save_file_name + '_relations.txt', 'w+', encoding='utf-8') as wf:
+
+        with io.open(save_dir + self.save_file_name + '_relations.txt', 'w+', encoding='utf-8') as wf:
             for c in self.clusters:
                 for phrase in c.phrases:
                     for relation in phrase.relations:
-                        wf.write(str(relation) + " Confidence:  " + str(relation.confidence) + '\n')
+                        wf.write(six.text_type(relation) + " Confidence:  " + six.text_type(relation.confidence) + '\n')
 
         return
-    
+
     def cluster(self, phrase):
         """Assign a phrase object to a cluster
-        
+
         Arguments:
             phrase {Phrase} -- The Phrase to cluster
         """
@@ -169,15 +170,15 @@ class Snowball(object):
         if len(self.clusters) == 0:
             cluster0 = Cluster(str(self.cluster_counter), learning_rate=self.learning_rate)
             cluster0.add_phrase(phrase)
-            self.clusters.append(cluster0) 
+            self.clusters.append(cluster0)
         else:
             # Use a single pass classification algorithm to classify
             self.classify(phrase)
         return
-    
+
     def delete_cluster(self, idx):
         """Delete all data associated with a cluster
-        
+
         Arguments:
             idx {int} -- Cluster to delete
         """
@@ -202,7 +203,7 @@ class Snowball(object):
 
                 # Check the level of similarity to the cluster pattern
                 similarity = match(phrase, cluster.pattern)
-                
+
                 if similarity >= self.minimum_cluster_similarity_score:
                     cluster.add_phrase(phrase)
                     phrase_added = True
@@ -219,10 +220,10 @@ class Snowball(object):
             self.clusters.append(new_cluster)
         return
 
-    
+
     def extract(self, s):
         """Retrieve probabilistic relationships from a sentence
-        
+
         Arguments:
             s {Sentence} -- The Sentence object to extract from
         Returns:
@@ -277,7 +278,7 @@ class Snowball(object):
                 best_candidate_phrase_score = phrase_confidence_score
                 best_candidate_cluster = best_match_cluster
 
-        
+
         if best_candidate_phrase and best_candidate_phrase_score >= self.minimum_relation_confidence:
             for candidate_relation in best_candidate_phrase.relations:
                 candidate_relation.confidence = phrase_confidence_score
@@ -289,7 +290,7 @@ class Snowball(object):
 
     def parse(self, filename):
         """Parse the sentences of a file
-        
+
         Arguments:
             f {str} -- the file path to parse
         """
@@ -307,7 +308,7 @@ class Snowball(object):
                         candidate_dict[str(i)] = candidate
                         print("Candidate " + str(i)  + ' ' + str(candidate) + '\n')
 
-                    res = input("...: ")
+                    res = six.moves.input("...: ")
                     chosen_candidate_idx= res.split(',')
                     chosen_candidates = []
                     for cci in chosen_candidate_idx:
@@ -320,10 +321,10 @@ class Snowball(object):
         f.close()
         return
 
-    
+
     def train(self, corpus):
         """train the snowball algorithm on a specified corpus
-        
+
         Arguments:
             corpus {str} -- path to a corpus of documents
         """
