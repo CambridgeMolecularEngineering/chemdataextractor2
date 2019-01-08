@@ -6,7 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import logging
-import unittest
+import unittest2
 
 from chemdataextractor import Document
 
@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
-class TestAddingCellFigure(unittest.TestCase):
+class TestAddingCellFigure(unittest2.TestCase):
 
     """ Test parsing warning for when a figure is nested inside a table and can not be added."""
 

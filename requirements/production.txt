@@ -12,3 +12,4 @@ PyYAML>=3.12
 requests>=2.12.5
 six>=1.10.0
 selenium>=3.14.1
+unittest2>=1.1.0
