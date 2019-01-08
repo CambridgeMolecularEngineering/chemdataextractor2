@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -81,6 +82,6 @@ class TestAddingCellFigure(unittest.TestCase):
                     </xocs:doc></originalText></full-text-retrieval-response>"""
 
         with self.assertLogs(level=logging.WARNING) as cm:
-            d = Document().from_string(xml_string.encode('utf-8'))
+            d = Document().from_string(bytes(xml_string, 'utf-8'))
             self.assertTrue(cm.output[0].startswith('WARNING'))
 
