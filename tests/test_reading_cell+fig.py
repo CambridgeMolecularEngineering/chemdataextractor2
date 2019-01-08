@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import logging
 import unittest2
+from builtins import bytes
 
 from chemdataextractor import Document
 
