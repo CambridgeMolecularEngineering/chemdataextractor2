@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import sys
 import logging
 import unittest2
 from builtins import bytes
@@ -83,6 +84,9 @@ class TestAddingCellFigure(unittest2.TestCase):
                     </xocs:doc></originalText></full-text-retrieval-response>"""
 
         with self.assertLogs(level=logging.WARNING) as cm:
-            d = Document().from_string(bytes(xml_string, 'utf-8'))
+            if sys.version_info[0] < 3:
+                d = Document().from_string(bytes(xml_string, 'utf-8'))
+            else:
+                d = Document().from_string(xml_string.encode('utf-8'))
             self.assertTrue(cm.output[0].startswith('WARNING'))
 
