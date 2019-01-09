@@ -235,11 +235,10 @@ class Snowball(object):
         all_combs = []
         list_of_names = []
         box_name = ['name']
-        if num_candidates:
-            for i in candidate_relations:
-                for j in i.entities:
-                    if j.tag.name in box_name:
-                        list_of_names.append(j.text)
+        for i in candidate_relations:
+            for j in i.entities:
+                if j.tag.name in box_name:
+                    list_of_names.append(j.text)
         number_of_unique_name = len(set(list_of_names))
         product = num_candidates * number_of_unique_name
         if product <= your_limit:
