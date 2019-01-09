@@ -5,8 +5,8 @@ Chemdataextractor.relex.relationship
 Classes for defining new chemical relationships
 """
 import copy
-from collections import Counter
-from itertools import combinations, product
+import numpy as np
+from itertools import product
 
 from .entity import Entity
 from .utils import KnuthMorrisPratt
@@ -18,8 +18,7 @@ class ChemicalRelationship(object):
     Used to define a new relationship model based on entities
     """
 
-
-    def __init__(self, entities, parser, name):
+    def __init__(self, entities, parser, name, rule={'all': None}):
         """Create the new relationship
         
         Arguments:
@@ -31,6 +30,15 @@ class ChemicalRelationship(object):
         self.entities = copy.copy(entities)
         self.parser = parser
         self.name = name
+        self.rule = rule
+
+    @property
+    def rule_key(self):
+        return list(self.rule.keys())[0]
+
+    @property
+    def rule_values(self):
+        return list(self.rule.values())[0]
 
     def get_candidates(self, tokens):
         """Find all candidate relationships of this type within a sentence
@@ -79,10 +87,30 @@ class ChemicalRelationship(object):
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
         candidates = list(product(*all_entities))
+        if self.rule_key == 'followed_by':
+            candidates = self.followed_by_filter_candidates(candidates)
         for candidate in candidates:
             candidate_relationships.append(Relation(candidate, confidence=0))
 
         return candidate_relationships
+
+    def followed_by_filter_candidates(self, candidate_rels):
+        n_rules = len(self.rule_values)
+        del_indices = []
+
+        for rel in candidate_rels:
+            for entity_name in self.rule_values:
+                exec ('{} = next(filter(lambda x: x.tag.name ==\'{}\', rel))'.format(entity_name, entity_name))
+            conditions = []
+            for j in range(n_rules - 1):
+                conditions.append(eval(self.rule_values[j]).start < eval(self.rule_values[j + 1]).start)
+            if all(conditions):
+                del_indices.append(True)
+            else:
+                del_indices.append(False)
+
+        filtered_candidates = np.array(candidate_rels)[np.array(del_indices)]
+        return filtered_candidates
 
 
 class Relation(object):
