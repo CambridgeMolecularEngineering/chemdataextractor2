@@ -221,7 +221,7 @@ class Snowball(object):
         return
 
 
-    def extract(self, s):
+    def extract(self, s, your_limit = 400):
         """Retrieve probabilistic relationships from a sentence
 
         Arguments:
@@ -231,9 +231,19 @@ class Snowball(object):
         """
         # Use the default tagger to find candidate relationships
         candidate_relations = self.relationship.get_candidates(s.tagged_tokens)
-        # print(candidate_relations)
         num_candidates = len(candidate_relations)
-        all_combs = [i for r in range(1, num_candidates+1) for i in combinations(candidate_relations, r) ]
+        all_combs = []
+        list_of_names = []
+        box_name = ['name']
+        if num_candidates:
+            for i in candidate_relations:
+                for j in i.entities:
+                    if j.tag.name in box_name:
+                        list_of_names.append(j.text)
+        number_of_unique_name = len(set(list_of_names))
+        product = num_candidates * number_of_unique_name
+        if product <= your_limit:
+            all_combs = [i for r in range(1,number_of_unique_name + 1) for i in combinations(candidate_relations, r)]
         # Create a candidate phrase for each possible combination
         all_candidate_phrases = []
         for combination in all_combs:
