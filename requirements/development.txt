@@ -1,6 +1,4 @@
 -r production.txt
-future>=0.17.1
 pytest>=3.0.6
 twine>=1.8.1
-unittest2>=1.1.0
 wheel>=0.29.0
