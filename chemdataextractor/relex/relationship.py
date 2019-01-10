@@ -20,12 +20,20 @@ class ChemicalRelationship(object):
 
     def __init__(self, entities, parser, name, rule={'all': None}):
         """Create the new relationship
-        
+
         Arguments:
             entities {list(chemdataextractor elements)} -- List of CDE parse elements that define how to identify the entities
             parser {Parserelement} -- A phrase describing how to find all entities in a single sentence
             name {str} -- What to call this relationship
+            rule {dict(rule_name -> (str): rule_values -> (list))} -- Rules for candidate relations. Default is 'all':
+                                                                      all candidate elations are used. 'followed_by':
+                                                                      pass a list of entities in the order that the user
+                                                                      desires them to appear in relationships. For
+                                                                      example, using ['value', 'units'] will only return
+                                                                      candidate relationships in which the value is
+                                                                      followed by units.
         """
+
 
         self.entities = copy.copy(entities)
         self.parser = parser
