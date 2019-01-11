@@ -5,8 +5,7 @@ Chemdataextractor.relex.relationship
 Classes for defining new chemical relationships
 """
 import copy
-from collections import Counter
-from itertools import combinations, product
+from itertools import product
 
 from .entity import Entity
 from .utils import KnuthMorrisPratt
@@ -18,19 +17,35 @@ class ChemicalRelationship(object):
     Used to define a new relationship model based on entities
     """
 
-
-    def __init__(self, entities, parser, name):
+    def __init__(self, entities, parser, name, rule={'all': None}):
         """Create the new relationship
-        
+
         Arguments:
             entities {list(chemdataextractor elements)} -- List of CDE parse elements that define how to identify the entities
             parser {Parserelement} -- A phrase describing how to find all entities in a single sentence
             name {str} -- What to call this relationship
+            rule {dict(rule_name -> (str): rule_values -> (list))} -- Rules for candidate relations. Default is 'all':
+                                                                      all candidate elations are used. 'followed_by':
+                                                                      pass a list of entities in the order that the user
+                                                                      desires them to appear in relationships. For
+                                                                      example, using ['value', 'units'] will only return
+                                                                      candidate relationships in which the value is
+                                                                      followed by units.
         """
+
 
         self.entities = copy.copy(entities)
         self.parser = parser
         self.name = name
+        self.rule = rule
+
+    @property
+    def rule_key(self):
+        return list(self.rule.keys())[0]
+
+    @property
+    def rule_values(self):
+        return list(self.rule.values())[0]
 
     def get_candidates(self, tokens):
         """Find all candidate relationships of this type within a sentence
@@ -79,10 +94,30 @@ class ChemicalRelationship(object):
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
         candidates = list(product(*all_entities))
+        if self.rule_key == 'followed_by':
+            candidates = self.followed_by_filter_candidates(candidates)
         for candidate in candidates:
             candidate_relationships.append(Relation(candidate, confidence=0))
 
         return candidate_relationships
+
+    def followed_by_filter_candidates(self, candidate_rels):
+        n_rules = len(self.rule_values)
+        del_indices = []
+
+        for rel in candidate_rels:
+            for entity_name in self.rule_values:  # Loop through entity names and create new attribute for each
+                setattr(self, str(entity_name), next(filter(lambda x: x.tag.name == entity_name, rel)))
+            conditions = []
+            for j in range(n_rules - 1):
+                conditions.append(getattr(self, str(self.rule_values[j])).start < getattr(self, str(self.rule_values[j+1])).start)
+            if all(conditions):
+                del_indices.append(True)
+            else:
+                del_indices.append(False)
+        filtered_candidates = [x for i, x in enumerate(candidate_rels) if del_indices[i]]
+
+        return filtered_candidates
 
 
 class Relation(object):
@@ -90,7 +125,6 @@ class Relation(object):
 
     Essentially a placeholder for a number of entities
     """
-
 
     def __init__(self, entities, confidence):
         """Init
