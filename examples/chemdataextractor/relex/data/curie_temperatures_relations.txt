@@ -1,0 +1,1 @@
+<(BiFeO3,name_1,0,1), (K,units_1,10,11), (1103,value_1,9,10), (curie temperature,specifier_1,6,8)> Confidence:  1.0
