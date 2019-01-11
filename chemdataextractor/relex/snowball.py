@@ -333,7 +333,7 @@ class Snowball(object):
         """
         corpus_list = os.listdir(corpus)
         for i, file_name in enumerate(corpus_list):
-            print('{}/{}'.format(i+1, len(corpus_list)), '\t', file_name)
+            print('{}/{}:'.format(i+1, len(corpus_list)), ' ', file_name)
             f = os.path.join(corpus, file_name)
             self.parse(f)
         return
