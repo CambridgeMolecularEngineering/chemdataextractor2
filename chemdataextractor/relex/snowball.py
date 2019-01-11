@@ -331,11 +331,6 @@ class Snowball(object):
         Arguments:
             corpus {str} -- path to a corpus of documents
         """
-        # for file_name in os.listdir(corpus):
-        #     print(file_name)
-        #     f = os.path.join(corpus, file_name)
-        #     self.parse(f)
-        # return
         corpus_list = os.listdir(corpus)
         for i, file_name in enumerate(corpus_list):
             print('{}/{}'.format(i+1, len(corpus_list)), '\t', file_name)
