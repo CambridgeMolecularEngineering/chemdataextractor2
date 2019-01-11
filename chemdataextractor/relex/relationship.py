@@ -107,7 +107,7 @@ class ChemicalRelationship(object):
         del_indices = []
 
         for rel in candidate_rels:
-            for entity_name in self.rule_values:
+            for entity_name in self.rule_values:  # Loop through entity names and create new attribute for each
                 attr_value = next(filter(lambda x: x.tag.name == entity_name, rel))
                 setattr(self, str(entity_name), attr_value)
             conditions = []
