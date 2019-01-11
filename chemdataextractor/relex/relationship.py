@@ -108,8 +108,7 @@ class ChemicalRelationship(object):
 
         for rel in candidate_rels:
             for entity_name in self.rule_values:  # Loop through entity names and create new attribute for each
-                attr_value = next(filter(lambda x: x.tag.name == entity_name, rel))
-                setattr(self, str(entity_name), attr_value)
+                setattr(self, str(entity_name), next(filter(lambda x: x.tag.name == entity_name, rel)))
             conditions = []
             for j in range(n_rules - 1):
                 conditions.append(getattr(self, str(self.rule_values[j])).start < getattr(self, str(self.rule_values[j+1])).start)
@@ -121,16 +120,12 @@ class ChemicalRelationship(object):
         filtered_candidates = np.array(candidate_rels)[np.array(del_indices)]
         return filtered_candidates
 
-    def closest_to_filter_candidates(self, candidate_rels):
-        pass
-
 
 class Relation(object):
     """Relation class
 
     Essentially a placeholder for a number of entities
     """
-
 
     def __init__(self, entities, confidence):
         """Init
