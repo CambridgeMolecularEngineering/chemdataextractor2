@@ -57,15 +57,18 @@ class Snowball(object):
                         suffix_weight=0.1,
                         prefix_length=1,
                         suffix_length=1,
-                        learning_rate=0.5):
+                        learning_rate=0.5, 
+                        max_candidate_combinations=400):
         self.relationship = relationship
         self.relations = []
         self.phrases = []
         self.clusters = []
         self.cluster_counter = 0
         self.sentences = []
+        self.max_candidate_combinations = max_candidate_combinations
         self.save_dir = 'chemdataextractor/relex/data/'
         self.save_file_name = relationship.name
+        
 
         # params
         if not 0 <= tc <= 1.0:
@@ -231,9 +234,18 @@ class Snowball(object):
         """
         # Use the default tagger to find candidate relationships
         candidate_relations = self.relationship.get_candidates(s.tagged_tokens)
-        # print(candidate_relations)
         num_candidates = len(candidate_relations)
-        all_combs = [i for r in range(1, num_candidates+1) for i in combinations(candidate_relations, r) ]
+        all_combs = []
+        unique_names = set()
+        for i in candidate_relations:
+            for j in i.entities:
+                if j.tag.name  == 'name':
+                    unique_names.update(j.text)
+                    
+        number_of_unique_name = len(unique_names)
+        product = num_candidates * number_of_unique_name
+        if product <= self.max_candidate_combinations:
+            all_combs = [i for r in range(1,number_of_unique_name + 1) for i in combinations(candidate_relations, r)]
         # Create a candidate phrase for each possible combination
         all_candidate_phrases = []
         for combination in all_combs:

@@ -11,9 +11,10 @@ The cluster centroid pattern is: The name_1 nanocrystals have low coercive field
 Cluster 3 contains 1 phrases
 	 The much smaller value of TB compared to the Curie temperature ( 627 K ) of bulk Ni suggests that the thickness of the Ni shell is very small .
 The cluster centroid pattern is: the specifier_1 <Blank> value_1 <Blank> units_1 ) of bulk name_1 suggests with confidence score 1.0
-Cluster 4 contains 1 phrases
+Cluster 4 contains 2 phrases
 	 CoS2 is ferromagnetic with a Curie temperature of 116 K and Co9S8 is antiferromagnetic with a Néel temperature above the decomposition temperature.28 The magnetic susceptibility of Ni3S2 was found to be temperature - independent , which is consistent with Pauli paramagnetism .
-The cluster centroid pattern is: <Blank> name_1 is ferromagnetic with a specifier_1 of value_1 <Blank> units_1 and with confidence score 1.0
+	 BiFeO3 is highly ferromagnetic with a curie temperature of 1103 K and that is extremely interesting
+The cluster centroid pattern is: <Blank> name_1 is ferromagnetic with a specifier_1 of value_1 <Blank> units_1 and with confidence score 0.75
 Cluster 5 contains 1 phrases
 	 These novel properties are of great potential application in highly efficient bioseparation / drug delivery , highly sensitive bio-sensing , magnetic resonance imaging ( MRI ) contrast enhancement , and magnetic fluid hyperthermia.1 – 3 In the family of magnetic NPs , magnetite ( Fe3O4 ) has recently attracted much attention due to its high Curie temperature ( Tc ∼ 850 K ) , good biocompatibility , high magnetic moment , and relatively good air - stability .
 The cluster centroid pattern is: , name_1 has recently attracted much attention due to its high specifier_1 ∼ value_1 <Blank> units_1 ) with confidence score 1.0
