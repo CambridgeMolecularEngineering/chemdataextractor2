@@ -5,7 +5,6 @@ Chemdataextractor.relex.relationship
 Classes for defining new chemical relationships
 """
 import copy
-import numpy as np
 from itertools import product
 
 from .entity import Entity
@@ -116,8 +115,8 @@ class ChemicalRelationship(object):
                 del_indices.append(True)
             else:
                 del_indices.append(False)
+        filtered_candidates = [x for i, x in enumerate(candidate_rels) if del_indices[i]]
 
-        filtered_candidates = np.array(candidate_rels)[np.array(del_indices)]
         return filtered_candidates
 
 
