@@ -233,7 +233,8 @@ class Snowball(object):
         candidate_relations = self.relationship.get_candidates(s.tagged_tokens)
         # print(candidate_relations)
         num_candidates = len(candidate_relations)
-        all_combs = [i for r in range(1, num_candidates+1) for i in combinations(candidate_relations, r) ]
+        all_combs = [i for r in range(1, 4) for i in combinations(candidate_relations, r)]
+        # all_combs = [i for r in range(1, num_candidates+1) for i in combinations(candidate_relations, r)]
         # Create a candidate phrase for each possible combination
         all_candidate_phrases = []
         for combination in all_combs:
@@ -330,8 +331,14 @@ class Snowball(object):
         Arguments:
             corpus {str} -- path to a corpus of documents
         """
-        for file_name in os.listdir(corpus):
-            print(file_name)
+        # for file_name in os.listdir(corpus):
+        #     print(file_name)
+        #     f = os.path.join(corpus, file_name)
+        #     self.parse(f)
+        # return
+        corpus_list = os.listdir(corpus)
+        for i, file_name in enumerate(corpus_list):
+            print('{}/{}'.format(i+1, len(corpus_list)), '\t', file_name)
             f = os.path.join(corpus, file_name)
             self.parse(f)
         return
