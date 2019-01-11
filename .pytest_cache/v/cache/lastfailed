@@ -1,1 +1,9 @@
-{}
+{
+  "tests/test_scrape_rsc.py::TestRscSearchScraper::test_abstract": true, 
+  "tests/test_scrape_rsc.py::TestRscSearchScraper::test_doi": true, 
+  "tests/test_scrape_rsc.py::TestRscSearchScraper::test_html_url": true, 
+  "tests/test_scrape_rsc.py::TestRscSearchScraper::test_journal": true, 
+  "tests/test_scrape_rsc.py::TestRscSearchScraper::test_landing_url": true, 
+  "tests/test_scrape_rsc.py::TestRscSearchScraper::test_pdf_url": true, 
+  "tests/test_scrape_rsc.py::TestRscSearchScraper::test_title": true
+}

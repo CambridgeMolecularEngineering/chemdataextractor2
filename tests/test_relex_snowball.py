@@ -62,26 +62,25 @@ class TestSnowball(unittest.TestCase):
     snowball_pkl_py2 = 'tests/data/relex/curie_temperatures_py2.pkl'
 
     def test_load_snowball(self):
-        # if sys.version_info[0] == 2:
-        #     sb = Snowball.load(self.snowball_pkl_py2)
-        # else:
-        #     sb = Snowball.load(self.snowball_pkl)
-        if sys.version_info[0] == 3:
+        if sys.version_info[0] == 2:
+            sb = Snowball.load(self.snowball_pkl_py2)
+        else:
             sb = Snowball.load(self.snowball_pkl)
-            self.assertIsInstance(sb, Snowball)
+        self.assertIsInstance(sb, Snowball)
 
     def test_extract(self):
-        if sys.version_info[0] == 3:
+        if sys.version_info[0] == 2:
+            curie_temp_snowball = Snowball.load(self.snowball_pkl_py2)
+        else:
             curie_temp_snowball = Snowball.load(self.snowball_pkl)
-            self.assertIsInstance(curie_temp_snowball, Snowball)
-            curie_temp_snowball.save_file_name = 'curie_test_output'
-            test_sentence = Sentence('BiFeO3 is ferromagnetic with a curie temperature of 1103 K and this is very interesting')
-            result = curie_temp_snowball.extract(test_sentence)
-            self.assertEqual(len(result), 1)
-            expected_entities = [Entity('BiFeO3', chemical_name, 0, 1), Entity('curie temperature', specifier, 0,0), Entity('1103', value, 0,0), Entity('K', units, 0,0)]
-            expected_relation = Relation(expected_entities, confidence=1.0)
-            self.assertEqual(result[0], expected_relation)
-            self.assertEqual(result[0].confidence, expected_relation.confidence)
+        curie_temp_snowball.save_file_name = 'curie_test_output'
+        test_sentence = Sentence('BiFeO3 is ferromagnetic with a curie temperature of 1103 K and this is very interesting')
+        result = curie_temp_snowball.extract(test_sentence)
+        self.assertEqual(len(result), 1)
+        expected_entities = [Entity('BiFeO3', chemical_name, 0, 1), Entity('curie temperature', specifier, 0,0), Entity('1103', value, 0,0), Entity('K', units, 0,0)]
+        expected_relation = Relation(expected_entities, confidence=1.0)
+        self.assertEqual(result[0], expected_relation)
+        self.assertEqual(result[0].confidence, expected_relation.confidence)
 
 
 if __name__ == '__main__':
