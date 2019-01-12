@@ -3,6 +3,7 @@
 <(EuS,name_1,1,2), (TC,specifier_1,34,35), (K,units_1,11,12), (2,value_1,10,11)> Confidence:  1.0
 <(Curie temperature (,specifier_1,9,12), (Ni,name_1,17,18), (K,units_1,13,14), (627,value_1,12,13)> Confidence:  1.0
 <(116,value_1,8,9), (CoS2,name_1,0,1), (Curie temperature,specifier_1,5,7), (K,units_1,9,10)> Confidence:  1.0
+<(BiFeO3,name_1,0,1), (1103,value_1,9,10), (K,units_1,10,11), (curie temperature,specifier_1,6,8)> Confidence:  1.0
 <(850,value_1,60,61), (Curie temperature ( Tc,specifier_1,55,59), (K,units_1,61,62), (magnetite ( Fe3O4 ),name_1,42,46)> Confidence:  1.0
 <(Magnetite ( Fe3O4 ),name_1,0,4), (858,value_1,19,20), (Curie temperature (,specifier_1,15,18), (K,units_1,20,21)> Confidence:  1.0
 <(Curie temperature,specifier_1,19,21), (K,units_1,23,24), (395,value_1,22,23), (CrO2,name_1,6,7)> Confidence:  1.0

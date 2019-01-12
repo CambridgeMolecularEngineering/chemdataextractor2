@@ -2,13 +2,11 @@
 
 since name_1 has a specifier_1 at value_1  units_1 . with confidence score 1.0
 
-the specifier_1  value_1  units_1 ) of bulk Ni suggests that the thickness of the name_1 shell with confidence score 1.0
+the specifier_1  value_1  units_1 ) of bulk name_1 suggests with confidence score 1.0
 
  name_1 is ferromagnetic with a specifier_1 of value_1  units_1 and with confidence score 1.0
 
 ( name_1 ) has recently attracted much attention due to its high specifier_1 ∼ value_1  units_1 ) with confidence score 0.75
 
 , name_1 has a high spin polarization ( > 95 % ) and a specifier_1 of value_1  units_1 . with confidence score 1.0
-
-, name_2 ( name_1 ) has received the most attention , due to its high ferroelectric specifier_1 ∼ value_1  units_1 ) with confidence score 1.0
 
