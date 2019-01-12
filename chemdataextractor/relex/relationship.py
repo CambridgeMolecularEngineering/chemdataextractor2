@@ -13,7 +13,7 @@ from .utils import KnuthMorrisPratt
 
 class ChemicalRelationship(object):
     """Base ChemicalRelationship class
-    
+
     Used to define a new relationship model based on entities
     """
 
@@ -33,7 +33,6 @@ class ChemicalRelationship(object):
                                                                       followed by units.
         """
 
-
         self.entities = copy.copy(entities)
         self.parser = parser
         self.name = name
@@ -49,7 +48,7 @@ class ChemicalRelationship(object):
 
     def get_candidates(self, tokens):
         """Find all candidate relationships of this type within a sentence
-        
+
         Arguments:
             tokens {list} -- List of sentence tokens, tagged using CDE
         Returns
@@ -67,7 +66,7 @@ class ChemicalRelationship(object):
                     detected.append((text, e))
 
         entities_dict = {}
-        
+
         if not detected:
             return []
 
@@ -76,12 +75,12 @@ class ChemicalRelationship(object):
             text_length = len(text.split(' '))
             toks = [tok[0] for tok in tokens]
             start_indices = [s for s in KnuthMorrisPratt(toks, text.split(' '))]
-            
+
             # Add specifier to dictionary  if it doesn't exist
             if tag.name not in entities_dict.keys():
                 entities_dict[tag.name] = []
 
-            entities = [Entity(text, tag, index, index+text_length) for index in start_indices]
+            entities = [Entity(text, tag, index, index + text_length) for index in start_indices]
             # Add entities to dictionary if new
             for entity in entities:
                 if entity not in entities_dict[tag.name]:
@@ -110,7 +109,7 @@ class ChemicalRelationship(object):
                 setattr(self, str(entity_name), next(filter(lambda x: x.tag.name == entity_name, rel)))
             conditions = []
             for j in range(n_rules - 1):
-                conditions.append(getattr(self, str(self.rule_values[j])).start < getattr(self, str(self.rule_values[j+1])).start)
+                conditions.append(getattr(self, str(self.rule_values[j])).start < getattr(self, str(self.rule_values[j + 1])).start)
             if all(conditions):
                 del_indices.append(True)
             else:
@@ -128,7 +127,7 @@ class Relation(object):
 
     def __init__(self, entities, confidence):
         """Init
-        
+
         Arguments:
             entities {list} -- List of Entity objects that are present in this relationship
             confidence {float} -- The confidence of the relation
@@ -136,19 +135,19 @@ class Relation(object):
 
         self.entities = copy.copy(entities)
         self.confidence = confidence
-    
+
     def __len__(self):
         return len(self.entities)
-    
+
     def __getitem__(self, idx):
         return self.entities[idx]
-    
+
     def __setitem__(self, idx, value):
         self.entities[idx] = value
-    
+
     def __repr__(self):
         return '<' + ', '.join([str(i) for i in self.entities]) + '>'
-    
+
     def __eq__(self, other):
         # compare the text of all entities
         other_entities = other.entities
@@ -156,6 +155,6 @@ class Relation(object):
             if not entity.text in [i.text for i in other_entities]:
                 return False
         return True
-    
+
     def __str__(self):
         return self.__repr__()

@@ -14,7 +14,7 @@ import numpy as np
 import io
 
 from ..parse import (Any, I, OneOrMore, Optional, R, W,
-                                     ZeroOrMore, join, merge)
+                     ZeroOrMore, join, merge)
 
 from ..doc.document import Document, Paragraph
 from ..doc.text import Sentence
@@ -48,17 +48,16 @@ class Snowball(object):
         learning_rate: How fast new confidences update based on new data (1 means new confidence is always taken, 0 means no update, )
     """
 
-
     def __init__(self, relationship,
-                        tc=0.95,
-                        tsim=0.95,
-                        prefix_weight=0.1,
-                        middle_weight=0.8,
-                        suffix_weight=0.1,
-                        prefix_length=1,
-                        suffix_length=1,
-                        learning_rate=0.5, 
-                        max_candidate_combinations=400):
+                 tc=0.95,
+                 tsim=0.95,
+                 prefix_weight=0.1,
+                 middle_weight=0.8,
+                 suffix_weight=0.1,
+                 prefix_length=1,
+                 suffix_length=1,
+                 learning_rate=0.5,
+                 max_candidate_combinations=400):
         self.relationship = relationship
         self.relations = []
         self.phrases = []
@@ -68,7 +67,6 @@ class Snowball(object):
         self.max_candidate_combinations = max_candidate_combinations
         self.save_dir = 'chemdataextractor/relex/data/'
         self.save_file_name = relationship.name
-        
 
         # params
         if not 0 <= tc <= 1.0:
@@ -189,7 +187,6 @@ class Snowball(object):
         del to_del
         return
 
-
     def classify(self, phrase):
         """
         Assign a phrase to clusters based on similarity score using single pass classification
@@ -223,7 +220,6 @@ class Snowball(object):
             self.clusters.append(new_cluster)
         return
 
-
     def extract(self, s):
         """Retrieve probabilistic relationships from a sentence
 
@@ -239,13 +235,13 @@ class Snowball(object):
         unique_names = set()
         for i in candidate_relations:
             for j in i.entities:
-                if j.tag.name  == 'name':
+                if j.tag.name == 'name':
                     unique_names.update(j.text)
-                    
+
         number_of_unique_name = len(unique_names)
         product = num_candidates * number_of_unique_name
         if product <= self.max_candidate_combinations:
-            all_combs = [i for r in range(1,number_of_unique_name + 1) for i in combinations(candidate_relations, r)]
+            all_combs = [i for r in range(1, number_of_unique_name + 1) for i in combinations(candidate_relations, r)]
         # Create a candidate phrase for each possible combination
         all_candidate_phrases = []
         for combination in all_combs:
@@ -290,7 +286,6 @@ class Snowball(object):
                 best_candidate_phrase_score = phrase_confidence_score
                 best_candidate_cluster = best_match_cluster
 
-
         if best_candidate_phrase and best_candidate_phrase_score >= self.minimum_relation_confidence:
             for candidate_relation in best_candidate_phrase.relations:
                 candidate_relation.confidence = phrase_confidence_score
@@ -298,7 +293,6 @@ class Snowball(object):
             best_candidate_cluster.add_phrase(best_candidate_phrase)
             self.save()
             return best_candidate_phrase.relations
-
 
     def parse(self, filename):
         """Parse the sentences of a file
@@ -318,23 +312,22 @@ class Snowball(object):
                     print('\n')
                     for i, candidate in enumerate(candidate_relationships):
                         candidate_dict[str(i)] = candidate
-                        print("Candidate " + str(i)  + ' ' + str(candidate) + '\n')
+                        print("Candidate " + str(i) + ' ' + str(candidate) + '\n')
 
                     res = six.moves.input("...: ")
                     if res:
-                      chosen_candidate_idx= res.split(',')
-                      chosen_candidates = []
-                      for cci in chosen_candidate_idx:
-                          if cci in candidate_dict.keys():
-                              cc = candidate_dict[cci]
-                              cc.confidence = 1.0
-                              chosen_candidates.append(cc)
-                      if chosen_candidates:
-                          self.update(s.raw_tokens, chosen_candidates)
+                        chosen_candidate_idx = res.split(',')
+                        chosen_candidates = []
+                        for cci in chosen_candidate_idx:
+                            if cci in candidate_dict.keys():
+                                cc = candidate_dict[cci]
+                                cc.confidence = 1.0
+                                chosen_candidates.append(cc)
+                        if chosen_candidates:
+                            self.update(s.raw_tokens, chosen_candidates)
 
         f.close()
         return
-
 
     def train(self, corpus):
         """train the snowball algorithm on a specified corpus
@@ -342,8 +335,9 @@ class Snowball(object):
         Arguments:
             corpus {str} -- path to a corpus of documents
         """
-        for file_name in os.listdir(corpus):
-            print(file_name)
+        corpus_list = os.listdir(corpus)
+        for i, file_name in enumerate(corpus_list):
+            print('{}/{}:'.format(i + 1, len(corpus_list)), ' ', file_name)
             f = os.path.join(corpus, file_name)
             self.parse(f)
         return
