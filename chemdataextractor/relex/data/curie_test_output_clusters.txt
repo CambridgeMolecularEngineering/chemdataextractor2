@@ -1,4 +1,4 @@
-Cluster set contains 8 clusters.
+Cluster set contains 7 clusters.
 Cluster 0 contains 1 phrases
 	 Cobalt is a ferromagnetic transition metal exhibiting a high Curie temperature of 1388 K ( ferromagnetic – paramagnetic transition ) and a high saturation magnetization ( 1422 emu cm−3 ) at room temperature.2 The technological applications of Co nanoparticles in the field of ultrahigh - density data recording and data storage are well documented in the literature.1 Recently , Co has also been used in MRI agents,3 a field which has primarily been dominated by iron oxides ( Fe3O4 ) because of their stability and biocompatibility albeit the oxides show much less saturation magnetization ( 84 emu cm−3)4 in comparison to cobalt .
 The cluster centroid pattern is: <Blank> name_1 is a ferromagnetic transition metal exhibiting a high specifier_1 of value_1 <Blank> units_1 ( with confidence score 1.0
