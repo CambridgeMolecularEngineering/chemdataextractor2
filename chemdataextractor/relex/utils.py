@@ -33,7 +33,7 @@ def match(pi, pj, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
     prefix_j = pj.elements['prefix']['vector']
     middles_j = []
     for m in range(0, number_of_middles_j):
-        middles_j.append(pi.elements['middle_' + str(m+1)]['vector'])
+        middles_j.append(pj.elements['middle_' + str(m+1)]['vector'])
 
     suffix_j = pj.elements['suffix']['vector']
 
