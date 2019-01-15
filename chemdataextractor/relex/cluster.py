@@ -70,8 +70,8 @@ class Cluster:
                                             'unique words': [],  # Which words appear once
                                             'total words': 0,  # counter
                                             'total recurring words': 0}  # counter
-                # add the tokens
-                self.add_tokens(self.dictionaries[element], phrase.elements[element]['tokens'])
+            # add the tokens
+            self.add_tokens(self.dictionaries[element], phrase.elements[element]['tokens'])
         return
 
     @staticmethod
