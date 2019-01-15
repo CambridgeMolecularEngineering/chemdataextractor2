@@ -88,7 +88,7 @@ amino_acid_name = (
 #: Chemical formula patterns, updated to include Inorganic compound formulae
 formula = (
     R('^C\(?\d{1,3}\)?(([HNOP]|Cl)\(?\d\d?\)?)+(\(?\d?[\+\-]\d?\)?)?$') |
-    R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[r][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr]|R[abefghnu]|S[bcegimnr(\d\.?)]|T[abehil]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') | 
+    R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[r][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr\d]|R[abefghnu]|S[bcegimnr(\d\.?)]|T[abehil\d]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') | 
     R('^((\(?\d{2,3}\)?)?(Fe|Ti|Mg|Ru|Cd|Se)\(?(\d\d?|[IV]+)?\)?((O|Hg)\(?\d?\d?\)?)?)+(\(?\d?[\+\-]\d?\)?)?$') |
     R('(NaOH|CaCl\d?\d?|EtOH|EtAc|MeOH|CF\d|C\d?\d?H\d\d?)+$') |
     R('(NO\d|BH4|Ca\(2\+\)|Ti\(0\)2|\(CH3\)2CHOH|\(CH3\)2CO|\(CH3\)2NCOH|C2H5CN|CH2ClCH2Cl|CH3C6H5|CH3CN|CH3CO2H|CH3COCH3|CH3COOH|CH3NHCOH|CH3Ph|CH3SOCH3|Cl2CH2|ClCH2CH2Cl)') |
