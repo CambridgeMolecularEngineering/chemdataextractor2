@@ -92,8 +92,6 @@ class ChemicalRelationship(object):
 
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
-        candidates = list(product(*all_entities))
-
 
         # Intra-Candidate sorting (within each candidate)
         for i in range(len(all_entities)):
