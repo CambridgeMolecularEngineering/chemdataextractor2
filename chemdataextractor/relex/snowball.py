@@ -236,7 +236,7 @@ class Snowball(object):
         for i in candidate_relations:
             for j in i.entities:
                 if j.tag.name == 'name':
-                    unique_names.update(j.text)
+                    unique_names.add(j.text)
 
         number_of_unique_name = len(unique_names)
         product = num_candidates * number_of_unique_name
@@ -288,7 +288,7 @@ class Snowball(object):
 
         if best_candidate_phrase and best_candidate_phrase_score >= self.minimum_relation_confidence:
             for candidate_relation in best_candidate_phrase.relations:
-                candidate_relation.confidence = phrase_confidence_score
+                candidate_relation.confidence = best_candidate_phrase_score
             # update the knowlegde base
             best_candidate_cluster.add_phrase(best_candidate_phrase)
             self.save()
@@ -314,7 +314,7 @@ class Snowball(object):
                         candidate_dict[str(i)] = candidate
                         print("Candidate " + str(i) + ' ' + str(candidate) + '\n')
 
-                    res = six.moves.input("...: ")
+                    res = six.moves.input("...: ").replace(' ', '')
                     if res:
                         chosen_candidate_idx = res.split(',')
                         chosen_candidates = []

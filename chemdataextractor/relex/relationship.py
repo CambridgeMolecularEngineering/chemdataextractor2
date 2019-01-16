@@ -92,9 +92,20 @@ class ChemicalRelationship(object):
 
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
+
+        # Intra-Candidate sorting (within each candidate)
+        for i in range(len(all_entities)):
+            all_entities[i] = sorted(all_entities[i], key=lambda t: t.start)
+
         candidates = list(product(*all_entities))
         if self.rule_key == 'followed_by':
             candidates = self.followed_by_filter_candidates(candidates)
+
+        # Inter-Candidate sorting (sort all candidates)
+        for i in range(len(candidates)):
+            lst = sorted(candidates[i], key=lambda t: t.start)
+            candidates[i] = tuple(lst)
+
         for candidate in candidates:
             candidate_relationships.append(Relation(candidate, confidence=0))
 

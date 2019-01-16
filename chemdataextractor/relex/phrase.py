@@ -82,7 +82,7 @@ class Phrase(object):
         self.entities = sorted_entity_list
 
         # Create ordering
-        self.order = [e.tag.name for e in self.entities]
+        self.order = [e.tag.name.split('_')[0] for e in self.entities]
 
         # Create the phrase elements, prefix, middles, suffix
 
