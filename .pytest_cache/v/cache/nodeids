@@ -316,8 +316,6 @@
   "tests/test_reader_uspto.py::TestUsptoReader::test_direct_usage",
   "tests/test_reader_uspto.py::TestUsptoReader::test_document_usage",
   "tests/test_reading_cell+fig.py::TestAddingCellFigure::test_reader_adding",
-  "tests/test_relex_snowball.py::TestSnowball::test_extract",
-  "tests/test_relex_snowball.py::TestSnowball::test_load_snowball",
   "tests/test_relex_utils.py::TestRelexUtils::test_kmp",
   "tests/test_relex_utils.py::TestRelexUtils::test_match",
   "tests/test_relex_utils.py::TestRelexUtils::test_mode_rows",

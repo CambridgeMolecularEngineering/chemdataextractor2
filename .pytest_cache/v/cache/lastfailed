@@ -1,4 +1,3 @@
 {
-  "tests/test_reading_cell+fig.py::TestAddingCellFigure": true,
   "tests/test_relex_snowball.py::TestSnowball::test_extract": true
 }

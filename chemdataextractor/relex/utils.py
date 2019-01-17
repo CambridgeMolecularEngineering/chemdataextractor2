@@ -5,6 +5,7 @@ chemdataextractor.relex.utils.py
 Various utility functions
 """
 import numpy as np
+from collections import OrderedDict
 
 
 def match_score(pi, pj, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
