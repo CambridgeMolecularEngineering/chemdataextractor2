@@ -120,9 +120,14 @@ class Cluster:
             for element in phrase.elements.keys():  # Prefix, ,iddles, suffix
                 if element not in vectors.keys():
                     vectors[element] = []
+                phrase_element_vector = []
                 for token in self.dictionaries[element]['token dict'].keys():
                     if token in phrase.elements[element]['tokens']:
-                        vectors[element].append([self.dictionaries[element]['token dict'][token][1]])
+                        phrase_element_vector.append(self.dictionaries[element]['token dict'][token][1])
+                    else:
+                        phrase_element_vector.append(0)
+                
+                vectors[element].append(phrase_element_vector)
 
         # print("Vectors", vectors)
 
