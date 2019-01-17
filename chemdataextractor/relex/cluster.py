@@ -103,7 +103,6 @@ class Cluster:
                 freq = self.dictionaries[element]['token dict'][token][0]
                 weight = freq / self.dictionaries[element]['total words']
                 self.dictionaries[element]['token dict'][token] = [freq, weight]
-        # print("New dictionaries", self.dictionaries)
 
         return
 
@@ -185,9 +184,7 @@ class Cluster:
         """
 
         for element in phrase.elements.keys():
-            #print(element, element_key)
             element_dict = phrase.elements[element]
-            #print("Dict", element_dict)
             self.add_tokens(self.dictionaries[element], element_dict['tokens'])
             self.update_weights()
 
@@ -200,7 +197,6 @@ class Cluster:
             norm = np.linalg.norm(vector)
             if norm > 1e-15:
                 element_dict['vector'] = list((vector/np.linalg.norm(vector)))
-                #print(element_dict['vector'], len(element_dict['vector']))
             else:
                 element_dict['vector'] = list(np.zeros(len(self.dictionaries[element]['token dict'])))
         
@@ -221,7 +217,6 @@ class Cluster:
                 norm = np.linalg.norm(vector)
                 if norm > 1e-15:
                     element_dict['vector'] = list((vector/np.linalg.norm(vector)))
-                    #print(element_dict['vector'], len(element_dict['vector']))
                 else:
                     element_dict['vector'] = list(np.zeros(len(self.dictionaries[element]['token dict'])))
         return
