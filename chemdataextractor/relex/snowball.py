@@ -57,7 +57,8 @@ class Snowball(object):
                  prefix_length=1,
                  suffix_length=1,
                  learning_rate=0.5,
-                 max_candidate_combinations=400):
+                 max_candidate_combinations=400,
+                 save_dir='chemdataextractor/relex/data'):
         self.relationship = relationship
         self.relations = []
         self.phrases = []
@@ -65,7 +66,7 @@ class Snowball(object):
         self.cluster_counter = 0
         self.sentences = []
         self.max_candidate_combinations = max_candidate_combinations
-        self.save_dir = 'chemdataextractor/relex/data/'
+        self.save_dir = save_dir
         self.save_file_name = relationship.name
 
         # params
@@ -109,6 +110,12 @@ class Snowball(object):
 
         f = open(path, 'rb')
         return pickle.load(f)
+    
+    def set_learning_rate(self, alpha):
+        self.learning_rate =  alpha
+        for cluster in self.clusters:
+            cluster.learning_rate = alpha
+        return
 
     def update(self, sentence_tokens, relations=[]):
         """Update the learned extraction pattern clusters based on the incoming sentence and relation
@@ -198,7 +205,6 @@ class Snowball(object):
             # Only compare clusters that have the same ordering of entities
             if phrase.order == cluster.order:
                 # vectorise the phrase using this cluster dictionary
-                cluster.vectorise(cluster.pattern)
                 cluster.vectorise(phrase)
 
                 # Check the level of similarity to the cluster pattern
@@ -262,21 +268,25 @@ class Snowball(object):
             best_match_score = 0
             best_match_cluster = None
             confidence_term = 1
-
             for cluster in self.clusters:
                 if candidate_phrase.order != cluster.order:
                     continue
-
+                # print("Pattern", cluster.pattern)
+                # print("Candidate Phrase", candidate_phrase)
+                # print("Clster dict before vectorisation", cluster.dictionaries)
                 cluster.vectorise(candidate_phrase)
-                cluster.vectorise(cluster.pattern)
-
+                # print("Cluster dict after vectorisation", cluster.dictionaries)
+                
                 match_score = cluster.get_phrase_match_score(candidate_phrase)
+                print(cluster.label, match_score)
                 if match_score >= self.minimum_cluster_similarity_score:
                     confidence_term *= (1.0 - (match_score * cluster.pattern.confidence))
                 if match_score > best_match_score:
                     best_match_cluster = cluster
                     best_match_score = match_score
                 candidate_phrase.reset_vectors()
+                cluster.reset_vectors(candidate_phrase)
+                # print('Cluster dict after reset', cluster.dictionaries)
 
             # Confidence in the relationships we found
             phrase_confidence_score = 1.0 - confidence_term
@@ -329,14 +339,14 @@ class Snowball(object):
         f.close()
         return
 
-    def train(self, corpus):
+    def train(self, corpus, skip=0):
         """train the snowball algorithm on a specified corpus
 
         Arguments:
             corpus {str} -- path to a corpus of documents
         """
         corpus_list = os.listdir(corpus)
-        for i, file_name in enumerate(corpus_list):
+        for i, file_name in enumerate(corpus_list[skip:]):
             print('{}/{}:'.format(i + 1, len(corpus_list)), ' ', file_name)
             f = os.path.join(corpus, file_name)
             self.parse(f)
