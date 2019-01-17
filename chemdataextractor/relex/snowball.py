@@ -5,26 +5,25 @@ Chemdataextractor.relex.snowball
 The Snowball Relationship Extraction algorithm
 """
 import copy
+import io
 import os
 import pickle
-import six
+from collections import OrderedDict
 from itertools import combinations
 
 import numpy as np
-import io
-
-from ..parse import (Any, I, OneOrMore, Optional, R, W,
-                     ZeroOrMore, join, merge)
+import six
 
 from ..doc.document import Document, Paragraph
 from ..doc.text import Sentence
 from ..model import Compound
+from ..parse import Any, I, OneOrMore, Optional, R, W, ZeroOrMore, join, merge
 from ..parse.cem import chemical_name
 from .cluster import Cluster
 from .entity import Entity
 from .phrase import Phrase
 from .relationship import Relation
-from .utils import match
+from .utils import match, vectorise
 
 
 class Snowball(object):
@@ -58,7 +57,7 @@ class Snowball(object):
                  suffix_length=1,
                  learning_rate=0.5,
                  max_candidate_combinations=400,
-                 save_dir='chemdataextractor/relex/data'):
+                 save_dir='chemdataextractor/relex/data/'):
         self.relationship = relationship
         self.relations = []
         self.phrases = []
@@ -173,9 +172,10 @@ class Snowball(object):
         Arguments:
             phrase {Phrase} -- The Phrase to cluster
         """
-
+        # print("Clustering new phrase", phrase)
         # If no clusters, create a new one
         if len(self.clusters) == 0:
+            # print("Creating new cluster", self.cluster_counter)
             cluster0 = Cluster(str(self.cluster_counter), learning_rate=self.learning_rate)
             cluster0.add_phrase(phrase)
             self.clusters.append(cluster0)
@@ -192,6 +192,7 @@ class Snowball(object):
         """
         to_del = self.clusters[idx]
         del to_del
+        self.cluster_counter -= 1
         return
 
     def classify(self, phrase):
@@ -204,26 +205,21 @@ class Snowball(object):
         for cluster in self.clusters:
             # Only compare clusters that have the same ordering of entities
             if phrase.order == cluster.order:
-                # vectorise the phrase using this cluster dictionary
-                cluster.vectorise(phrase)
 
                 # Check the level of similarity to the cluster pattern
-                similarity = match(phrase, cluster.pattern)
+                similarity = match(phrase, cluster, self.prefix_weight, self.middle_weight, self.suffix_weight)
 
                 if similarity >= self.minimum_cluster_similarity_score:
                     cluster.add_phrase(phrase)
                     phrase_added = True
-                else:
-                    phrase.reset_vectors()
-                    continue
 
         if phrase_added is False:
-            # Create a new cluster
             self.cluster_counter += 1
             # create a new cluster
             new_cluster = Cluster(str(self.cluster_counter), learning_rate=self.learning_rate)
             new_cluster.add_phrase(phrase)
             self.clusters.append(new_cluster)
+            
         return
 
     def extract(self, s):
@@ -263,6 +259,7 @@ class Snowball(object):
         best_candidate_phrase_score = 0
 
         for candidate_phrase in all_candidate_phrases:
+            # print("Evaluating candidate", candidate_phrase)
             # For each cluster
             # Compare the candidate phrase to the cluster extraction patter
             best_match_score = 0
@@ -270,23 +267,14 @@ class Snowball(object):
             confidence_term = 1
             for cluster in self.clusters:
                 if candidate_phrase.order != cluster.order:
-                    continue
-                # print("Pattern", cluster.pattern)
-                # print("Candidate Phrase", candidate_phrase)
-                # print("Clster dict before vectorisation", cluster.dictionaries)
-                cluster.vectorise(candidate_phrase)
-                # print("Cluster dict after vectorisation", cluster.dictionaries)
-                
-                match_score = cluster.get_phrase_match_score(candidate_phrase)
-                print(cluster.label, match_score)
+                    continue   
+                match_score = match(candidate_phrase, cluster, self.prefix_weight, self.middle_weight, self.suffix_weight)
                 if match_score >= self.minimum_cluster_similarity_score:
                     confidence_term *= (1.0 - (match_score * cluster.pattern.confidence))
+
                 if match_score > best_match_score:
                     best_match_cluster = cluster
                     best_match_score = match_score
-                candidate_phrase.reset_vectors()
-                cluster.reset_vectors(candidate_phrase)
-                # print('Cluster dict after reset', cluster.dictionaries)
 
             # Confidence in the relationships we found
             phrase_confidence_score = 1.0 - confidence_term
@@ -300,6 +288,7 @@ class Snowball(object):
             for candidate_relation in best_candidate_phrase.relations:
                 candidate_relation.confidence = best_candidate_phrase_score
             # update the knowlegde base
+            # print("Best Candidate", best_candidate_phrase)
             best_candidate_cluster.add_phrase(best_candidate_phrase)
             self.save()
             return best_candidate_phrase.relations

@@ -14,8 +14,7 @@ from ..utils import first
 from .entity import Entity
 from .pattern import Pattern
 from .relationship import Relation
-from .utils import match, mode_rows
-
+from .utils import mode_rows
 
 class Cluster:
     """
@@ -47,7 +46,6 @@ class Cluster:
         :param phrase: The phrase to add to the cluster
         :type phrase: chemdataextractor.relex.phrase.Phrase
         """
-        # print("Adding phrase", phrase)
         self.phrases.append(phrase)
         self.order = phrase.order
         self.entities = phrase.entities
@@ -55,7 +53,6 @@ class Cluster:
         self.update_weights()
         self.update_pattern()
         self.update_pattern_confidence()
-        self.vectorise_pattern()
         return
 
     def update_dictionaries(self, phrase):
@@ -116,20 +113,17 @@ class Cluster:
 
         vectors = {}
         # print("Updating pattern")
-
-
         pattern_elements = {}
 
         # Create a dict of vectors for all phrases in the cluster
         for phrase in self.phrases:
-            self.vectorise(phrase)
             for element in phrase.elements.keys():  # Prefix, ,iddles, suffix
                 if element not in vectors.keys():
                     vectors[element] = []
-                if phrase.elements[element]['vector']:
-                    vectors[element].append(phrase.elements[element]['vector'])
-                else:
-                    vectors[element] = [[]]
+                for token in self.dictionaries[element]['token dict'].keys():
+                    if token in phrase.elements[element]['tokens']:
+                        vectors[element].append([self.dictionaries[element]['token dict'][token][1]])
+
         # print("Vectors", vectors)
 
         # Find the centroid vector for prefix, middles, suffix
@@ -143,7 +137,6 @@ class Cluster:
             else:
                 element_mode = np.array([])
             # print("Mode", element_mode)
-            # find points closest to the mode
             medoid_idx = spatial.KDTree(element_array).query(element_mode)[1]
             # print("Idx", medoid_idx)
             pattern_elements[element] = self.phrases[medoid_idx].elements[element]
@@ -156,69 +149,7 @@ class Cluster:
                                relations=phrase.relations,
                                confidence=0) 
         # print(self.pattern)
-        return
-    
-    def reset_vectors(self, phrase):
-        for element in phrase.elements.keys():
-            element_dict = phrase.elements[element]
-            for token in element_dict['tokens']:
-                if token in list(self.dictionaries[element]['token dict'].keys()):
-                    old_freq = self.dictionaries[element]['token dict'][token][0]
-                    if old_freq == 1:
-                        continue
-                    else:
-                        new_freq = old_freq - 1
-                        self.dictionaries[element]['token dict'][token] = [new_freq, 0]
-
-                    self.dictionaries[element]['total words'] -= 1
-        self.update_weights()
-        return
-    
-    def vectorise(self, phrase):
-        """ Convert phrase prefix, middles and suffix into
-        a normalised vector of weights
-
-        :param phrase: The phrase to vectorise
-        :type phrase: chemdataextractor.relex.phrase.Phrase
-
-        """
-
-        for element in phrase.elements.keys():
-            element_dict = phrase.elements[element]
-            self.add_tokens(self.dictionaries[element], element_dict['tokens'])
-            self.update_weights()
-
-            vector = np.zeros(len(self.dictionaries[element]['token dict']))
-            for token in element_dict['tokens']:
-                if token in list(self.dictionaries[element]['token dict'].keys()):
-                    token_index = list(self.dictionaries[element]['token dict'].keys()).index(token)
-                    vector[token_index] = self.dictionaries[element]['token dict'][token][1]
-
-            norm = np.linalg.norm(vector)
-            if norm > 1e-15:
-                element_dict['vector'] = list((vector/np.linalg.norm(vector)))
-            else:
-                element_dict['vector'] = list(np.zeros(len(self.dictionaries[element]['token dict'])))
         
-        self.vectorise_pattern()
-        return
-    
-    def vectorise_pattern(self):
-        """Vectorise the cluster pattern against the cluster dictionary
-        """
-        if self.pattern:
-            for element in self.pattern.elements.keys():
-                element_dict = self.pattern.elements[element]
-                vector = np.zeros(len(self.dictionaries[element]['token dict']))
-                for token in element_dict['tokens']:
-                    if token in list(self.dictionaries[element]['token dict'].keys()):
-                        token_index = list(self.dictionaries[element]['token dict'].keys()).index(token)
-                        vector[token_index] = self.dictionaries[element]['token dict'][token][1]
-                norm = np.linalg.norm(vector)
-                if norm > 1e-15:
-                    element_dict['vector'] = list((vector/np.linalg.norm(vector)))
-                else:
-                    element_dict['vector'] = list(np.zeros(len(self.dictionaries[element]['token dict'])))
         return
     
     def update_pattern_confidence(self):
@@ -252,7 +183,7 @@ class Cluster:
         return
         
     def get_relations(self, tokens):
-        """Retrueve relations from a set of tokens using this clusters extraction patter
+        """Retrieve relations from a set of tokens using this clusters extraction patter
         
         Arguments:
             tokens {list} -- Tokens to extract from
@@ -273,6 +204,3 @@ class Cluster:
                 found_relation = Relation(found_entities, confidence=0)
                 relations.append(found_relation)
         return relations
-    
-    def get_phrase_match_score(self, phrase):
-        return match(phrase, self.pattern)
