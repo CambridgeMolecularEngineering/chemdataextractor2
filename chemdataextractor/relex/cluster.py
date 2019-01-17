@@ -38,7 +38,7 @@ class Cluster:
         self.dictionaries = {}
         self.order = None
         self.old_pattern_confidence = 1.0
-        self.learning_rate = 0.5
+        self.learning_rate = learning_rate
 
     def add_phrase(self, phrase):
         """ Add phrase to this cluster,
@@ -47,6 +47,7 @@ class Cluster:
         :param phrase: The phrase to add to the cluster
         :type phrase: chemdataextractor.relex.phrase.Phrase
         """
+        # print("Adding phrase", phrase)
         self.phrases.append(phrase)
         self.order = phrase.order
         self.entities = phrase.entities
@@ -54,6 +55,7 @@ class Cluster:
         self.update_weights()
         self.update_pattern()
         self.update_pattern_confidence()
+        self.vectorise_pattern()
         return
 
     def update_dictionaries(self, phrase):
@@ -72,6 +74,7 @@ class Cluster:
                                             'total recurring words': 0}  # counter
             # add the tokens
             self.add_tokens(self.dictionaries[element], phrase.elements[element]['tokens'])
+
         return
 
     @staticmethod
@@ -87,8 +90,7 @@ class Cluster:
         for token in tokens:
             if token not in dictionary['token dict'].keys():
                 dictionary['total words'] += 1
-                dictionary['token dict'][token] = [
-                    1.0, 0]  # [frequeny, weight]
+                dictionary['token dict'][token] = [1.0, 0]  # [frequeny, weight]
             else:
                 dictionary['total words'] += 1
                 dictionary['token dict'][token][0] += 1
@@ -100,8 +102,8 @@ class Cluster:
             for token in self.dictionaries[element]['token dict'].keys():
                 freq = self.dictionaries[element]['token dict'][token][0]
                 weight = freq / self.dictionaries[element]['total words']
-                self.dictionaries[element]['token dict'][token] = [
-                        freq, weight]
+                self.dictionaries[element]['token dict'][token] = [freq, weight]
+        # print("New dictionaries", self.dictionaries)
 
         return
 
@@ -129,19 +131,24 @@ class Cluster:
                     vectors[element].append(phrase.elements[element]['vector'])
                 else:
                     vectors[element] = [[]]
+        # print("Vectors", vectors)
 
         # Find the centroid vector for prefix, middles, suffix
         for element in vectors.keys():
             element_array = np.array(vectors[element])
-
+            # print("Element", element)
+            # print("Element Array", element_array)
             # compute mode of vectors
             if element_array.any():
                 element_mode = mode_rows(element_array)
             else:
                 element_mode = np.array([])
+            # print("Mode", element_mode)
             # find points closest to the mode
             medoid_idx = spatial.KDTree(element_array).query(element_mode)[1]
+            # print("Idx", medoid_idx)
             pattern_elements[element] = self.phrases[medoid_idx].elements[element]
+            # print("Pattern element", pattern_elements[element])
         
         self.pattern = Pattern(elements=pattern_elements,
                                entities=self.entities,
@@ -151,7 +158,23 @@ class Cluster:
                                confidence=0) 
         # print(self.pattern)
         return
+    
+    def reset_vectors(self, phrase):
+        for element in phrase.elements.keys():
+            element_dict = phrase.elements[element]
+            for token in element_dict['tokens']:
+                if token in list(self.dictionaries[element]['token dict'].keys()):
+                    old_freq = self.dictionaries[element]['token dict'][token][0]
+                    if old_freq == 1:
+                        continue
+                    else:
+                        new_freq = old_freq - 1
+                        self.dictionaries[element]['token dict'][token] = [new_freq, 0]
 
+                    self.dictionaries[element]['total words'] -= 1
+        self.update_weights()
+        return
+    
     def vectorise(self, phrase):
         """ Convert phrase prefix, middles and suffix into
         a normalised vector of weights
@@ -165,17 +188,42 @@ class Cluster:
             #print(element, element_key)
             element_dict = phrase.elements[element]
             #print("Dict", element_dict)
+            self.add_tokens(self.dictionaries[element], element_dict['tokens'])
+            self.update_weights()
+
             vector = np.zeros(len(self.dictionaries[element]['token dict']))
             for token in element_dict['tokens']:
                 if token in list(self.dictionaries[element]['token dict'].keys()):
                     token_index = list(self.dictionaries[element]['token dict'].keys()).index(token)
                     vector[token_index] = self.dictionaries[element]['token dict'][token][1]
+
             norm = np.linalg.norm(vector)
             if norm > 1e-15:
                 element_dict['vector'] = list((vector/np.linalg.norm(vector)))
                 #print(element_dict['vector'], len(element_dict['vector']))
             else:
                 element_dict['vector'] = list(np.zeros(len(self.dictionaries[element]['token dict'])))
+        
+        self.vectorise_pattern()
+        return
+    
+    def vectorise_pattern(self):
+        """Vectorise the cluster pattern against the cluster dictionary
+        """
+        if self.pattern:
+            for element in self.pattern.elements.keys():
+                element_dict = self.pattern.elements[element]
+                vector = np.zeros(len(self.dictionaries[element]['token dict']))
+                for token in element_dict['tokens']:
+                    if token in list(self.dictionaries[element]['token dict'].keys()):
+                        token_index = list(self.dictionaries[element]['token dict'].keys()).index(token)
+                        vector[token_index] = self.dictionaries[element]['token dict'][token][1]
+                norm = np.linalg.norm(vector)
+                if norm > 1e-15:
+                    element_dict['vector'] = list((vector/np.linalg.norm(vector)))
+                    #print(element_dict['vector'], len(element_dict['vector']))
+                else:
+                    element_dict['vector'] = list(np.zeros(len(self.dictionaries[element]['token dict'])))
         return
     
     def update_pattern_confidence(self):
