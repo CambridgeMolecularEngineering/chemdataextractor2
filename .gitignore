@@ -41,11 +41,9 @@ docs/_build/
 .idea/
 .pytest_cache/v/cache/lastfailed
 .pytest_cache/v/cache/nodeids
-.vscode/settings.json
+.vscode/
 .pytest_cache/v/cache/nodeids
 main.py
 geckodriver.log
-.pytest_cache/v/cache/lastfailed
-.pytest_cache/v/cache/nodeids
-.pytest_cache/v/cache/nodeids
-.pytest_cache/v/cache/lastfailed
+.pytest_cache/
+.DS_Store
