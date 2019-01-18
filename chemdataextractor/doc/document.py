@@ -60,7 +60,7 @@ class BaseDocument(six.with_metaclass(ABCMeta, collections.Sequence)):
 class Document(BaseDocument):
     """A document to extract data from. Contains a list of document elements."""
 
-    def __init__(self, *elements, config=Config()):
+    def __init__(self, *elements, **kwargs):
         """Initialize a Document manually by passing one or more Document elements (Paragraph, Heading, Table, etc.)
 
         Strings that are passed to this constructor are automatically wrapped into Paragraph elements.
@@ -79,7 +79,10 @@ class Document(BaseDocument):
                 element = Paragraph(element.decode(encoding))
             element.document = self
             self._elements.append(element)
-        self.config = config
+        if 'config' in kwargs.keys():
+            self.config = kwargs['config']
+        else:
+            self.config = Config()
 
         # Sets parameters from configuration file
         for element in elements:

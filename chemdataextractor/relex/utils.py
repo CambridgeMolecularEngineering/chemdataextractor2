@@ -5,37 +5,34 @@ chemdataextractor.relex.utils.py
 Various utility functions
 """
 import numpy as np
+from collections import OrderedDict
 
-def match(pi, pj, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
+
+def match_score(pi, pj, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
     """ Compute match between phrases using a dot product of vectors
     :param pi Phrase or pattern
     :param pj phrase or pattern
     # add weights to dot products to put more emphasis on matching the middles
     """
+    assert(pi.keys() == pj.keys())
 
-    if pi.order != pj.order:
-        return 0
+    number_of_middles = len([i for i in pi.keys() if i.startswith('middle')])
 
-    #print(pi.as_string(), pj.as_string())
-
-    number_of_middles_i = pi.number_of_entities - 1
-    number_of_middles_j = pj.number_of_entities - 1
-    if number_of_middles_i != number_of_middles_j:
-        return 0
-
-    prefix_i = pi.elements['prefix']['vector']
+    prefix_i = pi['prefix']
 
     middles_i = []
-    for m in range(0, number_of_middles_i):
-        middles_i.append(pi.elements['middle_' + str(m+1)]['vector'])
-    suffix_i = pi.elements['suffix']['vector']
+    for m in range(0, number_of_middles):
+        middles_i.append(pi['middle_' + str(m+1)])
 
-    prefix_j = pj.elements['prefix']['vector']
+    suffix_i = pi['suffix']
+
+    prefix_j = pj['prefix']
+
     middles_j = []
-    for m in range(0, number_of_middles_j):
-        middles_j.append(pi.elements['middle_' + str(m+1)]['vector'])
+    for m in range(0, number_of_middles):
+        middles_j.append(pj['middle_' + str(m+1)])
 
-    suffix_j = pj.elements['suffix']['vector']
+    suffix_j = pj['suffix']
 
     if len(prefix_i) == 0 and len(prefix_j) == 0:
         prefix_dot_prod = 1.0
@@ -49,8 +46,6 @@ def match(pi, pj, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
         elif len(middles_i[i]) != len(middles_j[i]):
             middle_dot_prod.append(0)
         else:
-            #print(i, pi.elements['middles'], pj.elements['middles'])
-            #print(middles_i, middles_j)
             m_dot = np.dot(middles_i[i], middles_j[i])
             middle_dot_prod.append(m_dot)
 
@@ -59,10 +54,74 @@ def match(pi, pj, prefix_weight=0.1, middle_weight=0.8, suffix_weight=0.1):
     else:
         suffix_dot_prod = np.dot(suffix_i, suffix_j)
 
-    sim = (prefix_weight * prefix_dot_prod) + ((middle_weight/number_of_middles_j)
-                                               * sum(middle_dot_prod)) + (suffix_weight * suffix_dot_prod)
+    sim = (prefix_weight * prefix_dot_prod) + ((middle_weight/number_of_middles)*sum(middle_dot_prod)) + (suffix_weight * suffix_dot_prod)
     return sim
 
+
+def vectorise(phrase, cluster):
+    """Vectorise a phrase object against a given cluster
+    
+    Arguments:
+        phrase {[type]} -- [description]
+        cluster {[type]} -- [description]
+    """
+    # print("Vectorising phrase ", phrase)
+    # print("Pattern", cluster.pattern)
+    phrase_element_vectors = {}
+    pattern_element_vectors = {}
+    pattern = cluster.pattern
+    
+
+    for element in cluster.dictionaries.keys():  # prefix, middles, suffix
+        # print("element", element, '\n')
+        local_dictionary = OrderedDict()
+
+        # fill the local dictionary with the cluster tokens
+        for token in cluster.dictionaries[element]['token dict']:
+            if token in local_dictionary.keys():
+                local_dictionary[token] += 1
+            else:
+                local_dictionary[token] = cluster.dictionaries[element]['token dict'][token][0]
+        
+        # Same for the phrase tokens
+        for token in phrase.elements[element]['tokens']:
+            if token in local_dictionary.keys():
+                local_dictionary[token] += 1
+            else:
+                local_dictionary[token] = 1
+        # print(local_dictionary, '\n')
+        
+        phrase_element_vector = np.zeros(len(local_dictionary.keys()))
+        pattern_element_vector = np.zeros(len(local_dictionary.keys()))
+        # Now vectorise the phrase and pattern
+        for i, token in enumerate(local_dictionary.keys()):
+            if token in phrase.elements[element]['tokens']:
+                phrase_element_vector[i] += 1
+            if token in pattern.elements[element]['tokens']:
+                pattern_element_vector[i] += 1
+
+        # normalise the vectors
+        phrase_element_vectors[element] = phrase_element_vector / np.linalg.norm(phrase_element_vector)
+        pattern_element_vectors[element] = pattern_element_vector / np.linalg.norm(pattern_element_vector)
+    
+    # print(phrase_element_vectors)
+    # print(pattern_element_vectors)
+    return phrase_element_vectors, pattern_element_vectors
+
+def match(phrase, cluster, prefix_weight, middles_weight, suffix_weight):
+    """Vectorise the phrase against this cluster to determine the match score
+    
+    Arguments:
+        phrase {[type]} -- [description]
+        cluster {[type]} -- [description]
+    """
+    if phrase.order != cluster.order:
+        return 0
+
+    phrase_vectors, pattern_vectors = vectorise(phrase, cluster)
+    score = match_score(phrase_vectors, pattern_vectors, prefix_weight, middles_weight, suffix_weight)
+    # print(score)
+    return score
 
 def mode_rows(a):
     """

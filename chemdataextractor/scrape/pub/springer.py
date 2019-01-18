@@ -11,9 +11,9 @@ from __future__ import unicode_literals
 import logging
 
 from ...text.normalize import normalize
-from ...text.processors import Chain, LStrip, RStrip, Discard
+from ...text.processors import Chain, LStrip, RStrip, Discard, RAdd
 from ..clean import Cleaner
-from ..entity import Entity
+from ..entity import Entity, DocumentEntity
 from ..fields import StringField, EntityField, UrlField, IntField
 
 log = logging.getLogger(__name__)
@@ -62,6 +62,22 @@ def tidy_springer_references(document):
         ref.tail = strip_following(ref.tail or '')
     return document
 
+
+class SpringerHtmlDocument(DocumentEntity):
+    """ Scraper for Springer HTML articles """
+    # TODO: Tables and Figures
+    title = StringField('meta[property="og:title"]::attr("content")')
+    abstract = StringField('//section[@class="Abstract"]/p | //div[@class="AbstractSection"]/p ', xpath=True)
+    journal = StringField('meta[name="citation_journal_title"]::attr("content")')
+    #copyright = StringField('//div[@class="ArticleCopyright"]', xpath=True)
+    # headings = StringField('a[href^="#Sec"]::attr("title")', all=True)
+    #paragraphs = StringField('//div[@class="content"]/p[@class="Para"]', xpath=True, all=True)
+    #figures = EntityField(ElsevierXmlImage, 'figure', all=True)
+    #citations = StringField('//li[@class="Citation"]', xpath=True, all=True)
+
+    process_html_url = RAdd('.html')
+    #clean_headings = clean_springer_whitespace
+    #clean_paragraphs = clean_springer_whitespace
 
 
 class SpringerXmlAuthor(Entity):

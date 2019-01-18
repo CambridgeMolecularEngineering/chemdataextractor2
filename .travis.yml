@@ -1,6 +1,8 @@
 language: python
 python:
-  - "3.6"
+  - 2.7
+  - 3.5
+  - 3.6
 before_install:
   - wget https://github.com/mozilla/geckodriver/releases/download/v0.11.1/geckodriver-v0.11.1-linux64.tar.gz
   - mkdir geckodriver
@@ -22,7 +24,9 @@ install:
   - conda info -a
   - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION appdirs beautifulsoup4 click cssselect dawg lxml nltk numpy scipy pdfminer.six python-dateutil requests six python-crfsuite pyyaml pytest sphinx pandoc
   - source activate cde
-  - pip install nbsphinx nbsphinx-link m2r ipython ipykernel
+  - pip install nbsphinx==0.3.5 nbsphinx-link m2r ipython ipykernel
+  - pip install future==0.17.1
+  - pip install unittest2==1.1.0
   - python setup.py install
   - cde data download
 before_script:
@@ -31,4 +35,6 @@ before_script:
   - sleep 3
 script:
   - pytest
-  - sphinx-build -b html ./docs/ ./docs/_build/html/
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+      sphinx-build -b html ./docs/ ./docs/_build/html/;
+    fi

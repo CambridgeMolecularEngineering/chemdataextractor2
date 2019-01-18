@@ -12,7 +12,7 @@ else:
 
 setup(
     name='ChemDataExtractor',
-    version='1.3.0',
+    version='1.4.0-beta',
     author='Matt Swain',
     author_email='m.swain@me.com',
     license='MIT',
@@ -26,7 +26,7 @@ setup(
     tests_require=['pytest'],
     install_requires=[
         'appdirs', 'beautifulsoup4', 'click', 'cssselect', 'lxml', 'nltk', 'pdfminer.six', 'python-dateutil',
-        'requests', 'six', 'python-crfsuite', 'DAWG', 'PyYAML', 'selenium', 'numpy', 'scipy'
+        'requests', 'six', 'python-crfsuite', 'DAWG', 'PyYAML', 'selenium', 'numpy', 'scipy==1.1.0'
     ],
     classifiers=[
         'Intended Audience :: Developers',

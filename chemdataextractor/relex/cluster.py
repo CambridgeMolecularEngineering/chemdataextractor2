@@ -14,8 +14,7 @@ from ..utils import first
 from .entity import Entity
 from .pattern import Pattern
 from .relationship import Relation
-from .utils import match, mode_rows
-
+from .utils import mode_rows
 
 class Cluster:
     """
@@ -38,7 +37,7 @@ class Cluster:
         self.dictionaries = {}
         self.order = None
         self.old_pattern_confidence = 1.0
-        self.learning_rate = 0.5
+        self.learning_rate = learning_rate
 
     def add_phrase(self, phrase):
         """ Add phrase to this cluster,
@@ -70,8 +69,9 @@ class Cluster:
                                             'unique words': [],  # Which words appear once
                                             'total words': 0,  # counter
                                             'total recurring words': 0}  # counter
-                # add the tokens
-                self.add_tokens(self.dictionaries[element], phrase.elements[element]['tokens'])
+            # add the tokens
+            self.add_tokens(self.dictionaries[element], phrase.elements[element]['tokens'])
+
         return
 
     @staticmethod
@@ -87,8 +87,7 @@ class Cluster:
         for token in tokens:
             if token not in dictionary['token dict'].keys():
                 dictionary['total words'] += 1
-                dictionary['token dict'][token] = [
-                    1.0, 0]  # [frequeny, weight]
+                dictionary['token dict'][token] = [1.0, 0]  # [frequeny, weight]
             else:
                 dictionary['total words'] += 1
                 dictionary['token dict'][token][0] += 1
@@ -100,8 +99,7 @@ class Cluster:
             for token in self.dictionaries[element]['token dict'].keys():
                 freq = self.dictionaries[element]['token dict'][token][0]
                 weight = freq / self.dictionaries[element]['total words']
-                self.dictionaries[element]['token dict'][token] = [
-                        freq, weight]
+                self.dictionaries[element]['token dict'][token] = [freq, weight]
 
         return
 
@@ -115,33 +113,39 @@ class Cluster:
 
         vectors = {}
         # print("Updating pattern")
-
-
         pattern_elements = {}
 
         # Create a dict of vectors for all phrases in the cluster
         for phrase in self.phrases:
-            self.vectorise(phrase)
             for element in phrase.elements.keys():  # Prefix, ,iddles, suffix
                 if element not in vectors.keys():
                     vectors[element] = []
-                if phrase.elements[element]['vector']:
-                    vectors[element].append(phrase.elements[element]['vector'])
-                else:
-                    vectors[element] = [[]]
+                phrase_element_vector = []
+                for token in self.dictionaries[element]['token dict'].keys():
+                    if token in phrase.elements[element]['tokens']:
+                        phrase_element_vector.append(self.dictionaries[element]['token dict'][token][1])
+                    else:
+                        phrase_element_vector.append(0)
+                
+                vectors[element].append(phrase_element_vector)
+
+        # print("Vectors", vectors)
 
         # Find the centroid vector for prefix, middles, suffix
         for element in vectors.keys():
             element_array = np.array(vectors[element])
-
+            # print("Element", element)
+            # print("Element Array", element_array)
             # compute mode of vectors
             if element_array.any():
                 element_mode = mode_rows(element_array)
             else:
                 element_mode = np.array([])
-            # find points closest to the mode
+            # print("Mode", element_mode)
             medoid_idx = spatial.KDTree(element_array).query(element_mode)[1]
+            # print("Idx", medoid_idx)
             pattern_elements[element] = self.phrases[medoid_idx].elements[element]
+            # print("Pattern element", pattern_elements[element])
         
         self.pattern = Pattern(elements=pattern_elements,
                                entities=self.entities,
@@ -150,32 +154,7 @@ class Cluster:
                                relations=phrase.relations,
                                confidence=0) 
         # print(self.pattern)
-        return
-
-    def vectorise(self, phrase):
-        """ Convert phrase prefix, middles and suffix into
-        a normalised vector of weights
-
-        :param phrase: The phrase to vectorise
-        :type phrase: chemdataextractor.relex.phrase.Phrase
-
-        """
-
-        for element in phrase.elements.keys():
-            #print(element, element_key)
-            element_dict = phrase.elements[element]
-            #print("Dict", element_dict)
-            vector = np.zeros(len(self.dictionaries[element]['token dict']))
-            for token in element_dict['tokens']:
-                if token in list(self.dictionaries[element]['token dict'].keys()):
-                    token_index = list(self.dictionaries[element]['token dict'].keys()).index(token)
-                    vector[token_index] = self.dictionaries[element]['token dict'][token][1]
-            norm = np.linalg.norm(vector)
-            if norm > 1e-15:
-                element_dict['vector'] = list((vector/np.linalg.norm(vector)))
-                #print(element_dict['vector'], len(element_dict['vector']))
-            else:
-                element_dict['vector'] = list(np.zeros(len(self.dictionaries[element]['token dict'])))
+        
         return
     
     def update_pattern_confidence(self):
@@ -209,7 +188,7 @@ class Cluster:
         return
         
     def get_relations(self, tokens):
-        """Retrueve relations from a set of tokens using this clusters extraction patter
+        """Retrieve relations from a set of tokens using this clusters extraction patter
         
         Arguments:
             tokens {list} -- Tokens to extract from
@@ -230,6 +209,3 @@ class Cluster:
                 found_relation = Relation(found_entities, confidence=0)
                 relations.append(found_relation)
         return relations
-    
-    def get_phrase_match_score(self, phrase):
-        return match(phrase, self.pattern)

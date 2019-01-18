@@ -46,7 +46,7 @@ class TestRelexUtils(unittest.TestCase):
         phrase = Phrase(s1.raw_tokens, rel1, prefix_length=1, suffix_length=1)
         cluster = Cluster(label=0, order=phrase.order, learning_rate=0.5)
         cluster.add_phrase(phrase)
-        similarity = match(phrase, phrase)
+        similarity = match(phrase, cluster, prefix_weight=0.1, middles_weight=0.8, suffix_weight=0.1)
         expected = 1.0
         self.assertEqual(similarity, expected)
     
