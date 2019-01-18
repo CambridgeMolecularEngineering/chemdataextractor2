@@ -298,7 +298,6 @@ class Unit(object):
         return False
 
     def __hash__(self):
-        print('hashing units!')
         string = str(self.__class__.__name__)
         string += str(self.dimensions.__hash__())
         string += str(float(self.magnitude))
