@@ -422,6 +422,8 @@ class TestParseDocument(unittest.TestCase):
         results = [r.serialize() for r in d.records]
         self.assertEqual(results, [{'names': [u'hexanes']}, {'labels': [u'3'], 'names': [u'2-Amino-3-methoxy-5-chloropyridine'], 'roles': ['product', 'example']}])
 
+    # Edited by ti250 (8/11/2018)
+    # Changed format of the expected results for new-style models.
     def test_consecutive_headings2(self):
         d = Document(
             Heading('Example-3'),
@@ -429,9 +431,10 @@ class TestParseDocument(unittest.TestCase):
             Paragraph('The product had a melting point of 70-75° C. and has structural formula VII.')
         )
         results = [r.serialize() for r in d.records]
+        print(results)
         self.assertEqual(results, [
             {'labels': [u'VII'], 'roles': [u'formula']},
-            {'melting_points': [{'units': u'\xb0C.', 'value': u'70-75'}],
+            {'melting_points': [{'units': u'Kelvin^(1.0)', 'value': [343.15, 348.15], 'raw_value': '70-75', 'raw_units': '\xb0C.'}],
              'names': [u'5-Bromo-6-pentadecyl-2-hydroxybenzoic acid', u'DBAA'], 'roles': ['product']}])  # example-3?
 
 

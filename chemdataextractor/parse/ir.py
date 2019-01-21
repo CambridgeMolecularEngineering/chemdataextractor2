@@ -12,7 +12,6 @@ import logging
 import re
 
 from lxml.builder import E
-
 from ..model import Compound, IrSpectrum, IrPeak
 from .base import BaseParser
 from ..utils import first

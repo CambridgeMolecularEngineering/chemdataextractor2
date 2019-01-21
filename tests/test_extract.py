@@ -44,7 +44,7 @@ class TestExtract(unittest.TestCase):
             {'names': ['carbon']},
             {'names': ['hydrogen']},
             {'names': ['diethyl ether']},
-            {'melting_points': [{'units': '°C', 'value': '130-132'}], 'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride', '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}
+            {'melting_points': [{'units': 'Kelvin^(1.0)', 'value': [403.15, 405.15], 'raw_value': '130-132', 'raw_units': '\xb0C'}], 'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride', '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}
         ]
         self.assertEqual(expected, d.records.serialize())
 

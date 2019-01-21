@@ -72,6 +72,7 @@ def strip_delta(tokens, start, result):
                 child.text = child.text[1:]
     return result
 
+
 shift_range = (Optional(R('^[\-–−‒]$')) + (R('^δ?[\+\-–−‒]?\d+(\.+\d+)?[\-–−‒]\d+(\.+\d+)?\.?$') | (R('^[\+\-–−‒]?\d+(\.+\d+)?$') + R('^[\-–−‒]$') + R('^[\+\-–−‒]?\d+(\.+\d+)?\.?$'))))('shift').add_action(merge)
 shift_value = (Optional(R('^[\-–−‒]$')) + R('^δ?[\+\-–−‒]?\d+(\.+\d+)?\.?$'))('shift').add_action(merge)
 shift_error = (Optional(R('^[\-–−‒]$')) + R('^δ?[\+\-–−‒]?\d+(\.+\d+)?,\d+(\.+\d+)?\.?$'))('shift').add_action(merge)

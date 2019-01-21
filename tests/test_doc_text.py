@@ -22,7 +22,7 @@ from chemdataextractor.parse.cem import CompoundParser, ChemicalLabelParser, Com
 from chemdataextractor.parse.nmr import NmrParser
 from chemdataextractor.parse.ir import IrParser
 from chemdataextractor.parse.uvvis import UvvisParser
-from chemdataextractor.parse.mp import MpParser
+from chemdataextractor.parse.mp_new import MpParser
 from chemdataextractor.parse.tg import TgParser
 from chemdataextractor.parse.context import ContextParser
 from chemdataextractor.nlp import *

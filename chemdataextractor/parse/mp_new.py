@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-NMR text parser.
+Melting Point parser using the QuantityParser framework
 
 """
 
@@ -11,13 +11,16 @@ from __future__ import unicode_literals
 import logging
 import re
 
+from lxml import etree
+
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
 from ..model import Compound, MeltingPoint
+from ..model.units.temperature import Temperature, Kelvin
 from .actions import merge, join
-from .base import BaseParser
-from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
+from .quantity import QuantityParser, value_element
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
 
@@ -26,17 +29,9 @@ prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct) 
 delim = R('^[:;\.,]$')
 
 # TODO: Consider allowing degree symbol to be optional. The prefix should be restrictive enough to stop false positives.
-units = (W('°') + Optional(R('^[CFK]\.?$')) | W('K\.?'))('units').add_action(merge)
+units = ((W('°') + Optional(R('^[CFK]\.?$'))) | W('K\.?'))('units').add_action(merge)
 
-joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('value').add_action(merge)
-spaced_range = (R('^[\+\-–−]?\d+(\.\d+)?$') + Optional(units).hide() + (R('^[\-–−~∼˜]$') + R('^[\+\-–−]?\d+(\.\d+)?$') | R('^[\+\-–−]\d+(\.\d+)?$')))('value').add_action(merge)
-to_range = (R('^[\+\-–−]?\d+(\.\d+)?$') + Optional(units).hide() + (I('to') + R('^[\+\-–−]?\d+(\.\d+)?$') | R('^[\+\-–−]\d+(\.\d+)?$')))('value').add_action(join)
-temp_range = (Optional(R('^[\-–−]$')) + (joined_range | spaced_range | to_range))('value').add_action(merge)
-temp_value = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + R('^[\+\-–−]?\d+(\.\d+)?$'))('value').add_action(merge)
-temp = Optional(lbrct).hide() + (temp_range | temp_value)('value') + Optional(rbrct).hide()
-
-mp = (prefix + Optional(delim).hide() + temp + units)('mp')
-
+mp = (prefix + Optional(delim).hide() + value_element(units))('mp')
 
 bracket_any = lbrct + OneOrMore(Not(mp) + Not(rbrct) + Any()) + rbrct
 
@@ -47,21 +42,38 @@ obtained_mp_phrase = ((cem | chemical_label) + (I('is') | I('are') | I('was')).h
 
 mp_phrase = cem_mp_phrase | to_give_mp_phrase | obtained_mp_phrase
 
-class MpParser(BaseParser):
-    """"""
+
+class MpParser(QuantityParser):
+    """
+    MpParser rewritten to be based on QuantityParser
+    """
     root = mp_phrase
+    dimensions = Temperature()
 
     def interpret(self, result, start, end):
-        compound = Compound(
-            melting_points=[
-                MeltingPoint(
-                    value=first(result.xpath('./mp/value/text()')),
-                    units=first(result.xpath('./mp/units/text()'))
-                )
-            ]
-        )
+        try:
+            raw_value = first(result.xpath('./mp/value/text()'))
+            raw_units = first(result.xpath('./mp/units/text()'))
+            print(raw_value, raw_units)
+            compound = Compound(
+                melting_points=[
+                    MeltingPoint(
+                        raw_value=raw_value,
+                        raw_units=raw_units,
+                        value=self.extract_value(raw_value),
+                        error=self.extract_error(raw_value),
+                        units=self.extract_units(raw_units, strict=True)
+                    ).convert_to(Kelvin())
+                ]
+            )
+
+            print(etree.tostring(result))
+        except TypeError as e:
+            log.debug(e)
+            compound = Compound()
         cem_el = first(result.xpath('./cem'))
         if cem_el is not None:
             compound.names = cem_el.xpath('./name/text()')
             compound.labels = cem_el.xpath('./label/text()')
+
         yield compound

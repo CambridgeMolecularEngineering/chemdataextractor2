@@ -15,13 +15,13 @@ import re
 
 import six
 
-from ..model import ModelList
+from ..model.base import ModelList
 from ..parse.context import ContextParser
 from ..parse.cem import ChemicalLabelParser, CompoundHeadingParser, CompoundParser, chemical_name
 from ..parse.definitions import specifier_definition
 from ..parse.table import CaptionContextParser
 from ..parse.ir import IrParser
-from ..parse.mp import MpParser
+from ..parse.mp_new import MpParser
 from ..parse.tg import TgParser
 from ..parse.nmr import NmrParser
 from ..parse.uvvis import UvvisParser
@@ -103,7 +103,7 @@ class BaseText(BaseElement):
     def tags(self):
         """Return a list of tags."""
         return
-    
+
     @abstractproperty
     def definitions(self):
         """Return a list of all specifier definitions
@@ -251,7 +251,7 @@ class Text(collections.Sequence, BaseText):
     def cems(self):
         """Return a list of part of speech tags for each sentence in this text passage."""
         return [cem for sent in self.sentences for cem in sent.cems]
-    
+
     @property
     def definitions(self):
         """
@@ -362,7 +362,7 @@ class Caption(Text):
 
     def _repr_html_(self):
         return '<caption class="cde-caption">' + self.text + '</caption>'
-    
+
     @memoized_property
     def definitions(self):
         return [definition for sent in self.sentences for definition in sent.definitions]
@@ -557,13 +557,13 @@ class Sentence(BaseText):
                 else:
                     spans.append(split_span)
         return spans
-    
+
     @memoized_property
     def definitions(self):
         """
         Return specifier definitions from this sentence
 
-        A definition consists of: 
+        A definition consists of:
         a) A definition -- The quantitity being defined e.g. "Curie Temperature"
         b) A specifier -- The symbol used to define the quantity e.g. "Tc"
         c) Start -- The index of the starting point of the definition

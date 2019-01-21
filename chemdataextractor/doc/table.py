@@ -11,7 +11,8 @@ from __future__ import unicode_literals
 import logging
 from collections import defaultdict
 
-from ..model import Compound, ModelList
+from ..model.base import ModelList
+from ..model import Compound
 from ..parse.table import CompoundHeadingParser, CompoundCellParser, UvvisAbsHeadingParser, UvvisAbsCellParser, \
     QuantumYieldHeadingParser, QuantumYieldCellParser, UvvisEmiHeadingParser, UvvisEmiCellParser, ExtinctionCellParser, \
     ExtinctionHeadingParser, FluorescenceLifetimeHeadingParser, FluorescenceLifetimeCellParser, \
