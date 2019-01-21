@@ -60,13 +60,14 @@ class BaseDocument(six.with_metaclass(ABCMeta, collections.Sequence)):
 class Document(BaseDocument):
     """A document to extract data from. Contains a list of document elements."""
 
-    def __init__(self, *elements, **kwargs):
+    def __init__(self, models, *elements, **kwargs):
         """Initialize a Document manually by passing one or more Document elements (Paragraph, Heading, Table, etc.)
 
         Strings that are passed to this constructor are automatically wrapped into Paragraph elements.
 
         :param list[chemdataextractor.doc.element.BaseElement|string] elements: Elements in this Document.
         """
+        self.models = models
         self._elements = []
         for element in elements:
             # Convert raw text to Paragraph elements
@@ -164,9 +165,20 @@ class Document(BaseDocument):
         head_def_record_i = None
         last_product_record = None
         title_record = None
+
+        # New Approach
+        # 1. Get definitions found in the element
+        # 2. Update the models based on the new information
+        # 3. Get the records
+
+
         for i, el in enumerate(self.elements):
             last_id_record = None
 
+            element_definitions = el.definitions
+            for model in self.models:
+                model.update(element_definitions)
+            
             # Save title compound
             if isinstance(el, Title):
                 el_records = el.records
