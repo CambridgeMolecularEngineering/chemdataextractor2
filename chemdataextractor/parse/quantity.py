@@ -26,15 +26,15 @@ from ..model.base import ListType
 
 log = logging.getLogger(__name__)
 
-magnitudes_dict = {R('c', group=0): 2.,
-                  R('k', group=0): 3.,
-                  R('M', group=0): 6.,
-                  R('G', group=0): 9.,
-                  R('T', group=0): 12.,
-                  R('m', group=0): -3.,
-                  R('µ', group=0): -6.,
-                  R('n', group=0): -9.,
-                  R('p', group=0): -12.}
+magnitudes_dict = {R('c(enti)?', group=0): 2.,
+                  R('k(ilo)?', group=0): 3.,
+                  R('M(ega)?', group=0): 6.,
+                  R('G(iga)?', group=0): 9.,
+                  R('T(era)?', group=0): 12.,
+                  R('m(illi)?', group=0): -3.,
+                  R('µ|micro', group=0): -6.,
+                  R('n(ano)?', group=0): -9.,
+                  R('p(ico)?', group=0): -12.}
 
 
 def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('units').add_action(merge)):

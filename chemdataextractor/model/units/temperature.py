@@ -83,7 +83,7 @@ class TemperatureModel(QuantityModel):
     dimensions = Temperature()
 
 
-units_dict = {R('°?[K]\.?', group=0): Kelvin,
-              R('°?[C]\.?', group=0): Celsius,
-              R('°?[F]\.?', group=0): Fahrenheit}
+units_dict = {R('°?(((K|k)elvin(s)?)|K)\.?', group=0): Kelvin,
+              R('((C|c)elsius|°C)\.?', group=0): Celsius,
+              R('°?((F|f)ahrenheit|F)\.?', group=0): Fahrenheit}
 Temperature.units_dict = units_dict
