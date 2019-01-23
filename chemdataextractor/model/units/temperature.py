@@ -84,6 +84,6 @@ class TemperatureModel(QuantityModel):
 
 
 units_dict = {R('°?(((K|k)elvin(s)?)|K)\.?', group=0): Kelvin,
-              R('((C|c)elsius|°C)\.?', group=0): Celsius,
+              R('(°|((C|c)elsius|°?C))\.?', group=0): Celsius,
               R('°?((F|f)ahrenheit|F)\.?', group=0): Fahrenheit}
 Temperature.units_dict = units_dict
