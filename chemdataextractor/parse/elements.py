@@ -65,6 +65,7 @@ class BaseParserElement(object):
         self.actions = []
         """list(chemdataextractor.parse.actions): list of actions that will be applied to the results after parsing. Actions are functions with arguments of (tokens, start, result)"""
         self.streamlined = False
+        self.condition = None
 
     def set_action(self, *fns):
         self.actions = fns
@@ -72,6 +73,11 @@ class BaseParserElement(object):
 
     def add_action(self, *fns):
         self.actions += fns
+        return self
+
+    def with_condition(self, condition):
+        # condition should be a function that takes the match and returns true or false. Executed after any actions.
+        self.condition = condition
         return self
 
     def copy(self):
@@ -137,6 +143,9 @@ class BaseParserElement(object):
                 action_result = action(tokens, start, result)
                 if action_result is not None:
                     result = action_result
+        if self.condition is not None:
+            if not self.condition(result):
+                raise ParseException(tokens, i, 'Did not satisfy condition', self)
         return result, i
 
     def try_parse(self, tokens, i):
