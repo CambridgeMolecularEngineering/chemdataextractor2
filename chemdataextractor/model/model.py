@@ -8,6 +8,7 @@ import six
 
 from .base import BaseModel, StringType, ListType, ModelType
 from .units.temperature import TemperatureModel
+from ..parse.elements import R, I
 
 log = logging.getLogger(__name__)
 
@@ -143,6 +144,16 @@ class ElectrochemicalPotential(BaseModel):
     apparatus = StringType(contextual=True)
 
 
+class NeelTemperature(TemperatureModel):
+    # specifier = R('[Nn][ée]el') + I('Temperature')
+    specifier = I('TN')
+
+
+class CurieTemperature(TemperatureModel):
+    # specifier = I('Curie') + I('Temperature')
+    specifier = I('TC')
+
+
 class Compound(BaseModel):
     names = ListType(StringType())
     labels = ListType(StringType())
@@ -155,6 +166,8 @@ class Compound(BaseModel):
     quantum_yields = ListType(ModelType(QuantumYield))
     fluorescence_lifetimes = ListType(ModelType(FluorescenceLifetime))
     electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
+    neel_temperature = ListType(ModelType(NeelTemperature))
+    curie_temperature = ListType(ModelType(CurieTemperature))
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""
