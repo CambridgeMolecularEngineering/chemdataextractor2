@@ -70,6 +70,9 @@ model = TemperatureModel
 class BaseAutoParser(QuantityParser):
     model = model
     _specifier = None
+    value_phrase_tag = 'baseautoparserproperty'
+    root_phrase_tag = 'baseautopropertyphrase'
+    property_name = 'property_name'
 
     def __init__(self):
         self.dimensions = self.model.dimensions
@@ -78,12 +81,12 @@ class BaseAutoParser(QuantityParser):
     def root(self):
         if self._specifier is model.specifier:
             return self._root_phrase
-        unit_element = Group(construct_unit_element(model.dimensions).with_condition(match_dimensions_of(model))('units'))('baseautoparserproperty')
+        unit_element = Group(construct_unit_element(model.dimensions).with_condition(match_dimensions_of(model))('units'))(self.value_phrase_tag)
         specifier = model.specifier('specifier')
-        value_phrase = value_element(unit_element)('baseautoparserproperty')
+        value_phrase = value_element(unit_element)(self.value_phrase_tag)
         chem_name = (cem | chemical_label | lenient_chemical_label)
         entities = (value_phrase | specifier | chem_name)
-        root_phrase = OneOrMore(entities | Any().hide())('baseautoparserpropertyphrase')
+        root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
         self._root_phrase = root_phrase
         self._specifier = model.specifier
         return root_phrase
@@ -92,20 +95,13 @@ class BaseAutoParser(QuantityParser):
         try:
             # print(etree.tostring(result))
             # Change this to MODEL_PHRASE?
-            raw_value = first(result.xpath('./baseautoparserproperty/value/text()'))
-            raw_units = first(result.xpath('./baseautoparserproperty/units/text()'))
-            #TODO: How to add property_name to Compound automatically?
-            compound = Compound(
-                property_name=[
-                    self.model(
-                        raw_value=raw_value,
-                        raw_units=raw_units,
-                        value=self.extract_value(raw_value),
+            raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
+            raw_units = first(result.xpath('./' + self.value_phrase_tag + '/units/text()'))
+            arg_dict = {self.property_name: [self.model(raw_value=raw_value,
+                        raw_units=raw_units, value=self.extract_value(raw_value),
                         error=self.extract_error(raw_value),
-                        units=self.extract_units(raw_units, strict=True)
-                    )
-                ]
-            )
+                        units=self.extract_units(raw_units, strict=True))]}
+            compound = Compound(**arg_dict)
         except TypeError as e:
             # log.debug(e)
             compound = Compound()
@@ -128,12 +124,12 @@ class AutoTableParser(BaseAutoParser):
         # Not sure if this is valid, there must be a better way of doing this?
         if self._specifier is model.specifier:
             return self._root_phrase
-        unit_element = Group(construct_unit_element(model.dimensions).with_condition(match_dimensions_of(model))('units'))('baseautoparserproperty')
+        unit_element = Group(construct_unit_element(model.dimensions).with_condition(match_dimensions_of(model))('units'))(self.value_phrase_tag)
         specifier = model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
-        value_phrase = value_element_plain()('baseautoparserproperty')
+        value_phrase = value_element_plain()(self.value_phrase_tag)
         chem_name = (cem | chemical_label | lenient_chemical_label)
         entities = (value_phrase | specifier | chem_name)
-        root_phrase = OneOrMore(entities | Any().hide())('baseautoparserpropertyphrase')
+        root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
         self._root_phrase = root_phrase
         self._specifier = model.specifier
         return root_phrase
