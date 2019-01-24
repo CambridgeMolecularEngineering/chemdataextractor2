@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.relex.phrase
 Phrase object
 
 """

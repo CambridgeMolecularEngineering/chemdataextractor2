@@ -70,3 +70,17 @@ Document readers
 .. automodule:: chemdataextractor.reader.uspto
     :members:
     :undoc-members:
+
+.reader.elsevier
+------------------------------------------------
+
+.. automodule:: chemdataextractor.reader.elsevier
+    :members:
+    :undoc-members:
+
+.reader.springer
+------------------------------------------------
+
+.. automodule:: chemdataextractor.reader.springer
+    :members:
+    :undoc-members:

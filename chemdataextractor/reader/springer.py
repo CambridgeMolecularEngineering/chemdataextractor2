@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.springer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Readers for documents from Springer.
-by Callum Court
+
+.. codeauthor:: Callum Court
+
 """
 from __future__ import absolute_import
 from __future__ import division
