@@ -114,6 +114,8 @@ def extract_value(string):
     string = string.replace(" ", "")
     string = string.split("±")[0]
     split_by_num = [r for r in re.split('(\d+\.?(?:\d+)?)', string) if r]
+    if split_by_num[0] == "-":
+        split_by_num[0] = "-" + split_by_num.pop(1)
     values = []
     for index, value in enumerate(split_by_num):
         try:
