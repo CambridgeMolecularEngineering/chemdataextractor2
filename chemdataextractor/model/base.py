@@ -28,7 +28,7 @@ class BaseType(six.with_metaclass(ABCMeta)):
     # This is assigned by ModelMeta to match the attribute on the Model
     name = None
 
-    def __init__(self, default=None, null=False, required=False, contextual=False):
+    def __init__(self, default=None, null=False, required=False, contextual=False, mutable=True):
         """
 
         :param default: (Optional) The default value for this field if none is set.
@@ -40,6 +40,8 @@ class BaseType(six.with_metaclass(ABCMeta)):
         self.null = null
         self.required = required
         self.contextual = contextual
+        self.mutable = mutable
+        self._setted = False
 
     def __get__(self, instance, owner):
         """Descriptor for retrieving a value from a field in a Model."""
@@ -55,7 +57,9 @@ class BaseType(six.with_metaclass(ABCMeta)):
 
     def __set__(self, instance, value):
         """Descriptor for assigning a value to a field in a Model."""
-        instance._values[self.name] = self.process(value)
+        if not(not self.mutable and self._setted):
+            instance._values[self.name] = self.process(value)
+            self._setted = True
 
     def process(self, value):
         """Convert an assigned value into the desired data format."""
