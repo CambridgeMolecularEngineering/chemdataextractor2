@@ -1,0 +1,3 @@
+INFO       in table.py            --> Initialization of table: "https://en.wikipedia.org/wiki/Ionic_radius"
+INFO       in table.py            --> Configuration parameters are: {'use_title_row': True, 'use_max_data_area': False, 'use_notes_in_first_col': True, 'use_prefixing': True, 'use_footnotes': True}
+INFO       in from_any.py         --> Url: https://en.wikipedia.org/wiki/Ionic_radius

@@ -2,8 +2,6 @@
 """
 Table document elements v2.0
 
-
-
 """
 
 from __future__ import absolute_import
@@ -20,9 +18,12 @@ from ..nlp.tokenize import FineWordTokenizer
 from ..utils import memoized_property
 from .element import CaptionedElement
 from .text import Sentence
+# from ..parse.new_parsers import CurieTemperatureParser, NeelTemperatureParser
+from tabledataextractor import Table as TdeTable
 
-# from tabledataextractor import Table as TdeTable
 log = logging.getLogger(__name__)
+
+# parsers = [CurieTemperatureParser(), NeelTemperatureParser()]
 
 
 class Table(CaptionedElement):
@@ -39,8 +40,9 @@ class Table(CaptionedElement):
     def __init__(self, caption, label=None, table_data=[], **kwargs):
         super(Table, self).__init__(caption=caption, label=label, **kwargs)
         self.tde_table = TdeTable(table_data)
-        self.configuration_table = self.tde_table.configuration_table
-
+        self.category_table = self.tde_table.category_table
+        print('\n\n', self.tde_table.__repr__())
+        print(self.category_table)
 
     # def set_parsers(self):
     #     #: Table cell parsers
@@ -75,6 +77,10 @@ class Table(CaptionedElement):
             'caption': self.caption.serialize(),
         }
         return data
+    
+    @property
+    def definitions(self):
+        return self.caption.definitions
 
     # def _repr_html_(self):
     #     html_lines = ['<table class="table">']
@@ -97,15 +103,12 @@ class Table(CaptionedElement):
     @property
     def records(self):
         """Chemical records that have been parsed from the table.
-        1) Parse definitions
-        2) Updated models
-        3) Parse table Rows
         """
         table_records = []
         return table_records
 
 
-class TableRow(Sentence):
+class Cell(Sentence):
     word_tokenizer = FineWordTokenizer()
     # pos_tagger = NoneTagger()
     ner_tagger = NoneTagger()

@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 greek_symbols = R('[\u0370-\u03ff\u1f00-\u1fff]')('specifier')
 
 #: Critical temperature e.g. Tc, Tmax, etc
-critical_temperature = R('T[C|c|max|on|1-2]')('specifier')
+critical_temperature = R('T[C|c|N|n|max|on|1-2|A-Z]')('specifier')
 
 #: Possible definition specifiers
 specifier_options = (greek_symbols | critical_temperature)
