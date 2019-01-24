@@ -110,14 +110,30 @@ def extract_value(string):
     string = string.replace("-", "-")
     string = string.replace("–", "-")
     string = string.replace("−", "-")
-    # Remove whitespace
-    string = string.replace(" ", "")
     string = string.split("±")[0]
-    split_by_num = [r for r in re.split('(\d+\.?(?:\d+)?)', string) if r]
+    split_by_space = [r for r in re.split(' |(-)', string) if r]
+    split_by_num = []
+    for elem in split_by_space:
+        split_by_num.extend([r for r in re.split('(\d+\.?(?:\d+)?)', elem) if r])
     if split_by_num[0] == "-":
         split_by_num[0] = "-" + split_by_num.pop(1)
-    values = []
+    flag = 0
+    new_split_by_num = []
     for index, value in enumerate(split_by_num):
+        if flag == 2:
+            new_split_by_num.append(split_by_num[index - 2])
+            new_split_by_num.append(split_by_num[index - 1] + value)
+            flag = 0
+        elif flag == 1 and re.match('(-?\d+\.?(?:\d+)?)', value):
+            new_split_by_num.append(split_by_num[index - 1])
+            new_split_by_num.append(value)
+            flag = 0
+        elif not re.match('(-?\d+\.?(?:\d+)?)', value):
+            flag += 1
+        else:
+            new_split_by_num.append(value)
+    values = []
+    for index, value in enumerate(new_split_by_num):
         try:
             float_val = float(value)
             values.append(float_val)
