@@ -18,6 +18,7 @@ Source Code Docs
    source_code_docs/nlp
    source_code_docs/parse
    source_code_docs/reader
+   source_code_docs/relex
    source_code_docs/scrape
    source_code_docs/text
    source_code_docs/chemdataextractor
@@ -113,6 +114,8 @@ Source Code Docs
    reader.plaintext
    reader.rsc
    reader.uspto
+   reader.elsevier
+   reader.springer
 
 ---------------------------------------------------------
 
@@ -130,6 +133,7 @@ Source Code Docs
    scrape.pub.nlm
    scrape.pub.rsc
    scrape.pub.springer
+   scrape.pub.elsevier
 
 ---------------------------------------------------------
 
@@ -141,6 +145,21 @@ Source Code Docs
    text.normalize
    text.processors
    text.unwrap
+
+---------------------------------------------------------
+
+.. autosummary::
+
+   relex
+   relex.cluster
+   relex.entity
+   relex.pattern
+   relex.phrase
+   relex.relationship
+   relex.snowball
+   relex.utils
+
+
 
 
 
