@@ -10,26 +10,16 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import logging
-import re
-from abc import abstractproperty
-import copy
 
 from .common import lbrct, rbrct
-from ..model.units.unit import DimensionlessUnit
 from .cem import cem, chemical_label, lenient_chemical_label
 from ..model.units.dimension import Dimensionless
-from ..model.units.temperature import Temperature, TemperatureModel
-from .actions import merge, join
-from .base import BaseParser
+from .actions import merge
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group
-from fractions import Fraction
-from ..model.base import ListType
 from ..utils import first
-from ..model.units.quantity_model import DimensionlessModel
 from .quantity import QuantityParser, magnitudes_dict, value_element, extract_units, value_element_plain
 from ..model import Compound
 from ..doc.text import Sentence
-from lxml import etree
 
 
 def construct_unit_element(dimensions):
@@ -64,11 +54,8 @@ def create_total_phrase(model):
             pass
 
 
-model = TemperatureModel
-
-
 class BaseAutoParser(QuantityParser):
-    model = model
+    model = None
     _specifier = None
     value_phrase_tag = 'baseautoparserproperty'
     root_phrase_tag = 'baseautopropertyphrase'
@@ -79,16 +66,16 @@ class BaseAutoParser(QuantityParser):
 
     @property
     def root(self):
-        if self._specifier is model.specifier:
+        if self._specifier is self.model.specifier:
             return self._root_phrase
-        unit_element = Group(construct_unit_element(model.dimensions).with_condition(match_dimensions_of(model))('units'))(self.value_phrase_tag)
-        specifier = model.specifier('specifier')
+        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
+        specifier = self.model.specifier('specifier')
         value_phrase = value_element(unit_element)(self.value_phrase_tag)
         chem_name = (cem | chemical_label | lenient_chemical_label)
         entities = (value_phrase | specifier | chem_name)
         root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
         self._root_phrase = root_phrase
-        self._specifier = model.specifier
+        self._specifier = self.model.specifier
         return root_phrase
 
     def interpret(self, result, start, end):
@@ -116,22 +103,21 @@ class BaseAutoParser(QuantityParser):
 
 
 class AutoTableParser(BaseAutoParser):
-    model = model
+    model = None
     _specifier = None
 
     @property
     def root(self):
-        # Not sure if this is valid, there must be a better way of doing this?
-        if self._specifier is model.specifier:
+        if self._specifier is self.model.specifier:
             return self._root_phrase
-        unit_element = Group(construct_unit_element(model.dimensions).with_condition(match_dimensions_of(model))('units'))(self.value_phrase_tag)
-        specifier = model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
+        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
+        specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
         value_phrase = value_element_plain()(self.value_phrase_tag)
         chem_name = (cem | chemical_label | lenient_chemical_label)
         entities = (value_phrase | specifier | chem_name)
         root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
         self._root_phrase = root_phrase
-        self._specifier = model.specifier
+        self._specifier = self.model.specifier
         return root_phrase
 
     def parse(self, cell):
