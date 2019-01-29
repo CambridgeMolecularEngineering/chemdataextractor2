@@ -111,7 +111,7 @@ class Dimension(BaseDimension):
                 dimensions[new_key] = other
 
             new_model.dimensions = dimensions
-
+            new_model.units_dict = copy.copy(self.units_dict)
         return new_model
 
     def __mul__(self, other):
