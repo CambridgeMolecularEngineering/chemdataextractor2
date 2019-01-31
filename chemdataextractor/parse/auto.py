@@ -15,11 +15,12 @@ from .common import lbrct, rbrct
 from .cem import cem, chemical_label, lenient_chemical_label
 from ..model.units.dimension import Dimensionless
 from .actions import merge
-from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, All
 from ..utils import first
 from .quantity import QuantityParser, magnitudes_dict, value_element, extract_units, value_element_plain
 from ..model import Compound
 from ..doc.text import Sentence
+
 
 
 def construct_unit_element(dimensions):
@@ -106,18 +107,52 @@ class AutoTableParser(BaseAutoParser):
     model = None
     _specifier = None
 
+    # @property
+    # def root(self):
+    #     if self._specifier is self.model.specifier:
+    #         return self._root_phrase
+    #     unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
+    #     specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
+    #     value_phrase = value_element_plain()(self.value_phrase_tag)
+    #     chem_name = (cem | chemical_label | lenient_chemical_label)
+    #     entities = (value_phrase | specifier | chem_name)
+    #     root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
+    #     self._root_phrase = root_phrase
+    #     self._specifier = self.model.specifier
+    #     print(dir(self.model))
+    #     return root_phrase
+
     @property
     def root(self):
         if self._specifier is self.model.specifier:
             return self._root_phrase
-        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
+        # will always be possible to find from model:
+        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))( self.value_phrase_tag)
+        # will always be possible to find from model:
         specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
+        # is always there:
         value_phrase = value_element_plain()(self.value_phrase_tag)
+        # is always there:
         chem_name = (cem | chemical_label | lenient_chemical_label)
-        entities = (value_phrase | specifier | chem_name)
-        root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
+
+        # NOW COMES the tricky part
+        # 1. all other sensible elements of the model need to be added (sensible means that their R,I,W,... can be found
+        # 2. some of the elements have to be made optional, for example even chem_name will have to be optional in the future for a later-stage interdependency resolution
+
+        #entities = (value_phrase | specifier | chem_name)
+
+        #root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
+        root_phrase = All(value_phrase, specifier, chem_name)(self.root_phrase_tag)
+
+        #root_phrase = (entities + entities + ZeroOrMore(Any()) + entities)(self.root_phrase_tag)
+
+        #root_phrase = (entities + entities + entities)(self.root_phrase_tag)
+
+
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
+        # print(dir(self.model))
+        # print(self.model.fields)
         return root_phrase
 
     def parse(self, cell):

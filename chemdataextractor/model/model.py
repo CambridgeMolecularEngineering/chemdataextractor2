@@ -147,6 +147,9 @@ class ElectrochemicalPotential(BaseModel):
 class NeelTemperature(TemperatureModel):
     # specifier = R('[Nn][ée]el') + I('Temperature')
     specifier = I('TN')
+    # test2 = StringType(expression=R(''), contextual=True, mandatory=True)
+
+
 
 
 class CurieTemperature(TemperatureModel):
