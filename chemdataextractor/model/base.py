@@ -23,12 +23,9 @@ from ..utils import python_2_unicode_compatible
 log = logging.getLogger(__name__)
 
 
-class BaseType(six.with_metaclass(ABCMeta)):
+class MutableAttribute():
 
-    # This is assigned by ModelMeta to match the attribute on the Model
-    name = None
-
-    def __init__(self, default=None, null=False, required=False, contextual=False, mutable=True):
+    def __init__(self, default):
         """
 
         :param default: (Optional) The default value for this field if none is set.
@@ -36,12 +33,42 @@ class BaseType(six.with_metaclass(ABCMeta)):
         :param bool required: (Optional) Whether a value is required. Default False.
         :param bool contextual: (Optional) Whether this value is contextual. Default False.
         """
-        self.default = default
+        self.default = copy.copy(default)
+        self._value = copy.copy(self.default)
+
+    def __get__(self, instance, owner):
+        """Descriptor for retrieving a value from a field in a Model."""
+        # Check if Model class is being called, rather than Model instance
+        if instance is None:
+            return self
+        return self._value
+
+    def __set__(self, instance, value):
+        self._value = value
+        if instance.has('set_parsers_need_update'):
+            instance.set_parsers_need_update()
+
+    def reset(self):
+        self._value = copy.copy(self.default)
+
+
+class BaseType(six.with_metaclass(ABCMeta)):
+
+    # This is assigned by ModelMeta to match the attribute on the Model
+    name = None
+
+    def __init__(self, default=None, null=False, required=False, contextual=False):
+        """
+
+        :param default: (Optional) The default value for this field if none is set.
+        :param bool null: (Optional) Include in serialized output even if value is None. Default False.
+        :param bool required: (Optional) Whether a value is required. Default False.
+        :param bool contextual: (Optional) Whether this value is contextual. Default False.
+        """
+        self.default = copy.deepcopy(default)
         self.null = null
         self.required = required
         self.contextual = contextual
-        self.mutable = mutable
-        self._setted = False
 
     def __get__(self, instance, owner):
         """Descriptor for retrieving a value from a field in a Model."""
@@ -57,9 +84,7 @@ class BaseType(six.with_metaclass(ABCMeta)):
 
     def __set__(self, instance, value):
         """Descriptor for assigning a value to a field in a Model."""
-        if not(not self.mutable and self._setted):
-            instance._values[self.name] = self.process(value)
-            self._setted = True
+        instance._values[self.name] = self.process(value)
 
     def process(self, value):
         """Convert an assigned value into the desired data format."""
@@ -147,6 +172,8 @@ class ModelMeta(ABCMeta):
         cls = super(ModelMeta, mcs).__new__(mcs, name, bases, attrs)
         cls.fields = cls.fields.copy()
         cls.fields.update(fields)
+        for parser in cls.parsers:
+            parser.model = cls
         return cls
 
     def __setattr__(cls, key, value):
@@ -161,6 +188,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     """"""
 
     fields = {}
+    parsers = []
 
     def __init__(self, **raw_data):
         """"""
@@ -216,6 +244,17 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             return val is not None
         except AttributeError:
             return False
+
+    @classmethod
+    def reset_mutables(cls):
+        for key, field in six.iteritems(cls.fields):
+            if isinstance(field, MutableAttribute):
+                field.reset()
+
+    @classmethod
+    def set_parsers_need_update(cls):
+        for parser in cls.parsers:
+            parser.needs_update = True
 
     def keys(self):
         return list(iter(self))

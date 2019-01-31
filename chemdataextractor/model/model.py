@@ -9,165 +9,17 @@ import six
 from .base import BaseModel, StringType, ListType, ModelType
 from .units.temperature import TemperatureModel
 from ..parse.elements import R, I
+from ..parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser
+from ..parse.ir import IrParser
 
 log = logging.getLogger(__name__)
 
 
-class UvvisPeak(BaseModel):
-    #: Peak value, i.e. wavelength
-    value = StringType()
-    #: Peak value units
-    units = StringType(contextual=True)
-    # Extinction value
-    extinction = StringType()
-    # Extinction units
-    extinction_units = StringType(contextual=True)
-    # Peak shape information (e.g. shoulder, broad)
-    shape = StringType()
-
-
-class UvvisSpectrum(BaseModel):
-    solvent = StringType(contextual=True)
-    temperature = StringType(contextual=True)
-    temperature_units = StringType(contextual=True)
-    concentration = StringType(contextual=True)
-    concentration_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
-    peaks = ListType(ModelType(UvvisPeak))
-
-
-class IrPeak(BaseModel):
-    value = StringType()
-    units = StringType(contextual=True)
-    strength = StringType()
-    bond = StringType()
-
-
-class IrSpectrum(BaseModel):
-    solvent = StringType(contextual=True)
-    temperature = StringType(contextual=True)
-    temperature_units = StringType(contextual=True)
-    concentration = StringType(contextual=True)
-    concentration_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
-    peaks = ListType(ModelType(IrPeak))
-
-
-class NmrPeak(BaseModel):
-    shift = StringType()
-    intensity = StringType()
-    multiplicity = StringType()
-    coupling = StringType()
-    coupling_units = StringType(contextual=True)
-    number = StringType()
-    assignment = StringType()
-
-
-class NmrSpectrum(BaseModel):
-    nucleus = StringType(contextual=True)
-    solvent = StringType(contextual=True)
-    frequency = StringType(contextual=True)
-    frequency_units = StringType(contextual=True)
-    standard = StringType(contextual=True)
-    temperature = StringType(contextual=True)
-    temperature_units = StringType(contextual=True)
-    concentration = StringType(contextual=True)
-    concentration_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
-    peaks = ListType(ModelType(NmrPeak))
-
-
-# class MeltingPoint(BaseModel):
-#     """A melting point measurement."""
-#     value = StringType()
-#     units = StringType(contextual=True)
-#     solvent = StringType(contextual=True)
-#     concentration = StringType(contextual=True)
-#     concentration_units = StringType(contextual=True)
-#     apparatus = StringType(contextual=True)
-
-
-class MeltingPoint(TemperatureModel):
-    solvent = StringType(contextual=True)
-    concentration = StringType(contextual=True)
-    concentration_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
-
-
-class GlassTransition(BaseModel):
-    """A glass transition temperature."""
-    value = StringType()
-    units = StringType(contextual=True)
-    method = StringType(contextual=True)
-    concentration = StringType(contextual=True)
-    concentration_units = StringType(contextual=True)
-
-
-class QuantumYield(BaseModel):
-    """A quantum yield measurement."""
-    value = StringType()
-    units = StringType(contextual=True)
-    solvent = StringType(contextual=True)
-    type = StringType(contextual=True)
-    standard = StringType(contextual=True)
-    standard_value = StringType(contextual=True)
-    standard_solvent = StringType(contextual=True)
-    concentration = StringType(contextual=True)
-    concentration_units = StringType(contextual=True)
-    temperature = StringType(contextual=True)
-    temperature_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
-
-
-class FluorescenceLifetime(BaseModel):
-    """A fluorescence lifetime measurement."""
-    value = StringType()
-    units = StringType(contextual=True)
-    solvent = StringType(contextual=True)
-    concentration = StringType(contextual=True)
-    concentration_units = StringType(contextual=True)
-    temperature = StringType(contextual=True)
-    temperature_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
-
-
-class ElectrochemicalPotential(BaseModel):
-    """An oxidation or reduction potential, from cyclic voltammetry."""
-    value = StringType()
-    units = StringType(contextual=True)
-    type = StringType(contextual=True)
-    solvent = StringType(contextual=True)
-    concentration = StringType(contextual=True)
-    concentration_units = StringType(contextual=True)
-    temperature = StringType(contextual=True)
-    temperature_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
-
-
-class NeelTemperature(TemperatureModel):
-    # specifier = R('[Nn][ée]el') + I('Temperature')
-    specifier = I('TN')
-
-
-class CurieTemperature(TemperatureModel):
-    # specifier = I('Curie') + I('Temperature')
-    specifier = I('TC')
-
-
 class Compound(BaseModel):
+    parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
     names = ListType(StringType())
     labels = ListType(StringType())
     roles = ListType(StringType())
-    nmr_spectra = ListType(ModelType(NmrSpectrum))
-    ir_spectra = ListType(ModelType(IrSpectrum))
-    uvvis_spectra = ListType(ModelType(UvvisSpectrum))
-    melting_points = ListType(ModelType(MeltingPoint))
-    glass_transitions = ListType(ModelType(GlassTransition))
-    quantum_yields = ListType(ModelType(QuantumYield))
-    fluorescence_lifetimes = ListType(ModelType(FluorescenceLifetime))
-    electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
-    neel_temperature = ListType(ModelType(NeelTemperature))
-    curie_temperature = ListType(ModelType(CurieTemperature))
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""
@@ -228,3 +80,159 @@ class Compound(BaseModel):
         if self.names or self.labels:
             return True
         return False
+
+
+class UvvisPeak(BaseModel):
+    #: Peak value, i.e. wavelength
+    value = StringType()
+    #: Peak value units
+    units = StringType(contextual=True)
+    # Extinction value
+    extinction = StringType()
+    # Extinction units
+    extinction_units = StringType(contextual=True)
+    # Peak shape information (e.g. shoulder, broad)
+    shape = StringType()
+    compound = ModelType(Compound)
+
+
+class UvvisSpectrum(BaseModel):
+    solvent = StringType(contextual=True)
+    temperature = StringType(contextual=True)
+    temperature_units = StringType(contextual=True)
+    concentration = StringType(contextual=True)
+    concentration_units = StringType(contextual=True)
+    apparatus = StringType(contextual=True)
+    peaks = ListType(ModelType(UvvisPeak))
+    compound = ModelType(Compound)
+
+
+class IrPeak(BaseModel):
+    value = StringType()
+    units = StringType(contextual=True)
+    strength = StringType()
+    bond = StringType()
+
+
+class IrSpectrum(BaseModel):
+    solvent = StringType(contextual=True)
+    temperature = StringType(contextual=True)
+    temperature_units = StringType(contextual=True)
+    concentration = StringType(contextual=True)
+    concentration_units = StringType(contextual=True)
+    apparatus = StringType(contextual=True)
+    peaks = ListType(ModelType(IrPeak))
+    compound = ModelType(Compound)
+    parsers = [IrParser()]
+
+
+class NmrPeak(BaseModel):
+    shift = StringType()
+    intensity = StringType()
+    multiplicity = StringType()
+    coupling = StringType()
+    coupling_units = StringType(contextual=True)
+    number = StringType()
+    assignment = StringType()
+    compound = ModelType(Compound)
+
+
+class NmrSpectrum(BaseModel):
+    nucleus = StringType(contextual=True)
+    solvent = StringType(contextual=True)
+    frequency = StringType(contextual=True)
+    frequency_units = StringType(contextual=True)
+    standard = StringType(contextual=True)
+    temperature = StringType(contextual=True)
+    temperature_units = StringType(contextual=True)
+    concentration = StringType(contextual=True)
+    concentration_units = StringType(contextual=True)
+    apparatus = StringType(contextual=True)
+    peaks = ListType(ModelType(NmrPeak))
+    compound = ModelType(Compound)
+
+
+# class MeltingPoint(BaseModel):
+#     """A melting point measurement."""
+#     value = StringType()
+#     units = StringType(contextual=True)
+#     solvent = StringType(contextual=True)
+#     concentration = StringType(contextual=True)
+#     concentration_units = StringType(contextual=True)
+#     apparatus = StringType(contextual=True)
+
+
+class MeltingPoint(TemperatureModel):
+    solvent = StringType(contextual=True)
+    concentration = StringType(contextual=True)
+    concentration_units = StringType(contextual=True)
+    apparatus = StringType(contextual=True)
+    compound = ModelType(Compound)
+
+
+class GlassTransition(BaseModel):
+    """A glass transition temperature."""
+    value = StringType()
+    units = StringType(contextual=True)
+    method = StringType(contextual=True)
+    concentration = StringType(contextual=True)
+    concentration_units = StringType(contextual=True)
+    compound = ModelType(Compound)
+
+
+class QuantumYield(BaseModel):
+    """A quantum yield measurement."""
+    value = StringType()
+    units = StringType(contextual=True)
+    solvent = StringType(contextual=True)
+    type = StringType(contextual=True)
+    standard = StringType(contextual=True)
+    standard_value = StringType(contextual=True)
+    standard_solvent = StringType(contextual=True)
+    concentration = StringType(contextual=True)
+    concentration_units = StringType(contextual=True)
+    temperature = StringType(contextual=True)
+    temperature_units = StringType(contextual=True)
+    apparatus = StringType(contextual=True)
+    compound = ModelType(Compound)
+
+
+class FluorescenceLifetime(BaseModel):
+    """A fluorescence lifetime measurement."""
+    value = StringType()
+    units = StringType(contextual=True)
+    solvent = StringType(contextual=True)
+    concentration = StringType(contextual=True)
+    concentration_units = StringType(contextual=True)
+    temperature = StringType(contextual=True)
+    temperature_units = StringType(contextual=True)
+    apparatus = StringType(contextual=True)
+    compound = ModelType(Compound)
+
+
+class ElectrochemicalPotential(BaseModel):
+    """An oxidation or reduction potential, from cyclic voltammetry."""
+    value = StringType()
+    units = StringType(contextual=True)
+    type = StringType(contextual=True)
+    solvent = StringType(contextual=True)
+    concentration = StringType(contextual=True)
+    concentration_units = StringType(contextual=True)
+    temperature = StringType(contextual=True)
+    temperature_units = StringType(contextual=True)
+    apparatus = StringType(contextual=True)
+    compound = ModelType(Compound)
+
+
+class NeelTemperature(TemperatureModel):
+    # specifier = R('[Nn][ée]el') + I('Temperature')
+    specifier = I('TN')
+    compound = ModelType(Compound)
+
+
+class CurieTemperature(TemperatureModel):
+    # specifier = I('Curie') + I('Temperature')
+    specifier = I('TC')
+    compound = ModelType(Compound)
+
+

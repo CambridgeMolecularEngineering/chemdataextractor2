@@ -12,11 +12,10 @@ import logging
 import re
 from lxml import etree
 
-from ..model import Compound
 from .actions import join, fix_whitespace
 from .common import roman_numeral, cc, nnp, hyph, nns, nn, cd, ls, optdelim, bcm, icm, rbrct, lbrct, sym, jj, hyphen, quote, \
     dt
-from .base import BaseParser
+from .base import BaseSentenceParser, BaseTableParser
 from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any
 
 log = logging.getLogger(__name__)
@@ -88,7 +87,7 @@ amino_acid_name = (
 #: Chemical formula patterns, updated to include Inorganic compound formulae
 formula = (
     R('^C\(?\d{1,3}\)?(([HNOP]|Cl)\(?\d\d?\)?)+(\(?\d?[\+\-]\d?\)?)?$') |
-    R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[r][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr\d]|R[abefghnu]|S[bcegimnr(\d\.?)]|T[abehil\d]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') | 
+    R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[r][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr\d]|R[abefghnu]|S[bcegimnr(\d\.?)]|T[abehil\d]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') |
     R('^((\(?\d{2,3}\)?)?(Fe|Ti|Mg|Ru|Cd|Se)\(?(\d\d?|[IV]+)?\)?((O|Hg)\(?\d?\d?\)?)?)+(\(?\d?[\+\-]\d?\)?)?$') |
     R('(NaOH|CaCl\d?\d?|EtOH|EtAc|MeOH|CF\d|C\d?\d?H\d\d?)+$') |
     R('(NO\d|BH4|Ca\(2\+\)|Ti\(0\)2|\(CH3\)2CHOH|\(CH3\)2CO|\(CH3\)2NCOH|C2H5CN|CH2ClCH2Cl|CH3C6H5|CH3CN|CH3CO2H|CH3COCH3|CH3COOH|CH3NHCOH|CH3Ph|CH3SOCH3|Cl2CH2|ClCH2CH2Cl)') |
@@ -282,7 +281,7 @@ def standardize_role(role):
     return role
 
 
-class CompoundParser(BaseParser):
+class CompoundParser(BaseSentenceParser, BaseTableParser):
     """Chemical name possibly with an associated label."""
 
     root = cem_phrase
@@ -290,7 +289,7 @@ class CompoundParser(BaseParser):
     def interpret(self, result, start, end):
         # TODO: Parse label_type into label model object
         for cem_el in result.xpath('./cem'):
-            c = Compound(
+            c = self.model(
                 names=cem_el.xpath('./name/text()'),
                 labels=cem_el.xpath('./label/text()'),
                 roles=[standardize_role(r) for r in cem_el.xpath('./role/text()')]
@@ -298,7 +297,7 @@ class CompoundParser(BaseParser):
             yield c
 
 
-class ChemicalLabelParser(BaseParser):
+class ChemicalLabelParser(BaseSentenceParser, BaseTableParser):
     """Chemical label occurrences with no associated name."""
 
     root = chemical_label_phrase
@@ -306,10 +305,10 @@ class ChemicalLabelParser(BaseParser):
     def interpret(self, result, start, end):
         roles = [standardize_role(r) for r in result.xpath('./role/text()')]
         for label in result.xpath('./label/text()'):
-            yield Compound(labels=[label], roles=roles)
+            yield self.model(labels=[label], roles=roles)
 
 
-class CompoundHeadingParser(BaseParser):
+class CompoundHeadingParser(BaseSentenceParser, BaseTableParser):
     """Better matching of abbreviated names in dedicated compound headings."""
 
     root = compound_heading_phrase
@@ -319,11 +318,11 @@ class CompoundHeadingParser(BaseParser):
         labels = result.xpath('./label/text()')
         if len(labels) > 1:
             for label in labels:
-                yield Compound(labels=[label], roles=roles)
+                yield self.model(labels=[label], roles=roles)
             for name in result.xpath('./name/text()'):
-                yield Compound(names=[name], roles=roles)
+                yield self.model(names=[name], roles=roles)
         else:
-            yield Compound(
+            yield self.model(
                 names=result.xpath('./name/text()'),
                 labels=labels,
                 roles=roles

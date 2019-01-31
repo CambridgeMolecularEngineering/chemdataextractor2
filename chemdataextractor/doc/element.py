@@ -20,12 +20,16 @@ from ..utils import python_2_unicode_compatible
 class BaseElement(six.with_metaclass(ABCMeta)):
     """Abstract base class for a Document Element."""
 
-    def __init__(self, document=None, references=None, id=None):
+    def __init__(self, document=None, references=None, id=None, models=None):
         """If part of a Document, an Element should be initialized with a reference to its containing Document."""
         #: The containing Document
         self._document = document
         self.id = id
         self.references = references if references is not None else []
+        if models:
+            self.models = models
+        else:
+            self.models = []
 
     def __repr__(self):
         return '<%s>' % (self.__class__.__name__,)
@@ -66,7 +70,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
 class CaptionedElement(BaseElement):
     """Document Element with a caption."""
 
-    def __init__(self, caption, label=None, **kwargs):
+    def __init__(self, caption, label=None, models=None, **kwargs):
         """If part of a Document, an Element should be initialized with a reference to its containing Document."""
         super(CaptionedElement, self).__init__(**kwargs)
         self.caption = caption
@@ -108,11 +112,11 @@ class CaptionedElement(BaseElement):
     def cems(self):
         """Return a list of chemical entity mentions for this element."""
         return self.caption.cems
-    
+
     @property
     def definitions(self):
         """Return a list of all specifier definitions in the caption
-        
+
         Returns:
             list-- The specifier definitions
         """
