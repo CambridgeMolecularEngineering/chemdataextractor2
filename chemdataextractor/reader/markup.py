@@ -20,7 +20,8 @@ import six
 from ..errors import ReaderError
 from ..doc.document import Document
 from ..doc.text import Title, Heading, Paragraph, Caption, Citation, Footnote, Text, Sentence
-from ..doc.table import Table, Cell
+# from ..doc.table import Table, Cell
+from ..doc.table_new import Table, Cell
 from ..doc.figure import Figure
 from ..scrape import INLINE_ELEMENTS
 from ..scrape.clean import clean
@@ -145,7 +146,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
                             hdict[rownum] = {}
                         while colnum in hdict[rownum]:
                             colnum += 1
-                        hdict[rownum][colnum] = cell[0] if len(cell) > 0 else Cell('')
+                        hdict[rownum][colnum] = cell[0]
                     colnum += 1
         rows = []
         for row in sorted(hdict):
@@ -171,14 +172,28 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
         else:
             return [''.join(el.itertext()).strip()]
 
+    # def _parse_table(self, el, refs, specials):
+    #     caps = self._css(self.table_caption_css, el)
+    #     caption = self._parse_text(caps[0], refs=refs, specials=specials, element_cls=Caption)[0] if caps else Caption('')
+    #     hrows = self._parse_table_rows(self._css(self.table_head_row_css, el), refs=refs, specials=specials)
+    #     rows = self._parse_table_rows(self._css(self.table_body_row_css, el), refs=refs, specials=specials)
+    #     footnotes = self._parse_table_footnotes(self._css(self.table_footnote_css, el), refs=refs, specials=specials)
+    #     tab = Table(caption, headings=hrows, rows=rows, footnotes=footnotes, id=el.get('id', None))
+    #     return [tab]
+
     def _parse_table(self, el, refs, specials):
-        caps = self._css(self.table_caption_css, el)
-        caption = self._parse_text(caps[0], refs=refs, specials=specials, element_cls=Caption)[0] if caps else Caption('')
-        hrows = self._parse_table_rows(self._css(self.table_head_row_css, el), refs=refs, specials=specials)
-        rows = self._parse_table_rows(self._css(self.table_body_row_css, el), refs=refs, specials=specials)
-        footnotes = self._parse_table_footnotes(self._css(self.table_footnote_css, el), refs=refs, specials=specials)
-        tab = Table(caption, headings=hrows, rows=rows, footnotes=footnotes, id=el.get('id', None))
-        return [tab]
+        caption_css = self._css(self.table_caption_css, el)
+        caption = self._parse_text(caption_css[0], refs=refs, specials=specials, element_cls=Caption)[0] if caption_css else Caption('')
+        hrows= self._parse_table_rows(self._css(self.table_head_row_css, el), refs=refs, specials=specials)
+        rows = rows = self._parse_table_rows(self._css(self.table_body_row_css, el), refs=refs, specials=specials)
+        data = []
+        for hr in hrows:
+            data.append([i.text.strip() for i in hr])
+        for r in rows:
+            data.append([i.text.strip() for i in r])
+        table = Table(caption, table_data=data)
+
+        return [table]
 
     def _xpath(self, query, root):
         result = root.xpath(query, smart_strings=False)
@@ -203,8 +218,10 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
 
     def parse(self, fstring):
         root = self._make_tree(fstring)
+
         if root is None:
             raise ReaderError
+
         root = self._css(self.root_css, root)[0]
         for cleaner in self.cleaners:
             cleaner(root)
