@@ -39,10 +39,11 @@ class Table(CaptionedElement):
 
     def __init__(self, caption, label=None, table_data=[], **kwargs):
         super(Table, self).__init__(caption=caption, label=label, **kwargs)
-        self.tde_table = TdeTable(table_data)
+        # can pass any kwargs into TDE directly
+        self.tde_table = TdeTable(table_data, **kwargs)
         self.category_table = self.tde_table.category_table
-        print('\n\n', self.tde_table.__repr__())
-        print(self.category_table)
+        # print('\n\n', self.tde_table)
+        # print(self.category_table)
 
     # def set_parsers(self):
     #     #: Table cell parsers
