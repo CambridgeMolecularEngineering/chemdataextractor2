@@ -150,11 +150,10 @@ class NeelTemperature(TemperatureModel):
     # test2 = StringType(expression=R(''), contextual=True, mandatory=True)
 
 
-
-
 class CurieTemperature(TemperatureModel):
     # specifier = I('Curie') + I('Temperature')
     specifier = I('TC')
+    tag = StringType(parse_expression=R('^Temperatures$'), required=False)
 
 
 class Compound(BaseModel):

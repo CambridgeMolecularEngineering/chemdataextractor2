@@ -57,18 +57,20 @@ class BaseType(six.with_metaclass(ABCMeta)):
     # This is assigned by ModelMeta to match the attribute on the Model
     name = None
 
-    def __init__(self, default=None, null=False, required=False, contextual=False):
+    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None):
         """
 
         :param default: (Optional) The default value for this field if none is set.
         :param bool null: (Optional) Include in serialized output even if value is None. Default False.
         :param bool required: (Optional) Whether a value is required. Default False.
         :param bool contextual: (Optional) Whether this value is contextual. Default False.
+        :param parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement
         """
         self.default = copy.deepcopy(default)
         self.null = null
         self.required = required
         self.contextual = contextual
+        self.parse_expression = parse_expression
 
     def __get__(self, instance, owner):
         """Descriptor for retrieving a value from a field in a Model."""

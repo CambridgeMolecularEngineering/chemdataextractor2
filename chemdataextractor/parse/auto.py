@@ -82,27 +82,30 @@ class BaseAutoParser(QuantityParser):
 
     def interpret(self, result, start, end):
         try:
-            print(etree.tostring(result))
+            # print(etree.tostring(result))
             # Change this to MODEL_PHRASE?
             raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
             raw_units = first(result.xpath('./' + self.value_phrase_tag + '/units/text()'))
+            # TODO Add possibility for optional stuff
             arg_dict = {self.property_name: [self.model(raw_value=raw_value,
-                        raw_units=raw_units, value=self.extract_value(raw_value),
-                        error=self.extract_error(raw_value),
-                        units=self.extract_units(raw_units, strict=True))]}
+                                                        raw_units=raw_units,
+                                                        value=self.extract_value(raw_value),
+                                                        error=self.extract_error(raw_value),
+                                                        units=self.extract_units(raw_units, strict=True))]}
             compound = Compound(**arg_dict)
-            yield compound
+            cem_el = first(result.xpath('./cem'))
+            if cem_el is not None:
+                compound.names = cem_el.xpath('./name/text()')
+                compound.labels = cem_el.xpath('./label/text()')
+                yield compound
         except TypeError as e:
             # log.debug(e)
-            compound = Compound()
+            # compound = Compound()
+            pass
         except AttributeError as e:
             # For some cases of doing extract_units/extract_value/extract_error
-            compound = Compound()
-        cem_el = first(result.xpath('./cem'))
-        #if cem_el is not None:
-        #    compound.names = cem_el.xpath('./name/text()')
-        #    compound.labels = cem_el.xpath('./label/text()')
-        #yield compound
+            # compound = Compound()
+            pass
 
 
 class AutoTableParser(BaseAutoParser):
@@ -137,48 +140,32 @@ class AutoTableParser(BaseAutoParser):
         # is always there:
         chem_name = (cem | chemical_label | lenient_chemical_label)
 
+
+
         # NOW COMES the tricky part
-        # 1. all other sensible elements of the model need to be added (sensible means that their R,I,W,... can be found
+        # 1. all other sensible elements of the model need to be added (sensible means that their R,I,W,... can be found)
         # 2. some of the elements have to be made optional, for example even chem_name will have to be optional in the future for a later-stage interdependency resolution
+        # the optional stuff has to be done in the interpret function
 
+        # this is general, for everything we can find
         entities = (value_phrase | specifier | chem_name)
-
-        #root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
-        #root_phrase = All(value_phrase, specifier, chem_name)(self.root_phrase_tag)
-
-        #root_phrase = (entities + entities + ZeroOrMore(Any()) + entities)(self.root_phrase_tag)
-
-        #any_before_entity =
-
-        # complex_entity = (entities | (Any() + entities) | (Any() + Not(entities)))
-
-
-        # 0. Ignores space in between the tokens
-        # root_phrase = (entities + entities + entities)(self.root_phrase_tag)
-
-        # 1. Problem, counts the Any() as well as the entities
-        # complex_entity = (entities | (Any() + entities) | (Any() + Not(entities)))
-        # root_phrase = (complex_entity + complex_entity + complex_entity)(self.root_phrase_tag)
-
-        # 2. Using the SkipTo() function, works quite well but not perfect
-        # for some reason the etree structure is there but the interpret function seems to have problems
-        # TODO Check the interpret function etc.
-        root_phrase = (entities + SkipTo(entities) + entities + SkipTo(entities) + entities)(self.root_phrase_tag)
-
-        # 3. building up on 2
-        # root_phrase = (entities + )(self.root_phrase_tag)
-
-
-        # root_phrase = OneOrMore(complex_entity)(self.root_phrase_tag)
-
-        #root_phrase = (( entities | (Any() + entities) | (Any() + Not(entities)) ) + entities + entities)(self.root_phrase_tag)
+        root_phrase = OneOrMore(entities + Optional(SkipTo(entities)))(self.root_phrase_tag)
 
 
 
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
         # print(dir(self.model))
-        # print(self.model.fields)
+
+
+
+
+        print(self.model.fields)
+
+        
+
+
+
         return root_phrase
 
     def parse(self, cell):

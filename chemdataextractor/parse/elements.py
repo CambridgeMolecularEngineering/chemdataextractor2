@@ -638,6 +638,18 @@ class Group(ParseElementEnhance):
 
 
 class SkipTo(ParseElementEnhance):
+    """
+    Skips to the next occurance of expression. Does not add the next occurance of expression to the parse tree.
+    For example::
+
+        entities + SkipTo(entities)
+
+    will output ``entities`` only once. Whereas::
+
+        entities + SkipTo(entities) + entities
+
+    will output ``entities`` as well as the second occurrence of ``entities`` after an arbitrary number of tokens in between.
+    """
 
     def __init__(self, expr, include=False):
         super(SkipTo, self).__init__(expr)
