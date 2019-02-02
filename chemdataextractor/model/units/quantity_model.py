@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.units.quantit_model.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Base types for making quantity models.
 
 Taketomo Isazawa (ti250@cam.ac.uk)
-
 """
 
 from __future__ import absolute_import

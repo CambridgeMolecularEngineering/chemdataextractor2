@@ -15,11 +15,12 @@ from .common import lbrct, rbrct
 from .cem import cem, chemical_label, lenient_chemical_label
 from ..model.units.dimension import Dimensionless
 from .actions import merge, join
-from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
 from ..utils import first
 from .quantity import QuantityParser, magnitudes_dict, value_element, extract_units, value_element_plain
 from ..model import Compound
 from ..doc.text import Sentence
+from ..model.units.quantity_model import QuantityModel
 import xml.etree.ElementTree as etree
 
 
@@ -56,6 +57,20 @@ def create_total_phrase(model):
             pass
 
 
+def create_entities_list(entities):
+    """
+    For a list of Base parser entities, creates an entity of structure. For example, with 4 entities in the list, the output is::
+
+        (entities[0] | entities[1] | entities[2] | entities[3])
+
+    :param entities: BaseParserElement type objects
+    :return: BaseParserElement type object
+    """
+    result = entities[0]
+    for entity in entities[1:]:
+        result = (result | entity)
+    return result
+
 class BaseAutoParser(QuantityParser):
     model = None
     _specifier = None
@@ -82,7 +97,7 @@ class BaseAutoParser(QuantityParser):
 
     def interpret(self, result, start, end):
         try:
-            # print(etree.tostring(result))
+            print(etree.tostring(result))
             # Change this to MODEL_PHRASE?
             raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
             raw_units = first(result.xpath('./' + self.value_phrase_tag + '/units/text()'))
@@ -132,11 +147,11 @@ class AutoTableParser(BaseAutoParser):
         if self._specifier is self.model.specifier:
             return self._root_phrase
         # will always be possible to find from model:
-        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))( self.value_phrase_tag)
+        # unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
         # will always be possible to find from model:
-        specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
+        # specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
         # is always there:
-        value_phrase = value_element_plain()(self.value_phrase_tag)
+        # value_phrase = value_element_plain()(self.value_phrase_tag)
         # is always there:
         chem_name = (cem | chemical_label | lenient_chemical_label)
 
@@ -147,22 +162,34 @@ class AutoTableParser(BaseAutoParser):
         # 2. some of the elements have to be made optional, for example even chem_name will have to be optional in the future for a later-stage interdependency resolution
         # the optional stuff has to be done in the interpret function
 
+        print("\n\n")
+        if issubclass(self.model, QuantityModel):
+            unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
+            specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
+            value_phrase = value_element_plain()(self.value_phrase_tag)
+            entities = [chem_name, specifier, value_phrase]
+            for field in self.model.fields:
+                if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+                    print(field)
+                    if self.model.__getattribute__(self.model, field).parse_expression is not None:
+                        entities.append(self.model.__getattribute__(self.model, field).parse_expression)
+
+
+        #combined_entities = create_entities_list(entities)
+
+        # combined_entities = (entities[0] | entities[1] | entities[2])
+        # print(combined_entities)
+
         # this is general, for everything we can find
-        entities = (value_phrase | specifier | chem_name)
+        # TODO There is a problem, changing the order here changes the result, the chemical name has to be parsed last otherwise it identifies it as a label
+        # entities = (value_phrase | specifier | chem_name)
+        entities = (chem_name | specifier | value_phrase)
         root_phrase = OneOrMore(entities + Optional(SkipTo(entities)))(self.root_phrase_tag)
 
-
-
+        # root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))(self.root_phrase_tag)
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
-        # print(dir(self.model))
 
-
-
-
-        print(self.model.fields)
-
-        
 
 
 
