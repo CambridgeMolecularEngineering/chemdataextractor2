@@ -98,21 +98,32 @@ class BaseAutoParser(QuantityParser):
     def interpret(self, result, start, end):
         try:
             # print(etree.tostring(result))
-            # Change this to MODEL_PHRASE?
-            raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
-            raw_units = first(result.xpath('./' + self.value_phrase_tag + '/units/text()'))
 
-            # TODO Fetch the phrase names for custom defined entities from the results
-            # TODO Search for information about optional or not within the models
-            # TODO Construct the appropriate dictionary
+            if issubclass(self.model, QuantityModel):
 
-            arg_dict = {self.property_name: [self.model(raw_value=raw_value,
+
+                raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
+                raw_units = first(result.xpath('./' + self.value_phrase_tag + '/units/text()'))
+
+                # TODO Fetch the phrase names for custom defined entities from the results
+                # TODO Search for information about optional or not within the models
+                # TODO Construct the appropriate dictionary
+                # TODO Optional/Mandatory
+
+                custom_entities = {}
+                for field in self.model.fields:
+                    if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+                        data = first(result.xpath('./' + field + '/text()'))
+                        custom_entities.update({str(field): data})
+
+                arg_dict = {self.property_name: [self.model(raw_value=raw_value,
                                                         raw_units=raw_units,
                                                         value=self.extract_value(raw_value),
                                                         error=self.extract_error(raw_value),
-                                                        units=self.extract_units(raw_units, strict=True))]}
-            compound = Compound(**arg_dict)
-            cem_el = first(result.xpath('./cem'))
+                                                        units=self.extract_units(raw_units, strict=True), **custom_entities)]}
+                compound = Compound(**arg_dict)
+                cem_el = first(result.xpath('./cem'))
+
             if cem_el is not None:
                 compound.names = cem_el.xpath('./name/text()')
                 compound.labels = cem_el.xpath('./label/text()')
@@ -131,21 +142,6 @@ class AutoTableParser(BaseAutoParser):
     model = None
     _specifier = None
 
-    # @property
-    # def root(self):
-    #     if self._specifier is self.model.specifier:
-    #         return self._root_phrase
-    #     unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
-    #     specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
-    #     value_phrase = value_element_plain()(self.value_phrase_tag)
-    #     chem_name = (cem | chemical_label | lenient_chemical_label)
-    #     entities = (value_phrase | specifier | chem_name)
-    #     root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
-    #     self._root_phrase = root_phrase
-    #     self._specifier = self.model.specifier
-    #     print(dir(self.model))
-    #     return root_phrase
-
     @property
     def root(self):
         if self._specifier is self.model.specifier:
@@ -155,10 +151,12 @@ class AutoTableParser(BaseAutoParser):
         chem_name = (cem | chemical_label | lenient_chemical_label)
 
         if issubclass(self.model, QuantityModel):
+            # the mandatory elements of Quantity model are grouped into a entities list
             unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
             specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
             value_phrase = value_element_plain()(self.value_phrase_tag)
             entities = [specifier, value_phrase]
+            # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
             for field in self.model.fields:
                 if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
                     if self.model.__getattribute__(self.model, field).parse_expression is not None:
@@ -166,12 +164,14 @@ class AutoTableParser(BaseAutoParser):
             # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
             entities.append(chem_name)
 
+        # logic for finding all the elements in any order
         combined_entities = create_entities_list(entities)
         root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))(self.root_phrase_tag)
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
         return root_phrase
 
+    # TODO Change this to proper loop with many cells
     def parse(self, cell):
         string = cell[0] + ' '
         string += ' '.join(cell[1]) + ' '

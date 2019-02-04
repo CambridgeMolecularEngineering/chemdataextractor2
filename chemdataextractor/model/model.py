@@ -153,7 +153,7 @@ class CurieTemperature(TemperatureModel):
     # specifier = I('Curie') + I('Temperature')
     specifier = I('TC')
     custom_element = StringType(parse_expression=R('^Temperatures$'), required=False)
-
+    other_stuff = StringType(parse_expression=R('^Inorganic$'), required=False)
 
 class Compound(BaseModel):
     names = ListType(StringType())
