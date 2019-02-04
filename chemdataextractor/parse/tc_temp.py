@@ -21,3 +21,14 @@ class CurieTemperatureTableParser(AutoTableParser):
     value_phrase_tag = 'curietemperature'
     root_phrase_tag = 'curietemperaturephrase'
     property_name = 'curie_temperature'
+
+
+def parser(category_table):
+    atp = CurieTemperatureTableParser()
+    for cell in category_table:
+        if atp.parse(cell):
+            for result in atp.parse(cell):
+                # print(cell)
+                if result.serialize() != {}:
+                    print(result.serialize())
+                    pass

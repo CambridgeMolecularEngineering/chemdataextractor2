@@ -22,3 +22,14 @@ class NeelTemperatureTableParser(AutoTableParser):
     value_phrase_tag = 'neeltemperature'
     root_phrase_tag = 'neeltemperaturephrase'
     property_name = 'neel_temperature'
+
+
+def parser(category_table):
+    atp = NeelTemperatureTableParser()
+    for cell in category_table:
+        if atp.parse(cell):
+            for result in atp.parse(cell):
+                # print(cell)
+                if result.serialize() != {}:
+                    print(result.serialize())
+                    pass

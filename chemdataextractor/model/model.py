@@ -145,15 +145,14 @@ class ElectrochemicalPotential(BaseModel):
 
 
 class NeelTemperature(TemperatureModel):
-    # specifier = R('[Nn][ée]el') + I('Temperature')
     specifier = I('TN')
-    # test2 = StringType(expression=R(''), contextual=True, mandatory=True)
+
 
 
 class CurieTemperature(TemperatureModel):
     # specifier = I('Curie') + I('Temperature')
     specifier = I('TC')
-    tag = StringType(parse_expression=R('^Temperatures$'), required=False)
+    custom_element = StringType(parse_expression=R('^Temperatures$'), required=False)
 
 
 class Compound(BaseModel):

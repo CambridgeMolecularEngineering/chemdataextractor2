@@ -97,11 +97,15 @@ class BaseAutoParser(QuantityParser):
 
     def interpret(self, result, start, end):
         try:
-            print(etree.tostring(result))
+            # print(etree.tostring(result))
             # Change this to MODEL_PHRASE?
             raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
             raw_units = first(result.xpath('./' + self.value_phrase_tag + '/units/text()'))
-            # TODO Add possibility for optional stuff
+
+            # TODO Fetch the phrase names for custom defined entities from the results
+            # TODO Search for information about optional or not within the models
+            # TODO Construct the appropriate dictionary
+
             arg_dict = {self.property_name: [self.model(raw_value=raw_value,
                                                         raw_units=raw_units,
                                                         value=self.extract_value(raw_value),
@@ -146,53 +150,26 @@ class AutoTableParser(BaseAutoParser):
     def root(self):
         if self._specifier is self.model.specifier:
             return self._root_phrase
-        # will always be possible to find from model:
-        # unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
-        # will always be possible to find from model:
-        # specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
-        # is always there:
-        # value_phrase = value_element_plain()(self.value_phrase_tag)
-        # is always there:
+
+        # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
 
-
-
-        # NOW COMES the tricky part
-        # 1. all other sensible elements of the model need to be added (sensible means that their R,I,W,... can be found)
-        # 2. some of the elements have to be made optional, for example even chem_name will have to be optional in the future for a later-stage interdependency resolution
-        # the optional stuff has to be done in the interpret function
-
-        print("\n\n")
         if issubclass(self.model, QuantityModel):
             unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
             specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
             value_phrase = value_element_plain()(self.value_phrase_tag)
-            entities = [chem_name, specifier, value_phrase]
+            entities = [specifier, value_phrase]
             for field in self.model.fields:
                 if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
-                    print(field)
                     if self.model.__getattribute__(self.model, field).parse_expression is not None:
-                        entities.append(self.model.__getattribute__(self.model, field).parse_expression)
+                        entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
+            # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
+            entities.append(chem_name)
 
-
-        #combined_entities = create_entities_list(entities)
-
-        # combined_entities = (entities[0] | entities[1] | entities[2])
-        # print(combined_entities)
-
-        # this is general, for everything we can find
-        # TODO There is a problem, changing the order here changes the result, the chemical name has to be parsed last otherwise it identifies it as a label
-        # entities = (value_phrase | specifier | chem_name)
-        entities = (chem_name | specifier | value_phrase)
-        root_phrase = OneOrMore(entities + Optional(SkipTo(entities)))(self.root_phrase_tag)
-
-        # root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))(self.root_phrase_tag)
+        combined_entities = create_entities_list(entities)
+        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))(self.root_phrase_tag)
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
-
-
-
-
         return root_phrase
 
     def parse(self, cell):
