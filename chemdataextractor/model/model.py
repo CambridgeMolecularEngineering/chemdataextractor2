@@ -8,7 +8,9 @@ import six
 
 from .base import BaseModel, StringType, ListType, ModelType
 from .units.temperature import TemperatureModel
-from ..parse.elements import R, I
+from ..parse.elements import R, I, Optional, W
+from ..parse.actions import merge
+from ..model.units.quantity_model import QuantityModel, DimensionlessModel
 
 log = logging.getLogger(__name__)
 
@@ -148,12 +150,19 @@ class NeelTemperature(TemperatureModel):
     specifier = I('TN')
 
 
-
 class CurieTemperature(TemperatureModel):
     # specifier = I('Curie') + I('Temperature')
     specifier = I('TC')
     custom_element = StringType(parse_expression=R('^Temperatures$'), required=False)
     other_stuff = StringType(parse_expression=R('^Inorganic$'), required=False)
+
+
+class CoordinationNumber(DimensionlessModel):
+    # somethink like NTi-O will not work with this, only workd if there is space between the label and specifier
+    coordination_number_label = R('^((X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr)\-?(X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr))$')
+    specifier = R('^(N|n|k)$')
+    cn_label = StringType(parse_expression=coordination_number_label)
+
 
 class Compound(BaseModel):
     names = ListType(StringType())
@@ -169,6 +178,7 @@ class Compound(BaseModel):
     electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
     neel_temperature = ListType(ModelType(NeelTemperature))
     curie_temperature = ListType(ModelType(CurieTemperature))
+    coordination_number = ListType(ModelType(CoordinationNumber))
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""

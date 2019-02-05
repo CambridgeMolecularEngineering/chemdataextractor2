@@ -3,6 +3,8 @@
 Base parser for automatically parsing
 
 :codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
+
+:codeauthor: Juraj Mavračić (jm2111@cam.ac.uk)
 """
 
 from __future__ import absolute_import
@@ -20,9 +22,8 @@ from ..utils import first
 from .quantity import QuantityParser, magnitudes_dict, value_element, extract_units, value_element_plain
 from ..model import Compound
 from ..doc.text import Sentence
-from ..model.units.quantity_model import QuantityModel
+from ..model.units.quantity_model import QuantityModel, DimensionlessModel
 import xml.etree.ElementTree as etree
-
 
 
 def construct_unit_element(dimensions):
@@ -50,13 +51,6 @@ def match_dimensions_of(model):
     return check_match
 
 
-def create_total_phrase(model):
-    manually_created = ['value', 'units', 'specifier', '']
-    for field in model.fields:
-        if field.name not in manually_created:
-            pass
-
-
 def create_entities_list(entities):
     """
     For a list of Base parser entities, creates an entity of structure. For example, with 4 entities in the list, the output is::
@@ -71,14 +65,18 @@ def create_entities_list(entities):
         result = (result | entity)
     return result
 
+
 class BaseAutoParser(QuantityParser):
     model = None
     _specifier = None
+    # TODO: Edit/remove/change the root function in BaseAutoParser as well as the phrase tags
+    # TODO: See if we need to inherit from QuantityParser, maybe that is not general enough
     value_phrase_tag = 'baseautoparserproperty'
     root_phrase_tag = 'baseautopropertyphrase'
     property_name = 'property_name'
 
     def __init__(self):
+        super(BaseAutoParser, self).__init__()
         self.dimensions = self.model.dimensions
 
     @property
@@ -97,37 +95,55 @@ class BaseAutoParser(QuantityParser):
 
     def interpret(self, result, start, end):
         try:
+            requirements = True
+            property_entities = {}
             # print(etree.tostring(result))
 
-            if issubclass(self.model, QuantityModel):
+            # specifier is mandatory
+            specifier = first(result.xpath('./specifier/text()'))
+            if specifier is None:
+                requirements = False
 
+            if issubclass(self.model, DimensionlessModel):
+                # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
+                raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
+                value = self.extract_value(raw_value)
+                error = self.extract_error(raw_value)
+                property_entities.update({"raw_value": raw_value,
+                                     "value": value,
+                                     "error": error})
 
+            if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
+                # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
                 raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
                 raw_units = first(result.xpath('./' + self.value_phrase_tag + '/units/text()'))
+                value = self.extract_value(raw_value)
+                error = self.extract_error(raw_value)
+                units = self.extract_units(raw_units, strict=True)
+                property_entities.update({"raw_value": raw_value,
+                                     "raw_units": raw_units,
+                                     "value": value,
+                                     "error": error,
+                                     "units": units})
 
-                # TODO Fetch the phrase names for custom defined entities from the results
-                # TODO Search for information about optional or not within the models
-                # TODO Construct the appropriate dictionary
-                # TODO Optional/Mandatory
+            # custom entities defined in the particular model are retrieved and added to the dictionary
+            for field in self.model.fields:
+                if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+                    data = first(result.xpath('./' + field + '/text()'))
+                    # if field is required, but empty, the requirements have not been met
+                    if self.model.__getattribute__(self.model, field).required and data is None:
+                        requirements = False
+                    property_entities.update({str(field): data})
 
-                custom_entities = {}
-                for field in self.model.fields:
-                    if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
-                        data = first(result.xpath('./' + field + '/text()'))
-                        custom_entities.update({str(field): data})
+            arg_dict = {self.property_name: [self.model(**property_entities)]}
+            compound = Compound(**arg_dict)
+            cem_el = first(result.xpath('./cem'))
 
-                arg_dict = {self.property_name: [self.model(raw_value=raw_value,
-                                                        raw_units=raw_units,
-                                                        value=self.extract_value(raw_value),
-                                                        error=self.extract_error(raw_value),
-                                                        units=self.extract_units(raw_units, strict=True), **custom_entities)]}
-                compound = Compound(**arg_dict)
-                cem_el = first(result.xpath('./cem'))
-
-            if cem_el is not None:
+            if cem_el is not None and requirements is not False:
                 compound.names = cem_el.xpath('./name/text()')
                 compound.labels = cem_el.xpath('./label/text()')
                 yield compound
+
         except TypeError as e:
             # log.debug(e)
             # compound = Compound()
@@ -149,20 +165,31 @@ class AutoTableParser(BaseAutoParser):
 
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
+        entities = []
 
-        if issubclass(self.model, QuantityModel):
+        if issubclass(self.model, DimensionlessModel):
+            # the mandatory elements of Dimensionless model are grouped into a entities list
+            specifier = self.model.specifier('specifier')
+            value_phrase = value_element_plain()(self.value_phrase_tag)
+            entities.append(specifier)
+            entities.append(value_phrase)
+
+        if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
             # the mandatory elements of Quantity model are grouped into a entities list
             unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
             specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
             value_phrase = value_element_plain()(self.value_phrase_tag)
-            entities = [specifier, value_phrase]
-            # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
-            for field in self.model.fields:
-                if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
-                    if self.model.__getattribute__(self.model, field).parse_expression is not None:
-                        entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
-            # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
-            entities.append(chem_name)
+            entities.append(specifier)
+            entities.append(value_phrase)
+
+        # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
+        for field in self.model.fields:
+            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+                if self.model.__getattribute__(self.model, field).parse_expression is not None:
+                    entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
+
+        # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
+        entities.append(chem_name)
 
         # logic for finding all the elements in any order
         combined_entities = create_entities_list(entities)
@@ -171,7 +198,6 @@ class AutoTableParser(BaseAutoParser):
         self._specifier = self.model.specifier
         return root_phrase
 
-    # TODO Change this to proper loop with many cells
     def parse(self, cell):
         string = cell[0] + ' '
         string += ' '.join(cell[1]) + ' '
