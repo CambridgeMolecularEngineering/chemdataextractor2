@@ -22,7 +22,7 @@ from ..utils import first
 from .quantity import QuantityParser, magnitudes_dict, value_element, extract_units, value_element_plain
 from ..model import Compound
 from ..doc.text import Sentence
-from ..model.units.quantity_model import QuantityModel, DimensionlessModel
+from ..model.units.quantity_model import QuantityModel, DimensionlessModel, BaseModel
 import xml.etree.ElementTree as etree
 
 
@@ -77,7 +77,8 @@ class BaseAutoParser(QuantityParser):
 
     def __init__(self):
         super(BaseAutoParser, self).__init__()
-        self.dimensions = self.model.dimensions
+        if hasattr(self.model, 'dimensions'):
+            self.dimensions = self.model.dimensions
 
     @property
     def root(self):
@@ -181,6 +182,12 @@ class AutoTableParser(BaseAutoParser):
             value_phrase = value_element_plain()(self.value_phrase_tag)
             entities.append(specifier)
             entities.append(value_phrase)
+
+        if issubclass(self.model, BaseModel) and not issubclass(self.model, QuantityModel):
+            # now we are parsing an element that has no value but some custom string
+            # therefore, there will be no matching interpret function, all entities are custom except for the specifier
+            specifier = self.model.specifier('specifier')
+            entities.append(specifier)
 
         # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
         for field in self.model.fields:
