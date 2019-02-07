@@ -71,9 +71,9 @@ class BaseAutoParser(QuantityParser):
     _specifier = None
     # TODO: Edit/remove/change the root function in BaseAutoParser as well as the phrase tags
     # TODO: See if we need to inherit from QuantityParser, maybe that is not general enough
-    value_phrase_tag = 'baseautoparserproperty'
-    root_phrase_tag = 'baseautopropertyphrase'
-    property_name = 'property_name'
+    #value_phrase_tag = 'baseautoparserproperty'
+    #root_phrase_tag = 'baseautopropertyphrase'
+    #property_name = 'property_name'
 
     def __init__(self):
         super(BaseAutoParser, self).__init__()
@@ -84,12 +84,12 @@ class BaseAutoParser(QuantityParser):
     def root(self):
         if self._specifier is self.model.specifier:
             return self._root_phrase
-        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
+        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))('value_phrase')
         specifier = self.model.specifier('specifier')
-        value_phrase = value_element(unit_element)(self.value_phrase_tag)
+        value_phrase = value_element(unit_element)('value_phrase')
         chem_name = (cem | chemical_label | lenient_chemical_label)
         entities = (value_phrase | specifier | chem_name)
-        root_phrase = OneOrMore(entities | Any().hide())(self.root_phrase_tag)
+        root_phrase = OneOrMore(entities | Any().hide())('root_phrase')
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
         return root_phrase
@@ -107,7 +107,7 @@ class BaseAutoParser(QuantityParser):
 
             if issubclass(self.model, DimensionlessModel):
                 # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
-                raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
+                raw_value = first(result.xpath('./value_phrase/value/text()'))
                 value = self.extract_value(raw_value)
                 error = self.extract_error(raw_value)
                 property_entities.update({"raw_value": raw_value,
@@ -116,8 +116,8 @@ class BaseAutoParser(QuantityParser):
 
             if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
                 # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
-                raw_value = first(result.xpath('./' + self.value_phrase_tag + '/value/text()'))
-                raw_units = first(result.xpath('./' + self.value_phrase_tag + '/units/text()'))
+                raw_value = first(result.xpath('./value_phrase/value/text()'))
+                raw_units = first(result.xpath('./value_phrase/units/text()'))
                 value = self.extract_value(raw_value)
                 error = self.extract_error(raw_value)
                 units = self.extract_units(raw_units, strict=True)
@@ -136,7 +136,7 @@ class BaseAutoParser(QuantityParser):
                         requirements = False
                     property_entities.update({str(field): data})
 
-            arg_dict = {self.property_name: [self.model(**property_entities)]}
+            arg_dict = {self.model.__name__: [self.model(**property_entities)]}
             compound = Compound(**arg_dict)
             cem_el = first(result.xpath('./cem'))
 
@@ -171,15 +171,15 @@ class AutoTableParser(BaseAutoParser):
         if issubclass(self.model, DimensionlessModel):
             # the mandatory elements of Dimensionless model are grouped into a entities list
             specifier = self.model.specifier('specifier')
-            value_phrase = value_element_plain()(self.value_phrase_tag)
+            value_phrase = value_element_plain()('value_phrase')
             entities.append(specifier)
             entities.append(value_phrase)
 
         if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
             # the mandatory elements of Quantity model are grouped into a entities list
-            unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(self.value_phrase_tag)
+            unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))('value_phrase')
             specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
-            value_phrase = value_element_plain()(self.value_phrase_tag)
+            value_phrase = value_element_plain()('value_phrase')
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -200,7 +200,7 @@ class AutoTableParser(BaseAutoParser):
 
         # logic for finding all the elements in any order
         combined_entities = create_entities_list(entities)
-        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))(self.root_phrase_tag)
+        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
         return root_phrase

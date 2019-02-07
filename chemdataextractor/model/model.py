@@ -183,10 +183,10 @@ class Compound(BaseModel):
     quantum_yields = ListType(ModelType(QuantumYield))
     fluorescence_lifetimes = ListType(ModelType(FluorescenceLifetime))
     electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
-    neel_temperature = ListType(ModelType(NeelTemperature))
-    curie_temperature = ListType(ModelType(CurieTemperature))
-    coordination_number = ListType(ModelType(CoordinationNumber))
-    cn_label = ListType(ModelType(CNLabel))
+    NeelTemperature = ListType(ModelType(NeelTemperature))
+    CurieTemperature = ListType(ModelType(CurieTemperature))
+    CoordinationNumber = ListType(ModelType(CoordinationNumber))
+    CNLabel = ListType(ModelType(CNLabel))
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""

@@ -11,22 +11,22 @@ from ..model.model import CNLabel
 
 class CNLabelParser(BaseAutoParser):
     model = CNLabel
-    root_phrase_tag = 'cn_label_phrase'
-    property_name = 'cn_label'
+    # root_phrase_tag = 'cn_label_phrase'
+    # property_name = 'cn_label'
 
 
 class CNLabelTableParser(AutoTableParser):
     model = CNLabel
-    root_phrase_tag = 'cn_label_phrase'
-    property_name = 'cn_label'
+    # root_phrase_tag = 'cn_label_phrase'
+    # property_name = 'cn_label'
 
 
-def parser(category_table):
-    atp = CNLabel()
-    for cell in category_table:
-        if atp.parse(cell):
-            for result in atp.parse(cell):
-                # print(cell)
-                if result.serialize() != {}:
-                    print(result.serialize())
-                    pass
+# def parser(category_table):
+#     atp = CNLabel()
+#     for cell in category_table:
+#         if atp.parse(cell):
+#             for result in atp.parse(cell):
+#                 # print(cell)
+#                 if result.serialize() != {}:
+#                     print(result.serialize())
+#                     pass
