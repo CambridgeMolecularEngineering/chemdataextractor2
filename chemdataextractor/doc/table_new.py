@@ -2,6 +2,10 @@
 """
 Table document elements v2.0
 
+.. codeauthor: Juraj Mavračić (jm2111@cam.ac.uk)
+
+.. codeauthor: Callum Court (cc889@cam.ac.uk)
+
 """
 
 from __future__ import absolute_import
@@ -11,65 +15,46 @@ from __future__ import unicode_literals
 
 import logging
 from collections import defaultdict
+import inspect
 
 from ..model import Compound, ModelList
+from ..model import model
 from ..nlp.tag import NoneTagger
 from ..nlp.tokenize import FineWordTokenizer
 from ..utils import memoized_property
 from .element import CaptionedElement
 from .text import Sentence
-# from ..parse.new_parsers import CurieTemperatureParser, NeelTemperatureParser
 from tabledataextractor import Table as TdeTable
+from ..parse.auto import TableAutoParser
 
 log = logging.getLogger(__name__)
 
-# parsers = [CurieTemperatureParser(), NeelTemperatureParser()]
-
 
 class Table(CaptionedElement):
-    """New 
-    
-    Arguments:
-        CaptionedElement {[type]} -- [description]
-    
-    Returns:
-        [type] -- [description]
+    """
+    Main Table object. Relies on TableDataExtractor
     """
 
-
-    def __init__(self, caption, label=None, table_data=[], **kwargs):
+    def __init__(self, caption, label=None, table_data=None, **kwargs):
         super(Table, self).__init__(caption=caption, label=label, **kwargs)
-        # can pass any kwargs into TDE directly
-        self.tde_table = TdeTable(table_data, **kwargs)
+        self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
         self.category_table = self.tde_table.category_table
-        # print('\n\n', self.tde_table)
-        # print(self.category_table)
+        self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
+        self.parsers = []
+        self.set_parsers()
 
-    # def set_parsers(self):
-    #     #: Table cell parsers
-    #     if self.document:
-    #         try:
-    #             c = self.document.config
-    #             conf_parsers = c['PARSERS'][self.__class__.__name__]
-    #             self.parsers =[TABLE_PARSERS[p] for p in conf_parsers]
-    #         except KeyError:
-    #             pass
-    #     return self
+    def set_parsers(self):
+        """
+        Sets the automated table parsers based on the models found
+        :return: list of TableAutoParser objects
+        """
+        for name, obj in inspect.getmembers(model):
+            if inspect.isclass(obj):
+                self.parsers.append(TableAutoParser(obj))
 
     @property
     def document(self):
         return self._document
-
-    # @document.setter
-    # def document(self, document):
-    #     self._document = document
-    #     self.caption.document = document
-    #     for row in self.headings:
-    #         for cell in row:
-    #             cell.document = document
-    #     for row in self.rows:
-    #         for cell in row:
-    #             cell.document = document
 
     def serialize(self):
         """Convert Table element to python dictionary."""
@@ -83,43 +68,46 @@ class Table(CaptionedElement):
     def definitions(self):
         return self.caption.definitions
 
-    # def _repr_html_(self):
-    #     html_lines = ['<table class="table">']
-    #     html_lines.append(self.caption._repr_html_  ())
-    #     html_lines.append('<thead>')
-    #     for hrow in self.headings:
-    #         html_lines.append('<tr>')
-    #         for cell in hrow:
-    #             html_lines.append('<th>' + cell.text + '</th>')
-    #     html_lines.append('</thead>')
-    #     html_lines.append('<tbody>')
-    #     for row in self.rows:
-    #         html_lines.append('<tr>')
-    #         for cell in row:
-    #             html_lines.append('<td>' + cell.text + '</td>')
-    #     html_lines.append('</tbody>')
-    #     html_lines.append('</table>')
-    #     return '\n'.join(html_lines)
+    @staticmethod
+    def _parse_table(parser, category_table):
+        """
+        Parses a table. The model and the category table have to be provided.
+
+        :param parser: parser to use for parsing of one row of the category table
+        :param category_table: list, output of TableDataExtractor
+        :return: Yields one result at a time
+        """
+        atp = parser
+        for cell in category_table:
+            if atp.parse(cell):
+                for result in atp.parse(cell):
+                    if result.serialize() != {}:
+                        yield result.serialize()
 
     @property
     def records(self):
-        """Chemical records that have been parsed from the table.
-        """
+        """Chemical records that have been parsed from the table."""
         table_records = []
+        for parser in self.parsers:
+            for record in self._parse_table(parser, self.category_table):
+                table_records.append(record)
         return table_records
 
 
-class Cell(Sentence):
-    word_tokenizer = FineWordTokenizer()
-    # pos_tagger = NoneTagger()
-    ner_tagger = NoneTagger()
-
-    @memoized_property
-    def abbreviation_definitions(self):
-        """Empty list. Abbreviation detection is disabled within table cells."""
-        return []
-
-    @property
-    def records(self):
-        """Empty list. Individual cells don't provide records, this is handled by the parent Table."""
-        return []
+# The Cell subclass is not used. It appears that it is making the cem recognition worse.
+# Instead the Sentence class is used. This is also consistent with the use of the regular expressions etc we
+# have defined so far. Perhaps in the future, if needed, we could experiment with different tokenizers and taggers.
+# class Cell(Sentence):
+#     word_tokenizer = FineWordTokenizer()
+#     # pos_tagger = NoneTagger()
+#     ner_tagger = NoneTagger()
+#
+#     @memoized_property
+#     def abbreviation_definitions(self):
+#         """Empty list. Abbreviation detection is disabled within table cells."""
+#         return []
+#
+#     @property
+#     def records(self):
+#         """Empty list. Individual cells don't provide records, this is handled by the parent Table."""
+#         return []

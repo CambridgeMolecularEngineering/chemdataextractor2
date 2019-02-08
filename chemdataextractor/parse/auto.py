@@ -70,11 +70,7 @@ def create_entities_list(entities):
 class BaseAutoParser(QuantityParser):
     model = None
     _specifier = None
-    # TODO: Edit/remove/change the root function in BaseAutoParser as well as the phrase tags
-    # TODO: See if we need to inherit from QuantityParser, maybe that is not general enough
-    #value_phrase_tag = 'baseautoparserproperty'
-    #root_phrase_tag = 'baseautopropertyphrase'
-    #property_name = 'property_name'
+    _root_phrase = None
 
     def __init__(self, model):
         super(BaseAutoParser, self).__init__()
@@ -86,12 +82,47 @@ class BaseAutoParser(QuantityParser):
     def root(self):
         if self._specifier is self.model.specifier:
             return self._root_phrase
-        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))('value_phrase')
-        specifier = self.model.specifier('specifier')
-        value_phrase = value_element(unit_element)('value_phrase')
+
+        # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
-        entities = (value_phrase | specifier | chem_name)
-        root_phrase = OneOrMore(entities + Optional(SkipTo(entities)))('root_phrase')
+        entities = []
+
+        if issubclass(self.model, DimensionlessModel):
+            # the mandatory elements of Dimensionless model are grouped into a entities list
+            specifier = self.model.specifier('specifier')
+            value_phrase = value_element_plain()('value_phrase')
+            entities.append(specifier)
+            entities.append(value_phrase)
+
+        if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
+            # the mandatory elements of Quantity model are grouped into a entities list
+            unit_element = Group(
+                construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(
+                'value_phrase')
+            specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(
+                unit_element) + Optional(rbrct)
+            value_phrase = value_element_plain()('value_phrase')
+            entities.append(specifier)
+            entities.append(value_phrase)
+
+        if issubclass(self.model, BaseModel) and not issubclass(self.model, QuantityModel):
+            # now we are parsing an element that has no value but some custom string
+            # therefore, there will be no matching interpret function, all entities are custom except for the specifier
+            specifier = self.model.specifier('specifier')
+            entities.append(specifier)
+
+        # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
+        for field in self.model.fields:
+            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+                if self.model.__getattribute__(self.model, field).parse_expression is not None:
+                    entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
+
+        # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
+        entities.append(chem_name)
+
+        # logic for finding all the elements in any order
+        combined_entities = create_entities_list(entities)
+        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
         return root_phrase
@@ -157,62 +188,20 @@ class BaseAutoParser(QuantityParser):
             pass
 
 
-class AutoTableParser(BaseAutoParser):
-
-    @property
-    def root(self):
-        if self._specifier is self.model.specifier:
-            return self._root_phrase
-
-        # is always found, our models currently rely on the compound
-        chem_name = (cem | chemical_label | lenient_chemical_label)
-        entities = []
-
-        if issubclass(self.model, DimensionlessModel):
-            # the mandatory elements of Dimensionless model are grouped into a entities list
-            specifier = self.model.specifier('specifier')
-            value_phrase = value_element_plain()('value_phrase')
-            entities.append(specifier)
-            entities.append(value_phrase)
-
-        if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
-            # the mandatory elements of Quantity model are grouped into a entities list
-            unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))('value_phrase')
-            specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(unit_element) + Optional(rbrct)
-            value_phrase = value_element_plain()('value_phrase')
-            entities.append(specifier)
-            entities.append(value_phrase)
-
-        if issubclass(self.model, BaseModel) and not issubclass(self.model, QuantityModel):
-            # now we are parsing an element that has no value but some custom string
-            # therefore, there will be no matching interpret function, all entities are custom except for the specifier
-            specifier = self.model.specifier('specifier')
-            entities.append(specifier)
-
-        # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
-        for field in self.model.fields:
-            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
-                if self.model.__getattribute__(self.model, field).parse_expression is not None:
-                    entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
-
-        # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
-        entities.append(chem_name)
-
-        # logic for finding all the elements in any order
-        combined_entities = create_entities_list(entities)
-        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
-        self._root_phrase = root_phrase
-        self._specifier = self.model.specifier
-        return root_phrase
-
+class TableAutoParser(BaseAutoParser):
+    """ Additions for automated parsing of tables"""
     def parse(self, cell):
         string = cell[0] + ' '
         string += ' '.join(cell[1]) + ' '
         string += ' '.join(cell[2])
         sent = Sentence(string)
-        for result in self.root.scan(sent.tagged_tokens):
-            for model in self.interpret(*result):
-                yield model
+        try:
+            for result in self.root.scan(sent.tagged_tokens):
+                for model in self.interpret(*result):
+                    yield model
+        except AttributeError as e:
+            # model is not parsable
+            pass
 
 
 def parse_table(model, category_table):
@@ -223,7 +212,7 @@ def parse_table(model, category_table):
     :param category_table: list, output of TableDataExtractor
     :return: Yields one result at a time
     """
-    atp = AutoTableParser(model)
+    atp = TableAutoParser(model)
     for cell in category_table:
         if atp.parse(cell):
             for result in atp.parse(cell):
