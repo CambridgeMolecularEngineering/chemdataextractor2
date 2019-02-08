@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Base parser for automatically parsing
+Parser for automatic parsing, without user-written parsing rules.
+Mainly used for tables.
 
 :codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
 
@@ -75,8 +76,9 @@ class BaseAutoParser(QuantityParser):
     #root_phrase_tag = 'baseautopropertyphrase'
     #property_name = 'property_name'
 
-    def __init__(self):
+    def __init__(self, model):
         super(BaseAutoParser, self).__init__()
+        self.model = model
         if hasattr(self.model, 'dimensions'):
             self.dimensions = self.model.dimensions
 
@@ -89,7 +91,7 @@ class BaseAutoParser(QuantityParser):
         value_phrase = value_element(unit_element)('value_phrase')
         chem_name = (cem | chemical_label | lenient_chemical_label)
         entities = (value_phrase | specifier | chem_name)
-        root_phrase = OneOrMore(entities | Any().hide())('root_phrase')
+        root_phrase = OneOrMore(entities + Optional(SkipTo(entities)))('root_phrase')
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
         return root_phrase
@@ -156,8 +158,6 @@ class BaseAutoParser(QuantityParser):
 
 
 class AutoTableParser(BaseAutoParser):
-    model = None
-    _specifier = None
 
     @property
     def root(self):
@@ -213,6 +213,22 @@ class AutoTableParser(BaseAutoParser):
         for result in self.root.scan(sent.tagged_tokens):
             for model in self.interpret(*result):
                 yield model
+
+
+def parse_table(model, category_table):
+    """
+    Parses a table. The model and the category table have to be provided.
+
+    :param model: subclass of BaseModel
+    :param category_table: list, output of TableDataExtractor
+    :return: Yields one result at a time
+    """
+    atp = AutoTableParser(model)
+    for cell in category_table:
+        if atp.parse(cell):
+            for result in atp.parse(cell):
+                if result.serialize() != {}:
+                    yield result.serialize()
 
 
 
