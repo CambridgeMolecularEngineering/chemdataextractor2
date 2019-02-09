@@ -638,6 +638,25 @@ class Sentence(BaseText):
         return NotImplemented
 
 
+class Cell(Sentence):
+    """Data cell for tables. One row of the category table"""
+    # It appears that using different tokenizers/taggers is making the cem recognition worse.
+    # This is also consistent with the use of the regular expressions etc we have defined so far.
+    # word_tokenizer = FineWordTokenizer()
+    # pos_tagger = NoneTagger()
+    # ner_tagger = NoneTagger()
+
+    @memoized_property
+    def abbreviation_definitions(self):
+        """Empty list. Abbreviation detection is disabled within table cells."""
+        return []
+
+    @property
+    def records(self):
+        """Empty list. Individual cells don't provide records, this is handled by the parent Table."""
+        return []
+
+
 @python_2_unicode_compatible
 class Span(object):
     """A text span within a sentence."""

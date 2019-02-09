@@ -146,15 +146,15 @@ class ElectrochemicalPotential(BaseModel):
     apparatus = StringType(contextual=True)
 
 
-class NeelTemperature(TemperatureModel):
-    specifier = I('TN')
-
-
-class CurieTemperature(TemperatureModel):
-    # specifier = I('Curie') + I('Temperature')
-    specifier = I('TC')
-    custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
-    other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)
+# class NeelTemperature(TemperatureModel):
+#     specifier = I('TN')
+#
+#
+# class CurieTemperature(TemperatureModel):
+#     # specifier = I('Curie') + I('Temperature')
+#     specifier = I('TC')
+#     custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
+#     other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)
 
 
 class CoordinationNumber(DimensionlessModel):
@@ -183,8 +183,8 @@ class Compound(BaseModel):
     quantum_yields = ListType(ModelType(QuantumYield))
     fluorescence_lifetimes = ListType(ModelType(FluorescenceLifetime))
     electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
-    NeelTemperature = ListType(ModelType(NeelTemperature))
-    CurieTemperature = ListType(ModelType(CurieTemperature))
+    # NeelTemperature = ListType(ModelType(NeelTemperature))
+    # CurieTemperature = ListType(ModelType(CurieTemperature))
     CoordinationNumber = ListType(ModelType(CoordinationNumber))
     CNLabel = ListType(ModelType(CNLabel))
 

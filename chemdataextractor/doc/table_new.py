@@ -18,12 +18,10 @@ from collections import defaultdict
 import inspect
 
 from ..model import Compound, ModelList
-from ..model import model
-from ..nlp.tag import NoneTagger
-from ..nlp.tokenize import FineWordTokenizer
+from ..doc import Sentence
 from ..utils import memoized_property
+from ..model import model
 from .element import CaptionedElement
-from .text import Sentence
 from tabledataextractor import Table as TdeTable
 from ..parse.auto import TableAutoParser
 
@@ -35,19 +33,24 @@ class Table(CaptionedElement):
     Main Table object. Relies on TableDataExtractor
     """
 
-    def __init__(self, caption, label=None, table_data=None, **kwargs):
+    def __init__(self, caption, label=None, table_data=[], models=[], **kwargs):
         super(Table, self).__init__(caption=caption, label=label, **kwargs)
         self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
         self.category_table = self.tde_table.category_table
         self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
+        self.models = models
         self.parsers = []
-        self.set_parsers()
+        self.append_parsers()
 
-    def set_parsers(self):
+    def append_parsers(self):
         """
-        Sets the automated table parsers based on the models found
+        Appends parser list to include automated table parsers based on the models explicitly passed in or
+        found in ``chemdataextractor.model.model``
+
         :return: list of TableAutoParser objects
         """
+        for obj in self.models:
+            self.parsers.append(TableAutoParser(obj))
         for name, obj in inspect.getmembers(model):
             if inspect.isclass(obj):
                 self.parsers.append(TableAutoParser(obj))
@@ -94,20 +97,3 @@ class Table(CaptionedElement):
         return table_records
 
 
-# The Cell subclass is not used. It appears that it is making the cem recognition worse.
-# Instead the Sentence class is used. This is also consistent with the use of the regular expressions etc we
-# have defined so far. Perhaps in the future, if needed, we could experiment with different tokenizers and taggers.
-# class Cell(Sentence):
-#     word_tokenizer = FineWordTokenizer()
-#     # pos_tagger = NoneTagger()
-#     ner_tagger = NoneTagger()
-#
-#     @memoized_property
-#     def abbreviation_definitions(self):
-#         """Empty list. Abbreviation detection is disabled within table cells."""
-#         return []
-#
-#     @property
-#     def records(self):
-#         """Empty list. Individual cells don't provide records, this is handled by the parent Table."""
-#         return []

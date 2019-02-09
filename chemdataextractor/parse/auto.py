@@ -22,7 +22,8 @@ from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Gro
 from ..utils import first
 from .quantity import QuantityParser, magnitudes_dict, value_element, extract_units, value_element_plain
 from ..model import Compound
-from ..doc.text import Sentence
+from ..doc.text import Sentence, Cell
+
 from ..model.units.quantity_model import QuantityModel, DimensionlessModel, BaseModel
 import xml.etree.ElementTree as etree
 
@@ -194,7 +195,7 @@ class TableAutoParser(BaseAutoParser):
         string = cell[0] + ' '
         string += ' '.join(cell[1]) + ' '
         string += ' '.join(cell[2])
-        sent = Sentence(string)
+        sent = Cell(string)
         try:
             for result in self.root.scan(sent.tagged_tokens):
                 for model in self.interpret(*result):
