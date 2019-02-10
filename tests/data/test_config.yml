@@ -1,13 +1,13 @@
 # Example Config for testing
 
-PARSERS:
+# PARSERS:
 
-    Paragraph: [CompoundParser, ChemicalLabelParser, NmrParser]
-    Table: [CompoundTableParser, UvvisAbsQuantumYieldTableParser, UvvisEmiQuantumYieldTableParser]
-    Title: [NmrParser]
-    Heading: [NmrParser]
-    Footnote: [ChemicalLabelParser]
-    Caption: [NmrParser]
+#     Paragraph: [CompoundParser, ChemicalLabelParser, NmrParser]
+#     Table: [CompoundTableParser, UvvisAbsQuantumYieldTableParser, UvvisEmiQuantumYieldTableParser]
+#     Title: [NmrParser]
+#     Heading: [NmrParser]
+#     Footnote: [ChemicalLabelParser]
+#     Caption: [NmrParser]
 
 POS_TAGGER: CrfPosTagger
 

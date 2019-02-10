@@ -11,6 +11,10 @@ from .units.temperature import TemperatureModel
 from ..parse.elements import R, I
 from ..parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser
 from ..parse.ir import IrParser
+from ..parse.mp_new import MpParser
+from ..parse.nmr import NmrParser
+from ..parse.tg import TgParser
+from ..parse.uvvis import UvvisParser
 
 log = logging.getLogger(__name__)
 
@@ -105,6 +109,7 @@ class UvvisSpectrum(BaseModel):
     apparatus = StringType(contextual=True)
     peaks = ListType(ModelType(UvvisPeak))
     compound = ModelType(Compound)
+    parsers = [UvvisParser()]
 
 
 class IrPeak(BaseModel):
@@ -134,7 +139,6 @@ class NmrPeak(BaseModel):
     coupling_units = StringType(contextual=True)
     number = StringType()
     assignment = StringType()
-    compound = ModelType(Compound)
 
 
 class NmrSpectrum(BaseModel):
@@ -150,6 +154,7 @@ class NmrSpectrum(BaseModel):
     apparatus = StringType(contextual=True)
     peaks = ListType(ModelType(NmrPeak))
     compound = ModelType(Compound)
+    parsers = [NmrParser()]
 
 
 # class MeltingPoint(BaseModel):
@@ -168,6 +173,7 @@ class MeltingPoint(TemperatureModel):
     concentration_units = StringType(contextual=True)
     apparatus = StringType(contextual=True)
     compound = ModelType(Compound)
+    parsers = [MpParser()]
 
 
 class GlassTransition(BaseModel):
@@ -178,6 +184,7 @@ class GlassTransition(BaseModel):
     concentration = StringType(contextual=True)
     concentration_units = StringType(contextual=True)
     compound = ModelType(Compound)
+    parsers = [TgParser()]
 
 
 class QuantumYield(BaseModel):

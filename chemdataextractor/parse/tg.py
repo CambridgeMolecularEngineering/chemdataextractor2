@@ -14,7 +14,6 @@ import re
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct, hyphen
 from ..utils import first
-from ..model import Compound, GlassTransition
 from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
@@ -55,17 +54,13 @@ class TgParser(BaseParser):
     #print ('outside parser', tg_phrase, type(tg_phrase))
 
     def interpret(self, result, start, end):
-        compound = Compound(
-            glass_transitions=[
-                GlassTransition(
-                    value=first(result.xpath('./tg/value/text()')),
-                    units=first(result.xpath('./tg/units/text()'))
-                )
-            ]
-        )
+        compound = self.model.fields['compound'].model_class()
+        glass_transition = self.model(value=first(result.xpath('./tg/value/text()')),
+                    units=first(result.xpath('./tg/units/text()')))
         cem_el = first(result.xpath('./cem'))
         if cem_el is not None:
             compound.names = cem_el.xpath('./name/text()')
             compound.labels = cem_el.xpath('./label/text()')
-        yield compound
+        glass_transition.compound = compound
+        yield glass_transition
 
