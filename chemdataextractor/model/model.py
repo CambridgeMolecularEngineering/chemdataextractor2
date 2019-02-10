@@ -15,15 +15,29 @@ from ..parse.mp_new import MpParser
 from ..parse.nmr import NmrParser
 from ..parse.tg import TgParser
 from ..parse.uvvis import UvvisParser
+from ..parse.elements import R, I, Optional, W
+from ..parse.actions import merge
+from ..model.units.quantity_model import QuantityModel, DimensionlessModel
 
 log = logging.getLogger(__name__)
 
 
 class Compound(BaseModel):
-    parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
     names = ListType(StringType())
     labels = ListType(StringType())
     roles = ListType(StringType())
+    # nmr_spectra = ListType(ModelType(NmrSpectrum))
+    # ir_spectra = ListType(ModelType(IrSpectrum))
+    # uvvis_spectra = ListType(ModelType(UvvisSpectrum))
+    # melting_points = ListType(ModelType(MeltingPoint))
+    # glass_transitions = ListType(ModelType(GlassTransition))
+    # quantum_yields = ListType(ModelType(QuantumYield))
+    # fluorescence_lifetimes = ListType(ModelType(FluorescenceLifetime))
+    # electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
+    # NeelTemperature = ListType(ModelType(NeelTemperature))
+    # CurieTemperature = ListType(ModelType(CurieTemperature))
+    # CoordinationNumber = ListType(ModelType(CoordinationNumber))
+    # CNLabel = ListType(ModelType(CNLabel))
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""
@@ -86,6 +100,23 @@ class Compound(BaseModel):
         return False
 
 
+class CoordinationNumber(DimensionlessModel):
+    # somethink like NTi-O will not work with this, only work if there is space between the label and specifier
+    coordination_number_label = R('^((X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr)\-?(X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr))$')
+    specifier = R('^(N|n|k)$')
+    cn_label = StringType(parse_expression=coordination_number_label)
+    compound = ModelType(Compound)
+
+
+class CNLabel(BaseModel):
+    # separate model to test automated parsing for stuff that are not quantities
+    coordination_number_label = R('^((X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr)\-?(X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr))$')
+    specifier = (I('Pair') + I('ij')).add_action(merge)
+    label = StringType(parse_expression=coordination_number_label)
+    compound = ModelType(Compound)
+
+
+
 class UvvisPeak(BaseModel):
     #: Peak value, i.e. wavelength
     value = StringType()
@@ -97,7 +128,6 @@ class UvvisPeak(BaseModel):
     extinction_units = StringType(contextual=True)
     # Peak shape information (e.g. shoulder, broad)
     shape = StringType()
-    compound = ModelType(Compound)
 
 
 class UvvisSpectrum(BaseModel):
@@ -127,8 +157,6 @@ class IrSpectrum(BaseModel):
     concentration_units = StringType(contextual=True)
     apparatus = StringType(contextual=True)
     peaks = ListType(ModelType(IrPeak))
-    compound = ModelType(Compound)
-    parsers = [IrParser()]
 
 
 class NmrPeak(BaseModel):
@@ -155,7 +183,6 @@ class NmrSpectrum(BaseModel):
     peaks = ListType(ModelType(NmrPeak))
     compound = ModelType(Compound)
     parsers = [NmrParser()]
-
 
 # class MeltingPoint(BaseModel):
 #     """A melting point measurement."""
@@ -201,7 +228,6 @@ class QuantumYield(BaseModel):
     temperature = StringType(contextual=True)
     temperature_units = StringType(contextual=True)
     apparatus = StringType(contextual=True)
-    compound = ModelType(Compound)
 
 
 class FluorescenceLifetime(BaseModel):
@@ -214,7 +240,6 @@ class FluorescenceLifetime(BaseModel):
     temperature = StringType(contextual=True)
     temperature_units = StringType(contextual=True)
     apparatus = StringType(contextual=True)
-    compound = ModelType(Compound)
 
 
 class ElectrochemicalPotential(BaseModel):
@@ -228,18 +253,14 @@ class ElectrochemicalPotential(BaseModel):
     temperature = StringType(contextual=True)
     temperature_units = StringType(contextual=True)
     apparatus = StringType(contextual=True)
-    compound = ModelType(Compound)
 
 
-class NeelTemperature(TemperatureModel):
-    # specifier = R('[Nn][ée]el') + I('Temperature')
-    specifier = I('TN')
-    compound = ModelType(Compound)
-
-
-class CurieTemperature(TemperatureModel):
-    # specifier = I('Curie') + I('Temperature')
-    specifier = I('TC')
-    compound = ModelType(Compound)
-
-
+# class NeelTemperature(TemperatureModel):
+#     specifier = I('TN')
+#
+#
+# class CurieTemperature(TemperatureModel):
+#     # specifier = I('Curie') + I('Temperature')
+#     specifier = I('TC')
+#     custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
+#     other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)

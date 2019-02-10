@@ -409,6 +409,30 @@ class And(ParseExpression):
         return self.append(other)
 
 
+# class All(BaseParserElement):
+#     """
+#     All elements are present in any order. Other elements can be in between.
+#     This is primarily used for table parsing, to see if all required elements are found in a row of the category table.
+#     """
+#
+#     def __init__(self, *exprs):
+#         super(All, self).__init__(*exprs)
+#
+#     # i am not sure if this has the correct parent, but essentially, for every expression provided we have to do
+#     # something like a simple Match() not And() and then go on to the next expression with resetting the tokens to zero
+#     # if all expressions are found individually return the result.
+#
+#     def _parse_tokens(self, tokens, i, actions=True):
+#         results = []
+#         for expression in self.exprs:
+#             for e in expression:
+#                 exprresults, i = e.parse(tokens, i)
+#                 if exprresults is not None:
+#                     results.extend(exprresults)
+#         return ([E(self.name, *results)] if self.name else results), i
+
+
+
 class Or(ParseExpression):
     """
     Match the longest.
@@ -569,6 +593,7 @@ class OneOrMore(ParseElementEnhance):
     """Repetition of one or more of the given expression."""
 
     def _parse_tokens(self, tokens, i, actions=True):
+        #print(tokens)
         # must be at least one
         results, i = self.expr.parse(tokens, i, actions)
         try:
@@ -613,6 +638,18 @@ class Group(ParseElementEnhance):
 
 
 class SkipTo(ParseElementEnhance):
+    """
+    Skips to the next occurance of expression. Does not add the next occurance of expression to the parse tree.
+    For example::
+
+        entities + SkipTo(entities)
+
+    will output ``entities`` only once. Whereas::
+
+        entities + SkipTo(entities) + entities
+
+    will output ``entities`` as well as the second occurrence of ``entities`` after an arbitrary number of tokens in between.
+    """
 
     def __init__(self, expr, include=False):
         super(SkipTo, self).__init__(expr)

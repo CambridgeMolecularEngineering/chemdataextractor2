@@ -20,7 +20,7 @@ from ..utils import python_2_unicode_compatible
 class BaseElement(six.with_metaclass(ABCMeta)):
     """Abstract base class for a Document Element."""
 
-    def __init__(self, document=None, references=None, id=None, models=None):
+    def __init__(self, document=None, references=None, id=None, models=None, **kwargs):
         """If part of a Document, an Element should be initialized with a reference to its containing Document."""
         #: The containing Document
         self._document = document

@@ -18,7 +18,7 @@ import logging
 import six
 
 from ..utils import python_2_unicode_compatible
-
+from ..parse.elements import Any
 
 log = logging.getLogger(__name__)
 
@@ -57,18 +57,20 @@ class BaseType(six.with_metaclass(ABCMeta)):
     # This is assigned by ModelMeta to match the attribute on the Model
     name = None
 
-    def __init__(self, default=None, null=False, required=False, contextual=False):
+    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None):
         """
 
         :param default: (Optional) The default value for this field if none is set.
         :param bool null: (Optional) Include in serialized output even if value is None. Default False.
         :param bool required: (Optional) Whether a value is required. Default False.
         :param bool contextual: (Optional) Whether this value is contextual. Default False.
+        :param parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement
         """
         self.default = copy.deepcopy(default)
         self.null = null
         self.required = required
         self.contextual = contextual
+        self.parse_expression = parse_expression
 
     def __get__(self, instance, owner):
         """Descriptor for retrieving a value from a field in a Model."""
@@ -189,6 +191,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
     fields = {}
     parsers = []
+    specifier = None
 
     def __init__(self, **raw_data):
         """"""
@@ -353,3 +356,6 @@ class ModelList(MutableSequence):
     def to_json(self, *args, **kwargs):
         """Convert ModelList to JSON."""
         return json.dumps(self.serialize(), *args, **kwargs)
+
+
+

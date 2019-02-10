@@ -90,7 +90,7 @@ class SpringerHtmlReader(HtmlReader):
     table_caption_css = 'div[class^="Caption"] p'
     table_head_row_css = 'thead tr'
     table_body_row_css = 'tbody tr'
-    table_cell_css = 'td p, th p'
+    table_cell_css = 'td, th'
     figure_css = 'figure'
     figure_caption_css = 'figcaption'
     reference_css = 'span[class^="CitationRef"]'
@@ -113,6 +113,7 @@ class SpringerHtmlReader(HtmlReader):
         if fname and not (fname.endswith('.html') or fname.endswith('.htm')):
             return False
         if b'<meta content="Springer US" name="citation_publisher"' in fstring or b'<meta content="SpringerLink"' in fstring:
+            print("springer HTML")
             return True
         return False
 
