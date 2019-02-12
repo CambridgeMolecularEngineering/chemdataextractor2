@@ -102,7 +102,7 @@ class BaseAutoParser(QuantityParser):
                 'value_phrase')
             specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(
                 unit_element) + Optional(rbrct)
-            value_phrase = value_element_plain()('value_phrase')
+            value_phrase = (value_element_plain()('value_phrase') + Optional(unit_element))
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -132,6 +132,8 @@ class BaseAutoParser(QuantityParser):
         try:
             requirements = True
             property_entities = {}
+            # print("")
+            # print(self.model.__name__)
             # print(etree.tostring(result))
 
             # specifier is mandatory
@@ -145,8 +147,8 @@ class BaseAutoParser(QuantityParser):
                 value = self.extract_value(raw_value)
                 error = self.extract_error(raw_value)
                 property_entities.update({"raw_value": raw_value,
-                                     "value": value,
-                                     "error": error})
+                                          "value": value,
+                                          "error": error})
 
             if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
                 # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
@@ -156,10 +158,10 @@ class BaseAutoParser(QuantityParser):
                 error = self.extract_error(raw_value)
                 units = self.extract_units(raw_units, strict=True)
                 property_entities.update({"raw_value": raw_value,
-                                     "raw_units": raw_units,
-                                     "value": value,
-                                     "error": error,
-                                     "units": units})
+                                          "raw_units": raw_units,
+                                          "value": value,
+                                          "error": error,
+                                          "units": units})
 
             # custom entities defined in the particular model are retrieved and added to the dictionary
             for field in self.model.fields:
@@ -182,10 +184,12 @@ class BaseAutoParser(QuantityParser):
         except TypeError as e:
             # log.debug(e)
             # compound = Compound()
+            # print(e)
             pass
         except AttributeError as e:
             # For some cases of doing extract_units/extract_value/extract_error
             # compound = Compound()
+            # print(e)
             pass
 
 
@@ -197,6 +201,7 @@ class TableAutoParser(BaseAutoParser):
         string += ' '.join(cell[2])
         sent = Cell(string)
         try:
+            #print(sent.tagged_tokens)
             for result in self.root.scan(sent.tagged_tokens):
                 for model in self.interpret(*result):
                     yield model

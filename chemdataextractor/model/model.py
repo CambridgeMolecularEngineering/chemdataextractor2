@@ -6,8 +6,9 @@ from __future__ import unicode_literals
 import logging
 import six
 
-from .base import BaseModel, StringType, ListType, ModelType
+from .base import BaseModel, StringType, ListType, ModelType, FloatType
 from .units.temperature import TemperatureModel
+from .units.length import LengthModel
 from ..parse.elements import R, I, Optional, W
 from ..parse.actions import merge
 from ..model.units.quantity_model import QuantityModel, DimensionlessModel
@@ -146,15 +147,15 @@ class ElectrochemicalPotential(BaseModel):
     apparatus = StringType(contextual=True)
 
 
-# class NeelTemperature(TemperatureModel):
-#     specifier = I('TN')
-#
-#
-# class CurieTemperature(TemperatureModel):
-#     # specifier = I('Curie') + I('Temperature')
-#     specifier = I('TC')
-#     custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
-#     other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)
+class NeelTemperature(TemperatureModel):
+    specifier = I('TN')
+
+
+class CurieTemperature(TemperatureModel):
+    # specifier = I('Curie') + I('Temperature')
+    specifier = I('TC')
+    custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
+    other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)
 
 
 class CoordinationNumber(DimensionlessModel):
@@ -171,6 +172,12 @@ class CNLabel(BaseModel):
     label = StringType(parse_expression=coordination_number_label)
 
 
+class InteratomicDistance(LengthModel):
+    specifier = (R('^bond$') + R('^distance')).add_action(merge)
+
+
+
+
 class Compound(BaseModel):
     names = ListType(StringType())
     labels = ListType(StringType())
@@ -183,10 +190,11 @@ class Compound(BaseModel):
     quantum_yields = ListType(ModelType(QuantumYield))
     fluorescence_lifetimes = ListType(ModelType(FluorescenceLifetime))
     electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
-    # NeelTemperature = ListType(ModelType(NeelTemperature))
-    # CurieTemperature = ListType(ModelType(CurieTemperature))
+    NeelTemperature = ListType(ModelType(NeelTemperature))
+    CurieTemperature = ListType(ModelType(CurieTemperature))
     CoordinationNumber = ListType(ModelType(CoordinationNumber))
     CNLabel = ListType(ModelType(CNLabel))
+    InteratomicDistance = ListType(ModelType(InteratomicDistance))
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""

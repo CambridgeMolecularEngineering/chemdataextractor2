@@ -18,14 +18,17 @@ from collections import defaultdict
 import inspect
 
 from ..model import Compound, ModelList
-from ..doc import Sentence
+# from ..doc import Sentence
 from ..utils import memoized_property
 from ..model import model
 from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
+from tabledataextractor.output.print import print_table
 from ..parse.auto import TableAutoParser
+from ..doc.table import Table as TableOld
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class Table(CaptionedElement):
@@ -35,12 +38,17 @@ class Table(CaptionedElement):
 
     def __init__(self, caption, label=None, table_data=[], models=[], **kwargs):
         super(Table, self).__init__(caption=caption, label=label, **kwargs)
+        #print("Table data:", table_data)
         self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
         self.category_table = self.tde_table.category_table
         self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
         self.models = models
         self.parsers = []
         self.append_parsers()
+        #print(label, caption)
+        #print_table(self.tde_table.raw_table)
+        #print(self.tde_table)
+        #print("\n\n")
 
     def append_parsers(self):
         """
@@ -55,10 +63,6 @@ class Table(CaptionedElement):
             if inspect.isclass(obj):
                 self.parsers.append(TableAutoParser(obj))
 
-    @property
-    def document(self):
-        return self._document
-
     def serialize(self):
         """Convert Table element to python dictionary."""
         data = {
@@ -66,7 +70,7 @@ class Table(CaptionedElement):
             'caption': self.caption.serialize(),
         }
         return data
-    
+
     @property
     def definitions(self):
         return self.caption.definitions
@@ -95,5 +99,6 @@ class Table(CaptionedElement):
             for record in self._parse_table(parser, self.category_table):
                 table_records.append(record)
         return table_records
+
 
 
