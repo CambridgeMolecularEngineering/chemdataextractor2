@@ -55,10 +55,6 @@ class Table(CaptionedElement):
             if inspect.isclass(obj):
                 self.parsers.append(TableAutoParser(obj))
 
-    @property
-    def document(self):
-        return self._document
-
     def serialize(self):
         """Convert Table element to python dictionary."""
         data = {
@@ -66,7 +62,7 @@ class Table(CaptionedElement):
             'caption': self.caption.serialize(),
         }
         return data
-    
+
     @property
     def definitions(self):
         return self.caption.definitions
