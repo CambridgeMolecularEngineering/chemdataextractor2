@@ -61,14 +61,13 @@ class BaseDocument(six.with_metaclass(ABCMeta, collections.Sequence)):
 class Document(BaseDocument):
     """A document to extract data from. Contains a list of document elements."""
 
-    def __init__(self,models=[], *elements, **kwargs):
+    def __init__(self, *elements, **kwargs):
         """Initialize a Document manually by passing one or more Document elements (Paragraph, Heading, Table, etc.)
 
         Strings that are passed to this constructor are automatically wrapped into Paragraph elements.
 
         :param list[chemdataextractor.doc.element.BaseElement|string] elements: Elements in this Document.
         """
-        self.models = models
         self._elements = []
         for element in elements:
             # Convert raw text to Paragraph elements
@@ -79,12 +78,17 @@ class Document(BaseDocument):
                 encoding = get_encoding(element)
                 log.warning('Guessed bytestring encoding as %s. Use unicode strings to avoid this warning.', encoding)
                 element = Paragraph(element.decode(encoding))
+            print(type(element))
             element.document = self
             self._elements.append(element)
         if 'config' in kwargs.keys():
             self.config = kwargs['config']
         else:
             self.config = Config()
+        if 'models' in kwargs.keys():
+            self.models = kwargs['models']
+        else:
+            self.models = []
 
         # Sets parameters from configuration file
         for element in elements:
@@ -178,8 +182,9 @@ class Document(BaseDocument):
 
             element_definitions = el.definitions
             for model in self.models:
-                model.update(element_definitions)
-            
+                print('Updating records', model)
+                # model.update(element_definitions)
+
             # Save title compound
             if isinstance(el, Title):
                 el_records = el.records
@@ -193,19 +198,19 @@ class Document(BaseDocument):
                     head_def_record_i = None
 
             # Paragraph with single sentence with single ID record considered a head_def_record like heading
-            if isinstance(el, Paragraph) and len(el.sentences) == 1:
-                el_records = el.records
-                if len(el_records) == 1 and el_records[0].is_id_only:
-                    head_def_record = el_records[0]
-                    head_def_record_i = i
-            elif isinstance(el, Paragraph) and len(el.sentences) > 0 and not (head_def_record_i == i - 1 and isinstance(self.elements[i - 1], Heading)):
-                # head_def_record from first sentence in Paragraph with single ID record unless right after heading with previous head_def_record
-                first_sent_records = el.sentences[0].records
-                if len(first_sent_records) == 1 and first_sent_records[0].is_id_only:
-                    sent_record = first_sent_records[0]
-                    if sent_record.labels or (sent_record.names and len(sent_record.names[0]) > len(el.sentences[0].text) / 2):
-                        head_def_record = sent_record
-                        head_def_record_i = i
+            # if isinstance(el, Paragraph) and len(el.sentences) == 1:
+            #     el_records = el.records
+            #     if len(el_records) == 1 and el_records[0].is_id_only:
+            #         head_def_record = el_records[0]
+            #         head_def_record_i = i
+            # elif isinstance(el, Paragraph) and len(el.sentences) > 0 and not (head_def_record_i == i - 1 and isinstance(self.elements[i - 1], Heading)):
+            #     # head_def_record from first sentence in Paragraph with single ID record unless right after heading with previous head_def_record
+            #     first_sent_records = el.sentences[0].records
+            #     if len(first_sent_records) == 1 and first_sent_records[0].is_id_only:
+            #         sent_record = first_sent_records[0]
+            #         if sent_record.labels or (sent_record.names and len(sent_record.names[0]) > len(el.sentences[0].text) / 2):
+            #             head_def_record = sent_record
+            #             head_def_record_i = i
             for record in el.records:
                 records.append(record)
         # TODO: Restore functionality to resolve contextual elements/ merge by compound
