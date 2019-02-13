@@ -360,7 +360,6 @@ class Sentence(BaseText):
         self.start = start
         #: The end index of this sentence within the text passage.
         self.end = end if end is not None else len(text)
-        print(text, self.models)
 
     def __repr__(self):
         return '%s(%r, %r, %r)' % (self.__class__.__name__, self._text, self.start, self.end)
@@ -549,7 +548,8 @@ class Sentence(BaseText):
         :return: list -- The specifier definitions
         """
         defs = []
-        for result in specifier_definition.scan(self.tagged_tokens):
+        tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
+        for result in specifier_definition.scan(tagged_tokens):
             definition = result[0]
             start = result[1]
             end = result[2]
@@ -592,7 +592,7 @@ class Sentence(BaseText):
                         if record in records:
                             continue
                         # Skip just labels that have already been seen (bit of a hack)
-                        # THE FOLLOWING IS INFORMATION USED THAT ASSUMED THE COMPOUND WAS BASICALLY A PRIMARY KEY.PRIMARY
+                        # THE FOLLOWING IS INFORMATION USED THAT ASSUMED THE COMPOUND WAS BASICALLY A PRIMARY KEY.
                         # TODO: Implement functionality for merging models similar to this.
                         # if all(k in {'labels', 'roles'} for k in p.keys()) and set(record.labels).issubset(seen_labels):
                         #     continue
