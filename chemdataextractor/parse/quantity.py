@@ -76,6 +76,8 @@ def extract_error(string):
     Arguments:
         string {[type]} -- [description]
     """
+    if string is None:
+        return None
     string = string.replace("-", "-")
     string = string.replace("–", "-")
     string = string.replace("−", "-")
@@ -106,6 +108,8 @@ def extract_value(string):
     :returns: The string expressed as a float or a list of floats if it was a value range.
     :rtype: list(float)
     """
+    if string is None:
+        return None
     string = string.replace("-", "-")
     string = string.replace("–", "-")
     string = string.replace("−", "-")
@@ -159,6 +163,8 @@ def extract_units(string, dimensions, strict=False):
     :returns: The string expressed as a Unit
     :rtype: chemdataextractor.quantities.Unit
     """
+    if string is None:
+        return None
     string = string.replace("-", "-")
     string = string.replace("–", "-")
     string = string.replace("−", "-")

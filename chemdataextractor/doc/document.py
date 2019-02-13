@@ -19,7 +19,8 @@ import six
 
 from ..utils import python_2_unicode_compatible
 from .text import Paragraph, Citation, Footnote, Heading, Title, Caption
-from .table import Table
+# from .table import Table
+from .table_new import Table
 from .figure import Figure
 from ..errors import ReaderError
 from ..model.base import ModelList

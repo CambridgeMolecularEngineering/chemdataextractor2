@@ -8,7 +8,7 @@ import six
 
 from .base import BaseModel, StringType, ListType, ModelType
 from .units.temperature import TemperatureModel
-from ..parse.elements import R, I
+from .units.length import LengthModel
 from ..parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser
 from ..parse.ir import IrParser
 from ..parse.mp_new import MpParser
@@ -113,8 +113,8 @@ class CNLabel(BaseModel):
     # separate model to test automated parsing for stuff that are not quantities
     coordination_number_label = R('^((X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr)\-?(X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr))$')
     specifier = (I('Pair') + I('ij')).add_action(merge)
-    label = StringType(parse_expression=coordination_number_label)
-    compound = ModelType(Compound)
+    label_Juraj = StringType(parse_expression=coordination_number_label)
+    compound = ModelType(Compound, required=True)
 
 
 
@@ -256,12 +256,20 @@ class ElectrochemicalPotential(BaseModel):
     apparatus = StringType(contextual=True)
 
 
-# class NeelTemperature(TemperatureModel):
-#     specifier = I('TN')
-#
-#
-# class CurieTemperature(TemperatureModel):
-#     # specifier = I('Curie') + I('Temperature')
-#     specifier = I('TC')
-#     custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
-#     other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)
+class NeelTemperature(TemperatureModel):
+    specifier = I('TN')
+
+
+class CurieTemperature(TemperatureModel):
+    # specifier = I('Curie') + I('Temperature')
+    specifier = I('TC')
+    custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
+    other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)
+
+
+class InteratomicDistance(LengthModel):
+    specifier = (R('^bond$') + R('^distance')).add_action(merge)
+
+
+
+

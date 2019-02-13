@@ -280,7 +280,7 @@ def standardize_role(role):
         return 'product'
     return role
 
-
+#TODO jm2111, Problems here! The parsers don't have a parse method anymore. Ruins parsing of captions.
 class CompoundParser(BaseSentenceParser, BaseTableParser):
     """Chemical name possibly with an associated label."""
 

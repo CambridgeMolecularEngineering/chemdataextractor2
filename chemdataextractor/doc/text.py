@@ -26,6 +26,7 @@ from ..text import CONTROL_RE
 from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
 from ..parse.definitions import specifier_definition
+from ..parse.cem import  chemical_name
 from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
 
 from lxml import etree

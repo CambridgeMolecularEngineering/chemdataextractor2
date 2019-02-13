@@ -26,11 +26,6 @@ class BaseParser(object):
     def interpret(self, result, start, end):
         pass
 
-    # def parse(self, tokens):
-    #     for result in self.root.scan(tokens):
-    #         for model in self.interpret(*result):
-    #             yield model
-
     def __init__(self):
         self.needs_update = True
 

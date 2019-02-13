@@ -18,14 +18,19 @@ from collections import defaultdict
 import inspect
 
 from ..model import Compound, ModelList
-from ..doc import Sentence
+# from ..doc import Sentence
 from ..utils import memoized_property
 from ..model import model
+from ..model.base import BaseModel
 from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
-from ..parse.auto import TableAutoParser
+from tabledataextractor.output.print import print_table
+from ..parse.auto import AutoTableParser
+from ..parse.base import BaseParser
+from ..doc.table import Table as TableOld
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class Table(CaptionedElement):
@@ -35,12 +40,17 @@ class Table(CaptionedElement):
 
     def __init__(self, caption, label=None, table_data=[], models=[], **kwargs):
         super(Table, self).__init__(caption=caption, label=label, **kwargs)
+        #print("Table data:", table_data)
         self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
         self.category_table = self.tde_table.category_table
         self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
         self.models = models
         self.parsers = []
         self.append_parsers()
+        #print(label, caption)
+        #print_table(self.tde_table.raw_table)
+        #print(self.tde_table)
+        #print("\n\n")
 
     def append_parsers(self):
         """
@@ -50,10 +60,10 @@ class Table(CaptionedElement):
         :return: list of TableAutoParser objects
         """
         for obj in self.models:
-            self.parsers.append(TableAutoParser(obj))
+            self.parsers.append(AutoTableParser(obj))
         for name, obj in inspect.getmembers(model):
-            if inspect.isclass(obj):
-                self.parsers.append(TableAutoParser(obj))
+            if inspect.isclass(obj) and issubclass(obj, BaseModel):
+                self.parsers.append(AutoTableParser(obj))
 
     def serialize(self):
         """Convert Table element to python dictionary."""
@@ -78,18 +88,20 @@ class Table(CaptionedElement):
         """
         atp = parser
         for cell in category_table:
-            if atp.parse(cell):
-                for result in atp.parse(cell):
+            if atp.parse_cell(cell):
+                for result in atp.parse_cell(cell):
                     if result.serialize() != {}:
                         yield result.serialize()
 
     @property
     def records(self):
         """Chemical records that have been parsed from the table."""
+        # caption_records = self.caption.records
         table_records = []
         for parser in self.parsers:
             for record in self._parse_table(parser, self.category_table):
                 table_records.append(record)
         return table_records
+
 
 

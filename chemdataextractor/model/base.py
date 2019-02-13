@@ -154,7 +154,10 @@ class ListType(BaseType):
     def __set__(self, instance, value):
         """Descriptor for assigning a value to a ListField in a Model."""
         # Run process for the nested field type for each value in list
-        instance._values[self.name] = [self.field.process(v) for v in value]
+        if value is None:
+            instance._values[self.name] = None
+        else:
+            instance._values[self.name] = [self.field.process(v) for v in value]
 
     def serialize(self, value, primitive=False):
         """Serialize this field."""
