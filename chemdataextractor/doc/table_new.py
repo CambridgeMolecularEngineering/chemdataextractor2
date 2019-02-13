@@ -94,6 +94,7 @@ class Table(CaptionedElement):
     @property
     def records(self):
         """Chemical records that have been parsed from the table."""
+        # caption_records = self.caption.records
         table_records = []
         for parser in self.parsers:
             for record in self._parse_table(parser, self.category_table):
