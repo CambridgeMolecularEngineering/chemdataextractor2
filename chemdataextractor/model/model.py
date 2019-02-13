@@ -38,6 +38,7 @@ class Compound(BaseModel):
     # CurieTemperature = ListType(ModelType(CurieTemperature))
     # CoordinationNumber = ListType(ModelType(CoordinationNumber))
     # CNLabel = ListType(ModelType(CNLabel))
+    parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""
