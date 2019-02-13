@@ -14,11 +14,9 @@ import re
 from abc import abstractproperty
 
 from .common import lbrct, rbrct
-from ..model.units.unit import DimensionlessUnit
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 from fractions import Fraction
-from ..model.base import ListType
 
 log = logging.getLogger(__name__)
 
@@ -373,6 +371,8 @@ def _find_units(powers_cleaned, dimensions, strict):
     :returns: The units found from the list given.
     :rtype: chemdataextractor.quantities.Unit
     """
+    num_elements_associated = 0
+    total_elements = len(powers_cleaned)
     powers = {}
     for power in powers_cleaned:
         original_string = power[1]
@@ -386,6 +386,9 @@ def _find_units(powers_cleaned, dimensions, strict):
             for magnitude in magnitudes_dict.keys():
                 for result in magnitude.scan([[original_string, 'a']]):
                     exp = magnitudes_dict[magnitude]
+                    original_string = original_string.replace(result[0].text, '', 1)
+        if original_string == '':
+            num_elements_associated += 1
         # To handle cases when the units given by parsing don't match with what's expected.
         try:
             powers[power[0](magnitude=exp)] = power[2]
@@ -393,14 +396,20 @@ def _find_units(powers_cleaned, dimensions, strict):
             log.debug(e)
             powers = {}
             break
-    end_unit = DimensionlessUnit()
+    end_unit = None
     for unit, power in powers.items():
-        log.debug(unit, '^', power)
-        end_unit = end_unit * (unit ** power)
+        if end_unit is None:
+            end_unit = unit ** power
+        else:
+            end_unit = end_unit * (unit ** power)
     if strict:
-        if end_unit.dimensions == dimensions:
+        if end_unit is not None and end_unit.dimensions == dimensions and num_elements_associated == total_elements:
             return end_unit
         else:
+            if end_unit is None:
+                raise TypeError('Could not find ' + str(dimensions) + ' in given string')
+            if num_elements_associated != total_elements:
+                raise TypeError('String input had extraneous elements')
             raise TypeError('Parsed with Dimensions ' + str(end_unit.dimensions) + ', expected' + str(dimensions))
     else:
         return end_unit
