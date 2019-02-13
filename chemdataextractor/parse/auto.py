@@ -20,7 +20,8 @@ from ..model.units.dimension import Dimensionless
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
 from ..utils import first
-from .quantity import QuantityParser, magnitudes_dict, value_element, extract_units, value_element_plain
+from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain
+from .base import BaseSentenceParser, BaseParser
 from ..model import Compound
 from ..doc.text import Sentence, Cell
 
@@ -68,7 +69,7 @@ def create_entities_list(entities):
     return result
 
 
-class BaseAutoParser(QuantityParser):
+class BaseAutoParser(BaseParser):
     model = None
     _specifier = None
     _root_phrase = None
@@ -189,9 +190,13 @@ class BaseAutoParser(QuantityParser):
             pass
 
 
-class TableAutoParser(BaseAutoParser):
+class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
+    pass
+
+
+class AutoTableParser(BaseAutoParser):
     """ Additions for automated parsing of tables"""
-    def parse(self, cell):
+    def parse_table(self, cell):
         string = cell[0] + ' '
         string += ' '.join(cell[1]) + ' '
         string += ' '.join(cell[2])
