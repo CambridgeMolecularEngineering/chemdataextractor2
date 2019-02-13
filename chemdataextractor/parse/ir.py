@@ -80,7 +80,6 @@ class IrParser(BaseSentenceParser):
     root = ir
 
     def interpret(self, result, start, end):
-        print(type(self.model))
         c = self.model.fields['compound'].model_class()
         i = self.model(
             solvent=first(result.xpath('./solvent/text()'))

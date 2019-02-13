@@ -14,7 +14,6 @@ import re
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
-from ..model import Compound, MeltingPoint
 from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
@@ -47,21 +46,18 @@ obtained_mp_phrase = ((cem | chemical_label) + (I('is') | I('are') | I('was')).h
 
 mp_phrase = cem_mp_phrase | to_give_mp_phrase | obtained_mp_phrase
 
+
 class MpParser(BaseParser):
     """"""
     root = mp_phrase
 
     def interpret(self, result, start, end):
-        compound = Compound(
-            melting_points=[
-                MeltingPoint(
-                    value=first(result.xpath('./mp/value/text()')),
-                    units=first(result.xpath('./mp/units/text()'))
-                )
-            ]
-        )
+        compound_class = self.model.fields['compound'].model_class()
+        melting_point = self.model(value=first(result.xpath('./mp/value/text()')),
+                                   units=first(result.xpath('./mp/units/text()')))
+        melting_point.compound = compound_class()
         cem_el = first(result.xpath('./cem'))
         if cem_el is not None:
-            compound.names = cem_el.xpath('./name/text()')
-            compound.labels = cem_el.xpath('./label/text()')
-        yield compound
+            melting_point.compound.names = cem_el.xpath('./name/text()')
+            melting_point.compound.labels = cem_el.xpath('./label/text()')
+        yield melting_point

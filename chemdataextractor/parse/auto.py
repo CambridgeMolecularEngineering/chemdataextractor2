@@ -20,7 +20,8 @@ from ..model.units.dimension import Dimensionless
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
 from ..utils import first
-from .quantity import QuantityParser, magnitudes_dict, value_element, extract_units, value_element_plain
+from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain
+from .base import BaseSentenceParser, BaseParser
 from ..model import Compound
 from ..doc.text import Sentence, Cell
 
@@ -42,6 +43,7 @@ def construct_unit_element(dimensions):
     units_regex = units_regex[:-1]
     units_regex += ')'
     units_regex += ')+'
+    #print(units_regex)
     return OneOrMore(R(pattern=units_regex, group=0)).add_action(merge)
 
 
@@ -68,7 +70,7 @@ def create_entities_list(entities):
     return result
 
 
-class BaseAutoParser(QuantityParser):
+class BaseAutoParser(BaseParser):
     model = None
     _specifier = None
     _root_phrase = None
@@ -97,6 +99,7 @@ class BaseAutoParser(QuantityParser):
 
         if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
             # the mandatory elements of Quantity model are grouped into a entities list
+            # print(self.model, self.model.dimensions)
             unit_element = Group(
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(
                 'value_phrase')
@@ -129,83 +132,92 @@ class BaseAutoParser(QuantityParser):
         return root_phrase
 
     def interpret(self, result, start, end):
-        try:
-            requirements = True
-            property_entities = {}
-            # print("")
-            # print(self.model.__name__)
-            # print(etree.tostring(result))
+        #try:
+        requirements = True
+        property_entities = {}
+        # if self.model.__name__ == "CoordinationNumber":
+        #     print("")
+        #     print(self.model.__name__)
+        #     print(etree.tostring(result))
 
-            # specifier is mandatory
-            specifier = first(result.xpath('./specifier/text()'))
-            if specifier is None:
-                requirements = False
+        # specifier is mandatory
+        specifier = first(result.xpath('./specifier/text()'))
+        if specifier is None:
+            requirements = False
 
-            if issubclass(self.model, DimensionlessModel):
-                # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
-                raw_value = first(result.xpath('./value_phrase/value/text()'))
-                value = self.extract_value(raw_value)
-                error = self.extract_error(raw_value)
-                property_entities.update({"raw_value": raw_value,
-                                          "value": value,
-                                          "error": error})
+        if issubclass(self.model, DimensionlessModel):
+            # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
+            raw_value = first(result.xpath('./value_phrase/value/text()'))
+            value = self.extract_value(raw_value)
+            error = self.extract_error(raw_value)
+            property_entities.update({"raw_value": raw_value,
+                                      "value": value,
+                                      "error": error})
 
-            if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
-                # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
-                raw_value = first(result.xpath('./value_phrase/value/text()'))
-                raw_units = first(result.xpath('./value_phrase/units/text()'))
-                value = self.extract_value(raw_value)
-                error = self.extract_error(raw_value)
-                units = self.extract_units(raw_units, strict=True)
-                property_entities.update({"raw_value": raw_value,
-                                          "raw_units": raw_units,
-                                          "value": value,
-                                          "error": error,
-                                          "units": units})
+        if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
+            # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
+            raw_value = first(result.xpath('./value_phrase/value/text()'))
+            raw_units = first(result.xpath('./value_phrase/units/text()'))
+            value = self.extract_value(raw_value)
+            error = self.extract_error(raw_value)
+            units = self.extract_units(raw_units, strict=True)
+            property_entities.update({"raw_value": raw_value,
+                                      "raw_units": raw_units,
+                                      "value": value,
+                                      "error": error,
+                                      "units": units})
 
-            # custom entities defined in the particular model are retrieved and added to the dictionary
-            for field in self.model.fields:
-                if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
-                    data = first(result.xpath('./' + field + '/text()'))
-                    # if field is required, but empty, the requirements have not been met
-                    if self.model.__getattribute__(self.model, field).required and data is None:
-                        requirements = False
-                    property_entities.update({str(field): data})
+        # custom entities defined in the particular model are retrieved and added to the dictionary
+        for field in self.model.fields:
+            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+                data = first(result.xpath('./' + field + '/text()'))
+                # if field is required, but empty, the requirements have not been met
+                if self.model.__getattribute__(self.model, field).required and data is None:
+                    requirements = False
+                property_entities.update({str(field): data})
 
-            arg_dict = {self.model.__name__: [self.model(**property_entities)]}
-            compound = Compound(**arg_dict)
-            cem_el = first(result.xpath('./cem'))
+        model_instance = self.model(**property_entities)
+        cem_el = first(result.xpath('./cem'))
+        if 'compound' in self.model.fields:
+            compound = self.model.fields['compound'].model_class()
 
             if cem_el is not None and requirements is not False:
                 compound.names = cem_el.xpath('./name/text()')
                 compound.labels = cem_el.xpath('./label/text()')
-                yield compound
+                model_instance.compound = compound
 
-        except TypeError as e:
-            # log.debug(e)
-            # compound = Compound()
-            # print(e)
-            pass
-        except AttributeError as e:
-            # For some cases of doing extract_units/extract_value/extract_error
-            # compound = Compound()
-            # print(e)
-            pass
+        yield model_instance
+
+        # except TypeError as e:
+        #     # log.debug(e)
+        #     # compound = Compound()
+        #     print(e)
+        #     pass
+        # except AttributeError as e:
+        #     # For some cases of doing extract_units/extract_value/extract_error
+        #     # compound = Compound()
+        #     print(e)
+        #     pass
 
 
-class TableAutoParser(BaseAutoParser):
+class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
+    pass
+
+
+class AutoTableParser(BaseAutoParser):
     """ Additions for automated parsing of tables"""
-    def parse(self, cell):
+    def parse_cell(self, cell):
         string = cell[0] + ' '
         string += ' '.join(cell[1]) + ' '
         string += ' '.join(cell[2])
         sent = Cell(string)
         try:
-            #print(sent.tagged_tokens)
-            for result in self.root.scan(sent.tagged_tokens):
-                for model in self.interpret(*result):
-                    yield model
+            if self.root_phrase is not None:
+                for result in self.root_phrase.scan(sent.tagged_tokens):
+                    for model in self.interpret(*result):
+                        yield model
         except AttributeError as e:
+            # print(e, "Model is not parsable.")
             # model is not parsable
             pass
 
@@ -218,10 +230,10 @@ def parse_table(model, category_table):
     :param category_table: list, output of TableDataExtractor
     :return: Yields one result at a time
     """
-    atp = TableAutoParser(model)
+    atp = AutoTableParser(model)
     for cell in category_table:
-        if atp.parse(cell):
-            for result in atp.parse(cell):
+        if atp.parse_cell(cell):
+            for result in atp.parse_cell(cell):
                 if result.serialize() != {}:
                     yield result.serialize()
 

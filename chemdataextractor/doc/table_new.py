@@ -21,10 +21,12 @@ from ..model import Compound, ModelList
 # from ..doc import Sentence
 from ..utils import memoized_property
 from ..model import model
+from ..model.base import BaseModel
 from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
 from tabledataextractor.output.print import print_table
-from ..parse.auto import TableAutoParser
+from ..parse.auto import AutoTableParser
+from ..parse.base import BaseParser
 from ..doc.table import Table as TableOld
 
 log = logging.getLogger(__name__)
@@ -58,10 +60,10 @@ class Table(CaptionedElement):
         :return: list of TableAutoParser objects
         """
         for obj in self.models:
-            self.parsers.append(TableAutoParser(obj))
+            self.parsers.append(AutoTableParser(obj))
         for name, obj in inspect.getmembers(model):
-            if inspect.isclass(obj):
-                self.parsers.append(TableAutoParser(obj))
+            if inspect.isclass(obj) and issubclass(obj, BaseModel):
+                self.parsers.append(AutoTableParser(obj))
 
     def serialize(self):
         """Convert Table element to python dictionary."""
@@ -86,8 +88,8 @@ class Table(CaptionedElement):
         """
         atp = parser
         for cell in category_table:
-            if atp.parse(cell):
-                for result in atp.parse(cell):
+            if atp.parse_cell(cell):
+                for result in atp.parse_cell(cell):
                     if result.serialize() != {}:
                         yield result.serialize()
 

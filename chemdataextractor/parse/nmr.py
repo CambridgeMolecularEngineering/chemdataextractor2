@@ -14,7 +14,6 @@ import logging
 import re
 
 
-from ..model import Compound, NmrSpectrum, NmrPeak
 from ..utils import first
 from .actions import join, merge, strip_stop, fix_whitespace
 from .base import BaseParser
@@ -118,9 +117,9 @@ class NmrParser(BaseParser):
 
     def interpret(self, result, start, end):
 
-        c = Compound()
+        c = self.model.fields['compound'].model_class()
 
-        n = NmrSpectrum(
+        n = self.model(
             nucleus=first(result.xpath('./nucleus/text()')),
             solvent=first(result.xpath('./solvent/text()')),
             frequency=first(result.xpath('./frequency/value/text()')),
@@ -128,9 +127,9 @@ class NmrParser(BaseParser):
             temperature=first(result.xpath('./temperature/value/text()')),
             temperature_units=first(result.xpath('./temperature/units/text()'))
         )
-
+        peak_model = self.model.fields['peaks'].field.model_class
         for peak_result in result.xpath('./peaks/peak'):
-            nmr_peak = NmrPeak(
+            nmr_peak = peak_model(
                 shift=first(peak_result.xpath('./shift/text()')),
                 multiplicity=first(peak_result.xpath('./multiplicity/text()')),
                 coupling=first(peak_result.xpath('./coupling/value/text()')),
@@ -140,5 +139,5 @@ class NmrParser(BaseParser):
             )
             n.peaks.append(nmr_peak)
 
-        c.nmr_spectra.append(n)
+        n.compound = c
         yield c

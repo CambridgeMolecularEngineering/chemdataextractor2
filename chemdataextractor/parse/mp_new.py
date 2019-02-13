@@ -16,10 +16,9 @@ from lxml import etree
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
-from ..model import Compound, MeltingPoint
-from ..model.units.temperature import Temperature, Kelvin
 from .actions import merge, join
-from .quantity import QuantityParser, value_element
+from .quantity import value_element
+from .base import BaseSentenceParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
@@ -43,37 +42,28 @@ obtained_mp_phrase = ((cem | chemical_label) + (I('is') | I('are') | I('was')).h
 mp_phrase = cem_mp_phrase | to_give_mp_phrase | obtained_mp_phrase
 
 
-class MpParser(QuantityParser):
+class MpParser(BaseSentenceParser):
     """
     MpParser rewritten to be based on QuantityParser
     """
     root = mp_phrase
-    dimensions = Temperature()
 
     def interpret(self, result, start, end):
         try:
+            compound = self.model.fields['compound'].model_class()
             raw_value = first(result.xpath('./mp/value/text()'))
             raw_units = first(result.xpath('./mp/units/text()'))
-            print(raw_value, raw_units)
-            compound = Compound(
-                melting_points=[
-                    MeltingPoint(
-                        raw_value=raw_value,
+            melting_point = self.model(raw_value=raw_value,
                         raw_units=raw_units,
                         value=self.extract_value(raw_value),
                         error=self.extract_error(raw_value),
-                        units=self.extract_units(raw_units, strict=True)
-                    ).convert_to(Kelvin())
-                ]
-            )
-
-            print(etree.tostring(result))
+                        units=self.extract_units(raw_units, strict=True),
+                        compound=compound)
         except TypeError as e:
             log.debug(e)
-            compound = Compound()
         cem_el = first(result.xpath('./cem'))
         if cem_el is not None:
-            compound.names = cem_el.xpath('./name/text()')
-            compound.labels = cem_el.xpath('./label/text()')
+            melting_point.compound.names = cem_el.xpath('./name/text()')
+            melting_point.compound.labels = cem_el.xpath('./label/text()')
 
-        yield compound
+        yield melting_point

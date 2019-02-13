@@ -16,15 +16,6 @@ import re
 import six
 
 from ..model.base import ModelList
-from ..parse.context import ContextParser
-from ..parse.cem import ChemicalLabelParser, CompoundHeadingParser, CompoundParser, chemical_name
-from ..parse.definitions import specifier_definition
-from ..parse.table import CaptionContextParser
-from ..parse.ir import IrParser
-from ..parse.mp_new import MpParser
-from ..parse.tg import TgParser
-from ..parse.nmr import NmrParser
-from ..parse.uvvis import UvvisParser
 from ..nlp.lexicon import ChemLexicon, Lexicon
 from ..nlp.cem import CemTagger, IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
 from ..nlp.abbrev import ChemAbbreviationDetector
@@ -34,6 +25,9 @@ from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_
 from ..text import CONTROL_RE
 from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
+from ..parse.definitions import specifier_definition
+from ..parse.cem import  chemical_name
+from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
 
 from lxml import etree
 
@@ -56,7 +50,8 @@ class BaseText(BaseElement):
         self.abbreviation_detector = abbreviation_detector if abbreviation_detector is not None else self.abbreviation_detector
         self.pos_tagger = pos_tagger if pos_tagger is not None else self.pos_tagger
         self.ner_tagger = ner_tagger if ner_tagger is not None else self.ner_tagger
-        self.parsers = parsers if parsers is not None else self.parsers
+        if parsers:
+            raise ValueError('parsers is no longer an allowed argument to elements as of 1.5.0. Models now own parsers; pass in the model that needs to be parsed instead.')
 
     def __repr__(self):
         return '%s(id=%r, references=%r, text=%r)' % (self.__class__.__name__, self.id, self.references, self._text)
@@ -87,11 +82,6 @@ class BaseText(BaseElement):
     @abstractproperty
     def ner_tagger(self):
         """The named entity recognition tagger to use."""
-        return
-
-    @abstractproperty
-    def parsers(self):
-        """The parsers to use."""
         return
 
     @abstractproperty
@@ -128,7 +118,6 @@ class Text(collections.Sequence, BaseText):
     abbreviation_detector = ChemAbbreviationDetector()
     pos_tagger = ChemCrfPosTagger()  # ChemPerceptronTagger()
     ner_tagger = CemTagger()
-    parsers = []
 
     def __init__(self, text, sentence_tokenizer=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, parsers=None, **kwargs):
         """"""
@@ -162,18 +151,7 @@ class Text(collections.Sequence, BaseText):
             if 'LEXICON' in c.keys():
                 self.lexicon = eval(c['LEXICON'])()
             if 'PARSERS' in c.keys():
-                self.set_parsers(c['PARSERS'])
-
-    def set_parsers(self, p_dict):
-        """ Sets parsers from config when defined
-
-        :param dict[str: str] p_dict : Dictionary of parsers
-        """
-
-        class_type = self.__class__.__name__
-        if class_type in p_dict:
-            conf_parsers = p_dict[class_type]
-            self.parsers = [eval(p)() for p in conf_parsers]
+                raise(DeprecationWarning('Manually setting parsers deprecated, any settings from config files for this will be ignored.'))
 
     @memoized_property
     def sentences(self):
@@ -190,8 +168,8 @@ class Text(collections.Sequence, BaseText):
                 abbreviation_detector=self.abbreviation_detector,
                 pos_tagger=self.pos_tagger,
                 ner_tagger=self.ner_tagger,
-                parsers=self.parsers,
-                document=self.document
+                document=self.document,
+                models=self.models
             )
             sents.append(sent)
         return sents
@@ -291,7 +269,6 @@ class Text(collections.Sequence, BaseText):
                 abbreviation_detector=self.abbreviation_detector,
                 pos_tagger=self.pos_tagger,
                 ner_tagger=self.ner_tagger,
-                parsers=self.parsers
             )
             return merged
         return NotImplemented
@@ -301,8 +278,8 @@ class Title(Text):
 
     def __init__(self, text, **kwargs):
         super(Title, self).__init__(text, **kwargs)
-        default_parsers = [CompoundParser()]
-        self.parsers = default_parsers
+        # default_parsers = [CompoundParser()]
+        self.models = [Compound]
 
     def _repr_html_(self):
         return '<h1 class="cde-title">' + self.text + '</h1>'
@@ -312,8 +289,8 @@ class Heading(Text):
 
     def __init__(self, text, **kwargs):
         super(Heading, self).__init__(text, **kwargs)
-        default_parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
-        self.parsers = default_parsers
+        self.models = [Compound]
+        # default_parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
 
     def _repr_html_(self):
         return '<h2 class="cde-title">' + self.text + '</h2>'
@@ -323,9 +300,9 @@ class Paragraph(Text):
 
     def __init__(self, text, **kwargs):
         super(Paragraph, self).__init__(text, **kwargs)
-        default_parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(),
-               TgParser(), ContextParser()]
-        self.parsers = default_parsers
+        # default_parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(),
+        #        TgParser(), ContextParser()]
+        self.models = [Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition]
 
     def _repr_html_(self):
         return '<p class="cde-paragraph">' + self.text + '</p>'
@@ -335,8 +312,8 @@ class Footnote(Text):
 
     def __init__(self, text, **kwargs):
         super(Footnote, self).__init__(text, **kwargs)
-        default_parsers = [ContextParser(), CaptionContextParser()]
-        self.parsers = default_parsers
+        # default_parsers = [ContextParser(), CaptionContextParser()]
+        self.models = [Compound]
 
     def _repr_html_(self):
         return '<p class="cde-footnote">' + self.text + '</p>'
@@ -357,8 +334,8 @@ class Caption(Text):
 
     def __init__(self, text, **kwargs):
         super(Caption, self).__init__(text, **kwargs)
-        default_parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
-        self.parsers = default_parsers
+        self.models = [Compound]
+        # default_parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
 
     def _repr_html_(self):
         return '<caption class="cde-caption">' + self.text + '</caption>'
@@ -376,10 +353,10 @@ class Sentence(BaseText):
     abbreviation_detector = ChemAbbreviationDetector()
     pos_tagger = ChemCrfPosTagger()  # ChemPerceptronTagger()
     ner_tagger = CemTagger()
-    parsers = []
 
-    def __init__(self, text, start=0, end=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, parsers=None, **kwargs):
-        super(Sentence, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, parsers=parsers, **kwargs)
+    def __init__(self, text, start=0, end=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, **kwargs):
+        self.models = [Compound]
+        super(Sentence, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, **kwargs)
         #: The start index of this sentence within the text passage.
         self.start = start
         #: The end index of this sentence within the text passage.
@@ -600,24 +577,28 @@ class Sentence(BaseText):
     @property
     def records(self):
         """Return a list of records for this sentence."""
-        compounds = ModelList()
+        records = ModelList()
         seen_labels = set()
         # Ensure no control characters are sent to a parser (need to be XML compatible)
         tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
-        for parser in self.parsers:
-            for record in parser.parse(tagged_tokens):
-                p = record.serialize()
-                if not p:  # TODO: Potential performance issues?
-                    continue
-                # Skip duplicate records
-                if record in compounds:
-                    continue
-                # Skip just labels that have already been seen (bit of a hack)
-                if all(k in {'labels', 'roles'} for k in p.keys()) and set(record.labels).issubset(seen_labels):
-                    continue
-                seen_labels.update(record.labels)
-                compounds.append(record)
-        return compounds
+        for model in self.models:
+            for parser in model.parsers:
+                if hasattr(parser, 'parse_sentence'):
+                    for record in parser.parse_sentence(tagged_tokens):
+                        p = record.serialize()
+                        if not p:  # TODO: Potential performance issues?
+                            continue
+                        # Skip duplicate records
+                        if record in records:
+                            continue
+                        # Skip just labels that have already been seen (bit of a hack)
+                        # THE FOLLOWING IS INFORMATION USED THAT ASSUMED THE COMPOUND WAS BASICALLY A PRIMARY KEY.PRIMARY
+                        # TODO: Implement functionality for merging models similar to this.
+                        # if all(k in {'labels', 'roles'} for k in p.keys()) and set(record.labels).issubset(seen_labels):
+                        #     continue
+                        # seen_labels.update(record.labels)
+                        records.append(record)
+        return records
 
     def __add__(self, other):
         if type(self) == type(other):
@@ -632,7 +613,6 @@ class Sentence(BaseText):
                 abbreviation_detector=self.abbreviation_detector,
                 pos_tagger=self.pos_tagger,
                 ner_tagger=self.ner_tagger,
-                parsers=self.parsers
             )
             return merged
         return NotImplemented
