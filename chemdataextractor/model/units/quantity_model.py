@@ -13,6 +13,7 @@ from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 from .unit import Unit, UnitType
 from .dimension import Dimensionless
 from ...parse.elements import Any
+from ...parse.auto import AutoSentenceParser, AutoTableParser
 
 
 class QuantityModel(BaseModel):
@@ -28,6 +29,7 @@ class QuantityModel(BaseModel):
     error = FloatType()
     dimensions = None
     specifier = Any()
+    parsers = [AutoSentenceParser(), AutoTableParser()]
 
     """
     Operators are implemented so that composite quantities can be created easily

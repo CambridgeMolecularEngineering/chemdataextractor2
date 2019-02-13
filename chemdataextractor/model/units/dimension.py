@@ -208,4 +208,5 @@ class Dimension(BaseDimension):
 
 class Dimensionless(Dimension):
     """Special case to handle dimensionless quantities."""
-    pass
+    def __bool__(self):
+        return False

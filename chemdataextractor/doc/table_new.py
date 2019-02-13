@@ -28,6 +28,7 @@ from tabledataextractor.output.print import print_table
 from ..parse.auto import AutoTableParser
 from ..parse.base import BaseParser
 from ..doc.table import Table as TableOld
+from ..doc.text import Cell
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -45,25 +46,10 @@ class Table(CaptionedElement):
         self.category_table = self.tde_table.category_table
         self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
         self.models = models
-        self.parsers = []
-        self.append_parsers()
         #print(label, caption)
         #print_table(self.tde_table.raw_table)
         #print(self.tde_table)
         #print("\n\n")
-
-    def append_parsers(self):
-        """
-        Appends parser list to include automated table parsers based on the models explicitly passed in or
-        found in ``chemdataextractor.model.model``
-
-        :return: list of TableAutoParser objects
-        """
-        for obj in self.models:
-            self.parsers.append(AutoTableParser(obj))
-        for name, obj in inspect.getmembers(model):
-            if inspect.isclass(obj) and issubclass(obj, BaseModel):
-                self.parsers.append(AutoTableParser(obj))
 
     def serialize(self):
         """Convert Table element to python dictionary."""
@@ -86,11 +72,13 @@ class Table(CaptionedElement):
         :param category_table: list, output of TableDataExtractor
         :return: Yields one result at a time
         """
-        atp = parser
         for cell in category_table:
-            if atp.parse_cell(cell):
-                for result in atp.parse_cell(cell):
+            if hasattr(parser, 'parse_cell'):
+                cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' '.join(cell[2]))
+                results = parser.parse_cell(cde_cell)
+                for result in results:
                     if result.serialize() != {}:
+                        # TODO: Ask Juraj: Shouldn't this yield the result not the serialized version of the result?
                         yield result.serialize()
 
     @property
@@ -98,9 +86,10 @@ class Table(CaptionedElement):
         """Chemical records that have been parsed from the table."""
         # caption_records = self.caption.records
         table_records = []
-        for parser in self.parsers:
-            for record in self._parse_table(parser, self.category_table):
-                table_records.append(record)
+        for model in self.models:
+            for parser in self.parsers:
+                for record in self._parse_table(parser, self.category_table):
+                    table_records.append(record)
         return table_records
 
 

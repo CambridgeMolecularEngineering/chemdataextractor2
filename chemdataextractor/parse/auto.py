@@ -16,22 +16,18 @@ import logging
 
 from .common import lbrct, rbrct
 from .cem import cem, chemical_label, lenient_chemical_label
-from ..model.units.dimension import Dimensionless
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
 from ..utils import first
 from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain
 from .base import BaseSentenceParser, BaseParser
-from ..model import Compound
-from ..doc.text import Sentence, Cell
 
-from ..model.units.quantity_model import QuantityModel, DimensionlessModel, BaseModel
 import xml.etree.ElementTree as etree
 
 
 def construct_unit_element(dimensions):
-    if isinstance(dimensions, Dimensionless):
-        return Any()
+    if not dimensions:
+        return None
     units_regex = '(('
     for element in magnitudes_dict.keys():
         units_regex += '(' + element.pattern + ')|'
@@ -49,9 +45,12 @@ def construct_unit_element(dimensions):
 
 def match_dimensions_of(model):
     def check_match(result):
-        if extract_units(result[0].text, model.dimensions).dimensions == model.dimensions:
+        try:
+            extract_units(result[0].text, model.dimensions, strict=True)
             return True
-        return False
+        except TypeError as e:
+            print(e)
+            return False
     return check_match
 
 
@@ -75,11 +74,6 @@ class BaseAutoParser(BaseParser):
     _specifier = None
     _root_phrase = None
 
-    def __init__(self, model):
-        super(BaseAutoParser, self).__init__()
-        self.model = model
-        if hasattr(self.model, 'dimensions'):
-            self.dimensions = self.model.dimensions
 
     @property
     def root(self):
@@ -90,14 +84,14 @@ class BaseAutoParser(BaseParser):
         chem_name = (cem | chemical_label | lenient_chemical_label)
         entities = []
 
-        if issubclass(self.model, DimensionlessModel):
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
             specifier = self.model.specifier('specifier')
             value_phrase = value_element_plain()('value_phrase')
             entities.append(specifier)
             entities.append(value_phrase)
 
-        if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
+        elif hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Quantity model are grouped into a entities list
             # print(self.model, self.model.dimensions)
             unit_element = Group(
@@ -109,7 +103,7 @@ class BaseAutoParser(BaseParser):
             entities.append(specifier)
             entities.append(value_phrase)
 
-        if issubclass(self.model, BaseModel) and not issubclass(self.model, QuantityModel):
+        elif hasattr(self.model, 'specifier'):
             # now we are parsing an element that has no value but some custom string
             # therefore, there will be no matching interpret function, all entities are custom except for the specifier
             specifier = self.model.specifier('specifier')
@@ -145,7 +139,7 @@ class BaseAutoParser(BaseParser):
         if specifier is None:
             requirements = False
 
-        if issubclass(self.model, DimensionlessModel):
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
             raw_value = first(result.xpath('./value_phrase/value/text()'))
             value = self.extract_value(raw_value)
@@ -154,7 +148,7 @@ class BaseAutoParser(BaseParser):
                                       "value": value,
                                       "error": error})
 
-        if issubclass(self.model, QuantityModel) and not issubclass(self.model, DimensionlessModel):
+        elif hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
             raw_value = first(result.xpath('./value_phrase/value/text()'))
             raw_units = first(result.xpath('./value_phrase/units/text()'))
@@ -206,14 +200,11 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
 class AutoTableParser(BaseAutoParser):
     """ Additions for automated parsing of tables"""
+
     def parse_cell(self, cell):
-        string = cell[0] + ' '
-        string += ' '.join(cell[1]) + ' '
-        string += ' '.join(cell[2])
-        sent = Cell(string)
         try:
             if self.root_phrase is not None:
-                for result in self.root_phrase.scan(sent.tagged_tokens):
+                for result in self.root_phrase.scan(cell.tagged_tokens):
                     for model in self.interpret(*result):
                         yield model
         except AttributeError as e:
