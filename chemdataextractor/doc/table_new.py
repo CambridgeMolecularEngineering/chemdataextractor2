@@ -39,13 +39,12 @@ class Table(CaptionedElement):
     Main Table object. Relies on TableDataExtractor
     """
 
-    def __init__(self, caption, label=None, table_data=[], models=[], **kwargs):
-        super(Table, self).__init__(caption=caption, label=label, **kwargs)
+    def __init__(self, caption, label=None, table_data=[], models=None, **kwargs):
+        super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         #print("Table data:", table_data)
         self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
         self.category_table = self.tde_table.category_table
         self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
-        self.models = models
         #print(label, caption)
         #print_table(self.tde_table.raw_table)
         #print(self.tde_table)
@@ -74,12 +73,12 @@ class Table(CaptionedElement):
         """
         for cell in category_table:
             if hasattr(parser, 'parse_cell'):
-                cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' '.join(cell[2]))
+                cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' ' + ' '.join(cell[2]))
                 results = parser.parse_cell(cde_cell)
                 for result in results:
                     if result.serialize() != {}:
-                        # TODO: Ask Juraj: Shouldn't this yield the result not the serialized version of the result?
-                        yield result.serialize()
+                        #TODO: Ask Juraj: Shouldn't this yield the result not the serialized version of the result?
+                        yield {parser.model.__name__: result.serialize()}
 
     @property
     def records(self):
@@ -87,7 +86,7 @@ class Table(CaptionedElement):
         # caption_records = self.caption.records
         table_records = []
         for model in self.models:
-            for parser in self.parsers:
+            for parser in model.parsers:
                 for record in self._parse_table(parser, self.category_table):
                     table_records.append(record)
         return table_records

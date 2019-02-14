@@ -70,7 +70,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
 class CaptionedElement(BaseElement):
     """Document Element with a caption."""
 
-    def __init__(self, caption, label=None, models=None, **kwargs):
+    def __init__(self, caption, label=None, **kwargs):
         """If part of a Document, an Element should be initialized with a reference to its containing Document."""
         super(CaptionedElement, self).__init__(**kwargs)
         self.caption = caption
