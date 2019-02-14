@@ -40,7 +40,7 @@ def construct_unit_element(dimensions):
     units_regex += ')'
     units_regex += ')+'
     #print(units_regex)
-    return OneOrMore(R(pattern=units_regex, group=0)).add_action(merge)
+    return OneOrMore(R(pattern=units_regex)).add_action(merge)
 
 
 def match_dimensions_of(model):
@@ -49,7 +49,6 @@ def match_dimensions_of(model):
             extract_units(result[0].text, model.dimensions, strict=True)
             return True
         except TypeError as e:
-            print(e)
             return False
     return check_match
 
@@ -91,7 +90,7 @@ class BaseAutoParser(BaseParser):
             entities.append(specifier)
             entities.append(value_phrase)
 
-        elif hasattr(self.model, 'dimensions') and not self.model.dimensions:
+        elif hasattr(self.model, 'dimensions') and self.model.dimensions:
             # the mandatory elements of Quantity model are grouped into a entities list
             # print(self.model, self.model.dimensions)
             unit_element = Group(
@@ -130,9 +129,9 @@ class BaseAutoParser(BaseParser):
         requirements = True
         property_entities = {}
         # if self.model.__name__ == "CoordinationNumber":
-        #     print("")
-        #     print(self.model.__name__)
-        #     print(etree.tostring(result))
+        # print("")
+        # print(self.model)
+        # print(etree.tostring(result))
 
         # specifier is mandatory
         specifier = first(result.xpath('./specifier/text()'))
@@ -148,7 +147,7 @@ class BaseAutoParser(BaseParser):
                                       "value": value,
                                       "error": error})
 
-        elif hasattr(self.model, 'dimensions') and not self.model.dimensions:
+        elif hasattr(self.model, 'dimensions') and self.model.dimensions:
             # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
             raw_value = first(result.xpath('./value_phrase/value/text()'))
             raw_units = first(result.xpath('./value_phrase/units/text()'))
