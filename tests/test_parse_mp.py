@@ -34,6 +34,7 @@ class TestParseMp(unittest.TestCase):
         log.debug(s.tagged_tokens)
         result = next(mp_phrase.scan(s.tagged_tokens))[0]
         log.debug(etree.tostring(result, pretty_print=True, encoding='unicode'))
+        print(etree.tostring(result, pretty_print=True, encoding='unicode'))
         self.assertEqual(expected, etree.tostring(result, encoding='unicode'))
 
     def test_mp1(self):
@@ -217,6 +218,7 @@ class TestParseMpCompound(unittest.TestCase):
         p = Paragraph(input)
         log.debug(p)
         log.debug([r.serialize() for r in p.records])
+        print([r.serialize() for r in p.records])
         self.assertEqual(expected, [r.serialize() for r in p.records])
 
     def test_mpc1(self):

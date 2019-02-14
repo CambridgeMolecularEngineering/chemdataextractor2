@@ -18,6 +18,7 @@ from lxml import etree
 
 from chemdataextractor.doc.text import Sentence
 from chemdataextractor.parse.uvvis import uvvis, UvvisParser
+from chemdataextractor.model import UvvisSpectrum
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -35,7 +36,9 @@ class TestParseUvvis(unittest.TestCase):
         result = next(uvvis.scan(s.tagged_tokens))[0]
         log.debug(etree.tostring(result, pretty_print=True, encoding='unicode'))
         self.assertEqual(expected, etree.tostring(result, encoding='unicode'))
-        for c in UvvisParser().parse(s.tagged_tokens):
+        parser = UvvisParser()
+        parser.model = UvvisSpectrum
+        for c in parser.parse_sentence(s.tagged_tokens):
             print(c.serialize())
 
     def test_uvvis1(self):

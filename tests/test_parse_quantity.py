@@ -18,7 +18,8 @@ import unittest
 import numpy as np
 
 
-from chemdataextractor.parse.quantity import QuantityParser
+from chemdataextractor.parse.base import BaseParser
+from chemdataextractor.model.units import QuantityModel
 from chemdataextractor.model.units.temperature import Temperature, Celsius, Kelvin
 from chemdataextractor.model.units.length import Length, Meter, Mile
 from chemdataextractor.model.units.time import Time, Second, Hour
@@ -32,7 +33,8 @@ class TestUnitClass(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        self.qp = QuantityParser()
+        self.qp = BaseParser()
+        self.qp.model = QuantityModel()
 
     def test_to_range(self):
         test_string = '1500.3 to 1600.2'
@@ -54,7 +56,7 @@ class TestUnitClass(unittest.TestCase):
         self.assertEqual(extracted[0], 500.8)
 
     def test_unit_mm(self):
-        self.qp.dimensions = Length()**2 / Time()
+        self.qp.model.dimensions = Length()**2 / Time()
         test_string = 'mm2/s'
         extracted = self.qp.extract_units(test_string, strict=True)
         expected = (Meter(magnitude=-3.0) ** 2.) / Second()
@@ -62,7 +64,7 @@ class TestUnitClass(unittest.TestCase):
         self.assertEqual(extracted, expected)
 
     def test_unit_multiplication(self):
-        self.qp.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
+        self.qp.model.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
         test_string = '(km/s)1/2Kh2'
         extracted = self.qp.extract_units(test_string, strict=True)
         expected = ((Meter(magnitude=3.0) / Second()) ** 0.5) * (Kelvin() * Hour()**2)
@@ -70,7 +72,7 @@ class TestUnitClass(unittest.TestCase):
         self.assertEqual(extracted, expected)
 
     def test_unit_division(self):
-        self.qp.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
+        self.qp.model.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
         test_string = 'Kh2/(km/s)-1/2'
         extracted = self.qp.extract_units(test_string, strict=True)
         expected = ((Meter(magnitude=3.0) / Second()) ** 0.5) * (Kelvin() * Hour()**2)
