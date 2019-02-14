@@ -59,11 +59,10 @@ class MpParser(BaseSentenceParser):
                         error=self.extract_error(raw_value),
                         units=self.extract_units(raw_units, strict=True),
                         compound=compound)
+            cem_el = first(result.xpath('./cem'))
+            if cem_el is not None:
+                melting_point.compound.names = cem_el.xpath('./name/text()')
+                melting_point.compound.labels = cem_el.xpath('./label/text()')
+                yield melting_point
         except TypeError as e:
             log.debug(e)
-        cem_el = first(result.xpath('./cem'))
-        if cem_el is not None:
-            melting_point.compound.names = cem_el.xpath('./name/text()')
-            melting_point.compound.labels = cem_el.xpath('./label/text()')
-
-        yield melting_point

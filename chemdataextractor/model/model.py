@@ -158,6 +158,8 @@ class IrSpectrum(BaseModel):
     concentration_units = StringType(contextual=True)
     apparatus = StringType(contextual=True)
     peaks = ListType(ModelType(IrPeak))
+    compound = ModelType(Compound)
+    parsers = [IrParser()]
 
 
 class NmrPeak(BaseModel):
