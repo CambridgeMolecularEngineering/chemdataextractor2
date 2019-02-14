@@ -8,7 +8,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 
-from chemdataextractor.parse.common import lbrct, dt, rbrct, delim
+from .common import lbrct, dt, rbrct, delim
 from ..utils import first
 from ..model import Compound
 from .actions import merge, join

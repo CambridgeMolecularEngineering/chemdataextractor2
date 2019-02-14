@@ -177,8 +177,12 @@ class ModelMeta(ABCMeta):
         cls = super(ModelMeta, mcs).__new__(mcs, name, bases, attrs)
         cls.fields = cls.fields.copy()
         cls.fields.update(fields)
+        parsers = []
         for parser in cls.parsers:
-            parser.model = cls
+            p = copy.copy(parser)
+            p.model = cls
+            parsers.append(p)
+        cls.parsers = parsers
         return cls
 
     def __setattr__(cls, key, value):
