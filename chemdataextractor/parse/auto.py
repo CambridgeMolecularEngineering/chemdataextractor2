@@ -39,7 +39,6 @@ def construct_unit_element(dimensions):
     units_regex = units_regex[:-1]
     units_regex += ')'
     units_regex += ')+'
-    #print(units_regex)
     return OneOrMore(R(pattern=units_regex)).add_action(merge)
 
 
@@ -72,7 +71,6 @@ class BaseAutoParser(BaseParser):
     model = None
     _specifier = None
     _root_phrase = None
-
 
     @property
     def root(self):
@@ -125,18 +123,12 @@ class BaseAutoParser(BaseParser):
         return root_phrase
 
     def interpret(self, result, start, end):
-        #try:
         requirements = True
         property_entities = {}
-        # if self.model.__name__ == "CoordinationNumber":
-        # print("")
-        # print(self.model)
-        # print(etree.tostring(result))
 
-        # specifier is mandatory
-        specifier = first(result.xpath('./specifier/text()'))
-        if specifier is None:
-            requirements = False
+        # if self.model.__name__ == "InteratomicDistance":
+        #     print(self.model)
+        #     print(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
@@ -162,35 +154,32 @@ class BaseAutoParser(BaseParser):
 
         # custom entities defined in the particular model are retrieved and added to the dictionary
         for field in self.model.fields:
-            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'compound']:
                 data = first(result.xpath('./' + field + '/text()'))
                 # if field is required, but empty, the requirements have not been met
-                if self.model.__getattribute__(self.model, field).required and data is None:
+                if data is None \
+                        and self.model.__getattribute__(self.model, field).required\
+                        and not self.model.__getattribute__(self.model, field).contextual:
                     requirements = False
                 property_entities.update({str(field): data})
 
         model_instance = self.model(**property_entities)
-        cem_el = first(result.xpath('./cem'))
+
         if 'compound' in self.model.fields:
+            cem_el = first(result.xpath('./cem'))
             compound = self.model.fields['compound'].model_class()
 
-            if cem_el is not None and requirements is not False:
+            if cem_el is not None:
                 compound.names = cem_el.xpath('./name/text()')
                 compound.labels = cem_el.xpath('./label/text()')
                 model_instance.compound = compound
+            elif cem_el is None \
+                    and self.model.compound.required\
+                    and not self.model.compound.contextual:
+                requirements = False
 
-        yield model_instance
-
-        # except TypeError as e:
-        #     # log.debug(e)
-        #     # compound = Compound()
-        #     print(e)
-        #     pass
-        # except AttributeError as e:
-        #     # For some cases of doing extract_units/extract_value/extract_error
-        #     # compound = Compound()
-        #     print(e)
-        #     pass
+        if requirements:
+            yield model_instance
 
 
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
@@ -201,31 +190,30 @@ class AutoTableParser(BaseAutoParser):
     """ Additions for automated parsing of tables"""
 
     def parse_cell(self, cell):
-        try:
-            if self.root_phrase is not None:
-                for result in self.root_phrase.scan(cell.tagged_tokens):
+        if self.root_phrase is not None:
+            for result in self.root_phrase.scan(cell.tagged_tokens):
+                try:
                     for model in self.interpret(*result):
                         yield model
-        except AttributeError as e:
-            # print(e, "Model is not parsable.")
-            # model is not parsable
-            pass
+                except (AttributeError, TypeError) as e:
+                    print(e)
+                    pass
 
 
-def parse_table(model, category_table):
-    """
-    Parses a table. The model and the category table have to be provided.
-
-    :param model: subclass of BaseModel
-    :param category_table: list, output of TableDataExtractor
-    :return: Yields one result at a time
-    """
-    atp = AutoTableParser(model)
-    for cell in category_table:
-        if atp.parse_cell(cell):
-            for result in atp.parse_cell(cell):
-                if result.serialize() != {}:
-                    yield result.serialize()
+# def parse_table(model, category_table):
+#     """
+#     Parses a table. The model and the category table have to be provided.
+#
+#     :param model: subclass of BaseModel
+#     :param category_table: list, output of TableDataExtractor
+#     :return: Yields one result at a time
+#     """
+#     atp = AutoTableParser(model)
+#     for cell in category_table:
+#         if atp.parse_cell(cell):
+#             for result in atp.parse_cell(cell):
+#                 if result.serialize() != {}:
+#                     yield result.serialize()
 
 
 

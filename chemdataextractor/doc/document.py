@@ -79,7 +79,7 @@ class Document(BaseDocument):
                 encoding = get_encoding(element)
                 log.warning('Guessed bytestring encoding as %s. Use unicode strings to avoid this warning.', encoding)
                 element = Paragraph(element.decode(encoding))
-            print(type(element))
+            # print(type(element))
             element.document = self
             self._elements.append(element)
         if 'config' in kwargs.keys():
