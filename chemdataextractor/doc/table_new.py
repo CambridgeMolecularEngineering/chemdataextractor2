@@ -14,20 +14,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import logging
-from collections import defaultdict
-import inspect
 
-from ..model import Compound, ModelList
-# from ..doc import Sentence
-from ..utils import memoized_property
-from ..model import model
-from ..model.base import BaseModel
 from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
-from tabledataextractor.output.print import print_table
-from ..parse.auto import AutoTableParser
-from ..parse.base import BaseParser
-from ..doc.table import Table as TableOld
+from tabledataextractor.exceptions import TDEError
 from ..doc.text import Cell
 
 log = logging.getLogger(__name__)
@@ -36,19 +26,19 @@ log.setLevel(logging.INFO)
 
 class Table(CaptionedElement):
     """
-    Main Table object. Relies on TableDataExtractor
+    Main Table object. Relies on TableDataExtractor.
     """
 
     def __init__(self, caption, label=None, table_data=[], models=None, **kwargs):
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
-        #print("Table data:", table_data)
-        self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
-        self.category_table = self.tde_table.category_table
-        self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
-        #print(label, caption)
-        #print_table(self.tde_table.raw_table)
-        #print(self.tde_table)
-        #print("\n\n")
+        try:
+            self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
+        except TDEError:
+            self.category_table = None
+            self.heading = None
+        else:
+            self.category_table = self.tde_table.category_table
+            self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
 
     def serialize(self):
         """Convert Table element to python dictionary."""
@@ -77,13 +67,13 @@ class Table(CaptionedElement):
                 results = parser.parse_cell(cde_cell)
                 for result in results:
                     if result.serialize() != {}:
-                        #TODO: Ask Juraj: Shouldn't this yield the result not the serialized version of the result?
                         yield {parser.model.__name__: result.serialize()}
 
     @property
     def records(self):
         """Chemical records that have been parsed from the table."""
-        # caption_records = self.caption.records
+        caption_records = self.caption.records
+        # print(caption_records.serialize())
         table_records = []
         for model in self.models:
             for parser in model.parsers:
