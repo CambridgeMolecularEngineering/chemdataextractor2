@@ -14,6 +14,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import logging
+import copy
 
 from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
@@ -72,69 +73,75 @@ class Table(CaptionedElement):
                         # yield {parser.model.__name__: result.serialize()}
                         yield result
 
-    def _merged_partial_records(self, partial_table_records):
-        """Merges partial records found in the table based on the 'required' and 'contextual' flags"""
+    def _merged_partial_records(self, model, partial_table_records):
+        """
+        Merges partial records found in different rows of the table.
+        A 'shared_element' can be defined below based on which the merging will be performed.
+        The function returns merged records, that may still be incomplete. Completeness based on 'required' flags
+        is tested outside.
+        """
         if not partial_table_records or len(partial_table_records) <= 1:
-            return None
+            return partial_table_records
 
-        #: element used for merging
+        #: field based on which merging is done
         shared_element = 'compound'
 
         contextual_records = []
+
         for i, record_i in enumerate(partial_table_records):
-            #for j, record_j in enumerate(partial_table_records, start=i+1):
+            record_update_i = False
+            for j in range(i+1, len(partial_table_records)):
+                record_j = partial_table_records[j]
 
-            j = i + 1
-            if j < len(partial_table_records):
-                record_j = partial_table_records[i+1]
-            else:
-                break
+                fields_i = set([])
+                for field in record_i.fields:
+                    if record_i.__getattribute__(field):
+                        fields_i.add(field)
 
+                fields_j = set([])
+                for field in record_j.fields:
+                    if record_j.__getattribute__(field):
+                        fields_j.add(field)
 
-            # fields_i = record_i.fields
-            # fields_j = record_j.fields
+                # using a symmetric difference will ensure that we have correct output if we have shared elements
+                sym_diff = fields_i.symmetric_difference(fields_j)
+                # we need the intersection to check if it includes the shared element
+                intersection = fields_i.intersection(fields_j)
 
-            # TODO The order that the partial records are coming in is wrong
-            # TODO This seems to work now, NOW, use only the first combination as real result.
-            # It seems that something is wrong with the enumerate function, YES!! It doesn't work like that!
-            # print(i, record_i.serialize())
-            # print(j, record_j.serialize())
+                record = None
+                record_update_j = False
+                if sym_diff \
+                        and shared_element in intersection and len(intersection) == 1 \
+                        and record_i.__getattribute__(list(intersection)[0]) == \
+                        record_j.__getattribute__(list(intersection)[0]):
 
-            fields_i = set([])
-            for field in record_i.fields:
-                if record_i.__getattribute__(field):
-                    # print(i, record_i.__getattribute__(field))
-                    fields_i.add(field)
+                    # update record_i until we have the full record
+                    # this is for the case that the contextual elements are in record_j
+                    if not record_update_j:
+                        record = copy.deepcopy(record_i)
+                        for field in sym_diff:
+                            if not record_i.__getattribute__(field) and record_i.fields[field].contextual:
+                                record.__setitem__(field, record_j.__getattribute__(field))
+                                record_update_j = True
+                                record_update_i = True
+                    # update record_j until we have the full record
+                    # this is for the case that the contextual elements are in record_i
+                    if not record_update_j:
+                        record = copy.deepcopy(record_j)
+                        for field in sym_diff:
+                            if not record_j.__getattribute__(field) and record_j.fields[field].contextual:
+                                record.__setitem__(field, record_i.__getattribute__(field))
+                                record_update_j = True
+                                record_update_i = True
 
-            fields_j = set([])
-            for field in record_j.fields:
-                if record_j.__getattribute__(field):
-                    # print(j, record_j.__getattribute__(field))
-                    fields_j.add(field)
+# TODO check indentation of these if statements
+                if record_update_j:
+                    #print("Record inside: ", record.serialize())
+                    contextual_records.append(record)
+            if not record_update_i:
+                #print("Record outside: ", record_i.serialize())
+                contextual_records.append(record_i)
 
-            # using a symmetric difference will ensure that we have no correct output if we have shared elements
-            sym_diff = fields_i.symmetric_difference(fields_j)
-            # we want to check if the intersection is the 'shared_element' only
-            intersection = fields_i.intersection(fields_j)
-
-            # print(i, j, sym_diff)
-            # print(i, j, intersection)
-
-            record = None
-            if sym_diff and shared_element in intersection and len(intersection) == 1:
-                # we will update record_i until we have the full record
-                record = record_i
-                for field in sym_diff:
-                    # if record_i doesn't have the record, record_j must have it
-                    if not record_i.__getattribute__(field):
-                        record.__setitem__(field, record_j.__getattribute__(field))
-                        print(i, j, record.serialize())
-
-            # print("")
-
-            contextual_records.append(record)
-        # print("TEST")
-        # print(contextual_records)
         return contextual_records
 
     @property
@@ -152,6 +159,7 @@ class Table(CaptionedElement):
         requirements = True
         table_records = []
         partial_table_records = []
+        contextual_records = []
         for model in self.models:
             for parser in model.parsers:
                 for record in self._parse_table(parser, self.category_table):
@@ -161,24 +169,58 @@ class Table(CaptionedElement):
                         record.compound = caption_compounds[0]  # the first compound from the caption is used by default
 
                     # check if all the required elements have been found
-                    for field in model.fields:
-                        if model.fields[field].required and not record.__getattribute__(field):
-                            requirements = False
+                    # for field in model.fields:
+                    #     if model.fields[field].required and not record.__getattribute__(field):
+                    #         requirements = False
 
-                    if requirements:
-                        table_records.append({parser.model.__name__: record.serialize()})
-                    elif not requirements:
-                        # store as partial_table_record
-                        partial_table_records.append(record)
+                    # if requirements:
+                    #     table_records.append({parser.model.__name__: record.serialize()})
+                    # elif not requirements:
+                    #     # store as partial_table_record
+                    #     partial_table_records.append(record)
 
-        # TODO Also include compound in the interdependency function
+                    partial_table_records.append(record)
+
+
+
+        # TODO Also include compound in the interdependency function?
+
         #: only contextual for within a table
         # table_records.append(self._merged_partial_records(partial_table_records))
-        self._merged_partial_records(partial_table_records)
+
+                new_partial_records = self._merged_partial_records(model, partial_table_records)
+
+                #print(len(new_partial_records))
+                # for record in new_partial_records:
+                #     print({parser.model.__name__: record.serialize()})
+                # print("")
+
+
+                for record in new_partial_records:
+                    requirements = True
+
+                    # check if all required elements are present
+                    for field in model.fields:
+                        if model.fields[field].required \
+                                and not record.__getattribute__(field):
+                            requirements = False
+                    # check if unknown elements from a different model are present
+                    for field in record.fields:
+                        if field not in model.fields:
+                            requirements = False
+
+                    # print(requirements)
+                    if requirements:
+                        contextual_records.append({parser.model.__name__: record.serialize()})
+
+
+
+        table_records += contextual_records
 
         # TODO Merge pure caption records to the table records?
         # caption_records = [c for c in caption_records if not c.is_contextual]
-        # table_records += caption_records
+        table_records += caption_records
+
         return table_records
 
 
