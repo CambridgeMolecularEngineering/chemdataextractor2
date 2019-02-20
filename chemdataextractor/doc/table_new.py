@@ -200,8 +200,8 @@ class Table(CaptionedElement):
                     if requirements:
                         table_records.append({parser.model.__name__: record.serialize()})
 
-                    elif not requirements:
-                        # add the record if only the compound is missing
+                    # add the record if only the compound is missing
+                    elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
                         if record.is_unidentified:
                             table_records.append(["unidentified", {parser.model.__name__: record.serialize()}])
 
