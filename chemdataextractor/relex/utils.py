@@ -1,7 +1,6 @@
 
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.relex.utils.py
 Various utility functions
 """
 import numpy as np

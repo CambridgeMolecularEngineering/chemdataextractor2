@@ -15,6 +15,14 @@ Chemical property parsers
     :members:
     :undoc-members:
 
+.parse.auto
+------------------------------------------------
+
+.. automodule:: chemdataextractor.parse.auto
+    :members:
+    :undoc-members:
+
+
 .parse.base
 ------------------------------------------------
 
@@ -69,13 +77,6 @@ Chemical property parsers
 ------------------------------------------------
 
 .. automodule:: chemdataextractor.parse.nmr
-    :members:
-    :undoc-members:
-
-.parse.table
-------------------------------------------------
-
-.. automodule:: chemdataextractor.parse.table
     :members:
     :undoc-members:
 

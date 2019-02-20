@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.relex.pattern.py
 Extraction pattern object
 """
 import copy

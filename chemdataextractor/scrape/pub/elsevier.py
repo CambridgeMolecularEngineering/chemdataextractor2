@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape.elsevier
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Tools for scraping documents from Elsevier.
 
 :copyright: Copyright 2017 by Callum Court.

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Chemdataextractor.relex.snowball
-
 The Snowball Relationship Extraction algorithm
 """
 import copy
@@ -27,7 +25,8 @@ from .utils import match, vectorise
 
 
 class Snowball(object):
-    """Main Snowball class
+    """
+    Main Snowball class
 
     ::Usage: Define a ChemicalRelationship (see relex.relationship)
         ```snowball = Snowball(relationship=my_relationhip)```
@@ -36,7 +35,9 @@ class Snowball(object):
         This will generate an online training system
 
     ::params:
+
     For full detail see the associated paper: https://www.nature.com/articles/sdata2018111
+
         tc: The minimum confidence of a relationship in order to be accepted
         tsim: Minimum similarity between sentences in order for them to be clustered
         prefix_weight: The weight of the sentence prefix in the similarity calculation

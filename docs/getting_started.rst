@@ -986,7 +986,7 @@ In this way, documentation will be automatically created using `Sphinx <http://w
 
     will create a correct documentation entry.
 
-If you are adding new modules (.py files) to the codebase, make sure they are included in the documentation (check some of the example files in ``documentation/source_code_docs/``.
+If you are adding new modules (.py files) to the codebase, make sure they are included in the documentation (check some of the example files in ``docs/source_code_docs/``.
 Most importantly, add an ``.. autosummary::`` to ``code_documentation.rst`` and a file describing all the new content of the module (new classes and functions).
 
 .. note:: Private methods are not included by default in the documentation!
@@ -1012,16 +1012,24 @@ Check out the source documentation ``.rst`` files for inspiration on how to use 
 Parameters for compiling the html documentation with spinx are:
 
     * command: ``html``
-    * input: ``/chemdataextractor-development/documentation``
-    * output: ``/chemdataextractor-development/documentation/_build/html``
+    * input: ``/chemdataextractor-development/docs``
+    * output: ``/chemdataextractor-development/docs/_build/html``
     * options: optionally, use ``-a`` and ``-E`` to build the documentation from scratch.
-    * working directory: ``/chemdataextractor-development/documentation``
+    * working directory: ``/chemdataextractor-development/docs``
 
 So, in the bash shell, from within the working directory you would use:
 
     .. code-block:: bash
 
-        $ sphinx-build -b html chemdataextractor-development/documentation chemdataextractor-development/documentation/_build/html
+<<<<<<< HEAD
+<<<<<<< HEAD
+        $ sphinx-build -b html docs docs/_build/html
+=======
+        $ sphinx-build -b html chemdataextractor-development/docs chemdataextractor-development/docs/_build/html
+>>>>>>> master
+=======
+        $ sphinx-build -b html chemdataextractor-development/docs chemdataextractor-development/docs/_build/html
+>>>>>>> master
 
 However, it is encouraged to set up a Sphinx Run configuration in the IDE you are using for development. It is very easy to do in Pycharm,
 where you can run sphinx within the same Python virtual environment you are using for the development of ChemDataExtractor.
