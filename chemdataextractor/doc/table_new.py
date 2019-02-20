@@ -199,8 +199,7 @@ class Table(CaptionedElement):
                         table_records.append({parser.model.__name__: record.serialize()})
 
         # Addition of the serialized caption records
-        # TODO add title for records in caption
-        caption_records = [c.serialize() for c in caption_records if not c.is_contextual]
+        caption_records = [{type(c).__name__: c.serialize()} for c in caption_records if not c.is_contextual]
         table_records += caption_records
 
         return table_records
