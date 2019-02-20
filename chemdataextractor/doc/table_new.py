@@ -186,9 +186,11 @@ class Table(CaptionedElement):
                     requirements = True
 
                     # check if all required elements are present
+                    unmet_requirements = []
                     for field in model.fields:
                         if model.fields[field].required \
                                 and not record.__getattribute__(field):
+                            unmet_requirements.append(field)
                             requirements = False
                     # check if unknown elements from a different model are present
                     for field in record.fields:
@@ -197,6 +199,11 @@ class Table(CaptionedElement):
 
                     if requirements:
                         table_records.append({parser.model.__name__: record.serialize()})
+
+                    elif not requirements:
+                        # add the record if only the compound is missing
+                        if record.is_unidentified:
+                            table_records.append(["unidentified", {parser.model.__name__: record.serialize()}])
 
         # Addition of the serialized caption records
         caption_records = [{type(c).__name__: c.serialize()} for c in caption_records if not c.is_contextual]
