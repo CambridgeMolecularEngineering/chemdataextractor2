@@ -73,12 +73,14 @@ class Table(CaptionedElement):
                         # yield {parser.model.__name__: result.serialize()}
                         yield result
 
-    def _merged_partial_records(self, model, partial_table_records):
+    def _merge_partial_records(self, partial_table_records):
         """
-        Merges partial records found in different rows of the table.
+        Merges partial records found in different rows of the table, based on the 'contextual' flags.
         A 'shared_element' can be defined below based on which the merging will be performed.
         The function returns merged records, that may still be incomplete. Completeness based on 'required' flags
         is tested outside.
+
+        Returns a list of not serialized records.
         """
         if not partial_table_records or len(partial_table_records) <= 1:
             return partial_table_records
@@ -90,7 +92,6 @@ class Table(CaptionedElement):
         updated_records = []
 
         for i, record_i in enumerate(partial_table_records):
-            record_update_i = False
             for j in range(i+1, len(partial_table_records)):
                 record_j = partial_table_records[j]
 
@@ -105,12 +106,13 @@ class Table(CaptionedElement):
                         fields_j.add(field)
 
                 # using a symmetric difference will ensure that we have correct output if we have shared elements
+                # shared elements will not be found in sym_diff
                 sym_diff = fields_i.symmetric_difference(fields_j)
                 # we need the intersection to check if it includes the shared element
                 intersection = fields_i.intersection(fields_j)
 
                 record = None
-                record_update_j = False
+                record_update = False
                 if sym_diff \
                         and shared_element in intersection and len(intersection) == 1 \
                         and record_i.__getattribute__(list(intersection)[0]) == \
@@ -118,29 +120,29 @@ class Table(CaptionedElement):
 
                     # update record_i until we have the full record
                     # this is for the case that the contextual elements are in record_j
-                    if not record_update_j:
+                    if not record_update:
                         record = copy.deepcopy(record_i)
                         for field in sym_diff:
                             if not record_i.__getattribute__(field) and record_i.fields[field].contextual:
                                 record.__setitem__(field, record_j.__getattribute__(field))
-                                record_update_j = True
-                                record_update_i = True
+                                record_update = True
                                 updated_records.append(i)
+                                updated_records.append(j)
                     # update record_j until we have the full record
                     # this is for the case that the contextual elements are in record_i
-                    if not record_update_j:
+                    if not record_update:
                         record = copy.deepcopy(record_j)
                         for field in sym_diff:
                             if not record_j.__getattribute__(field) and record_j.fields[field].contextual:
                                 record.__setitem__(field, record_i.__getattribute__(field))
-                                record_update_j = True
-                                record_update_i = True
+                                record_update = True
+                                updated_records.append(i)
                                 updated_records.append(j)
 
-                if record_update_j:
+                if record_update:
                     # print("Record inside: i,j ", i, j, record.serialize())
                     contextual_records.append(record)
-            if not record_update_i and i not in updated_records:
+            if i not in updated_records:
                 # print("Record outside: i,j ", i, j, record_i.serialize())
                 contextual_records.append(record_i)
 
@@ -157,48 +159,30 @@ class Table(CaptionedElement):
             if isinstance(record, Compound):
                 caption_compounds += [record]
 
-        # obtain pure table records
-        requirements = True
+        # obtain table records
         table_records = []
         partial_table_records = []
-        contextual_records = []
+
         for model in self.models:
             for parser in model.parsers:
+
+                # the partial records are obtained from the autoparser
                 for record in self._parse_table(parser, self.category_table):
 
                     # add caption compound if necessary, and append to record
-                    if 'compound' in model.fields and not record.compound and caption_compounds and model.compound.contextual:
+                    if 'compound' in model.fields \
+                            and not record.compound \
+                            and caption_compounds \
+                            and model.compound.contextual:
                         record.compound = caption_compounds[0]  # the first compound from the caption is used by default
-
-                    # check if all the required elements have been found
-                    # for field in model.fields:
-                    #     if model.fields[field].required and not record.__getattribute__(field):
-                    #         requirements = False
-
-                    # if requirements:
-                    #     table_records.append({parser.model.__name__: record.serialize()})
-                    # elif not requirements:
-                    #     # store as partial_table_record
-                    #     partial_table_records.append(record)
 
                     partial_table_records.append(record)
 
+                # the partial records are merged
+                partial_table_records_merged = self._merge_partial_records(partial_table_records)
 
-
-        # TODO Also include compound in the interdependency function?
-
-        #: only contextual for within a table
-        # table_records.append(self._merged_partial_records(partial_table_records))
-
-                new_partial_records = self._merged_partial_records(model, partial_table_records)
-
-                #print(len(new_partial_records))
-                # for record in new_partial_records:
-                #     print({parser.model.__name__: record.serialize()})
-                # print("")
-
-
-                for record in new_partial_records:
+                # a check is performed to see if all the 'required' elements of the merged table records are satisfied
+                for record in partial_table_records_merged:
                     requirements = True
 
                     # check if all required elements are present
@@ -211,16 +195,12 @@ class Table(CaptionedElement):
                         if field not in model.fields:
                             requirements = False
 
-                    # print(requirements)
                     if requirements:
-                        contextual_records.append({parser.model.__name__: record.serialize()})
+                        table_records.append({parser.model.__name__: record.serialize()})
 
-
-
-        table_records += contextual_records
-
-        # TODO Merge pure caption records to the table records?
-        # caption_records = [c for c in caption_records if not c.is_contextual]
+        # Addition of the serialized caption records
+        # TODO add title for records in caption
+        caption_records = [c.serialize() for c in caption_records if not c.is_contextual]
         table_records += caption_records
 
         return table_records
