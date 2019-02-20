@@ -87,6 +87,7 @@ class Table(CaptionedElement):
         shared_element = 'compound'
 
         contextual_records = []
+        updated_records = []
 
         for i, record_i in enumerate(partial_table_records):
             record_update_i = False
@@ -124,6 +125,7 @@ class Table(CaptionedElement):
                                 record.__setitem__(field, record_j.__getattribute__(field))
                                 record_update_j = True
                                 record_update_i = True
+                                updated_records.append(i)
                     # update record_j until we have the full record
                     # this is for the case that the contextual elements are in record_i
                     if not record_update_j:
@@ -133,13 +135,13 @@ class Table(CaptionedElement):
                                 record.__setitem__(field, record_i.__getattribute__(field))
                                 record_update_j = True
                                 record_update_i = True
+                                updated_records.append(j)
 
-# TODO check indentation of these if statements
                 if record_update_j:
-                    #print("Record inside: ", record.serialize())
+                    # print("Record inside: i,j ", i, j, record.serialize())
                     contextual_records.append(record)
-            if not record_update_i:
-                #print("Record outside: ", record_i.serialize())
+            if not record_update_i and i not in updated_records:
+                # print("Record outside: i,j ", i, j, record_i.serialize())
                 contextual_records.append(record_i)
 
         return contextual_records
