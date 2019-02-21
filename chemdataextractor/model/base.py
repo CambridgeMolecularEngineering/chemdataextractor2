@@ -23,41 +23,12 @@ from ..parse.elements import Any
 log = logging.getLogger(__name__)
 
 
-class MutableAttribute():
-
-    def __init__(self, default):
-        """
-
-        :param default: (Optional) The default value for this field if none is set.
-        :param bool null: (Optional) Include in serialized output even if value is None. Default False.
-        :param bool required: (Optional) Whether a value is required. Default False.
-        :param bool contextual: (Optional) Whether this value is contextual. Default False.
-        """
-        self.default = copy.copy(default)
-        self._value = copy.copy(self.default)
-
-    def __get__(self, instance, owner):
-        """Descriptor for retrieving a value from a field in a Model."""
-        # Check if Model class is being called, rather than Model instance
-        if instance is None:
-            return self
-        return self._value
-
-    def __set__(self, instance, value):
-        self._value = value
-        if instance.has('set_parsers_need_update'):
-            instance.set_parsers_need_update()
-
-    def reset(self):
-        self._value = copy.copy(self.default)
-
-
 class BaseType(six.with_metaclass(ABCMeta)):
 
     # This is assigned by ModelMeta to match the attribute on the Model
     name = None
 
-    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None):
+    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None, mutable=False):
         """
 
         :param default: (Optional) The default value for this field if none is set.
@@ -71,6 +42,13 @@ class BaseType(six.with_metaclass(ABCMeta)):
         self.required = required
         self.contextual = contextual
         self.parse_expression = parse_expression
+        self.mutable = mutable
+        if mutable:
+            self._default_parse_expression = copy.copy(parse_expression)
+
+    def reset(self):
+        if self.mutable:
+            self.parse_expression = copy.copy(self._default_parse_expression)
 
     def __get__(self, instance, owner):
         """Descriptor for retrieving a value from a field in a Model."""
@@ -257,14 +235,12 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
     @classmethod
     def reset_mutables(cls):
+        """
+        Reset all MutableAttributes owned by the class.
+        """
         for key, field in six.iteritems(cls.fields):
-            if isinstance(field, MutableAttribute):
+            if field.mutable:
                 field.reset()
-
-    @classmethod
-    def set_parsers_need_update(cls):
-        for parser in cls.parsers:
-            parser.needs_update = True
 
     def keys(self):
         return list(iter(self))
@@ -363,6 +339,4 @@ class ModelList(MutableSequence):
     def to_json(self, *args, **kwargs):
         """Convert ModelList to JSON."""
         return json.dumps(self.serialize(), *args, **kwargs)
-
-
 
