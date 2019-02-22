@@ -36,6 +36,13 @@ Scrapers for the various data sources
     :members:
     :undoc-members:
 
+.scrape.pub.elsevier
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: chemdataextractor.scrape.pub.elsevier
+    :members:
+    :undoc-members:
+
 .scrape.base
 ------------------------------------------------
 

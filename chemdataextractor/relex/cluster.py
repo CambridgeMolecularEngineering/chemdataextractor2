@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.relex.cluster
 Cluster of phrase objects and associated cluster dictionaries
 """
 from collections import OrderedDict

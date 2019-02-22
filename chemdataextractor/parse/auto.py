@@ -26,6 +26,14 @@ import xml.etree.ElementTree as etree
 
 
 def construct_unit_element(dimensions):
+    """
+    Construct an element for detecting units for the dimensions given.
+    Any magnitude modifiers (e.g. kilo) will be automatically handled.
+
+    :param Dimension dimensions: The dimensions that the element produced will look for.
+    :returns: An Element to look for units of given dimensions. If None or Dimensionless are passed in, returns None.
+    :rtype: BaseParserElement or None
+    """
     if not dimensions:
         return None
     units_regex = '(('
@@ -43,6 +51,14 @@ def construct_unit_element(dimensions):
 
 
 def match_dimensions_of(model):
+    """
+    Produces a function that checks whether the given results of parsing match the
+    dimensions of the model provided.
+
+    :param QuantityModel model: The model with which to check dimensions.
+    :returns: A function which will return True if the results of parsing match the model's dimensions, False if not.
+    :rtype: function(tuple(list(Element), int) -> bool)
+    """
     def check_match(result):
         try:
             extract_units(result[0].text, model.dimensions, strict=True)
@@ -190,8 +206,8 @@ class AutoTableParser(BaseAutoParser):
     """ Additions for automated parsing of tables"""
 
     def parse_cell(self, cell):
-        if self.root_phrase is not None:
-            for result in self.root_phrase.scan(cell.tagged_tokens):
+        if self.root is not None:
+            for result in self.root.scan(cell.tagged_tokens):
                 try:
                     for model in self.interpret(*result):
                         yield model

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Chemdataextractor.relex.relationship
-
 Classes for defining new chemical relationships
 """
 import copy

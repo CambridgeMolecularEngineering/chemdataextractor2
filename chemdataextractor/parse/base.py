@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-
+Base classes for parsing sentences and tables.
 """
 
 from __future__ import absolute_import
@@ -29,22 +29,13 @@ class BaseParser(object):
     def __init__(self):
         self.needs_update = True
 
-    @property
-    def root_phrase(self):
-        if self.needs_update:
-            self._root_phrase = self.root
-            self.needs_update = False
-            return self._root_phrase
-        else:
-            return self._root_phrase
-
     def extract_error(self, string):
         """Extract the error from a string
 
         Usage::
-            qp = QuantityParser()
+            bp = BaseParser()
             test_string = '150±5'
-            end_value = qp.extract_error(test_string)
+            end_value = bp.extract_error(test_string)
             print(end_value) # 5
 
         Arguments:
@@ -57,9 +48,9 @@ class BaseParser(object):
         Takes a string and returns a float or a list representing the string given.
 
         Usage::
-            qp = QuantityParser()
+            bp = BaseParser()
             test_string = '150 to 160'
-            end_value = qp.extract_value(test_string)
+            end_value = bp.extract_value(test_string)
             print(end_value) # [150., 160.]
 
         :param str string: A representation of the values as a string
@@ -71,13 +62,17 @@ class BaseParser(object):
     def extract_units(self, string, strict=False):
         """
         Takes a string and returns a Unit.
-        Raises TypeError if strict and the dimensions do not match the expected dimensions.
+        Raises TypeError if strict and the dimensions do not match the expected dimensions
+        or the string has extraneous characters, e.g. if a string Fe was given, and we were
+        looking for a temperature, strict=False would return Fahrenheit, strinct=True would
+        raise a TypeError.
 
         Usage::
-            qp = QuantityParser()
-            qp.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
+            bp = QuantityParser()
+            bp.model = QuantityModel()
+            bp.model.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
             test_string = 'Kh2/(km/s)-1/2'
-            end_units = qp.extract_units(test_string, strict=True)
+            end_units = bp.extract_units(test_string, strict=True)
             print(end_units) # Units of: (10^1.5) * Hour^(2.0)  Meter^(0.5)  Second^(-0.5)  Kelvin^(1.0)
 
         :param str string: A representation of the units as a string
@@ -89,18 +84,29 @@ class BaseParser(object):
 
 
 class BaseSentenceParser(BaseParser):
-    """"""
+    """
+    Base class for parsing sentences. To implement a parser for a new property,
+    impelement the interpret function.
+    """
 
     def parse_sentence(self, tokens):
-        for result in self.root_phrase.scan(tokens):
+        for result in self.root.scan(tokens):
             for model in self.interpret(*result):
                 yield model
 
 
 class BaseTableParser(BaseParser):
-    """"""
+    """
+    Base class for parsing new-style tables. To implement a parser for a new property,
+    impelement the interpret function.
+    """
 
-    def parse_table(self, tokens):
-        for result in self.root_phrase.scan(tokens):
-            for model in self.interpret(*result):
-                yield model
+    def parse_cell(self, cell):
+        if self.root is not None:
+            for result in self.root.scan(cell.tagged_tokens):
+                try:
+                    for model in self.interpret(*result):
+                        yield model
+                except (AttributeError, TypeError) as e:
+                    print(e)
+                    pass

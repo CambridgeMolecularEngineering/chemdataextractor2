@@ -1,9 +1,10 @@
 ChemDataExtractor-Development
-=================
+==================================
 
 ChemDataExtractor is a toolkit for extracting chemical information from the scientific literature.
 
-This is the development version of ChemDataExtractor. The most recent unstable release is available [here](https://github.com/CambridgeMolecularEngineering/chemdataextractor)
+This is the development version of ChemDataExtractor. The most recent unstable release is 
+available [here](https://github.com/CambridgeMolecularEngineering/chemdataextractor)
 
 Features
 --------
@@ -20,10 +21,12 @@ Features
 - NEW: Improved inorganic comound name identification
 
 
-Development
------------
+Documentation & Development
+-----------------------------
 
-Please read the Introduction.md file for instructions on contributing to the project.
+Please read the documentation for instructions on contributing to the project.
+
+https://cambridgemolecularengineering-chemdataextractor-development.readthedocs-hosted.com/en/latest/
 
 
 License
