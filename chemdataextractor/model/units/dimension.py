@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.units.dimensions.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Base types for dimensions.
 
-Taketomo Isazawa (ti250@cam.ac.uk)
-
+:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
 """
 
 import six
@@ -15,34 +11,9 @@ from abc import abstractmethod
 from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 
 
-class BaseDimension(BaseModel):
-
-    @abstractmethod
-    def __truediv__(self, a):
-        pass
-
-    @abstractmethod
-    def __pow__(self):
-        pass
-
-    @abstractmethod
-    def __mul__(self, a):
-        pass
-
-    @abstractmethod
-    def __eq__(self, a):
-        pass
-
-    @abstractmethod
-    def __hash__(self):
-        pass
-
-
-class Dimension(BaseDimension):
+class Dimension(object):
     """
-    Class for dimensions. All actual quantities should be subclassed from this
-    instead of BaseDimension. (This setup is as we otherwise wouldn't be able
-    to make a DictionaryType with Dimension-type objects as keys)
+    Class for representing physical dimensions.
     """
 
     dimensions = None
@@ -51,16 +22,19 @@ class Dimension(BaseDimension):
     units_dict = {}
 
     """
-    Set up units_dict with {element : Unit}, where element is an element from parse.elements.
-    Examples can be seen in temperatures.py
+    Set up units_dict with {chemdataextractor.parse.element : Unit},
+    where element is an element from parse.elements. Examples can be found in temperatures.py
     """
 
     @classmethod
     def composite_dimension(cls, with_dimensions):
         """
         Creates a new Dimension subclass composed of the dimensions given.
+
         .. note::
+
             This returns a subclass of Dimension, not an instance of a subclass of Dimension.
+
         :param Dimension with_dimensions: The dimensions for the new unit subclass to be created
         :returns: The new composite dimension
         :rtype: subclass of Dimension
@@ -168,7 +142,7 @@ class Dimension(BaseDimension):
 
     def __eq__(self, other):
 
-        if not isinstance(other, BaseDimension):
+        if not isinstance(other, Dimension):
             return False
 
         if self.dimensions is not None:
