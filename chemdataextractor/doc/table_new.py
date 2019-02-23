@@ -110,8 +110,10 @@ class Table(CaptionedElement):
                 # using a symmetric difference will ensure that we have correct output if we have shared elements
                 # shared elements will not be found in sym_diff
                 sym_diff = fields_i.symmetric_difference(fields_j)
+                #print("Sym diff:", sym_diff)
                 # we need the intersection to check if it includes the shared element
                 intersection = fields_i.intersection(fields_j)
+                #print("Intersection: ", intersection)
 
                 record = None
                 record_update = False
