@@ -82,7 +82,7 @@ Some model types have not yet been defined. An example of how to create a new mo
 Addition of Units and Dimensions
 --------------------------------
 
-Newly included in ChemDataExtractor are the concepts of :python:`Unit`s and :python:`Dimension`s. These work just as expected; each :python:`Unit` has a dimension and quantities with the same :python:`Unit`s can be converted between each other. See the API documentation for :python:`model.units` for more information.
+Newly included in ChemDataExtractor are the concepts of :python:`Unit` s and :python:`Dimension` s. These work just as expected; each :python:`Unit` has a dimension and quantities with the same :python:`Unit` s can be converted between each other. See the API documentation for :python:`model.units` for more information.
 
 Changes to Parsers
 --------------------
@@ -120,7 +120,7 @@ We have taken advantage this new data to create automatic parsers for both sente
 
 .. note::
 
-    These parsers rely on the specifier and units information provided in :python:`Quantitymodel`, so cannot be used with existing subclasses of :python:`BaseModel`s.
+    These parsers rely on the specifier and units information provided in :python:`Quantitymodel`, so cannot be used with existing subclasses of :python:`BaseModel` s.
 
 Migrating Existing Code
 =================================
@@ -140,7 +140,7 @@ When a model was previously written, a reference to the model would need to be c
 
     Compound.boiling_points = ListType(ModelType(BoilingPoint))
 
-The new way to write this would be:
+The new way to write this would be::
 
     from chemdataextractor.model import BaseModel, StringType, ModelType
     from chemdataextractor.model import Compound
@@ -228,7 +228,7 @@ The above small alterations are enough to get your code up and running, but to m
 Upgrading Models
 ------------------
 
-A key new feature of version 1.5.0 are the new :pyton:`QuantityModel`s. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
+A key new feature of version 1.5.0 are the new :python:`QuantityModel` s. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
 
 For example, the :python:`BoilingPoint` class we wrote earlier can be further transformed::
 
