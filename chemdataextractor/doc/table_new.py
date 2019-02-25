@@ -49,7 +49,7 @@ class Table(CaptionedElement):
         :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
         :param list table_data: (Optional) Table data to be passed on to TableDataExtractor to be parsed.
             Refer to documentation for TableDataExtractor.TdeTable for more information on how this should be structured.
-        :param list[chemdataextractor.models.BaseModel] models: A list of models for this element to parse.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
             If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
             inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.

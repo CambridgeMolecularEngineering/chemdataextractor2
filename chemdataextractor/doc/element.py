@@ -21,7 +21,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
     """
     Abstract base class for a Document Element.
 
-    :ivar id: An identifier for this Element.
+    :ivar id: (Optional) An identifier for this Element.
     :type id: Any or None
     :ivar list[chemdataextractor.models.BaseModel] models: A list of models that this element will parse
     """
@@ -40,7 +40,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
         :param Document document: (Optional) The document containing this element.
         :param list[Citation] references: (Optional) Any references contained in the element.
         :param Any id: (Optional) An identifier for this element. Must be equatable.
-        :param list[chemdataextractor.models.BaseModel] models: A list of models for this element to parse.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
             If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
             inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`chemdataextractor.doc.document.Document`,
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.

@@ -60,7 +60,7 @@ class BaseText(BaseElement):
         :param Document document: (Optional) The document containing this element.
         :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
         :param Any id: (Optional) Some identifier for this element. Must be equatable.
-        :param list[chemdataextractor.models.BaseModel] models: A list of models for this element to parse.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
             If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
             inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
@@ -177,7 +177,7 @@ class Text(collections.Sequence, BaseText):
         :param Document document: (Optional) The document containing this element.
         :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
         :param Any id: (Optional) Some identifier for this element. Must be equatable.
-        :param list[chemdataextractor.models.BaseModel] models: A list of models for this element to parse.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
             If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
             inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
@@ -457,7 +457,7 @@ class Sentence(BaseText):
         :param Document document: (Optional) The document containing this element.
         :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
         :param Any id: (Optional) Some identifier for this element. Must be equatable.
-        :param list[chemdataextractor.models.BaseModel] models: A list of models for this element to parse.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
             If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
             inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
