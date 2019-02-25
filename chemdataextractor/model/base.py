@@ -192,6 +192,17 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             if key not in raw_data:
                 setattr(self, key, copy.copy(field.default))
 
+    @property
+    def is_unidentified(self):
+        """
+        If there is no 'compound' field associated with the model, but the model must have one
+        """
+        if hasattr(self, 'compound') and \
+                self.fields['compound'].contextual and \
+                self.fields['compound'].model_class.is_unidentified:
+            return True
+        return False
+
     def __repr__(self):
         return '<%s>' % (self.__class__.__name__,)
 

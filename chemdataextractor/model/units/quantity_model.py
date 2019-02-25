@@ -20,11 +20,11 @@ class QuantityModel(BaseModel):
     """
     Class for modelling quantities.
     """
-    raw_value = StringType()
-    raw_units = StringType()
-    value = ListType(FloatType())
-    units = UnitType()
-    error = FloatType()
+    raw_value = StringType(contextual=True)
+    raw_units = StringType(contextual=True)
+    value = ListType(FloatType(contextual=True), contextual=True)
+    units = UnitType(contextual=True)
+    error = FloatType(contextual=True)
     dimensions = None
     specifier = Any()
     parsers = [AutoSentenceParser(), AutoTableParser()]

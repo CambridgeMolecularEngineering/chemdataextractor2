@@ -99,7 +99,7 @@ class BaseAutoParser(BaseParser):
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
-            specifier = self.model.specifier('specifier')
+            specifier = self.model.specifier.parse_expression('specifier')
             value_phrase = value_element_plain()('value_phrase')
             entities.append(specifier)
             entities.append(value_phrase)
@@ -110,7 +110,7 @@ class BaseAutoParser(BaseParser):
             unit_element = Group(
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))(
                 'value_phrase')
-            specifier = self.model.specifier('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(
+            specifier = self.model.specifier.parse_expression('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(
                 unit_element) + Optional(rbrct)
             value_phrase = (value_element_plain()('value_phrase') + Optional(unit_element))
             entities.append(specifier)
@@ -119,12 +119,12 @@ class BaseAutoParser(BaseParser):
         elif hasattr(self.model, 'specifier'):
             # now we are parsing an element that has no value but some custom string
             # therefore, there will be no matching interpret function, all entities are custom except for the specifier
-            specifier = self.model.specifier('specifier')
+            specifier = self.model.specifier.parse_expression('specifier')
             entities.append(specifier)
 
         # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
         for field in self.model.fields:
-            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'specifier']:
                 if self.model.__getattribute__(self.model, field).parse_expression is not None:
                     entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
 
@@ -141,10 +141,6 @@ class BaseAutoParser(BaseParser):
     def interpret(self, result, start, end):
         requirements = True
         property_entities = {}
-
-        # if self.model.__name__ == "InteratomicDistance":
-        #     print(self.model)
-        #     print(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
@@ -168,7 +164,8 @@ class BaseAutoParser(BaseParser):
                                       "error": error,
                                       "units": units})
 
-        # custom entities defined in the particular model are retrieved and added to the dictionary
+        # custom entities defined in the particular model and 'specifier' are retrieved and added to the dictionary
+        # 'compound' is handled separately below
         for field in self.model.fields:
             if field not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'compound']:
                 data = first(result.xpath('./' + field + '/text()'))
