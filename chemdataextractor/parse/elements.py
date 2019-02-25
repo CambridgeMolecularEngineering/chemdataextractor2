@@ -17,6 +17,7 @@ from lxml.builder import E
 import six
 import types
 
+log = logging.getLogger(__name__)
 
 class ParseException(Exception):
     """Exception thrown by a ParserElement when it doesn't match input."""
@@ -34,7 +35,6 @@ class ParseException(Exception):
     def __str__(self):
         return ('%s (at token %d)' % (self.msg, self.i))
 
-log = logging.getLogger(__name__)
 
 XML_SAFE_TAGS = {
     '-LRB-': 'LRB',
@@ -76,7 +76,12 @@ class BaseParserElement(object):
         return self
 
     def with_condition(self, condition):
-        # condition should be a function that takes the match and returns true or false. Executed after any actions.
+        """
+        Add a condition to the parser element. The condition must be a function that takes
+        a match and return True or False, i.e. a function which takes tuple(list(Element), int)
+        and returns bool. If the function evaluates True, the match is kept, while if the function
+        evaluates False, the match is discarded. The condition is executed after any other actions.
+        """
         self.condition = condition
         return self
 

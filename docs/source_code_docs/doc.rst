@@ -2,7 +2,7 @@
 .doc
 ======================
 
-Logic for reading/creating documents. That is, splitting documents down into its various elements.
+Logic for reading/creating documents. That is, splitting documents down into its various elements. The API for documents has been slightly changed as of version 1.5.0. Please refer to the migration guide and the examples for an overview of the changes.
 
 .. automodule:: chemdataextractor.doc
     :members:

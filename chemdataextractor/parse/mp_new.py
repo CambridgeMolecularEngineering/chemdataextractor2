@@ -16,10 +16,10 @@ from lxml import etree
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
-from .actions import merge, join
+from .actions import merge
 from .quantity import value_element
 from .base import BaseSentenceParser
-from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
+from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ mp_phrase = cem_mp_phrase | to_give_mp_phrase | obtained_mp_phrase
 
 class MpParser(BaseSentenceParser):
     """
-    MpParser rewritten to be based on QuantityParser
+    MpParser rewritten to extract values and errors.
     """
     root = mp_phrase
 

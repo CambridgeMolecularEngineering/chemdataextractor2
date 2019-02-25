@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.units.temperatures.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Units and models for lengths.
 
-Taketomo Isazawa (ti250@cam.ac.uk)
-
+:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
 """
 
 from __future__ import absolute_import
@@ -25,21 +21,33 @@ log = logging.getLogger(__name__)
 
 
 class Length(Dimension):
+    """
+    Dimension subclass for lengths.
+    """
     pass
 
 
 class LengthModel(QuantityModel):
-
+    """
+    Model for lengths.
+    """
     dimensions = Length()
 
 
 class LengthUnit(Unit):
+    """
+    Base class for units with dimensions of length.
+    The standard value for length is defined to be a meter, implemented in the Meter class.
+    """
 
     def __init__(self, magnitude=0.0, powers=None):
         super(LengthUnit, self).__init__(Length(), magnitude, powers)
 
 
 class Meter(LengthUnit):
+    """
+    Class for meters.
+    """
 
     def convert_value_to_standard(self, value):
         return value
@@ -55,6 +63,9 @@ class Meter(LengthUnit):
 
 
 class Mile(LengthUnit):
+    """
+    Class for miles.
+    """
 
     def convert_value_to_standard(self, value):
         return value * 1609.34
@@ -68,7 +79,11 @@ class Mile(LengthUnit):
     def convert_error_from_standard(self, error):
         return error * 0.000621371
 
+
 class Angstrom(LengthUnit):
+    """
+    Class for Angstroms.
+    """
 
     def convert_value_to_standard(self, value):
         return value * 10**(-10)
@@ -81,6 +96,7 @@ class Angstrom(LengthUnit):
 
     def convert_error_from_standard(self, error):
         return error / 10**(-10)
+
 
 units_dict = {R('m(eter(s)?)?', group=0): Meter, R('mile[s]?', group=0): Mile, R('Å', group=0): Angstrom}
 Length.units_dict = units_dict

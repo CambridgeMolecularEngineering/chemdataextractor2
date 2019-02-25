@@ -35,7 +35,8 @@ class BaseType(six.with_metaclass(ABCMeta)):
         :param bool null: (Optional) Include in serialized output even if value is None. Default False.
         :param bool required: (Optional) Whether a value is required. Default False.
         :param bool contextual: (Optional) Whether this value is contextual. Default False.
-        :param parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement
+        :param BaseParserElement parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement. Default None.
+        :param bool mutable: (Optional) Whether the parse_expression can be changed by the document as parsing occurs. Default False
         """
         self.default = copy.deepcopy(default)
         self.null = null
@@ -47,6 +48,9 @@ class BaseType(six.with_metaclass(ABCMeta)):
             self._default_parse_expression = copy.copy(parse_expression)
 
     def reset(self):
+        """
+        Reset the parse expression to the initial value.
+        """
         if self.mutable:
             self.parse_expression = copy.copy(self._default_parse_expression)
 
@@ -67,7 +71,7 @@ class BaseType(six.with_metaclass(ABCMeta)):
         instance._values[self.name] = self.process(value)
 
     def process(self, value):
-        """Convert an assigned value into the desired data format."""
+        """Convert an assigned value into the desired data format for this field."""
         return value
 
     def serialize(self, value, primitive=False):
@@ -236,7 +240,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     @classmethod
     def reset_mutables(cls):
         """
-        Reset all MutableAttributes owned by the class.
+        Reset all mutable parse_expressions of properties associated with the class.
         """
         for key, field in six.iteritems(cls.fields):
             if field.mutable:

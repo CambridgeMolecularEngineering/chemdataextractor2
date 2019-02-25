@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-
-
+Concrete classes for scraping and searching.
 """
 
 from __future__ import absolute_import

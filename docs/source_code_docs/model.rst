@@ -3,6 +3,7 @@
 ======================
 
 Models for storing relationships extracted using chemdataextractor.
+The hierarchy for models has been greatly rewritten in 1.5.0, introducing breaking changes to older scripts using ChemDataExtractor. Please refer to the migration guide and the examples for an overview of the changes.
 
 .. automodule:: chemdataextractor.model
     :members:
@@ -36,7 +37,7 @@ Models for storing relationships extracted using chemdataextractor.
     :members:
     :undoc-members:
 
-.model.units.dimension.py
+.model.units.dimension
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: chemdataextractor.model.units.dimension

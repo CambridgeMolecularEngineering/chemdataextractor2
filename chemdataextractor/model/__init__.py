@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Model classes
+Classes for representing models.
 
 """
 

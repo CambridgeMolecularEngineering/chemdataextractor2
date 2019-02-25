@@ -17,13 +17,19 @@ class Dimension(object):
     """
 
     dimensions = None
-    # {ModelType(BaseDimension): FloatType()}
+    """
+    Used to represent composite dimensions.
+    It is of type dictionary{:class:`Dimension`: :class:`float`}.
+    An example would be speed, in which case we would have::
+
+        dimensions = {Length(): 1.0, Time(): -1.0}
+    """
 
     units_dict = {}
-
     """
-    Set up units_dict with {chemdataextractor.parse.element : Unit},
-    where element is an element from parse.elements. Examples can be found in temperatures.py
+    Used for extracting units with these dimensions.
+    It is of type dictionary{:class:`chemdataextractor.parse.element` : :class:`~chemdataextractor.model.units.unit.Unit`}.
+    Examples can be found in temperatures.py
     """
 
     @classmethod

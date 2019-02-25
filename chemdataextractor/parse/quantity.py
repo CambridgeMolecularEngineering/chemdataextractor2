@@ -17,6 +17,7 @@ from .common import lbrct, rbrct
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 from fractions import Fraction
+from ..utils import memoize
 
 log = logging.getLogger(__name__)
 
@@ -31,11 +32,12 @@ magnitudes_dict = {R('c(enti)?', group=0): 2.,
                   R('p(ico)?', group=0): -12.}
 
 
+@memoize
 def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('units').add_action(merge)):
     """
     Returns an Element for values with given units. By default, uses tags to guess that a unit exists.
 
-    :param BaseParserElement units: A parser element for the units that are to be looked for. Default option looks for nouns.
+    :param BaseParserElement units: (Optional) A parser element for the units that are to be looked for. Default option looks for nouns.
     :returns: An Element to look for values and units.
     :rtype: BaseParserElement
     """
@@ -50,7 +52,14 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     return value + units
 
 
+@memoize
 def value_element_plain():
+    """
+    Returns an element similar to value_element but without any units.
+
+    :returns: An Element to look for values.
+    :rtype: BaseParserElement
+    """
     number = R('^[\+\-–−]?\d+(\.\d+)?$')
     joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('value').add_action(merge)
     spaced_range = (number + R('^[\-–−~∼˜]$') + number)('value').add_action(merge)
@@ -63,16 +72,18 @@ def value_element_plain():
 
 
 def extract_error(string):
-    """Extract the error from a string
+    """
+    Extract the error from a string
 
     Usage::
-        qp = QuantityParser()
+
         test_string = '150±5'
-        end_value = qp.extract_error(test_string)
+        end_value = extract_error(test_string)
         print(end_value) # 5
 
-    Arguments:
-        string {[type]} -- [description]
+    :param str string: A representation of the value and error as a string
+    :returns: The error expressed as a float .
+    :rtype: float
     """
     if string is None:
         return None
@@ -94,16 +105,17 @@ def extract_error(string):
 
 def extract_value(string):
     """
-    Takes a string and returns a float or a list representing the string given.
+    Takes a string and returns a list of floats representing the string given.
 
     Usage::
-        qp = QuantityParser()
+
         test_string = '150 to 160'
-        end_value = qp.extract_value(test_string)
+        end_value = extract_value(test_string)
         print(end_value) # [150., 160.]
 
     :param str string: A representation of the values as a string
-    :returns: The string expressed as a float or a list of floats if it was a value range.
+    :returns: The value expressed as a list of floats of length 1 if the value had no range,
+        and as a list of floats of length 2 if it was a range.
     :rtype: list(float)
     """
     if string is None:
@@ -144,20 +156,24 @@ def extract_value(string):
     return values
 
 
+@memoize
 def extract_units(string, dimensions, strict=False):
     """
     Takes a string and returns a Unit.
-    Raises TypeError if strict and the dimensions do not match the expected dimensions.
+    Raises TypeError if strict and the dimensions do not match the expected dimensions
+    or the string has extraneous characters, e.g. if a string Fe was given, and we were
+    looking for a temperature, strict=False would return Fahrenheit, strinct=True would
+    raise a TypeError.
 
     Usage::
-        qp = QuantityParser()
-        qp.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
+
+        dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
         test_string = 'Kh2/(km/s)-1/2'
-        end_units = qp.extract_units(test_string, strict=True)
+        end_units = extract_units(test_string, dimensions, strict=True)
         print(end_units) # Units of: (10^1.5) * Hour^(2.0)  Meter^(0.5)  Second^(-0.5)  Kelvin^(1.0)
 
     :param str string: A representation of the units as a string
-    :param bool strict: Whether to raise a TypeError if the dimensions of the parsed units do not have the expected dimensions.
+    :param bool strict: (Optional) Whether to raise a TypeError if the dimensions of the parsed units do not have the expected dimensions.
     :returns: The string expressed as a Unit
     :rtype: chemdataextractor.quantities.Unit
     """

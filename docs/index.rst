@@ -27,6 +27,7 @@ Features:
    examples
    code_documentation
    internal
+   migration_guide
    changelog
    license
 
