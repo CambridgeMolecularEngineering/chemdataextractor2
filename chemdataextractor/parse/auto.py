@@ -20,7 +20,7 @@ from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
 from ..utils import first
 from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain
-from .base import BaseSentenceParser, BaseParser
+from .base import BaseSentenceParser, BaseParser, BaseTableParser
 
 import xml.etree.ElementTree as etree
 
@@ -202,18 +202,9 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
     pass
 
 
-class AutoTableParser(BaseAutoParser):
+class AutoTableParser(BaseAutoParser, BaseTableParser):
     """ Additions for automated parsing of tables"""
-
-    def parse_cell(self, cell):
-        if self.root is not None:
-            for result in self.root.scan(cell.tagged_tokens):
-                try:
-                    for model in self.interpret(*result):
-                        yield model
-                except (AttributeError, TypeError) as e:
-                    print(e)
-                    pass
+    pass
 
 
 # def parse_table(model, category_table):
