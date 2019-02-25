@@ -144,6 +144,8 @@ class Table(CaptionedElement):
                                 updated_records.append(j)
 
                 if record_update:
+                    # print("Record i = {}: {}".format(i, record_i.serialize()))
+                    # print("Record j = {}: {}".format(j, record_j.serialize()))
                     # print("Record inside: i,j ", i, j, record.serialize())
                     contextual_records.append(record)
             if i not in updated_records:

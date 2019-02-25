@@ -24,7 +24,7 @@ class QuantityModel(BaseModel):
     """
     raw_value = StringType(contextual=True)
     raw_units = StringType(contextual=True)
-    value = ListType(FloatType(contextual=True))
+    value = ListType(FloatType(contextual=True), contextual=True)
     units = UnitType(contextual=True)
     error = FloatType(contextual=True)
     dimensions = None
