@@ -110,10 +110,8 @@ class Table(CaptionedElement):
                 # using a symmetric difference will ensure that we have correct output if we have shared elements
                 # shared elements will not be found in sym_diff
                 sym_diff = fields_i.symmetric_difference(fields_j)
-                #print("Sym diff:", sym_diff)
                 # we need the intersection to check if it includes the shared element
                 intersection = fields_i.intersection(fields_j)
-                #print("Intersection: ", intersection)
 
                 record = None
                 record_update = False
@@ -144,12 +142,12 @@ class Table(CaptionedElement):
                                 updated_records.append(j)
 
                 if record_update:
-                    # print("Record i = {}: {}".format(i, record_i.serialize()))
-                    # print("Record j = {}: {}".format(j, record_j.serialize()))
-                    # print("Record inside: i,j ", i, j, record.serialize())
+                    log.debug("Record i = {}: {}".format(i, record_i.serialize()))
+                    log.debug("Record j = {}: {}".format(j, record_j.serialize()))
+                    log.debug("Record inside i = {}, j = {}: {}".format(i, j, record.serialize()))
                     contextual_records.append(record)
             if i not in updated_records:
-                # print("Record outside: i,j ", i, j, record_i.serialize())
+                log.debug("Record outside i = {}: {}".format(i, record_i.serialize()))
                 contextual_records.append(record_i)
 
         return contextual_records
