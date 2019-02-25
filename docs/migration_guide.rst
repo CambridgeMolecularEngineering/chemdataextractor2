@@ -22,28 +22,28 @@ Changes to ChemDataExtractor
 Overall Structure
 -------------------------
 
-At a high level, in previous versions of ChemDataExtractor, the :python:`Document` class and each of its subelements (e.g. :python:`Paragraph` or :python:`Sentence`) had a list of parsers. These parsers each had an associated model which they were parsing for. When these parsers found a sentence (or table cell) that contained the requisite elements, it would create a :python:`Compound` and the property would be associated to this instance of a compound.
+At a high level, in previous versions of ChemDataExtractor, the :class:`~chemdataextractor.doc.document.Document` class and each of its subelements (e.g. :class:`~chemdataextractor.doc.text.Paragraph` or :class:`~chemdataextractor.doc.text.Sentence`) had a list of parsers. These parsers each had an associated model which they were parsing for. When these parsers found a sentence (or table cell) that contained the requisite elements, it would create a :class:`~chemdataextractor.doc.text.Compound` and the property would be associated to this instance of a compound.
 
-The new structure changes this hierarchy slightly. The :python:`Document` class and its subelements now own models that the documents should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :python:`Sentence` or :python:`Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the model.
+The new structure changes this hierarchy slightly. The :class:`~chemdataextractor.doc.document.Document` class and its subelements now own models that the documents should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :class:`~chemdataextractor.doc.text.Sentence` or :class:`~chemdataextractor.doc.table_new.Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the model.
 
 This new structure has several advantages:
 
-- You no longer has to search for the appropriate classes for parsing. You don't need to find :python:`MpParser` and :python:`MpTableParser` and assign them as parsers to :python:`Sentences` and :python:`Tables` respectively to extract a :python:`MeltingPoint`. With the new model, one just passes in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
+- You no longer has to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table_new.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, one just passes in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
 
 - The new structure is far safer, that is, it is impossible to use a parser meant for tables on a sentence and a parser meant for sentences on tables.
 
-- The properties are no longer neccesarily tied to the :python:`Compound` class, meaning one could use ChemDataExtractor for other purposes too, such as extracting the conditions under which an experiment was done.
+- The properties are no longer neccesarily tied to the :class:`~chemdataextractor.model.models.Compound` class, meaning one could use ChemDataExtractor for other purposes too, such as extracting the conditions under which an experiment was done.
 
 Changes to Models
 ----------------------------------
 
-In addition to the overall change of structure, involving each property optionally owning a Compound, new types of models have  been introduced for the majority usecase, of extracting a physical quantity structure, i.e. the case with a specifier, a value, and units, such as melting points, interatomic distances, and cooling rates. These models are all defined as subclasses of a new type of model, :python:`QuantityModel`
+In addition to the overall change of structure, involving each property optionally owning a Compound, new types of models have  been introduced for the majority usecase, of extracting a physical quantity structure, i.e. the case with a specifier, a value, and units, such as melting points, interatomic distances, and cooling rates. These models are all defined as subclasses of a new type of model, :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`
 
 .. note::
 
     While new Quantity-based models have been added to ChemDataExtractor, old-style models can still be used. Refer to the section `Migrating Existing Code`_ on how to have older models be extracted as similarly to the old behaviour as possible.
 
-These model types can now be defined with minimal effort as the various base-quantities (Temperature, Length, Time etc) are included in ChemDataExtractor. Now for example, if we wished to create a new model that will be of type Temperature we simply inherit our model from the :python:`TemperatureModel` class and define our entities.
+These model types can now be defined with minimal effort as the various base-quantities (Temperature, Length, Time etc) are included in ChemDataExtractor. Now for example, if we wished to create a new model that will be of type Temperature we simply inherit our model from the :class:`~chemdataextractor.model.units.temperature.TemperatureModel` class and define our entities.
 
 Models of this type have only 2 requirements:
 
@@ -52,7 +52,7 @@ Models of this type have only 2 requirements:
 
 While previous models in ChemDataExtractor stored values and units as strings, these are now automatically extracted and stored as numbers and Unit classes, allowing for easy conversion and comparison. These changes are explored in more detail in `Addition of Units and Dimensions`_.
 
-Each entity must have a defined type, for example :python:`StringType`, :python:`FloatType` or :python:`ModelType`. Note that by specifying :python:`ModelType` you must provide another model, allowing for nested model relationships.
+Each entity must have a defined type, for example :class:`~chemdataextractor.model.base.StringType`, :class:`~chemdataextractor.model.base.FloatType` or :class:`~chemdataextractor.model.base.ModelType`. Note that by specifying :class:`~chemdataextractor.model.base.ModelType` you must provide another model, allowing for nested model relationships.
 
 The entities also have properties:
 
@@ -82,14 +82,14 @@ Some model types have not yet been defined. An example of how to create a new mo
 Addition of Units and Dimensions
 --------------------------------
 
-Newly included in ChemDataExtractor are the concepts of :python:`Unit` s and :python:`Dimension` s. These work just as expected; each :python:`Unit` has a dimension and quantities with the same :python:`Unit` s can be converted between each other. See the API documentation for :python:`model.units` for more information.
+Newly included in ChemDataExtractor are the concepts of :class:`~chemdataextractor.model.units.unit.Unit` s and :class:`~chemdataextractor.model.units.dimension.Dimension` s. These work just as expected; each :class:`~chemdataextractor.model.units.unit.Unit` has a dimension and quantities with the same :class:`~chemdataextractor.model.units.unit.Unit` s can be converted between each other. See the API documentation for :mod:`chemdataextractor.model.units` for more information.
 
 Changes to Parsers
 --------------------
 
-Previously, different types of parsers were just distinguished by name. A :python:`MpTableParser` was understood to parse tables, and :python:`MpParser` was understood to parse Sentences. However, this was not enforced in any way. This has now been changed, with all parsers now implementing either :python:`parse_sentence` if they are sentence parsers, or :python:`parse_cell` if a table parser. You can get these methods for free by subclassing from :python:`BaseSentenceParser` and :python:`BaseTableParser` respectively. You then only need to implement the interpret function, just as before.
+Previously, different types of parsers were just distinguished by name. A :class:`MpTableParser` was understood to parse tables, and :class:`~chemdataextractor.parse.mp_new.MpParser` was understood to parse Sentences. However, this was not enforced in any way. This has now been changed, with all parsers now implementing either :meth:`~chemdataextractor.parse.base.BaseSentenceParser.parse_sentence` if they are sentence parsers, or :meth:`~chemdataextractor.parse.base.BaseTableParser.parse_cell` if a table parser. You can get these methods for free by subclassing from :class:`~chemdataextractor.parse.base.BaseSentenceParser` and :class:`~chemdataextractor.parse.base.BaseTableParser` respectively. You then only need to implement the interpret function, just as before.
 
-To work with the models now being able to store values and units in a more structured manner, :python:`BaseParser` now contains new methods for extracting them. Refer to the API documentation for it for more detail.
+To work with the models now being able to store values and units in a more structured manner, :class:`~chemdataextractor.parse.base.BaseParser` now contains new methods for extracting them. Refer to the API documentation for it for more detail.
 
 Forward looking Interdependency Resolution
 ------------------------------------------
@@ -116,11 +116,11 @@ Automatic Parsers
 
 All of the above enhancements to ChemDataExtractor mean that the extraction is much more powerful and context-rich. The forward-looking Interdependency Resolution means that one no longer needs to manually specify as many specifiers when looking for new properties, and the quantity extraction involving units and dimensions means that we have rich new metadata on our extracted values.
 
-We have taken advantage this new data to create automatic parsers for both sentences and tables. Any subclasses of :python:`QuantityModel` have, by default, automatic parsers enabled, meaning no user intervention is needed to start extracting. These automatic parsers work expecially well with the TableDataExtractor tables, which have the data in a highly standardised format, meaning that more basic parsers can still work exceptionally well.
+We have taken advantage this new data to create automatic parsers for both sentences and tables. Any subclasses of :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` have, by default, automatic parsers enabled, meaning no user intervention is needed to start extracting. These automatic parsers work expecially well with the TableDataExtractor tables, which have the data in a highly standardised format, meaning that more basic parsers can still work exceptionally well.
 
 .. note::
 
-    These parsers rely on the specifier and units information provided in :python:`Quantitymodel`, so cannot be used with existing subclasses of :python:`BaseModel` s.
+    These parsers rely on the specifier and units information provided in :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`, so cannot be used with existing subclasses of :class:`~chemdataextractor.model.base.BaseModel` s.
 
 Migrating Existing Code
 =================================
@@ -204,7 +204,7 @@ would now be written as::
             boiling_point.compound = Compound()
             yield boiling_point
 
-Note also that the parser now inherits from :python:`BaseSentenceParser` as opposed to :python:`BaseParser` as it is a parser for sentences.
+Note also that the parser now inherits from :class:`~chemdataextractor.parse.base.BaseSentenceParser` as opposed to :class:`~chemdataextractor.parse.base.BaseParser` as it is a parser for sentences.
 
 Extracting Properties
 -----------------------
@@ -228,7 +228,7 @@ The above small alterations are enough to get your code up and running, but to m
 Upgrading Models
 ------------------
 
-A key new feature of version 1.5.0 are the new :python:`QuantityModel` s. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
+A key new feature of version 1.5.0 are the new :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` s. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
 
 For example, the :python:`BoilingPoint` class we wrote earlier can be further transformed::
 
@@ -239,7 +239,7 @@ For example, the :python:`BoilingPoint` class we wrote earlier can be further tr
         compound = ModelType(Compound)
         parsers = [BpParser()]
 
-Defining your own dimensions is also easy; an example of how it's done within ChemDataExtractor for temperatures is provided below, and further information can be found in the API documentation for model.units. ::
+Defining your own dimensions is also easy; an example of how it's done within ChemDataExtractor for temperatures is provided below, and further information can be found in the :mod:`API documentation <chemdataextractor.model.units>`. ::
 
     from __future__ import absolute_import
     from __future__ import division
