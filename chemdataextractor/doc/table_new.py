@@ -123,7 +123,7 @@ class Table(CaptionedElement):
                     # update record_i until we have the full record
                     # this is for the case that the contextual elements are in record_j
                     if not record_update:
-                        record = copy.deepcopy(record_i)
+                        record = copy.copy(record_i)
                         for field in sym_diff:
                             if not record_i.__getattribute__(field) and record_i.fields[field].contextual:
                                 record.__setitem__(field, record_j.__getattribute__(field))
@@ -133,7 +133,7 @@ class Table(CaptionedElement):
                     # update record_j until we have the full record
                     # this is for the case that the contextual elements are in record_i
                     if not record_update:
-                        record = copy.deepcopy(record_j)
+                        record = copy.copy(record_j)
                         for field in sym_diff:
                             if not record_j.__getattribute__(field) and record_j.fields[field].contextual:
                                 record.__setitem__(field, record_i.__getattribute__(field))
