@@ -165,9 +165,10 @@ class Table(CaptionedElement):
 
         # obtain table records
         table_records = []
-        partial_table_records = []
 
         for model in self.models:
+            # different parsers can yield different partial table records, but each model is independent
+            partial_table_records = []
             for parser in model.parsers:
 
                 # the partial records are obtained from the autoparser

@@ -240,10 +240,10 @@ class NeelTemperature(TemperatureModel):
 
 
 class CurieTemperature(TemperatureModel):
-    specifier = I('TC')
-    compound = ModelType(Compound)
-    custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
-    other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)
+    expression = (I('T') + I('C')).add_action(merge)
+    specifier = StringType(parse_expression=expression, required=True, contextual=False, mutable=False)
+    compound = ModelType(Compound, required=False, contextual=False)
+
 
 
 class InteratomicDistance(LengthModel):
