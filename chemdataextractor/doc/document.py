@@ -70,8 +70,8 @@ class Document(BaseDocument):
         Strings that are passed to this constructor are automatically wrapped into Paragraph elements.
 
         :param list[chemdataextractor.doc.element.BaseElement|string] elements: Elements in this Document.
-        :keyword Config config: Config file for the Document.
-        :keyword list[BaseModel] models: Models that the Document should extract data for.
+        :keyword Config config: (Optional) Config file for the Document.
+        :keyword list[BaseModel] models: (Optional) Models that the Document should extract data for.
         """
         self._elements = []
         for element in elements:
