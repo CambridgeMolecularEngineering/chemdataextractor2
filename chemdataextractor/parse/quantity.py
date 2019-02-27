@@ -177,8 +177,10 @@ def extract_units(string, dimensions, strict=False):
     :returns: The string expressed as a Unit
     :rtype: chemdataextractor.quantities.Unit
     """
-    if string is None:
+    if string is None and not strict:
         return None
+    elif string is None:
+        raise TypeError('None was passed in')
     string = string.replace("-", "-")
     string = string.replace("–", "-")
     string = string.replace("−", "-")
@@ -188,7 +190,13 @@ def extract_units(string, dimensions, strict=False):
     # Find the units by matching strings, e.g. K for Kelvin, m for Meter
     unit_types = _find_unit_types(split_string, dimensions)
     # Find the powers associated with each unit
-    powers = _find_powers(unit_types)
+    try:
+        powers = _find_powers(unit_types)
+    except ValueError as e:
+        if not strict:
+            return None
+        else:
+            raise TypeError('Error extracting power: \n' + str(e) + '\n encountered during parsing')
     # Deal with things like kilo, mega, or milli that modify the magnitude of the units found
     end_unit = _find_units(powers, dimensions, strict)
     return end_unit
