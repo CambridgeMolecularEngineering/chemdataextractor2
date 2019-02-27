@@ -202,15 +202,14 @@ class Table(CaptionedElement):
                             requirements = False
 
                     if requirements:
-                        table_records.append({parser.model.__name__: record.serialize()})
+                        table_records.append(record)
 
                     # add the record if only the compound is missing
                     elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
-                        if record.is_unidentified:
-                            table_records.append(["unidentified", {parser.model.__name__: record.serialize()}])
+                        table_records.append(record)
 
         # Addition of the serialized caption records
-        caption_records = [{type(c).__name__: c.serialize()} for c in caption_records if not c.is_contextual]
+        caption_records = [c for c in caption_records if not c.is_contextual]
         table_records += caption_records
 
         return table_records

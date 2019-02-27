@@ -262,8 +262,8 @@ class CoordinationNumber(DimensionlessModel):
     specifier_expression = R('^(N|n|k)$')
     specifier = StringType(parse_expression=specifier_expression, required=True, contextual=True)
 
-    cn_label = StringType(parse_expression=coordination_number_label, required=False, contextual=True)
-    compound = ModelType(Compound, required=False, contextual=True)
+    cn_label = StringType(parse_expression=coordination_number_label, required=True, contextual=True)
+    compound = ModelType(Compound, required=True, contextual=True)
 
 
 class CNLabel(BaseModel):
