@@ -153,6 +153,7 @@ class BaseAutoParser(BaseParser):
 
         elif hasattr(self.model, 'dimensions') and self.model.dimensions:
             # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
+            # print(etree.tostring(result))
             raw_value = first(result.xpath('./value_phrase/value/text()'))
             raw_units = first(result.xpath('./value_phrase/units/text()'))
             value = self.extract_value(raw_value)

@@ -278,7 +278,6 @@ class Title(Text):
 
     def __init__(self, text, **kwargs):
         super(Title, self).__init__(text, **kwargs)
-        # default_parsers = [CompoundParser()]
         self.models = [Compound]
 
     def _repr_html_(self):
@@ -557,6 +556,7 @@ class Sentence(BaseText):
             new_def = {
                        'definition': first(definition.xpath('./phrase/text()')),
                        'specifier': first(definition.xpath('./specifier/text()')),
+                       'tokens': tagged_tokens[start:end],
                        'start': start,
                        'end': end}
             defs.append(new_def)

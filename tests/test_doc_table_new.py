@@ -5,14 +5,16 @@ Test the Table Document element and Table autoparsers.
 """
 
 from chemdataextractor.model.units.quantity_model import DimensionlessModel
-from chemdataextractor.parse.elements import R
+from chemdataextractor.parse.elements import R, I
 from chemdataextractor.model.base import StringType, ModelType
 from chemdataextractor.model.model import Compound
 from chemdataextractor.doc.table_new import Table
 from chemdataextractor.doc import Caption
 from chemdataextractor.doc import Document
 from chemdataextractor.reader.elsevier import ElsevierXmlReader
+from chemdataextractor.reader.springer import SpringerHtmlReader
 from chemdataextractor.model.units.length import LengthModel
+from chemdataextractor.model.units.temperature import TemperatureModel
 from chemdataextractor.parse.actions import merge
 
 import logging
@@ -38,6 +40,17 @@ class InteratomicDistance(LengthModel):
     species = StringType(parse_expression=rij_label, required=True, contextual=False)
     compound = ModelType(Compound, required=True, contextual=True)
 
+class NeelTemperature(TemperatureModel):
+    specifier_expression = (I('Néel')+I('temperature'))
+    specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, mutable=True)
+    compound = ModelType(Compound, required=False, contextual=True)
+
+
+class CurieTemperature(TemperatureModel):
+    specifier_expression = (I('Curie')+I('temperature'))
+    specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, mutable=True)
+    compound = ModelType(Compound, required=False, contextual=True)
+
 
 class TestTable(unittest.TestCase):
     """Tests for automated parsing of tables"""
@@ -46,7 +59,7 @@ class TestTable(unittest.TestCase):
 
     def do_table_1(self, expected):
         table = Table(caption=Caption("This is my table."),
-                      table_data="./data/tables/table_example_1.csv",
+                      table_data="tests/data/tables/table_example_1.csv",
                       models=[CoordinationNumber])
         result = []
         for record in table.records:
@@ -270,7 +283,7 @@ class TestTable(unittest.TestCase):
         """
         Tests the addition of the caption compound to table records without a compound
         """
-        f = open('./data/tables/j.commatsci.2018.02.056.xml', 'rb')
+        f = open('tests/data/tables/j.commatsci.2018.02.056.xml', 'rb')
         doc = Document.from_file(f, readers=[ElsevierXmlReader()])
         f.close()
         table = doc.tables[0]
@@ -289,7 +302,7 @@ class TestTable(unittest.TestCase):
         Tests the retrieval of 'unidentified' records (records that need to have a compound but the compound is the
         only missing field.
         """
-        f = open('./data/tables/j.commatsci.2018.02.056_2.xml', 'rb')
+        f = open('tests/data/tables/j.commatsci.2018.02.056_2.xml', 'rb')
         doc = Document.from_file(f, readers=[ElsevierXmlReader()])
         f.close()
         table = doc.tables[0]
@@ -311,7 +324,7 @@ class TestTable(unittest.TestCase):
         Tests the retrieval of 'unidentified' records (records that need to have a compound but the compound is the
         only missing field. This should return no unidentified records
         """
-        f = open('./data/tables/j.commatsci.2018.02.056.xml', 'rb')
+        f = open('tests/data/tables/j.commatsci.2018.02.056.xml', 'rb')
         doc = Document.from_file(f, readers=[ElsevierXmlReader()])
         f.close()
         table = doc.tables[0]
@@ -328,6 +341,29 @@ class TestTable(unittest.TestCase):
                     {'InteratomicDistance': {'raw_value': '4.4992', 'raw_units': 'Å', 'value': [4.4992], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Si-Si', 'compound': {'Compound': {'names': ['Mg2Si']}}}},
                     {'Compound': {'names': ['Mg2Si']}}]
         self.assertListEqual(expected, result)
+    
+    def test_model_updating_from_caption_1(self):
+        f = open('tests/data/tables/table_test.html', 'rb')
+        d = Document.from_file(f, readers=[SpringerHtmlReader()])
+        d.set_models([CurieTemperature, NeelTemperature])
+        results = d.records.serialize()
+        expected = [
+            {'Compound': {'names': ['MnO']}}, 
+            {'CurieTemperature': {'raw_value': '122.0', 'raw_units': 'K', 'value': [122.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'CurieTemperature': {'raw_value': '143.5', 'raw_units': 'K', 'value': [143.5], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'CurieTemperature': {'raw_value': '0.4', 'raw_units': 'K', 'value': [0.4], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'CurieTemperature': {'raw_value': '0.6', 'raw_units': 'K', 'value': [0.6], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'CurieTemperature': {'raw_value': '0.8', 'raw_units': 'K', 'value': [0.8], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'CurieTemperature': {'raw_value': '116.5', 'raw_units': 'K', 'value': [116.5], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'NeelTemperature': {'raw_value': '0.0', 'raw_units': 'K', 'value': [0.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'NeelTemperature': {'raw_value': '0.2', 'raw_units': 'K', 'value': [0.2], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'NeelTemperature': {'raw_value': '167.6', 'raw_units': 'K', 'value': [167.6], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'NeelTemperature': {'raw_value': '278.0', 'raw_units': 'K', 'value': [278.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'NeelTemperature': {'raw_value': '181.9', 'raw_units': 'K', 'value': [181.9], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'NeelTemperature': {'raw_value': '1.0', 'raw_units': 'K', 'value': [1.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}}, 
+            {'Compound': {'names': ['PrMnO3']}}]
+        self.assertListEqual(results, expected)
+
 
 
 if __name__ == '__main__':
