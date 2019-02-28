@@ -11,12 +11,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import re
+import six
+from fractions import Fraction
 from abc import abstractproperty
 
 from .common import lbrct, rbrct
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
-from fractions import Fraction
 from ..utils import memoize
 
 log = logging.getLogger(__name__)
@@ -266,7 +267,10 @@ def _find_unit_types(tokenized_sentence, dimensions):
     :returns: A list containing tuples of the found units and the string split by the units, in the format (unit, string containing the unit, the substring that caused the unit to be recognised)
     :rtype: list((chemdataextractor.quantities.Unit, str, str))
     """
-    units_dict = dimensions.units_dict
+    units_dict = {}
+    for key, value in six.iteritems(dimensions.units_dict):
+        if value is not None:
+            units_dict[key] = value
     units_list = []
     # This is O(m*n), m being the length of the units dictionary, n the number of components of powers.
     for element in tokenized_sentence:
