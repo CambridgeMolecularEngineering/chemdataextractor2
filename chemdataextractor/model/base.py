@@ -18,7 +18,7 @@ import logging
 import six
 
 from ..utils import python_2_unicode_compatible
-from ..parse.elements import Any
+from ..parse.elements import Any, W
 
 log = logging.getLogger(__name__)
 
@@ -254,8 +254,25 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         Reset all mutable parse_expressions of properties associated with the class.
         """
         for key, field in six.iteritems(cls.fields):
-            if field.mutable:
-                field.reset()
+            if cls.fields[key].mutable:
+                cls.fields[key].reset()
+
+    @classmethod
+    def update(cls, definitions):
+        """Update this Element's mutable attributes with new information from definitions
+        
+        Arguments:
+            definitions {list} -- list of definitions found in this element
+        """
+        log.debug("Updating model")
+        for definition in definitions:
+            for field in cls.fields:
+                if cls.fields[field].mutable:
+                    matches = [i for i in cls.fields[field].parse_expression.scan(definition['tokens'])]
+                    # print(matches)
+                    if any(matches):
+                        cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+        return
 
     def keys(self):
         return list(iter(self))

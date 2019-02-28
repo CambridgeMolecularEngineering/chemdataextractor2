@@ -14,6 +14,8 @@ import json
 import six
 
 from ..utils import python_2_unicode_compatible
+import logging
+log = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -84,6 +86,14 @@ class BaseElement(six.with_metaclass(ABCMeta)):
     # def serialize(self):
     #     """Convert Element to python dictionary."""
     #     return []
+
+    def set_models(self, models):
+        """Set all models on this element
+        """
+        print(models)
+        log.debug("Setting models on %s" % self)
+        self.models += models
+        return
 
     def to_json(self, *args, **kwargs):
         """Convert element to JSON string. The content of the JSON will be equivalent
