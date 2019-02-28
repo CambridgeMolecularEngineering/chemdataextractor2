@@ -151,7 +151,7 @@ class Table(CaptionedElement):
                     # update record_i until we have the full record
                     # this is for the case that the contextual elements are in record_j
                     if not record_update:
-                        record = copy.deepcopy(record_i)
+                        record = copy.copy(record_i)
                         for field in sym_diff:
                             if not record_i.__getattribute__(field) and record_i.fields[field].contextual:
                                 record.__setitem__(field, record_j.__getattribute__(field))
@@ -161,7 +161,7 @@ class Table(CaptionedElement):
                     # update record_j until we have the full record
                     # this is for the case that the contextual elements are in record_i
                     if not record_update:
-                        record = copy.deepcopy(record_j)
+                        record = copy.copy(record_j)
                         for field in sym_diff:
                             if not record_j.__getattribute__(field) and record_j.fields[field].contextual:
                                 record.__setitem__(field, record_i.__getattribute__(field))
@@ -191,9 +191,10 @@ class Table(CaptionedElement):
 
         # obtain table records
         table_records = []
-        partial_table_records = []
 
         for model in self.models:
+            # different parsers can yield different partial table records, but each model is independent
+            partial_table_records = []
             for parser in model.parsers:
 
                 # the partial records are obtained from the autoparser
@@ -228,15 +229,14 @@ class Table(CaptionedElement):
                             requirements = False
 
                     if requirements:
-                        table_records.append({parser.model.__name__: record.serialize()})
+                        table_records.append(record)
 
                     # add the record if only the compound is missing
                     elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
-                        if record.is_unidentified:
-                            table_records.append(["unidentified", {parser.model.__name__: record.serialize()}])
+                        table_records.append(record)
 
         # Addition of the serialized caption records
-        caption_records = [{type(c).__name__: c.serialize()} for c in caption_records if not c.is_contextual]
+        caption_records = [c for c in caption_records if not c.is_contextual]
         table_records += caption_records
 
         return table_records

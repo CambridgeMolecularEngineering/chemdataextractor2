@@ -245,10 +245,10 @@ class NeelTemperature(TemperatureModel):
 
 
 class CurieTemperature(TemperatureModel):
-    specifier = I('TC')
-    compound = ModelType(Compound)
-    custom_element = StringType(parse_expression=R('^Temperatures$'), required=True)
-    other_stuff = StringType(parse_expression=R('^Inorganic$'), required=True)
+    expression = (I('T') + I('C')).add_action(merge)
+    specifier = StringType(parse_expression=expression, required=True, contextual=False, mutable=False)
+    compound = ModelType(Compound, required=False, contextual=False)
+
 
 
 class InteratomicDistance(LengthModel):
@@ -267,8 +267,8 @@ class CoordinationNumber(DimensionlessModel):
     specifier_expression = R('^(N|n|k)$')
     specifier = StringType(parse_expression=specifier_expression, required=True, contextual=True)
 
-    cn_label = StringType(parse_expression=coordination_number_label, required=False, contextual=True)
-    compound = ModelType(Compound, required=False, contextual=True)
+    cn_label = StringType(parse_expression=coordination_number_label, required=True, contextual=True)
+    compound = ModelType(Compound, required=True, contextual=True)
 
 
 class CNLabel(BaseModel):

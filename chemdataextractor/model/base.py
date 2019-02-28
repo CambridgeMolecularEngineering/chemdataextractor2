@@ -195,13 +195,13 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     @property
     def is_unidentified(self):
         """
-        If there is no 'compound' field associated with the model, but the model must have one
+        If there is no 'compound' field associated with the model but the compound is contextual
         """
-        if hasattr(self, 'compound') and \
-                self.fields['compound'].contextual and \
-                self.fields['compound'].model_class.is_unidentified:
+        try:
+            if self.compound.is_contextual:
+                return self.compound.is_unidentified
+        except AttributeError:
             return True
-        return False
 
     def __repr__(self):
         return '<%s>' % (self.__class__.__name__,)
@@ -312,7 +312,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             if not field.null and value in [None, '', []]:
                 continue
             data[field.name] = value
-        return data
+        record = {self.__class__.__name__: data}
+        return record
 
     def to_json(self, *args, **kwargs):
         """Convert Model to JSON."""
