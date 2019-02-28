@@ -28,8 +28,20 @@ class Dimension(object):
     units_dict = {}
     """
     Used for extracting units with these dimensions.
-    It is of type dictionary{:class:`chemdataextractor.parse.element` : :class:`~chemdataextractor.model.units.unit.Unit`}.
-    Examples can be found in temperatures.py
+    It is of type dictionary{:class:`chemdataextractor.parse.element` : :class:`~chemdataextractor.model.units.unit.Unit` or :class:`None`}.
+
+    An :class:`~chemdataextractor.parse.element` is the key for :class:`None` when an element is needed for autoparsing
+    to work correctly, but one does not want to take account of this when extracting a unit from a merged string.
+
+    An example of this is °C, which is always split into two tokens, so we need to be able to capture ° and C
+    separately using elements from the :attr:`units_dict`, but we do not want this to affect :meth:`~chemdataextractor.parse.base.BaseParser.extract_units`,
+    to which the single string '°C' is passed in. As a solution, we have the following :attr:`units_dict`::
+
+        units_dict = {R('°?(((K|k)elvin(s)?)|K)\.?', group=0): Kelvin,
+              R('(°C|((C|c)elsius))\.?', group=0): Celsius,
+              R('°?((F|f)ahrenheit|F)\.?', group=0): Fahrenheit,
+              R('°|C', group=0): None}
+
     """
 
     @classmethod
