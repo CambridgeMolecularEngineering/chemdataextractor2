@@ -66,7 +66,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
     def set_models(self, models):
         """Set all models on this element
         """
-        print(models)
+        # print(models)
         log.debug("Setting models on %s" % self)
         self.models += models
         return

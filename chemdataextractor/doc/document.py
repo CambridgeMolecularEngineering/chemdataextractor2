@@ -333,32 +333,31 @@ class Document(BaseDocument):
                         if abbrev in record.compound.names and not name in record.compound.names:
                             record.compound.names.append(name)
 
-        # # Merge records with any shared name/label
-        # len_l = len(records)
-        # i = 0
-        # while i < (len_l - 1):
-        #     for j in range(i + 1, len_l):
-        #         r = records[i]
-        #         other_r = records[j]
-        #         if isinstance(r, Compound) or isinstance(other_r, Compound):
-        #             continue
+        # Merge Compound records with any shared name/label
+        len_l = len(records)
+        i = 0
+        while i < (len_l - 1):
+            for j in range(i + 1, len_l):
+                r = records[i]
+                other_r = records[j]
+                if isinstance(r, Compound) and isinstance(other_r, Compound):
 
-        #         # Strip whitespace and lowercase to compare names
-        #         rnames_std = {''.join(n.split()).lower() for n in r.compound.names}
-        #         onames_std = {''.join(n.split()).lower() for n in other_r.compound.names}
+                    # Strip whitespace and lowercase to compare names
+                    rnames_std = {''.join(n.split()).lower() for n in r.names}
+                    onames_std = {''.join(n.split()).lower() for n in other_r.names}
 
-        #         # Clashing labels, don't merge
-        #         if len(set(r.compound.labels) - set(other_r.compound.labels)) > 0 and len(set(other_r.compound.labels) - set(r.compound.labels)) > 0:
-        #             continue
+                    # Clashing labels, don't merge
+                    if len(set(r.labels) - set(other_r.labels)) > 0 and len(set(other_r.labels) - set(r.labels)) > 0:
+                        continue
 
-        #         if any(n in rnames_std for n in onames_std) or any(l in r.labels for l in other_r.compound.labels):
-        #             records.pop(j)
-        #             records.pop(i)
-        #             records.append(r.merge(other_r))
-        #             len_l -= 1
-        #             i -= 1
-        #             break
-        #     i += 1
+                    if any(n in rnames_std for n in onames_std) or any(l in r.labels for l in other_r.labels):
+                        records.pop(j)
+                        records.pop(i)
+                        records.append(r.merge(other_r))
+                        len_l -= 1
+                        i -= 1
+                        break
+            i += 1
         
         # Reset mutables
         for el in self.elements:
