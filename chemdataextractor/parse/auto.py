@@ -13,6 +13,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import logging
+import six
+import copy
 
 from .common import lbrct, rbrct
 from .cem import cem, chemical_label, lenient_chemical_label
@@ -24,6 +26,7 @@ from .base import BaseSentenceParser, BaseParser, BaseTableParser
 
 import xml.etree.ElementTree as etree
 
+log = logging.getLogger(__name__)
 
 def construct_unit_element(dimensions):
     """
@@ -139,8 +142,12 @@ class BaseAutoParser(BaseParser):
         return root_phrase
 
     def interpret(self, result, start, end):
+        if result is None:
+            return
+
         requirements = True
         property_entities = {}
+        log.debug(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
@@ -158,42 +165,67 @@ class BaseAutoParser(BaseParser):
             raw_units = first(result.xpath('./value_phrase/units/text()'))
             value = self.extract_value(raw_value)
             error = self.extract_error(raw_value)
-            units = self.extract_units(raw_units, strict=True)
+            units = None
+            try:
+                units = self.extract_units(raw_units, strict=True)
+            except TypeError as e:
+                log.debug(e)
             property_entities.update({"raw_value": raw_value,
                                       "raw_units": raw_units,
                                       "value": value,
                                       "error": error,
                                       "units": units})
-
-        # custom entities defined in the particular model and 'specifier' are retrieved and added to the dictionary
-        # 'compound' is handled separately below
-        for field in self.model.fields:
-            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'compound']:
-                data = first(result.xpath('./' + field + '/text()'))
+        for field_name, field in six.iteritems(self.model.fields):
+            if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+                try:
+                    data = self._get_data(field_name, field, result)
+                    if data is not None:
+                        property_entities.update(data)
                 # if field is required, but empty, the requirements have not been met
-                if data is None \
-                        and self.model.__getattribute__(self.model, field).required\
-                        and not self.model.__getattribute__(self.model, field).contextual:
+                except TypeError as e:
+                    log.debug(self.model)
+                    log.debug(e)
                     requirements = False
-                property_entities.update({str(field): data})
-
         model_instance = self.model(**property_entities)
-
-        if 'compound' in self.model.fields:
-            cem_el = first(result.xpath('./cem'))
-            compound = self.model.fields['compound'].model_class()
-
-            if cem_el is not None:
-                compound.names = cem_el.xpath('./name/text()')
-                compound.labels = cem_el.xpath('./label/text()')
-                model_instance.compound = compound
-            elif cem_el is None \
-                    and self.model.compound.required\
-                    and not self.model.compound.contextual:
-                requirements = False
 
         if requirements:
             yield model_instance
+
+    def _get_data(self, field_name, field, result):
+        if hasattr(field, 'model_class'):
+            field_result = first(result.xpath('./' + field_name))
+            if field_result is None and field.required and not field.contextual:
+                raise TypeError('Could not find element for ' + str(field_name))
+            elif field_result is None:
+                return None
+            field_data = {}
+            for subfield_name, subfield in six.iteritems(field.model_class.fields):
+                data = self._get_data(subfield_name, subfield, field_result)
+                if data is not None:
+                    field_data.update(data)
+            field_object = field.model_class(**field_data)
+            log.debug('Created for' + field_name)
+            log.debug(field_object)
+            return {field_name: field_object}
+        elif hasattr(field, 'field'):
+            # Case that we have listtype
+            # Always only takes the first found one though
+            field = field.field
+            field_data = self._get_data(field_name, field, result)
+            if field_data is not None:
+                if field_data[field_name] is None:
+                    return None
+                field_data = [field_data[field_name]]
+            elif field_data is None and field.required and not field.contextual:
+                raise TypeError('Could not find element for ' + str(field_name))
+            elif field_data is None:
+                return None
+            return {field_name: field_data}
+        else:
+            field_result = first(result.xpath('./' + field_name + '/text()'))
+            if field_result is None and field.required and not field.contextual:
+                raise TypeError('Could not find element for ' + str(field_name))
+            return {field_name: field_result}
 
 
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):

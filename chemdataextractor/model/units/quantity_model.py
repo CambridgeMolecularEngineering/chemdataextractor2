@@ -26,7 +26,7 @@ class QuantityModel(BaseModel):
     units = UnitType(contextual=True)
     error = FloatType(contextual=True)
     dimensions = None
-    specifier = Any()
+    specifier = StringType()
     parsers = [AutoSentenceParser(), AutoTableParser()]
 
     # Operators are implemented so that composite quantities can be created easily
