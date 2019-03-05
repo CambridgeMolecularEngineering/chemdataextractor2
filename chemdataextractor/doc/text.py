@@ -718,11 +718,25 @@ class Sentence(BaseText):
                         if record in records:
                             continue
                         # Skip just labels that have already been seen (bit of a hack)
-                        # THE FOLLOWING IS INFORMATION USED THAT ASSUMED THE COMPOUND WAS BASICALLY A PRIMARY KEY.
-                        # TODO: Implement functionality for merging models similar to this.
-                        # if all(k in {'labels', 'roles'} for k in p.keys()) and set(record.labels).issubset(seen_labels):
-                        #     continue
-                        # seen_labels.update(record.labels)
+                        if (isinstance(record, Compound) and all(k in {'labels', 'roles'} for k in p['Compound'].keys()) and
+                          set(record.labels).issubset(seen_labels)):
+                            continue
+                        if isinstance(record, Compound):
+                            seen_labels.update(record.labels)
+                            # This can be super slow if we find lots of things
+                            found = False
+                            for seen_record in records:
+                                if (isinstance(record, Compound)
+                                  and (not set(record.names).isdisjoint(seen_record.names)
+                                       or not set(record.labels).isdisjoint(seen_record.labels))):
+                                    seen_record.names = sorted(list(set(seen_record.names).union(record.names)))
+                                    seen_record.labels = sorted(list(set(seen_record.labels).union(record.labels)))
+                                    seen_record.roles = sorted(list(set(seen_record.roles).union(record.roles)))
+                                    found = True
+                            if found:
+                                continue
+                        elif hasattr(record, 'compound') and record.compound is not None:
+                            seen_labels.update(record.compound.labels)
                         records.append(record)
         return records
 
