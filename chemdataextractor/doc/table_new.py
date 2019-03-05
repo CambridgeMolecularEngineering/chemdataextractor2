@@ -35,7 +35,7 @@ class Table(CaptionedElement):
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         try:
             self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
-        except TDEError as e:
+        except (TDEError, IndexError) as e:
             log.error("TableDataExtractor error: {}".format(e))
             self.category_table = []
             self.tde_table = None

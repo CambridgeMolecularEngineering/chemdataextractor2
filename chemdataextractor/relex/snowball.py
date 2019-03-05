@@ -13,6 +13,8 @@ import numpy as np
 import six
 
 from ..doc.document import Document, Paragraph
+from ..model.base import BaseModel
+from ..parse.auto import AutoSentenceParser
 from ..doc.text import Sentence
 from ..model import Compound
 from ..parse import Any, I, OneOrMore, Optional, R, W, ZeroOrMore, join, merge
@@ -20,16 +22,19 @@ from ..parse.cem import chemical_name
 from .cluster import Cluster
 from .entity import Entity
 from .phrase import Phrase
+# from .model import Relation
 from .relationship import Relation
-from .utils import match, vectorise
+from .utils import match, vectorise, KnuthMorrisPratt
+from lxml import etree
+from itertools import product
 
 
 class Snowball(object):
     """
     Main Snowball class
 
-    ::Usage: Define a ChemicalRelationship (see relex.relationship)
-        ```snowball = Snowball(relationship=my_relationhip)```
+    ::Usage: Define a Chemdataextractor Model
+        ```snowball = Snowball(model=my_relationhip)```
         Then train the system on a corpus
         ```snowball.train(corpus)```
         This will generate an online training system
@@ -38,7 +43,7 @@ class Snowball(object):
 
     For full detail see the associated paper: https://www.nature.com/articles/sdata2018111
 
-        tc: The minimum confidence of a relationship in order to be accepted
+        tc: The minimum confidence of a model in order to be accepted
         tsim: Minimum similarity between sentences in order for them to be clustered
         prefix_weight: The weight of the sentence prefix in the similarity calculation
         middle_weight: weight of middles in similarity calcs
@@ -48,7 +53,7 @@ class Snowball(object):
         learning_rate: How fast new confidences update based on new data (1 means new confidence is always taken, 0 means no update, )
     """
 
-    def __init__(self, relationship,
+    def __init__(self, model,
                  tc=0.95,
                  tsim=0.95,
                  prefix_weight=0.1,
@@ -59,7 +64,9 @@ class Snowball(object):
                  learning_rate=0.5,
                  max_candidate_combinations=400,
                  save_dir='chemdataextractor/relex/data/'):
-        self.relationship = relationship
+
+        self.model = model
+        
         self.relations = []
         self.phrases = []
         self.clusters = []
@@ -67,7 +74,7 @@ class Snowball(object):
         self.sentences = []
         self.max_candidate_combinations = max_candidate_combinations
         self.save_dir = save_dir
-        self.save_file_name = relationship.name
+        self.save_file_name = model.__name__
 
         # params
         if not 0 <= tc <= 1.0:
@@ -232,7 +239,7 @@ class Snowball(object):
             relations -- The Relations found in the sentence
         """
         # Use the default tagger to find candidate relationships
-        candidate_relations = self.relationship.get_candidates(s.tagged_tokens)
+        candidate_relations = self.model.get_candidates(s.tagged_tokens)
         num_candidates = len(candidate_relations)
         all_combs = []
         unique_names = set()
@@ -304,8 +311,12 @@ class Snowball(object):
         d = Document().from_file(f)
         for p in d.paragraphs:
             for s in p.sentences:
+                sent_definitions = s.definitions
+                if sent_definitions:
+                    self.model.update(sent_definitions)
+                
                 candidate_dict = {}
-                candidate_relationships = self.relationship.get_candidates(s.tagged_tokens)
+                candidate_relationships = self.get_candidates(s)
                 if len(candidate_relationships) > 0:
                     print("\n\n")
                     print(s)
@@ -328,6 +339,96 @@ class Snowball(object):
 
         f.close()
         return
+    
+    def get_candidates(self, s):
+        """Find all candidate relationships of this type within a sentence
+
+        Arguments:
+            s -- ChemdataExtractor.elements.Sentence -- the sentence to parse
+        Returns
+            relations {list} -- list of relations found in the text
+        """
+        entities_dict = {}
+        candidate_relationships = []
+        # Scan the tagged tokens with the parser
+        detected = []
+        sentence_parser = [p for p in self.model.parsers if isinstance(p, AutoSentenceParser)][0]
+        for result in sentence_parser.root.scan(s.tagged_tokens):
+            if result:
+                for key, field in self.model.fields.items():
+                    text_list = result[0].xpath('./' + key + '/text()')
+                    for i, text in enumerate(text_list):
+                        if not text:
+                            continue
+                        detected.append((text, key))
+        if not detected:
+            return []
+
+        detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
+        for text, tag in detected:
+            text_length = len(text.split(' '))
+            toks = [tok[0] for tok in s.tagged_tokens]
+            start_indices = [s for s in KnuthMorrisPratt(toks, text.split(' '))]
+
+            # Add specifier to dictionary  if it doesn't exist
+            if tag not in entities_dict.keys():
+                entities_dict[tag] = []
+
+            entities = [Entity(text, tag, index, index + text_length) for index in start_indices]
+
+            # Add entities to dictionary if new
+            for entity in entities:
+                if entity not in entities_dict[tag]:
+                    entities_dict[tag].append(entity)
+
+        # check all required entities are present
+        required_fields = self.model.required_fields
+        print(required_fields)
+        print(entities_dict)
+        if not all(e in entities_dict.keys() for e in required_fields):
+            return []
+
+        # Construct all valid combinations of entities
+        all_entities = [e for e in entities_dict.values()]
+
+        # Intra-Candidate sorting (within each candidate)
+        for i in range(len(all_entities)):
+            all_entities[i] = sorted(all_entities[i], key=lambda t: t.start)
+
+        candidates = list(product(*all_entities))
+        # if self.rule_key == 'followed_by':
+        #     candidates = self.followed_by_filter_candidates(candidates)
+
+        # Inter-Candidate sorting (sort all candidates)
+        for i in range(len(candidates)):
+            lst = sorted(candidates[i], key=lambda t: t.start)
+            candidates[i] = tuple(lst)
+
+        for candidate in candidates:
+            new_model = self.model()
+            candidate_relationships.append(Relation(candidate, confidence=0))
+        print(candidate_relationships)
+        return candidate_relationships
+
+    # def followed_by_filter_candidates(self, candidate_rels):
+    #     n_rules = len(self.rule_values)
+    #     del_indices = []
+
+    #     for rel in candidate_rels:
+    #         for entity_name in self.rule_values:  # Loop through entity names and create new attribute for each
+    #             setattr(self, str(entity_name), next(filter(lambda x: x.tag.name == entity_name, rel)))
+    #         conditions = []
+    #         for j in range(n_rules - 1):
+    #             conditions.append(getattr(self, str(self.rule_values[j])).start < getattr(self, str(self.rule_values[j + 1])).start)
+    #         if all(conditions):
+    #             del_indices.append(True)
+    #         else:
+    #             del_indices.append(False)
+    #     filtered_candidates = [x for i, x in enumerate(candidate_rels) if del_indices[i]]
+
+    #     return filtered_candidates
+        
+
 
     def train(self, corpus, skip=0):
         """train the snowball algorithm on a specified corpus

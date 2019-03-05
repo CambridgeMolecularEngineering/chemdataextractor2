@@ -168,6 +168,10 @@ class ModelMeta(ABCMeta):
             value.name = six.text_type(key)
             cls.fields[key] = value
         return super(ModelMeta, cls).__setattr__(key, value)
+    
+    @property
+    def required_fields(cls):
+        return [key for key, value in cls.fields.items() if value.required]
 
 
 @python_2_unicode_compatible
