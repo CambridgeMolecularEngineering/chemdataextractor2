@@ -54,32 +54,32 @@ class TestParseMp(unittest.TestCase):
 
     def test_mp4(self):
         s = '4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid (Compound 67): mp 163-164° C.'
-        expected = '<mp_phrase><cem><name>4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid</name><label>67</label></cem><mp><value>163-164</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid</names><labels>67</labels></compound><mp><value>163-164</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_mp5(self):
         s = '4-Amino-3-chloro-6-[2,4-dichloro-3-(1-fluoro-1-methylethylphenyl)pyridine-3-carboxylic acid (Compound 127): mp >250° C.'
-        expected = '<mp_phrase><cem><name>4-Amino-3-chloro-6-[2,4-dichloro-3-(1-fluoro-1-methylethylphenyl)pyridine-3-carboxylic acid</name><label>127</label></cem><mp><value>&gt;250</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>4-Amino-3-chloro-6-[2,4-dichloro-3-(1-fluoro-1-methylethylphenyl)pyridine-3-carboxylic acid</names><labels>127</labels></compound><mp><value>&gt;250</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_mp6(self):
         s = '4-Acetylamino-3-chloro-6-(4-cyano-2,6-difluoro-3-methoxyphenyl)pyridine-2-carboxylic acid, methyl ester: mp 146-147° C.'
-        expected = '<mp_phrase><cem><name>4-Acetylamino-3-chloro-6-(4-cyano-2,6-difluoro-3-methoxyphenyl)pyridine-2-carboxylic acid, methyl ester</name></cem><mp><value>146-147</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>4-Acetylamino-3-chloro-6-(4-cyano-2,6-difluoro-3-methoxyphenyl)pyridine-2-carboxylic acid, methyl ester</names></compound><mp><value>146-147</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_mp7(self):
         s = '3-Bromo-2,6-dichloroaniline: mp 71-72° C.'
-        expected = '<mp_phrase><cem><name>3-Bromo-2,6-dichloroaniline</name></cem><mp><value>71-72</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>3-Bromo-2,6-dichloroaniline</names></compound><mp><value>71-72</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_mp8(self):
         s = '4-Acetylamino-3-chloro-6-(4-chloro-2-fluoro-3-methoxymethoxy-phenyl)pyridine-2-carboxylic acid, methyl ester (Compound 34) mp 122-123° C.'
-        expected = '<mp_phrase><cem><name>4-Acetylamino-3-chloro-6-(4-chloro-2-fluoro-3-methoxymethoxy-phenyl)pyridine-2-carboxylic acid, methyl ester</name><label>34</label></cem><mp><value>122-123</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>4-Acetylamino-3-chloro-6-(4-chloro-2-fluoro-3-methoxymethoxy-phenyl)pyridine-2-carboxylic acid, methyl ester</names><labels>34</labels></compound><mp><value>122-123</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_mp9(self):
         s = 'to give 4-acetylamino-3-chloro-6-(4-chloro-2-fluoro-5-methoxyphenyl)pyridine-2-carboxylic acid methyl ester (4.5 g, 0.012 mol): mp 180-182° C.'
-        expected = '<mp_phrase><cem><role>to give</role><name>4-acetylamino-3-chloro-6-(4-chloro-2-fluoro-5-methoxyphenyl)pyridine-2-carboxylic acid methyl ester</name></cem><mp><value>180-182</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><roles>to give</roles><names>4-acetylamino-3-chloro-6-(4-chloro-2-fluoro-5-methoxyphenyl)pyridine-2-carboxylic acid methyl ester</names></compound><mp><value>180-182</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_degrees_only(self):
@@ -89,7 +89,7 @@ class TestParseMp(unittest.TestCase):
 
     def test_afforded(self):
         s = 'afforded bissulfonic acid (102 mg, 41%) as a green solid m.p.>300° C.'
-        expected = '<mp_phrase><cem><name>bissulfonic acid</name></cem><mp><value>&gt;300</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>bissulfonic acid</names></compound><mp><value>&gt;300</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_melting_point_of(self):
@@ -124,32 +124,32 @@ class TestParseMp(unittest.TestCase):
 
     def test_of_about(self):
         s = '300 g of carboxyethylmethylphosphinic acid are obtained as a white solid having a melting point of about 95° C'
-        expected = '<mp_phrase><cem><name>carboxyethylmethylphosphinic acid</name></cem><mp><value>95</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>carboxyethylmethylphosphinic acid</names></compound><mp><value>95</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_gave(self):
         s = 'under the conditions noted in example 1, gave 1-(3,4-dimethoxyphenyl)-2-(3,4,5-trimethoxyphenyl) ethylene, m.p. 150–152° C'
-        expected = '<mp_phrase><cem><name>1-(3,4-dimethoxyphenyl)-2-(3,4,5-trimethoxyphenyl) ethylene</name></cem><mp><value>150\u2013152</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>1-(3,4-dimethoxyphenyl)-2-(3,4,5-trimethoxyphenyl) ethylene</names></compound><mp><value>150\u2013152</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_gave_label(self):
         s = 'gave 2, m.p. 148° C.;'
-        expected = '<mp_phrase><label>2</label><mp><value>148</value><units>\xb0C.</units></mp></mp_phrase>'
+        expected = '<mp_phrase><labels>2</labels><mp><value>148</value><units>\xb0C.</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_give_label(self):
         s = 'to give 3, m.p. 242–244° C.;'
-        expected = '<mp_phrase><label>3</label><mp><value>242\u2013244</value><units>\xb0C.</units></mp></mp_phrase>'
+        expected = '<mp_phrase><labels>3</labels><mp><value>242\u2013244</value><units>\xb0C.</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_bracket_obtained(self):
         s = '(2S,3S)-3-(t-butoxycarbonyl)amino-1,2-epoxy-4-phenylbutane was obtained (mp: 125.6° C.).'
-        expected = '<mp_phrase><cem><name>(2S,3S)-3-(t-butoxycarbonyl)amino-1,2-epoxy-4-phenylbutane</name></cem><mp><value>125.6</value><units>\xb0C.</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>(2S,3S)-3-(t-butoxycarbonyl)amino-1,2-epoxy-4-phenylbutane</names></compound><mp><value>125.6</value><units>\xb0C.</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_bracket(self):
         s = '(2S,3S)-3-(t-butoxycarbonyl)amino-1,2-epoxy-4-phenylbutane (mp: 125.6° C.).'
-        expected = '<mp_phrase><cem><name>(2S,3S)-3-(t-butoxycarbonyl)amino-1,2-epoxy-4-phenylbutane</name></cem><mp><value>125.6</value><units>\xb0C.</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>(2S,3S)-3-(t-butoxycarbonyl)amino-1,2-epoxy-4-phenylbutane</names></compound><mp><value>125.6</value><units>\xb0C.</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_tilde(self):
@@ -174,12 +174,12 @@ class TestParseMp(unittest.TestCase):
 
     def test_cem_yield(self):
         s = '3-Ethoxymethyl-2-(4-chlorophenyl)imino-2H-chromene (E4): (1.00 g, 64%); m.p.: 84˜86° C., Rf=0.564'
-        expected = '<mp_phrase><cem><name>3-Ethoxymethyl-2-(4-chlorophenyl)imino-2H-chromene</name><label>E4</label></cem><mp><value>84\u02dc86</value><units>\xb0C.</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>3-Ethoxymethyl-2-(4-chlorophenyl)imino-2H-chromene</names><labels>E4</labels></compound><mp><value>84\u02dc86</value><units>\xb0C.</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_having(self):
         s = 'to obtain 5 parts of 1-phenyl-3-(4-phenylethynylstyryl)-5-(4-phenylethynylphenyl)pyrazoline having a melting point of 212-214° C.'
-        expected = '<mp_phrase><cem><name>1-phenyl-3-(4-phenylethynylstyryl)-5-(4-phenylethynylphenyl)pyrazoline</name></cem><mp><value>212-214</value><units>\xb0C</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>1-phenyl-3-(4-phenylethynylstyryl)-5-(4-phenylethynylphenyl)pyrazoline</names></compound><mp><value>212-214</value><units>\xb0C</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_solvent(self):
@@ -199,7 +199,7 @@ class TestParseMp(unittest.TestCase):
 
     def test_colon(self):
         s = '3-Cyano-2H-chromene (B1): (2.51 g, 80%); m.p.: 44-45° C.;'
-        expected = '<mp_phrase><cem><name>3-Cyano-2H-chromene</name><label>B1</label></cem><mp><value>44-45</value><units>\xb0C.</units></mp></mp_phrase>'
+        expected = '<mp_phrase><compound><names>3-Cyano-2H-chromene</names><labels>B1</labels></compound><mp><value>44-45</value><units>\xb0C.</units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
     def test_tm0(self):
@@ -224,16 +224,17 @@ class TestParseMpCompound(unittest.TestCase):
     def test_mpc1(self):
         s = '4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid (Compound 67): mp 163-164° C.'
         expected = [
-            {'labels': [u'67'], 'names': [u'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']},
-            {'labels': ['67'], 'melting_points': [{'raw_value': '163-164', 'raw_units': '°C', 'units': u'Kelvin^(1.0)','value': [436.15, 437.15]}], 'names': ['4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']}
+            {'Compound': {'labels': [u'67'], 'names': [u'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid'],'roles': ['compound']}},
+            {'MeltingPoint': {'raw_value': '163-164', 'raw_units': '°C', 'units': u'Celsius^(1.0)', 'value': [163.0, 164.0],
+                             'compound': {'Compound': {'labels': [u'67'], 'names': [u'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']}}}}
         ]
         self.do_parse(s, expected)
 
     def test_mpc2(self):
         s = '3-Bromo-2,6-dichloroaniline: mp 71-72° C.'
         expected = [
-            {'names': [u'3-Bromo-2,6-dichloroaniline']},
-            {'melting_points': [{'raw_value': '71-72', 'raw_units': '°C', 'units': 'Kelvin^(1.0)', 'value': [344.15, 345.15]}], 'names': ['3-Bromo-2,6-dichloroaniline']}
+            {'Compound': {'names': [u'3-Bromo-2,6-dichloroaniline']}},
+            {'MeltingPoint': {'raw_value': '71-72', 'raw_units': '°C', 'units': 'Celsius^(1.0)', 'value': [71.0, 72.0], 'compound': {'Compound': {'names': ['3-Bromo-2,6-dichloroaniline']}}}}
         ]
         self.do_parse(s, expected)
 
