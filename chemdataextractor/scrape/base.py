@@ -115,7 +115,7 @@ class BaseEntityProcessor(six.with_metaclass(ABCMeta)):
     def process_entity(self, entity):
         """Process an Entity. Return None to filter Entity from the pipeline.
 
-        :param Entity entity: The Entity to process.
+        :param chemdataextractor.scrape.entity.Entity entity: The Entity to process.
         :returns: The processed Entity.
         :rtype: Entity or None
         """

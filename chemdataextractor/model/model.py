@@ -1,3 +1,8 @@
+"""
+Model classes for physical properties.
+
+"""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -273,6 +278,4 @@ class CNLabel(BaseModel):
     label_Juraj = StringType(parse_expression=coordination_number_label)
     compound = ModelType(Compound, required=False)
     parsers = [AutoSentenceParser(), AutoTableParser()]
-
-
 

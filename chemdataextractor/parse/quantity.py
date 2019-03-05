@@ -11,12 +11,14 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import re
+import six
+from fractions import Fraction
 from abc import abstractproperty
 
 from .common import lbrct, rbrct
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
-from fractions import Fraction
+from ..utils import memoize
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     """
     Returns an Element for values with given units. By default, uses tags to guess that a unit exists.
 
-    :param BaseParserElement units: A parser element for the units that are to be looked for. Default option looks for nouns.
+    :param BaseParserElement units: (Optional) A parser element for the units that are to be looked for. Default option looks for nouns.
     :returns: An Element to look for values and units.
     :rtype: BaseParserElement
     """
@@ -50,7 +52,14 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     return value + units
 
 
+@memoize
 def value_element_plain():
+    """
+    Returns an element similar to value_element but without any units.
+
+    :returns: An Element to look for values.
+    :rtype: BaseParserElement
+    """
     number = R('^[\+\-–−]?\d+(\.\d+)?$')
     joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('raw_value').add_action(merge)
     spaced_range = (number + R('^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
@@ -63,16 +72,18 @@ def value_element_plain():
 
 
 def extract_error(string):
-    """Extract the error from a string
+    """
+    Extract the error from a string
 
     Usage::
-        qp = QuantityParser()
+
         test_string = '150±5'
-        end_value = qp.extract_error(test_string)
+        end_value = extract_error(test_string)
         print(end_value) # 5
 
-    Arguments:
-        string {[type]} -- [description]
+    :param str string: A representation of the value and error as a string
+    :returns: The error expressed as a float .
+    :rtype: float
     """
     if string is None:
         return None
@@ -94,16 +105,17 @@ def extract_error(string):
 
 def extract_value(string):
     """
-    Takes a string and returns a float or a list representing the string given.
+    Takes a string and returns a list of floats representing the string given.
 
     Usage::
-        qp = QuantityParser()
+
         test_string = '150 to 160'
-        end_value = qp.extract_value(test_string)
+        end_value = extract_value(test_string)
         print(end_value) # [150., 160.]
 
     :param str string: A representation of the values as a string
-    :returns: The string expressed as a float or a list of floats if it was a value range.
+    :returns: The value expressed as a list of floats of length 1 if the value had no range,
+        and as a list of floats of length 2 if it was a range.
     :rtype: list(float)
     """
     if string is None:
@@ -144,25 +156,31 @@ def extract_value(string):
     return values
 
 
+@memoize
 def extract_units(string, dimensions, strict=False):
     """
     Takes a string and returns a Unit.
-    Raises TypeError if strict and the dimensions do not match the expected dimensions.
+    Raises TypeError if strict and the dimensions do not match the expected dimensions
+    or the string has extraneous characters, e.g. if a string Fe was given, and we were
+    looking for a temperature, strict=False would return Fahrenheit, strinct=True would
+    raise a TypeError.
 
     Usage::
-        qp = QuantityParser()
-        qp.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
+
+        dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
         test_string = 'Kh2/(km/s)-1/2'
-        end_units = qp.extract_units(test_string, strict=True)
+        end_units = extract_units(test_string, dimensions, strict=True)
         print(end_units) # Units of: (10^1.5) * Hour^(2.0)  Meter^(0.5)  Second^(-0.5)  Kelvin^(1.0)
 
     :param str string: A representation of the units as a string
-    :param bool strict: Whether to raise a TypeError if the dimensions of the parsed units do not have the expected dimensions.
+    :param bool strict: (Optional) Whether to raise a TypeError if the dimensions of the parsed units do not have the expected dimensions.
     :returns: The string expressed as a Unit
     :rtype: chemdataextractor.quantities.Unit
     """
-    if string is None:
+    if string is None and not strict:
         return None
+    elif string is None:
+        raise TypeError('None was passed in')
     string = string.replace("-", "-")
     string = string.replace("–", "-")
     string = string.replace("−", "-")
@@ -172,7 +190,13 @@ def extract_units(string, dimensions, strict=False):
     # Find the units by matching strings, e.g. K for Kelvin, m for Meter
     unit_types = _find_unit_types(split_string, dimensions)
     # Find the powers associated with each unit
-    powers = _find_powers(unit_types)
+    try:
+        powers = _find_powers(unit_types)
+    except ValueError as e:
+        if not strict:
+            return None
+        else:
+            raise TypeError('Error extracting power: \n' + str(e) + '\n encountered during parsing')
     # Deal with things like kilo, mega, or milli that modify the magnitude of the units found
     end_unit = _find_units(powers, dimensions, strict)
     return end_unit
@@ -242,7 +266,10 @@ def _find_unit_types(tokenized_sentence, dimensions):
     :returns: A list containing tuples of the found units and the string split by the units, in the format (unit, string containing the unit, the substring that caused the unit to be recognised)
     :rtype: list((chemdataextractor.quantities.Unit, str, str))
     """
-    units_dict = dimensions.units_dict
+    units_dict = {}
+    for key, value in six.iteritems(dimensions.units_dict):
+        if value is not None:
+            units_dict[key] = value
     units_list = []
     # This is O(m*n), m being the length of the units dictionary, n the number of components of powers.
     for element in tokenized_sentence:

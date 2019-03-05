@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.units.dimensions.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Base types for dimensions.
 
-Taketomo Isazawa (ti250@cam.ac.uk)
-
+:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
 """
 
 import six
@@ -15,52 +11,48 @@ from abc import abstractmethod
 from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 
 
-class BaseDimension(BaseModel):
-
-    @abstractmethod
-    def __truediv__(self, a):
-        pass
-
-    @abstractmethod
-    def __pow__(self):
-        pass
-
-    @abstractmethod
-    def __mul__(self, a):
-        pass
-
-    @abstractmethod
-    def __eq__(self, a):
-        pass
-
-    @abstractmethod
-    def __hash__(self):
-        pass
-
-
-class Dimension(BaseDimension):
+class Dimension(object):
     """
-    Class for dimensions. All actual quantities should be subclassed from this
-    instead of BaseDimension. (This setup is as we otherwise wouldn't be able
-    to make a DictionaryType with Dimension-type objects as keys)
+    Class for representing physical dimensions.
     """
 
     dimensions = None
-    # {ModelType(BaseDimension): FloatType()}
+    """
+    Used to represent composite dimensions.
+    It is of type dictionary{:class:`Dimension`: :class:`float`}.
+    An example would be speed, in which case we would have::
+
+        dimensions = {Length(): 1.0, Time(): -1.0}
+    """
 
     units_dict = {}
-
     """
-    Set up units_dict with {element : Unit}, where element is an element from parse.elements.
-    Examples can be seen in temperatures.py
+    Used for extracting units with these dimensions.
+    It is of type dictionary{:class:`chemdataextractor.parse.element` : :class:`~chemdataextractor.model.units.unit.Unit` or :class:`None`}.
+
+    An :class:`~chemdataextractor.parse.element` is the key for :class:`None` when an element is needed for autoparsing
+    to work correctly, but one does not want to take account of this when extracting a unit from a merged string.
+
+    An example of this is °C, which is always split into two tokens, so we need to be able to capture ° and C
+    separately using elements from the :attr:`units_dict`, but we do not want this to affect :meth:`~chemdataextractor.parse.base.BaseParser.extract_units`,
+    to which the single string '°C' is passed in. As a solution, we have the following :attr:`units_dict`::
+
+        units_dict = {R('°?(((K|k)elvin(s)?)|K)\.?', group=0): Kelvin,
+              R('(°C|((C|c)elsius))\.?', group=0): Celsius,
+              R('°?((F|f)ahrenheit|F)\.?', group=0): Fahrenheit,
+              R('°|C', group=0): None}
+
     """
 
     @classmethod
     def composite_dimension(cls, with_dimensions):
         """
         Creates a new Dimension subclass composed of the dimensions given.
+
         .. note::
+
             This returns a subclass of Dimension, not an instance of a subclass of Dimension.
+
         :param Dimension with_dimensions: The dimensions for the new unit subclass to be created
         :returns: The new composite dimension
         :rtype: subclass of Dimension
@@ -168,7 +160,7 @@ class Dimension(BaseDimension):
 
     def __eq__(self, other):
 
-        if not isinstance(other, BaseDimension):
+        if not isinstance(other, Dimension):
             return False
 
         if self.dimensions is not None:

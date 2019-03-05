@@ -19,6 +19,7 @@ import six
 
 from ..utils import python_2_unicode_compatible
 from .text import Paragraph, Citation, Footnote, Heading, Title, Caption
+from .element import CaptionedElement
 # from .table import Table
 from .table_new import Table
 from .figure import Figure
@@ -62,6 +63,7 @@ class BaseDocument(six.with_metaclass(ABCMeta, collections.Sequence)):
 
 class Document(BaseDocument):
     """A document to extract data from. Contains a list of document elements."""
+    # TODO: Add a usage example here in the documentation.
 
     def __init__(self, *elements, **kwargs):
         """Initialize a Document manually by passing one or more Document elements (Paragraph, Heading, Table, etc.)
@@ -69,6 +71,8 @@ class Document(BaseDocument):
         Strings that are passed to this constructor are automatically wrapped into Paragraph elements.
 
         :param list[chemdataextractor.doc.element.BaseElement|string] elements: Elements in this Document.
+        :keyword Config config: (Optional) Config file for the Document.
+        :keyword list[BaseModel] models: (Optional) Models that the Document should extract data for.
         """
         self._elements = []
         for element in elements:
@@ -104,7 +108,7 @@ class Document(BaseDocument):
         Usage::
             d = Document.from_file(f)
             d.set_models([myModelClass1, myModelClass2,..])
-        
+
         Arguments::
             models -- List of model classes
 
@@ -129,9 +133,15 @@ class Document(BaseDocument):
 
             Always open files in binary mode by using the 'rb' parameter.
 
-        :param file|string f: A file-like object or path to a file.
-        :param string fname: (Optional) The filename. Used to help determine file format.
-        :param list[chemdataextractor.reader.base.BaseReader] readers: (Optional) List of readers to use.
+        :param f: A file-like object or path to a file.
+        :type f: file or str
+        :param str fname: (Optional) The filename. Used to help determine file format.
+        :param list[chemdataextractor.reader.base.BaseReader] readers: (Optional) List of readers to use. If not set, Document will try all default readers,
+            which are :class:`~chemdataextractor.reader.acs.AcsHtmlReader`, :class:`~chemdataextractor.reader.rsc.RscHtmlReader`,
+            :class:`~chemdataextractor.reader.nlm.NlmXmlReader`, :class:`~chemdataextractor.reader.uspto.UsptoXmlReader`,
+            :class:`~chemdataextractor.reader.cssp.CsspHtmlReader`, :class:`~chemdataextractor.elsevier.ElsevierXmlReader`,
+            :class:`~chemdataextractor.reader.markup.XmlReader`, :class:`~chemdataextractor.reader.markup.HtmlReader`,
+            :class:`~chemdataextractor.reader.pdf.PdfReader`, and :class:`~chemdataextractor.reader.plaintext.PlainTextReader`.
         """
         if isinstance(f, six.string_types):
             f = io.open(f, 'rb')
@@ -153,8 +163,13 @@ class Document(BaseDocument):
             This method expects a byte string, not a unicode string (in contrast to most methods in ChemDataExtractor).
 
         :param bytes fstring: A byte string containing the contents of a file.
-        :param string fname: (Optional) The filename. Used to help determine file format.
-        :param list[chemdataextractor.reader.base.BaseReader] readers: (Optional) List of readers to use.
+        :param str fname: (Optional) The filename. Used to help determine file format.
+        :param list[chemdataextractor.reader.base.BaseReader] readers: (Optional) List of readers to use. If not set, Document will try all default readers,
+            which are :class:`~chemdataextractor.reader.acs.AcsHtmlReader`, :class:`~chemdataextractor.reader.rsc.RscHtmlReader`,
+            :class:`~chemdataextractor.reader.nlm.NlmXmlReader`, :class:`~chemdataextractor.reader.uspto.UsptoXmlReader`,
+            :class:`~chemdataextractor.reader.cssp.CsspHtmlReader`, :class:`~chemdataextractor.elsevier.ElsevierXmlReader`,
+            :class:`~chemdataextractor.reader.markup.XmlReader`, :class:`~chemdataextractor.reader.markup.HtmlReader`,
+            :class:`~chemdataextractor.reader.pdf.PdfReader`, and :class:`~chemdataextractor.reader.plaintext.PlainTextReader`.
         """
         if readers is None:
             from ..reader import DEFAULT_READERS
@@ -177,13 +192,18 @@ class Document(BaseDocument):
 
     @property
     def elements(self):
-        """Return a list of document elements."""
+        """
+        A list of all the elements in this document. All elements subclass from :class:`~chemdataextractor.doc.element.BaseElement`,
+        and represent things such as paragraphs or tables, and can be found in :mod:`chemdataextractor.doc.figure`,
+        :mod:`chemdataextractor.doc.table_new`, and :mod:`chemdataextractor.doc.text`.
+        """
         return self._elements
 
     # TODO: memoized_property?
     @property
     def records(self):
-        """Return chemical records extracted from this document using interdependency resolution
+        """
+        All records found in this Document, as a list of :class:`~chemdataextractor.model.base.BaseModel`.
         """
         log.debug("Getting chemical records")
         records = ModelList()  # Final list of records -- output
@@ -223,7 +243,7 @@ class Document(BaseDocument):
                 if len(el_records) == 1 and isinstance(el_records[0], Compound) and el_records[0].is_id_only:
                     head_def_record = el_records[0]
                     head_def_record_i = i
-            
+
             # Paragraph with multiple sentences
             # We assume that if the first sentence of a paragraph contains only 1 ID Record, we can treat it as a header definition record, unless directly proceeding a header def record
             elif isinstance(el, Paragraph) and len(el.sentences) > 0:
@@ -234,7 +254,7 @@ class Document(BaseDocument):
                         if sent_record.labels or (sent_record.names and len(sent_record.names[0]) > len(el.sentences[0].text) / 2):  # TODO: Why do the length check?
                             head_def_record = sent_record
                             head_def_record_i = i
-        
+
             #: BACKWARD INTERDEPENDENCY RESOLUTION BEGINS HERE
             for record in el.records:
                 if isinstance(record, Compound):
@@ -252,7 +272,7 @@ class Document(BaseDocument):
                         # If 2 consecutive headings with compound ID, merge in from previous
                         if i > 0 and isinstance(self.elements[i - 1], Heading):
                             prev = self.elements[i - 1]
-                            if (len(el.records) == 1 and record.is_id_only and len(prev.records) == 1 and 
+                            if (len(el.records) == 1 and record.is_id_only and len(prev.records) == 1 and
                                 isinstance(prev.records[0], Compound) and prev.records[0].is_id_only and not (record.labels and prev.records[0].labels) and
                                     not (record.names and prev.records[0].names)):
                                 record.names.extend(prev.records[0].names)
@@ -358,7 +378,7 @@ class Document(BaseDocument):
                         i -= 1
                         break
             i += 1
-        
+
         # Reset mutables
         for el in self.elements:
             for model in el.models:
@@ -367,6 +387,13 @@ class Document(BaseDocument):
         return records
 
     def get_element_with_id(self, id):
+        """
+        Get element with the specified ID. If one is not found, None is returned.
+
+        :param id: Identifier to search for.
+        :returns: Element with specified ID
+        :rtype: BaseElement or None
+        """
         """Return the element with the specified ID."""
         # Should we maintain a hashmap of ids to make this more efficient? Probably overkill.
         # TODO: Elements can contain nested elements (captions, footnotes, table cells, etc.)
@@ -374,63 +401,95 @@ class Document(BaseDocument):
 
     @property
     def figures(self):
-        """Return all Figure Elements in this Document."""
+        """
+        A list of all :class:`~chemdataextractor.doc.figure.Figure` elements in this Document.
+        """
         return [el for el in self.elements if isinstance(el, Figure)]
 
     @property
     def tables(self):
-        """Return all Table Elements in this Document."""
+        """
+        A list of all :class:`~chemdataextractor.doc.table.Table` elements in this Document.
+        """
         return [el for el in self.elements if isinstance(el, Table)]
 
     @property
     def citations(self):
-        """Return all Citation Elements in this Document."""
+        """
+        A list of all :class:`~chemdataextractor.doc.text.Citation` elements in this Document.
+        """
         return [el for el in self.elements if isinstance(el, Citation)]
 
     @property
     def footnotes(self):
-        """Return all Footnote Elements in this Document."""
+        """
+        A list of all :class:`~chemdataextractor.doc.text.Footnote` elements in this Document.
+
+        .. note::
+
+            Elements (e.g. Tables) can contain nested Footnotes which are not taken into account.
+        """
         # TODO: Elements (e.g. Tables) can contain nested Footnotes
         return [el for el in self.elements if isinstance(el, Footnote)]
 
     @property
     def titles(self):
-        """Returns all Title Elements in this Document"""
+        """
+        A list of all :class:`~chemdataextractor.doc.text.Title` elements in this Document.
+        """
         return [el for el in self.elements if isinstance(el, Title)]
 
     @property
     def headings(self):
-        """Return all Heading Elements in this Document."""
+        """
+        A list of all :class:`~chemdataextractor.doc.text.Heading` elements in this Document.
+        """
         return [el for el in self.elements if isinstance(el, Heading)]
 
     @property
     def paragraphs(self):
-        """Return all Paragraph Elements in this Document."""
+        """
+        A list of all :class:`~chemdataextractor.doc.text.Paragraph` elements in this Document.
+        """
         return [el for el in self.elements if isinstance(el, Paragraph)]
 
     @property
     def captions(self):
-        """Return all Caption Elements in this Document."""
+        """
+        A list of all :class:`~chemdataextractor.doc.text.Caption` elements in this Document.
+        """
         return [el for el in self.elements if isinstance(el, Caption)]
 
     @property
     def captioned_elements(self):
-        """Return all Captioned Elements in this Document."""
-        return [el for el in self.elements if isinstance(el, BaseCaptionedElement)]
+        """
+        A list of all :class:`~chemdataextractor.doc.element.CaptionedElement` elements in this Document.
+        """
+        return [el for el in self.elements if isinstance(el, CaptionedElement)]
 
     @property
     def abbreviation_definitions(self):
-        """"""
+        """
+        A list of all abbreviation definitions in this Document. Each abbreviation is in the form
+        (:class:`str` abbreviation, :class:`str` long form of abbreviation, :class:`str` ner_tag)
+        """
         return [ab for el in self.elements for ab in el.abbreviation_definitions]
 
     @property
     def ner_tags(self):
-        """"""
+        """
+        A list of all Named Entity Recognition tags in this Document.
+        If a word was found not to be a named entity, the named entity tag is None,
+        and if it was found to be a named entity, it can have either a tag of 'B-CM' for a beginning of a
+        mention of a chemical or 'I-CM' for the continuation of a mention.
+        """
         return [n for el in self.elements for n in el.ner_tags]
 
     @property
     def cems(self):
-        """"""
+        """
+        A list of all Chemical Entity Mentions in this document as :class:`~chemdataextractor.doc.text.Span`
+        """
         return list(set([n for el in self.elements for n in el.cems]))
 
     @property
@@ -438,10 +497,14 @@ class Document(BaseDocument):
         """
         Return a list of all recognised definitions within this Document
         """
+        # TODO: What's the type of this?
         return list([defn for el in self.elements for defn in el.definitions])
 
     def serialize(self):
-        """Convert Document to python dictionary."""
+        """
+        Convert Document to Python dictionary. The dictionary will always contain the key 'type', which will be 'document',
+        and the key 'elements', which contains a dictionary representation of each of the elements of the document.
+        """
         # Serialize fields to a dict
         elements = []
         for element in self.elements:
@@ -450,7 +513,11 @@ class Document(BaseDocument):
         return data
 
     def to_json(self, *args, **kwargs):
-        """Convert Document to JSON string."""
+        """Convert Document to JSON string. The content of the JSON will be equivalent
+        to that of :meth:`serialize`.
+        The document itself will be under the key 'elements',
+        and there will also be the key 'type', which will always be 'document'.
+        Any arguments for :func:`json.dumps` can be passed into this function."""
         return json.dumps(self.serialize(), *args, **kwargs)
 
     def _repr_html_(self):

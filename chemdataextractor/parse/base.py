@@ -26,35 +26,37 @@ class BaseParser(object):
     def interpret(self, result, start, end):
         pass
 
-    def __init__(self):
-        self.needs_update = True
-
     def extract_error(self, string):
-        """Extract the error from a string
+        """
+        Extract the error from a string
 
         Usage::
+
             bp = BaseParser()
             test_string = '150±5'
             end_value = bp.extract_error(test_string)
             print(end_value) # 5
 
-        Arguments:
-            string {[type]} -- [description]
+        :param str string: A representation of the value and error as a string
+        :returns: The error expressed as a float .
+        :rtype: float
         """
         return extract_error(string)
 
     def extract_value(self, string):
         """
-        Takes a string and returns a float or a list representing the string given.
+        Takes a string and returns a list of floats representing the string given.
 
         Usage::
+
             bp = BaseParser()
             test_string = '150 to 160'
             end_value = bp.extract_value(test_string)
             print(end_value) # [150., 160.]
 
         :param str string: A representation of the values as a string
-        :returns: The string expressed as a float or a list of floats if it was a value range.
+        :returns: The value expressed as a list of floats of length 1 if the value had no range,
+            and as a list of floats of length 2 if it was a range.
         :rtype: list(float)
         """
         return extract_value(string)
@@ -68,6 +70,7 @@ class BaseParser(object):
         raise a TypeError.
 
         Usage::
+
             bp = QuantityParser()
             bp.model = QuantityModel()
             bp.model.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
@@ -90,6 +93,17 @@ class BaseSentenceParser(BaseParser):
     """
 
     def parse_sentence(self, tokens):
+        """
+        Parse a sentence. This function is primarily called by the
+        :attr:`~chemdataextractor.doc.text.Sentence.records` property of
+        :class:`~chemdataextractor.doc.text.Sentence`.
+
+        :param list[(token,tag)] tokens: List of tokens for parsing. When this method
+            is called by :attr:`chemdataextractor.doc.text.Sentence.records`,
+            the tokens passed in are :attr:`chemdataextractor.doc.text.Sentence.tagged_tokens`.
+        :returns: All the models found in the sentence.
+        :rtype: Iterator[:class:`chemdataextractor.model.base.BaseModel`]
+        """
         for result in self.root.scan(tokens):
             for model in self.interpret(*result):
                 yield model
@@ -102,6 +116,19 @@ class BaseTableParser(BaseParser):
     """
 
     def parse_cell(self, cell):
+        """
+        Parse a cell. This function is primarily called by the
+        :attr:`~chemdataextractor.doc.table_new.Table.records` property of
+        :class:`~chemdataextractor.doc.table_new.Table`.
+
+        :param list[(token,tag)] tokens: List of tokens for parsing. When this method
+            is called by :attr:`chemdataextractor.doc.text.table_new.Table`,
+            the tokens passed in are in the same form as
+            :attr:`chemdataextractor.doc.text.Sentence.tagged_tokens`, after the
+            category table has been flattened into a sentence.
+        :returns: All the models found in the table.
+        :rtype: Iterator[:class:`chemdataextractor.model.base.BaseModel`]
+        """
         if self.root is not None:
             for result in self.root.scan(cell.tagged_tokens):
                 try:

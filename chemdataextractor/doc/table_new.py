@@ -32,6 +32,30 @@ class Table(CaptionedElement):
     """
 
     def __init__(self, caption, label=None, table_data=[], models=None, **kwargs):
+        """
+        In addition to the parameters below, any keyword arguments supported by TableDataExtractor.TdeTable
+        can be passed in as keyword arguments and they will be passed on to TableDataExtractor.TdeTable.
+
+        .. note::
+
+            If intended as part of a :class:`~chemdataextractor.doc.document.Document`,
+            an element should either be initialized with a reference to its containing document,
+            or its :attr:`document` attribute should be set as soon as possible.
+            If the element is being passed in to a :class:`chemdataextractor.doc.document.Document`
+            to initialise it, the :attr:`document` attribute is automatically set
+            during the initialisation of the document, so the user does not need to worry about this.
+
+        :param BaseElement caption: The caption for the element.
+        :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
+        :param list table_data: (Optional) Table data to be passed on to TableDataExtractor to be parsed.
+            Refer to documentation for TableDataExtractor.TdeTable for more information on how this should be structured.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
+            If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
+            inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
+            this is set automatically to be the same as that of the containing element, unless manually set otherwise.
+        :param Document document: (Optional) The document containing this element.
+        :param Any id: (Optional) Some identifier for this element. Must be equatable.
+        """
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         try:
             self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
@@ -45,7 +69,11 @@ class Table(CaptionedElement):
             self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
 
     def serialize(self):
-        """Convert Table element to python dictionary."""
+        """
+        Convert self to a dictionary. The key 'type' will contain
+        the name of the class being serialized, and the key 'caption' will contain
+        a serialized representation of :attr:`caption`, which is a :class:`~chemdataextractor.doc.element.BaseElement`
+        """
         data = {
             'type': self.__class__.__name__,
             'caption': self.caption.serialize(),
@@ -154,8 +182,6 @@ class Table(CaptionedElement):
 
     @property
     def records(self):
-        """Chemical records that have been parsed from the table."""
-
         # get the compounds from the caption
         caption_records = self.caption.records
         caption_compounds = []

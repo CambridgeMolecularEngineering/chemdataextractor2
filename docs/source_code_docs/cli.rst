@@ -2,7 +2,7 @@
 .cli
 =======================
 
-Command line interfact tools
+Command line interface tools
 
 .. automodule:: chemdataextractor.cli
     :members:

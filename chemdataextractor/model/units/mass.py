@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.units.temperatures.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Units and models for masses.
 
-Taketomo Isazawa (ti250@cam.ac.uk)
-
+:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
 """
 
 from __future__ import absolute_import
@@ -25,21 +21,33 @@ log = logging.getLogger(__name__)
 
 
 class Mass(Dimension):
+    """
+    Dimension subclass for masses.
+    """
     pass
 
 
 class MassModel(QuantityModel):
-
+    """
+    Model for mass.
+    """
     dimensions = Mass()
 
 
 class MassUnit(Unit):
+    """
+    Base class for units with dimensions of mass.
+    The standard value for mass is defined to be a gram, implemented in the Gram class.
+    """
 
     def __init__(self, magnitude=0.0, powers=None):
         super(MassUnit, self).__init__(Mass(), magnitude, powers)
 
 
 class Gram(MassUnit):
+    """
+    class for grams.
+    """
 
     def convert_value_to_standard(self, value):
         return value
@@ -55,6 +63,9 @@ class Gram(MassUnit):
 
 
 class Pound(MassUnit):
+    """
+    Class for pounds.
+    """
 
     def convert_value_to_standard(self, value):
         return value * 453.592
@@ -70,6 +81,9 @@ class Pound(MassUnit):
 
 
 class Tonne(MassUnit):
+    """
+    Class for tonnes, i.e. metric tons.
+    """
 
     def convert_value_to_standard(self, value):
         return value * 1000000.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-
+Abstract base classes for document readers.
 """
 
 from __future__ import absolute_import

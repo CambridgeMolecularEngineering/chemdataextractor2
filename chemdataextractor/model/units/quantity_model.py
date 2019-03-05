@@ -2,7 +2,7 @@
 """
 Base types for making quantity models.
 
-Taketomo Isazawa (ti250@cam.ac.uk)
+:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
 """
 
 from __future__ import absolute_import
@@ -18,9 +18,7 @@ from ...parse.auto import AutoSentenceParser, AutoTableParser
 
 class QuantityModel(BaseModel):
     """
-    Class for quantities. All actual quantities should be subclassed from this
-    instead of BaseQuantityModel. (This setup is as we otherwise wouldn't be able
-    to make a list with QuantityModel-type objects as keys)
+    Class for modelling quantities.
     """
     raw_value = StringType(contextual=True)
     raw_units = StringType(contextual=True)
@@ -28,26 +26,26 @@ class QuantityModel(BaseModel):
     units = UnitType(contextual=True)
     error = FloatType(contextual=True)
     dimensions = None
-    specifier = Any()
+    specifier = StringType()
     parsers = [AutoSentenceParser(), AutoTableParser()]
 
-    """
-    Operators are implemented so that composite quantities can be created easily
-    on the fly, such as the following code snippet:
+    # Operators are implemented so that composite quantities can be created easily
+    # on the fly, such as the following code snippet:
 
-    length = LengthModel()
-    length.unit = Meter()
-    length.value = 10
-    time = TimeModel()
-    time.unit = Second()
-    time.value = 2
-    speed = length / time
-    print("Speed in miles per hour is: ", speed.convert_to(Mile() / Hour()))
+    # .. code-block:: python
 
-    Which has an expected output of
+    #     length = LengthModel()
+    #     length.unit = Meter()
+    #     length.value = 10
+    #     time = TimeModel()
+    #     time.unit = Second()
+    #     time.value = [2]
+    #     speed = length / time
+    #     print("Speed in miles per hour is: ", speed.convert_to(Mile() / Hour()).value[0])
 
-    Speed in miles per hour is:  11.184709259696522
-    """
+    # Which has an expected output of
+
+    # Speed in miles per hour is:  11.184709259696522
 
     def __truediv__(self, other):
 
@@ -115,8 +113,8 @@ class QuantityModel(BaseModel):
         Raises AttributeError if the current unit is not set.
 
         :param Unit unit: The Unit to convert to
-        :returns: The value as expressed in the new unit
-        :rtype: float
+        :returns: The quantity in the given units.
+        :rtype: QuantityModel
         """
         if self.units:
             converted_values = self.convert_value(self.units, unit)
@@ -127,7 +125,6 @@ class QuantityModel(BaseModel):
                 self.error = converted_error
 
         return self
-        #raise AttributeError("Unit to convert from not set")
 
     def convert_value(self, from_unit, to_unit):
         """
@@ -209,8 +206,6 @@ class QuantityModel(BaseModel):
         if min_converted_value <= max_other_value or max_converted_value >= min_other_value:
             return True
         return False
-
-
 
     def __str__(self):
         string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.units.__str__()

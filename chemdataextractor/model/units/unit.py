@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.units.unit.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Base types for making units.
 
-Taketomo Isazawa (ti250@cam.ac.uk)
-
+:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
 """
 
 import six
@@ -18,7 +14,7 @@ from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 
 class UnitType(BaseType):
     """
-    A field representing a Unit of some type.
+    A field containing a :class:`Unit` of some type.
     """
 
     def __set__(self, instance, value):
@@ -36,7 +32,6 @@ class UnitType(BaseType):
             instance._values[self.name] = None
 
     def process(self, value):
-
         if isinstance(value, Unit):
             return value
         return None
@@ -47,7 +42,7 @@ class UnitType(BaseType):
 
 class MetaUnit(type):
     """
-    Metaclass to ensure that all subclasses of Unit take the magnitude into account
+    Metaclass to ensure that all subclasses of :class:`Unit` take the magnitude into account
     when converting to standard units.
     """
 
@@ -92,36 +87,70 @@ class MetaUnit(type):
 @six.add_metaclass(MetaUnit)
 class Unit(object):
     """
-    Object represeting units. Implement subclasses of this of basic units, e.g.
-    units like meters, seconds, and Kelvins that are already implemented.
+    Object represeting units. Implement subclasses of this for basic units.
+    Units like meters, seconds, and Kelvins are already implemented in ChemDataExtractor.
     These can then be combined by simply dividing or multiplying them to create
     more complex units. Alternatively, one can create these by subclassing Unit
     and setting the powers parameter as desired. For example, a speed could be
     represented as either:
 
-    speedunit = Meter() / Second()
+    .. code-block:: python
+
+        speedunit = Meter() / Second()
 
     or
 
-    class SpeedUnit(Unit):
+    .. code-block:: python
 
-        def__init__(self, magnitude=1.0):
-            super(SpeedUnit, self).__init__(Length()/Time(),
-                                            powers={Meter():1.0, Second():-1.0} )
+        class SpeedUnit(Unit):
 
-    speedunit = SpeedUnit()
+            def __init__(self, magnitude=1.0):
+                super(SpeedUnit, self).__init__(Length()/Time(),
+                                                powers={Meter():1.0, Second():-1.0} )
+
+        speedunit = SpeedUnit()
 
     and either method should produce the same results.
+
+    Any subclass of Unit which represents a real unit should implement the following methods:
+
+    - convert_value_to_standard
+    - convert_value_from_standard
+    - convert_error_to_standard
+    - convert_error_from_standard
+
+    These methods ensure that Units can be seamlessly converted to other ones. Any
+    magnitudes placed in front of the units, e.g. kilometers, are handled automatically.
+    Care must be taken that the 'standard' unit chosen is obvious, consistent, and documented,
+    else another user may implement new units with the same dimensions but a different
+    standard unit, resulting in unexpected errors.
     """
 
     base_magnitude = 0.0
+
+    def __init__(self, dimensions, magnitude=0.0, powers=None):
+        """
+        Creates a unit object. Subclass Unit to create concrete units. For examples,
+        see lengths.py and times.py
+
+        :param Dimension dimensions: The dimensions this unit is for, e.g. Temperature
+        :param float magnitude: (Optional) The magnitude of the unit. e.g. km would be meters with an magnitude of 3
+        :param powers: (Optional) For representing any more complicated units, e.g. m/s may have this parameter set to {Meter():1.0, Second():-1.0}
+        :type powers: dict[Unit : float]
+        """
+        self.dimensions = dimensions
+        self.magnitude = magnitude
+        self.powers = powers
 
     @classmethod
     def composite_unit(cls, with_units):
         """
         Creates a new Unit subclass composed of the units given.
+
         .. note::
+
             This returns a subclass of Unit, not an instance of a subclass of Unit.
+
         :param Unit with_units: The units for the new unit subclass to be created
         :returns: The new composite unit
         :rtype: subclass of Unit
@@ -135,19 +164,6 @@ class Unit(object):
         new_unit.__init__ = new_initializer
         new_unit.base_magnitude = with_units.magnitude
         return new_unit
-
-    def __init__(self, dimensions, magnitude=0.0, powers=None):
-        """
-        Creates a unit object. Subclass this to create concrete units. For examples,
-        see lenghts.py and times.py
-
-        :param Dimension dimensions: The dimensions this unit is for, e.g. Temperature
-        :param float magnitude: The magnitude of the unit. e.g. km would be meters with an magnitude of 3
-        :param Dictionary{Unit : float} powers: For representing any more complicated units, e.g. m/s may have this parameter set to {Meter():1.0, Second():-1.0}
-        """
-        self.dimensions = dimensions
-        self.magnitude = magnitude
-        self.powers = powers
 
     def convert_value_to_standard(self, value):
         """
@@ -324,7 +340,10 @@ class Unit(object):
 class DimensionlessUnit(Unit):
     """Special case to handle dimensionless quantities."""
 
-    def __init__(self, magnitude = 0.0):
+    def __init__(self, magnitude=0.0):
+        """
+        :param float magnitude: The magnitude of the unit.
+        """
         self.dimensions = Dimensionless()
         self.magnitude = magnitude
         self.powers = None

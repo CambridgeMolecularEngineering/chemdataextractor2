@@ -138,6 +138,20 @@ API Documentation
 
 .. autosummary::
 
+   relex
+   relex.cluster
+   relex.entity
+   relex.pattern
+   relex.phrase
+   relex.relationship
+   relex.snowball
+   relex.utils
+
+
+---------------------------------------------------------
+
+.. autosummary::
+
    scrape
    scrape.base
    scrape.clean
@@ -162,20 +176,6 @@ API Documentation
    text.normalize
    text.processors
    text.unwrap
-
----------------------------------------------------------
-
-.. autosummary::
-
-   relex
-   relex.cluster
-   relex.entity
-   relex.pattern
-   relex.phrase
-   relex.relationship
-   relex.snowball
-   relex.utils
-
 
 
 

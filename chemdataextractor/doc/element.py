@@ -20,10 +20,33 @@ log = logging.getLogger(__name__)
 
 @python_2_unicode_compatible
 class BaseElement(six.with_metaclass(ABCMeta)):
-    """Abstract base class for a Document Element."""
+    """
+    Abstract base class for a Document Element.
+
+    :ivar id: (Optional) An identifier for this Element.
+    :type id: Any or None
+    :ivar list[chemdataextractor.models.BaseModel] models: A list of models that this element will parse
+    """
 
     def __init__(self, document=None, references=None, id=None, models=None, **kwargs):
-        """If part of a Document, an Element should be initialized with a reference to its containing Document."""
+        """
+        .. note::
+
+            If intended as part of a :class:`~chemdataextractor.doc.document.Document`,
+            an element should either be initialized with a reference to its containing document,
+            or its :attr:`document` attribute should be set as soon as possible.
+            If the element is being passed in to a :class:`~chemdataextractor.doc.document.Document`
+            to initialise it, the :attr:`document` attribute is automatically set
+            during the initialisation of the document, so the user does not need to worry about this.
+
+        :param Document document: (Optional) The document containing this element.
+        :param list[Citation] references: (Optional) Any references contained in the element.
+        :param Any id: (Optional) An identifier for this element. Must be equatable.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
+            If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
+            inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`chemdataextractor.doc.document.Document`,
+            this is set automatically to be the same as that of the containing element, unless manually set otherwise.
+        """
         #: The containing Document
         self._document = document
         self.id = id
@@ -41,6 +64,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
 
     @property
     def document(self):
+        """ The :class:`chemdataextractor.doc.document.Document` that this element belongs to. """
         return self._document
 
     @document.setter
@@ -55,7 +79,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
 
     @abstractproperty
     def records(self):
-        """Chemical records that have been parsed from this Element."""
+        """All records found in this Document, as a list of :class:`chemdataextractor.model.base.BaseModel`."""
         return []
 
     # @abstractmethod  # TODO: Put this back?
@@ -66,22 +90,46 @@ class BaseElement(six.with_metaclass(ABCMeta)):
     def set_models(self, models):
         """Set all models on this element
         """
-        # print(models)
+        print(models)
         log.debug("Setting models on %s" % self)
         self.models += models
         return
 
     def to_json(self, *args, **kwargs):
-        """Convert Element to JSON string."""
+        """Convert element to JSON string. The content of the JSON will be equivalent
+        to that of :meth:`serialize`."""
         return json.dumps(self.serialize(), *args, **kwargs)
 
 
 @python_2_unicode_compatible
 class CaptionedElement(BaseElement):
-    """Document Element with a caption."""
+    """
+    Document Element with a caption.
+
+    :ivar BaseElement caption: The caption for this element.
+    """
 
     def __init__(self, caption, label=None, **kwargs):
-        """If part of a Document, an Element should be initialized with a reference to its containing Document."""
+        """
+        .. note::
+
+            If intended as part of a :class:`~chemdataextractor.doc.document.Document`,
+            an element should either be initialized with a reference to its containing document,
+            or its :attr:`document` attribute should be set as soon as possible.
+            If the element is being passed in to a :class:`~chemdataextractor.doc.document.Document`
+            to initialise it, the :attr:`document` attribute is automatically set
+            during the initialisation of the document, so the user does not need to worry about this.
+
+        :param BaseElement caption: The caption for the element.
+        :param Document document: (Optional) The document containing this element.
+        :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
+        :param Any id: (Optional) Some identifier for this element. Must be equatable.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
+            If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
+            inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
+            this is set automatically to be the same as that of the containing element, unless manually set otherwise.
+        """
+        # TODO: docs for label
         super(CaptionedElement, self).__init__(**kwargs)
         self.caption = caption
         self.label = label
@@ -94,6 +142,7 @@ class CaptionedElement(BaseElement):
 
     @property
     def document(self):
+        """ The :class:`~chemdataextractor.doc.document.Document` that this element belongs to. """
         return self._document
 
     @document.setter
@@ -103,24 +152,34 @@ class CaptionedElement(BaseElement):
 
     @property
     def records(self):
-        """Chemical records that have been parsed from this Element."""
+        """All records found in the object, as a list of :class:`~chemdataextractor.model.base.BaseModel`."""
         # This just passes the caption records. Subclasses may wish to extend this.
         return self.caption.records
 
     @property
     def abbreviation_definitions(self):
-        """"""
+        """
+        A list of all abbreviation definitions in this Document. Each abbreviation is in the form
+        (:class:`str` abbreviation, :class:`str` long form of abbreviation, :class:`str` ner_tag)
+        """
         return self.caption.abbreviation_definitions
 
     @property
     def ner_tags(self):
-        """Return a list of part of speech tags for each sentence in this text passage."""
+        """
+        A list of all Named Entity Recognition tags in the caption for this element.
+        If a word was found not to be a named entity, the named entity tag is None,
+        and if it was found to be a named entity, it can have either a tag of 'B-CM' for a beginning of a
+        mention of a chemical or 'I-CM' for the continuation of a mention.
+        """
         # TODO: Delete this method?
         return self.caption.ner_tags
 
     @property
     def cems(self):
-        """Return a list of chemical entity mentions for this element."""
+        """
+        A list of all Chemical Entity Mentions in this document as :class:`~chemdataextractor.doc.text.Span`
+        """
         return self.caption.cems
 
     @property
@@ -134,6 +193,10 @@ class CaptionedElement(BaseElement):
         return self.caption.definitions
 
     def serialize(self):
-        """Convert Text element to python dictionary."""
+        """
+        Convert self to a dictionary. The key 'type' will contain
+        the name of the class being serialized, and the key 'caption' will contain
+        a serialized representation of :attr:`caption`, which is a :class:`~chemdataextractor.doc.element.BaseElement`
+        """
         data = {'type': self.__class__.__name__, 'caption': self.caption.serialize()}
         return data
