@@ -49,6 +49,7 @@ class MpParser(BaseSentenceParser):
     root = mp_phrase
 
     def interpret(self, result, start, end):
+        log.debug(etree.tostring(result))
         try:
             compound = self.model.fields['compound'].model_class()
             raw_value = first(result.xpath('./mp/value/text()'))
@@ -57,12 +58,14 @@ class MpParser(BaseSentenceParser):
                         raw_units=raw_units,
                         value=self.extract_value(raw_value),
                         error=self.extract_error(raw_value),
-                        units=self.extract_units(raw_units, strict=True),
-                        compound=compound)
-            cem_el = first(result.xpath('./cem'))
+                        units=self.extract_units(raw_units, strict=True))
+            cem_el = first(result.xpath('./compound'))
             if cem_el is not None:
-                melting_point.compound.names = cem_el.xpath('./name/text()')
-                melting_point.compound.labels = cem_el.xpath('./label/text()')
-                yield melting_point
+                log.debug(etree.tostring(cem_el))
+                melting_point.compound = compound
+                melting_point.compound.names = cem_el.xpath('./names/text()')
+                melting_point.compound.labels = cem_el.xpath('./labels/text()')
+            log.debug(melting_point.serialize())
+            yield melting_point
         except TypeError as e:
             log.debug(e)

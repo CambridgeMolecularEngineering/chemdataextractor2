@@ -16,7 +16,7 @@ from chemdataextractor.parse.common import lbrct, dt, rbrct
 from ..utils import first
 from ..model import Compound, MeltingPoint
 from .actions import merge, join
-from .base import BaseParser
+from .base import BaseSentenceParser
 from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
@@ -47,21 +47,31 @@ obtained_mp_phrase = ((cem | chemical_label) + (I('is') | I('are') | I('was')).h
 
 mp_phrase = cem_mp_phrase | to_give_mp_phrase | obtained_mp_phrase
 
-class MpParser(BaseParser):
-    """"""
+
+class MpParser(BaseSentenceParser):
+    """
+    MpParser rewritten to extract values and errors.
+    """
     root = mp_phrase
 
     def interpret(self, result, start, end):
-        compound = Compound(
-            melting_points=[
-                MeltingPoint(
-                    value=first(result.xpath('./mp/value/text()')),
-                    units=first(result.xpath('./mp/units/text()'))
-                )
-            ]
-        )
-        cem_el = first(result.xpath('./cem'))
-        if cem_el is not None:
-            compound.names = cem_el.xpath('./name/text()')
-            compound.labels = cem_el.xpath('./label/text()')
-        yield compound
+        log.debug(etree.tostring(result))
+        try:
+            compound = self.model.fields['compound'].model_class()
+            raw_value = first(result.xpath('./mp/value/text()'))
+            raw_units = first(result.xpath('./mp/units/text()'))
+            melting_point = self.model(raw_value=raw_value,
+                        raw_units=raw_units,
+                        value=self.extract_value(raw_value),
+                        error=self.extract_error(raw_value),
+                        units=self.extract_units(raw_units, strict=True))
+            cem_el = first(result.xpath('./compound'))
+            if cem_el is not None:
+                log.debug(etree.tostring(cem_el))
+                melting_point.compound = compound
+                melting_point.compound.names = cem_el.xpath('./names/text()')
+                melting_point.compound.labels = cem_el.xpath('./labels/text()')
+            log.debug(melting_point.serialize())
+            yield melting_point
+        except TypeError as e:
+            log.debug(e)
