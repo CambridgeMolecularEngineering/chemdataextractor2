@@ -102,7 +102,7 @@ class Document(BaseDocument):
                 element.set_config()
         log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
 
-    def set_models(self, models):
+    def add_models(self, models):
         """Set models on all element types
 
         Usage::
@@ -114,9 +114,11 @@ class Document(BaseDocument):
 
         """
         log.debug("Setting models")
+        self.models.extend(models)
+        self.models = self.models
         for element in self.elements:
             if callable(getattr(element, 'set_models', None)):
-                element.set_models(models)
+                element.add_models(models)
             # print(element.models)
         return
 
@@ -329,16 +331,22 @@ class Document(BaseDocument):
                         else:
                             # Consider continue here to filter records missing name/label...
                             pass
-                    if record.is_contextual:
-                        # Add contextual record to a list of all from the document for later merging
-                        contextual_records.append(record)
-                        continue
+                if record.is_contextual:
+                    log.debug(record.serialize())
+                    # Add contextual record to a list of all from the document for later merging
+                    contextual_records.append(record)
+                    continue
                 records.append(record)
 
         # Merge in contextual information
         for record in records:
             for contextual_record in contextual_records:
-                record.merge_contextual(contextual_record)
+                # record.merge_contextual(contextual_record)
+                contextual_record.merge_contextual(record)
+                if not contextual_record.is_contextual:
+                    records.append(contextual_record)
+                    contextual_records.remove(contextual_record)
+            log.debug(records.serialize())
 
         # Merge abbreviation definitions
         for record in records:
@@ -383,6 +391,7 @@ class Document(BaseDocument):
             for model in el.models:
                 model.reset_mutables()
 
+        records.extend(contextual_records)
         return records
 
     def get_element_with_id(self, id):

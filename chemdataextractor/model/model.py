@@ -24,6 +24,7 @@ from ..parse.elements import R, I, Optional, W
 from ..parse.actions import merge
 from ..model.units.quantity_model import QuantityModel, DimensionlessModel
 from ..parse.auto import AutoTableParser, AutoSentenceParser
+from ..parse.apparatus import ApparatusParser
 
 log = logging.getLogger(__name__)
 
@@ -44,30 +45,30 @@ class Compound(BaseModel):
         log.debug('Result: %s' % self.serialize())
         return self
 
-    def merge_contextual(self, other):
-        """Merge in contextual info from a template Compound."""
-        # TODO: This is currently dependent on our data model? Make more robust to schema changes
-        # Currently we assume all lists at Compound level, with 1 further potential nested level of lists
-        for k in self.keys():
-            # print('key: %s' % k)
-            for item in self[k]:
-                # print('item: %s' % item)
-                for other_item in other.get(k, []):
-                    # Skip text properties (don't merge names, labels, roles)
-                    if isinstance(other_item, six.text_type):
-                        continue
-                    for otherk in other_item.keys():
-                        if isinstance(other_item[otherk], list):
-                            if len(other_item[otherk]) > 0 and len(item[otherk]) > 0:
-                                other_nested_item = other_item[otherk][0]
-                                for othernestedk in other_nested_item.keys():
-                                    for nested_item in item[otherk]:
-                                        if not nested_item[othernestedk]:
-                                            nested_item[othernestedk] = other_nested_item[othernestedk]
-                        elif not item[otherk]:
-                            item[otherk] = other_item[otherk]
-        log.debug('Result: %s' % self.serialize())
-        return self
+    # def merge_contextual(self, other):
+    #     """Merge in contextual info from a template Compound."""
+    #     # TODO: This is currently dependent on our data model? Make more robust to schema changes
+    #     # Currently we assume all lists at Compound level, with 1 further potential nested level of lists
+    #     for k in self.keys():
+    #         # print('key: %s' % k)
+    #         for item in self[k]:
+    #             # print('item: %s' % item)
+    #             for other_item in other.get(k, []):
+    #                 # Skip text properties (don't merge names, labels, roles)
+    #                 if isinstance(other_item, six.text_type):
+    #                     continue
+    #                 for otherk in other_item.keys():
+    #                     if isinstance(other_item[otherk], list):
+    #                         if len(other_item[otherk]) > 0 and len(item[otherk]) > 0:
+    #                             other_nested_item = other_item[otherk][0]
+    #                             for othernestedk in other_nested_item.keys():
+    #                                 for nested_item in item[otherk]:
+    #                                     if not nested_item[othernestedk]:
+    #                                         nested_item[othernestedk] = other_nested_item[othernestedk]
+    #                     elif not item[otherk]:
+    #                         item[otherk] = other_item[otherk]
+    #     log.debug('Result: %s' % self.serialize())
+    #     return self
 
     @property
     def is_unidentified(self):
@@ -94,6 +95,11 @@ class Compound(BaseModel):
         return False
 
 
+class Apparatus(BaseModel):
+    name = StringType()
+    parsers = [ApparatusParser()]
+
+
 class UvvisPeak(BaseModel):
     #: Peak value, i.e. wavelength
     value = StringType()
@@ -113,7 +119,7 @@ class UvvisSpectrum(BaseModel):
     temperature_units = StringType(contextual=True)
     concentration = StringType(contextual=True)
     concentration_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
+    apparatus = ModelType(Apparatus, contextual=True)
     peaks = ListType(ModelType(UvvisPeak))
     compound = ModelType(Compound)
     parsers = [UvvisParser()]
@@ -132,7 +138,7 @@ class IrSpectrum(BaseModel):
     temperature_units = StringType(contextual=True)
     concentration = StringType(contextual=True)
     concentration_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
+    apparatus = ModelType(Apparatus, contextual=True)
     peaks = ListType(ModelType(IrPeak))
     compound = ModelType(Compound)
     parsers = [IrParser()]
@@ -158,7 +164,7 @@ class NmrSpectrum(BaseModel):
     temperature_units = StringType(contextual=True)
     concentration = StringType(contextual=True)
     concentration_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
+    apparatus = ModelType(Apparatus, contextual=True)
     peaks = ListType(ModelType(NmrPeak))
     compound = ModelType(Compound)
     parsers = [NmrParser()]
@@ -177,8 +183,8 @@ class MeltingPoint(TemperatureModel):
     solvent = StringType(contextual=True)
     concentration = StringType(contextual=True)
     concentration_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
-    compound = ModelType(Compound)
+    apparatus = ModelType(Apparatus, contextual=True)
+    compound = ModelType(Compound, contextual=True)
     parsers = [MpParser()]
 
 
@@ -206,7 +212,7 @@ class QuantumYield(BaseModel):
     concentration_units = StringType(contextual=True)
     temperature = StringType(contextual=True)
     temperature_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
+    apparatus = ModelType(Apparatus, contextual=True)
 
 
 class FluorescenceLifetime(BaseModel):
@@ -218,7 +224,7 @@ class FluorescenceLifetime(BaseModel):
     concentration_units = StringType(contextual=True)
     temperature = StringType(contextual=True)
     temperature_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
+    apparatus = ModelType(Apparatus, contextual=True)
 
 
 class ElectrochemicalPotential(BaseModel):
@@ -231,13 +237,14 @@ class ElectrochemicalPotential(BaseModel):
     concentration_units = StringType(contextual=True)
     temperature = StringType(contextual=True)
     temperature_units = StringType(contextual=True)
-    apparatus = StringType(contextual=True)
+    apparatus = ModelType(Apparatus, contextual=True)
 
 
 # TEST MODELS
 
 class NeelTemperature(TemperatureModel):
-    expression = (I('T')+I('N')).add_action(merge)
+    # expression = (I('T')+I('N')).add_action(merge)
+    expression = I('TN')
     # specifier = I('TN')
     # specifier = MutableAttribute(I('TN'))
     specifier = StringType(parse_expression=expression, required=True, contextual=False, mutable=False)
@@ -245,10 +252,10 @@ class NeelTemperature(TemperatureModel):
 
 
 class CurieTemperature(TemperatureModel):
-    expression = (I('T') + I('C')).add_action(merge)
+    # expression = (I('T') + I('C')).add_action(merge)
+    expression = I('TC')
     specifier = StringType(parse_expression=expression, required=True, contextual=False, mutable=False)
     compound = ModelType(Compound, required=False, contextual=False)
-
 
 
 class InteratomicDistance(LengthModel):
