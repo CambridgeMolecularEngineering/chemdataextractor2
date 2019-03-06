@@ -20,10 +20,9 @@ from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
 from tabledataextractor.exceptions import TDEError
 from ..doc.text import Cell
-from chemdataextractor.model.model import Compound
+from ..model.model import Compound
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class Table(CaptionedElement):
@@ -192,7 +191,7 @@ class Table(CaptionedElement):
         # obtain table records
         table_records = []
 
-        for model in self.models:
+        for model in self._streamlined_models:
             # different parsers can yield different partial table records, but each model is independent
             partial_table_records = []
             for parser in model.parsers:

@@ -707,7 +707,7 @@ class Sentence(BaseText):
         seen_labels = set()
         # Ensure no control characters are sent to a parser (need to be XML compatible)
         tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
-        for model in self.models:
+        for model in self._streamlined_models:
             for parser in model.parsers:
                 if hasattr(parser, 'parse_sentence'):
                     for record in parser.parse_sentence(tagged_tokens):
@@ -726,7 +726,7 @@ class Sentence(BaseText):
                             # This can be super slow if we find lots of things
                             found = False
                             for seen_record in records:
-                                if (isinstance(record, Compound)
+                                if (isinstance(seen_record, Compound)
                                   and (not set(record.names).isdisjoint(seen_record.names)
                                        or not set(record.labels).isdisjoint(seen_record.labels))):
                                     seen_record.names = sorted(list(set(seen_record.names).union(record.names)))
