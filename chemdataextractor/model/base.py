@@ -214,6 +214,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     def __eq__(self, other):
         # TODO: Check this actually works as expected (what about default values?)
         if isinstance(other, self.__class__):
+            log.debug(self._values, other._values)
             return self._values == other._values
         return False
 
@@ -249,6 +250,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             return val is not None
         except AttributeError:
             return False
+
+    def __hash__(self):
+        return str(self.serialize()).__hash__()
 
     @classmethod
     def reset_mutables(cls):
@@ -309,6 +313,24 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 return True
         log.debug('Not contextual')
         return False
+
+    @property
+    def required_fulfilled(self):
+        log.debug(self.serialize())
+        for field_name, field in six.iteritems(self.fields):
+            if hasattr(field, 'model_class'):
+                if self[field_name] == field.default and field.contextual \
+                  and field.required:
+                    return False
+                if hasattr(self[field_name], 'required_fulfilled') and \
+                  not self[field_name].required_fulfilled:
+                    log.debug('Required unfulfilled')
+                    return False
+            elif field.contextual and field.required and self[field_name] == field.default:
+                log.debug('Required unfulfilled')
+                return False
+        log.debug('Required fulfilled')
+        return True
 
     def serialize(self, primitive=False):
         """Convert Model to python dictionary."""
@@ -375,6 +397,12 @@ class ModelList(MutableSequence):
 
     def __str__(self):
         return self.models.__str__()
+
+    def __contains__(self, element):
+        log.debug(element.serialize())
+        log.debug(self.serialize())
+        log.debug(self.models.__contains__(element))
+        return self.models.__contains__(element)
 
     def insert(self, index, value):
         self.models.insert(index, value)
