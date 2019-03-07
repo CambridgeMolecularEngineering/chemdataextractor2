@@ -117,7 +117,7 @@ class Document(BaseDocument):
         self.models.extend(models)
         self.models = self.models
         for element in self.elements:
-            if callable(getattr(element, 'set_models', None)):
+            if callable(getattr(element, 'add_models', None)):
                 element.add_models(models)
             # print(element.models)
         return
@@ -336,7 +336,9 @@ class Document(BaseDocument):
                     # Add contextual record to a list of all from the document for later merging
                     contextual_records.append(record)
                     continue
-                records.append(record)
+                if record not in records:
+                    log.debug(record.serialize())
+                    records.append(record)
 
         # Merge in contextual information
         for record in records:
@@ -362,13 +364,13 @@ class Document(BaseDocument):
 
         # Merge Compound records with any shared name/label
         len_l = len(records)
+        log.debug(records)
         i = 0
         while i < (len_l - 1):
             for j in range(i + 1, len_l):
                 r = records[i]
                 other_r = records[j]
                 if isinstance(r, Compound) and isinstance(other_r, Compound):
-
                     # Strip whitespace and lowercase to compare names
                     rnames_std = {''.join(n.split()).lower() for n in r.names}
                     onames_std = {''.join(n.split()).lower() for n in other_r.names}
@@ -391,7 +393,11 @@ class Document(BaseDocument):
             for model in el.models:
                 model.reset_mutables()
 
-        records.extend(contextual_records)
+        # Append contextual records if they've filled required fields
+        for record in contextual_records:
+            if record.required_fulfilled:
+                records.append(record)
+
         return records
 
     def get_element_with_id(self, id):
