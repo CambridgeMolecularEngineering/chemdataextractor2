@@ -21,6 +21,7 @@ from tabledataextractor import Table as TdeTable
 from tabledataextractor.exceptions import TDEError
 from ..doc.text import Cell
 from ..model.model import Compound
+from ..model.base import ModelList
 
 log = logging.getLogger(__name__)
 
@@ -94,6 +95,7 @@ class Table(CaptionedElement):
         """
         for cell in category_table:
             if hasattr(parser, 'parse_cell'):
+                log.debug(parser)
                 cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' ' + ' '.join(cell[2]))
                 results = parser.parse_cell(cde_cell)
                 for result in results:
@@ -117,7 +119,7 @@ class Table(CaptionedElement):
         #: field based on which merging is done
         shared_element = 'compound'
 
-        contextual_records = []
+        contextual_records = ModelList()
         updated_records = []
 
         for i, record_i in enumerate(partial_table_records):
@@ -173,7 +175,7 @@ class Table(CaptionedElement):
                     log.debug("Record j = {}: {}".format(j, record_j.serialize()))
                     log.debug("Record inside i = {}, j = {}: {}".format(i, j, record.serialize()))
                     contextual_records.append(record)
-            if i not in updated_records:
+            if i not in updated_records and record_i not in contextual_records:
                 log.debug("Record outside i = {}: {}".format(i, record_i.serialize()))
                 contextual_records.append(record_i)
 
@@ -183,13 +185,14 @@ class Table(CaptionedElement):
     def records(self):
         # get the compounds from the caption
         caption_records = self.caption.records
+        log.debug(caption_records.serialize())
         caption_compounds = []
         for record in caption_records:
             if isinstance(record, Compound):
                 caption_compounds += [record]
 
         # obtain table records
-        table_records = []
+        table_records = ModelList()
 
         for model in self._streamlined_models:
             # different parsers can yield different partial table records, but each model is independent
@@ -237,6 +240,33 @@ class Table(CaptionedElement):
         # Addition of the serialized caption records
         caption_records = [c for c in caption_records if not c.is_contextual]
         table_records += caption_records
+
+        # Merge Compound records with any shared name/label
+        # TODO: Copy/pasted from document.py, probably should be moved out somewhere
+        len_l = len(table_records)
+        log.debug(table_records)
+        i = 0
+        while i < (len_l - 1):
+            for j in range(i + 1, len_l):
+                r = table_records[i]
+                other_r = table_records[j]
+                if isinstance(r, Compound) and isinstance(other_r, Compound):
+                    # Strip whitespace and lowercase to compare names
+                    rnames_std = {''.join(n.split()).lower() for n in r.names}
+                    onames_std = {''.join(n.split()).lower() for n in other_r.names}
+
+                    # Clashing labels, don't merge
+                    if len(set(r.labels) - set(other_r.labels)) > 0 and len(set(other_r.labels) - set(r.labels)) > 0:
+                        continue
+
+                    if any(n in rnames_std for n in onames_std) or any(l in r.labels for l in other_r.labels):
+                        table_records.pop(j)
+                        table_records.pop(i)
+                        table_records.append(r.merge(other_r))
+                        len_l -= 1
+                        i -= 1
+                        break
+            i += 1
 
         return table_records
 
