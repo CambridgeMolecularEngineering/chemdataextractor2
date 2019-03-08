@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 class Energy(Dimension):
-    constituent_dimensions = dimensions = Mass() * Length() / Time()
+    constituent_dimensions = Mass() * Length() / Time()
 
 
 class EnergyModel(QuantityModel):
