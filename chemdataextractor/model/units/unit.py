@@ -46,42 +46,51 @@ class MetaUnit(type):
     when converting to standard units.
     """
 
-    def __new__(cls, name, bases, attrs):
-        instance = type.__new__(cls, name, bases, attrs)
+    def __new__(mcs, name, bases, attrs):
+        cls = type.__new__(mcs, name, bases, attrs)
 
-        if hasattr(instance, 'convert_value_to_standard'):
-            sub_convert_to_standard = getattr(instance, 'convert_value_to_standard')
+        if hasattr(cls, 'convert_value_to_standard'):
+            sub_convert_to_standard = getattr(cls, 'convert_value_to_standard')
 
             def new_convert_to_standard(self, value):
                 val = value * 10 ** (self.magnitude + self.base_magnitude)
                 return sub_convert_to_standard(self, val)
-            setattr(instance, 'convert_value_to_standard', new_convert_to_standard)
+            setattr(cls, 'convert_value_to_standard', new_convert_to_standard)
 
-        if hasattr(instance, 'convert_value_from_standard'):
-            sub_convert_from_standard = getattr(instance, 'convert_value_from_standard')
+        if hasattr(cls, 'convert_value_from_standard'):
+            sub_convert_from_standard = getattr(cls, 'convert_value_from_standard')
 
             def new_convert_from_standard(self, value):
                 val = value * 10**(-1 * (self.magnitude + self.base_magnitude))
                 return sub_convert_from_standard(self, val)
-            setattr(instance, 'convert_value_from_standard', new_convert_from_standard)
+            setattr(cls, 'convert_value_from_standard', new_convert_from_standard)
 
-        if hasattr(instance, 'convert_error_to_standard'):
-            sub_convert_err_to_standard = getattr(instance, 'convert_error_to_standard')
+        if hasattr(cls, 'convert_error_to_standard'):
+            sub_convert_err_to_standard = getattr(cls, 'convert_error_to_standard')
 
             def new_convert_err_to_standard(self, value):
                 val = value * 10**(self.magnitude + self.base_magnitude)
                 return sub_convert_err_to_standard(self, val)
-            setattr(instance, 'convert_error_to_standard', new_convert_err_to_standard)
+            setattr(cls, 'convert_error_to_standard', new_convert_err_to_standard)
 
-        if hasattr(instance, 'convert_error_from_standard'):
-            sub_convert_err_from_standard = getattr(instance, 'convert_error_from_standard')
+        if hasattr(cls, 'convert_error_from_standard'):
+            sub_convert_err_from_standard = getattr(cls, 'convert_error_from_standard')
 
             def new_convert_err_from_standard(self, value):
                 val = value * 10**(-1 * (self.magnitude + self.base_magnitude))
                 return sub_convert_err_from_standard(self, val)
-            setattr(instance, 'convert_error_from_standard', new_convert_err_from_standard)
+            setattr(cls, 'convert_error_from_standard', new_convert_err_from_standard)
 
-        return instance
+        if hasattr(cls, 'constituent_units') and cls.constituent_units is not None:
+            cls.base_magnitude = cls.constituent_units.magnitude
+
+            def new_initializer(self, magnitude=0.0):
+                Unit.__init__(self, cls.constituent_units.dimensions, magnitude,
+                              powers=cls.constituent_units.powers)
+
+            cls.__init__ = new_initializer
+
+        return cls
 
 
 @six.add_metaclass(MetaUnit)
@@ -127,6 +136,14 @@ class Unit(object):
     """
 
     base_magnitude = 0.0
+    constituent_units = None
+    """
+    :class:`~chemdataextractor.model.units.unit.Unit` instance for showing constituent units.
+    Used for creating more complex models. An example would be::
+
+        class Newton(Unit):
+            constituent_units = Gram(magnitude=3.0) * Meter() * (Second()) ** (-2.0)
+    """
 
     def __init__(self, dimensions, magnitude=0.0, powers=None):
         """
@@ -141,29 +158,6 @@ class Unit(object):
         self.dimensions = dimensions
         self.magnitude = magnitude
         self.powers = powers
-
-    @classmethod
-    def composite_unit(cls, with_units):
-        """
-        Creates a new Unit subclass composed of the units given.
-
-        .. note::
-
-            This returns a subclass of Unit, not an instance of a subclass of Unit.
-
-        :param Unit with_units: The units for the new unit subclass to be created
-        :returns: The new composite unit
-        :rtype: subclass of Unit
-        """
-        # TODO: units produced in this way can't be pickled.
-
-        def new_initializer(self, magnitude=0.0):
-            Unit.__init__(self, with_units.dimensions, magnitude, powers=with_units.powers)
-
-        new_unit = type(str(with_units), (Unit,), {})
-        new_unit.__init__ = new_initializer
-        new_unit.base_magnitude = with_units.magnitude
-        return new_unit
 
     def convert_value_to_standard(self, value):
         """

@@ -7,22 +7,47 @@ Base types for dimensions.
 
 import six
 import copy
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 
 
-class Dimension(object):
+class _DimensionMeta(ABCMeta):
+
+    def __new__(mcs, name, bases, attrs):
+        cls = super(_DimensionMeta, mcs).__new__(mcs, name, bases, attrs)
+        if hasattr(cls, 'constituent_dimensions') and cls.constituent_dimensions is not None:
+            print('CLSCONSTDIMS', cls.constituent_dimensions)
+            print('CLSUNITSDICT', cls.units_dict)
+            print('CLSCONSTUNITSDICT', cls.constituent_dimensions.units_dict)
+            cls.units_dict = copy.copy(cls.constituent_dimensions.units_dict)
+            cls._dimensions = cls.constituent_dimensions._dimensions
+        return cls
+
+
+class Dimension(six.with_metaclass(_DimensionMeta)):
     """
     Class for representing physical dimensions.
     """
 
-    dimensions = None
+    constituent_dimensions = None
+    """
+    Used for creating composite dimensions.
+    It is of type :class:`~chemdataextractor.model.units.dimension.Dimension`.
+    An example would be speed, in which case we would have::
+
+        class Speed(Dimension):
+            constituent_dimensions = Length() / Time()
+    """
+
+    _dimensions = None
     """
     Used to represent composite dimensions.
     It is of type dictionary{:class:`Dimension`: :class:`float`}.
     An example would be speed, in which case we would have::
 
-        dimensions = {Length(): 1.0, Time(): -1.0}
+        Speed._dimensions = {Length(): 1.0, Time(): -1.0}
+
+    Not to be set by the user.
     """
 
     units_dict = {}
@@ -43,24 +68,6 @@ class Dimension(object):
               R('°|C', group=0): None}
 
     """
-
-    @classmethod
-    def composite_dimension(cls, with_dimensions):
-        """
-        Creates a new Dimension subclass composed of the dimensions given.
-
-        .. note::
-
-            This returns a subclass of Dimension, not an instance of a subclass of Dimension.
-
-        :param Dimension with_dimensions: The dimensions for the new unit subclass to be created
-        :returns: The new composite dimension
-        :rtype: subclass of Dimension
-        """
-        new_dimension = type(str(with_dimensions), (cls, ), {})
-        new_dimension.dimensions = with_dimensions.dimensions
-        new_dimension.units_dict = copy.copy(with_dimensions.units_dict)
-        return new_dimension
 
     """
     Operators are implemented so that composite dimensions can be created easily
@@ -94,15 +101,15 @@ class Dimension(object):
             new_model = Dimension()
             dimensions = {}
 
-            if self.dimensions is not None:
-                for dimension, power in six.iteritems(self.dimensions):
+            if self._dimensions is not None:
+                for dimension, power in six.iteritems(self._dimensions):
                     dimensions[dimension] = power * other
 
             else:
                 new_key = copy.deepcopy(self)
                 dimensions[new_key] = other
 
-            new_model.dimensions = dimensions
+            new_model._dimensions = dimensions
             new_model.units_dict = copy.copy(self.units_dict)
         return new_model
 
@@ -110,16 +117,16 @@ class Dimension(object):
         new_model = Dimension()
         dimensions = {}
 
-        if self.dimensions is not None:
-            dimensions = copy.deepcopy(self.dimensions)
+        if self._dimensions is not None:
+            dimensions = copy.deepcopy(self._dimensions)
 
         else:
             new_key = copy.deepcopy(self)
             dimensions[new_key] = 1.0
 
-        if other.dimensions is not None:
-            for key, value in six.iteritems(other.dimensions):
-                if self.dimensions is not None and key in self.dimensions.keys():
+        if other._dimensions is not None:
+            for key, value in six.iteritems(other._dimensions):
+                if self._dimensions is not None and key in self._dimensions.keys():
                     dimensions[key] += value
                     if dimensions[key] == 0:
                         dimensions.pop(key)
@@ -132,8 +139,8 @@ class Dimension(object):
 
         else:
             new_key = copy.deepcopy(other)
-            if self.dimensions is not None:
-                if new_key in self.dimensions:
+            if self._dimensions is not None:
+                if new_key in self._dimensions:
                     dimensions[new_key] += 1.0
                     if dimensions[new_key] == 0:
                         dimensions.pop(new_key)
@@ -151,7 +158,7 @@ class Dimension(object):
         if len(dimensions) == 0:
             new_model = dimensionless
         else:
-            new_model.dimensions = dimensions
+            new_model._dimensions = dimensions
 
         new_model.units_dict = {}
         for dimension in dimensions.keys():
@@ -159,19 +166,19 @@ class Dimension(object):
         return new_model
 
     def __eq__(self, other):
-
+        print('eq called')
         if not isinstance(other, Dimension):
             return False
 
-        if self.dimensions is not None:
-            if other.dimensions is not None:
-                if self.dimensions == other.dimensions:
+        if self._dimensions is not None:
+            if other._dimensions is not None:
+                if self._dimensions == other._dimensions:
                     return True
             else:
-                if self.dimensions == (other**1.0).dimensions:
+                if (self**1.0)._dimensions == (other**1.0)._dimensions:
                     return True
-        elif other.dimensions is not None:
-            if other.dimensions == (self**1.0).dimensions:
+        elif other._dimensions is not None:
+            if other._dimensions == (self**1.0)._dimensions:
                 return True
         else:
             if type(self) == type(other):
@@ -183,15 +190,15 @@ class Dimension(object):
         string = str(self.__class__.__name__)
         # TODO: Should use the dimensions as part of the hash as well, but does not seem to work.
         # Can't just hash the dictionary as that would lead to two units that are actually equal hashing to different values depending on the order in which the dictionary is iterated through, which is not neccesarily deterministic. Better to have it this way, as it's okay for two hashes to clash.
-        # if self.dimensions is not None:
-        #     for key in sorted(str(six.iteritems(self.dimensions))):
+        # if self._dimensions is not None:
+        #     for key in sorted(str(six.iteritems(self._dimensions))):
         #         string += (str(key))
         return string.__hash__()
 
     def __str__(self):
         string = ''
-        if self.dimensions is not None:
-            for key, value in six.iteritems(self.dimensions):
+        if self._dimensions is not None:
+            for key, value in six.iteritems(self._dimensions):
                 string += (type(key).__name__ + '^(' + str(value) + ')  ')
         else:
             string += type(self).__name__
@@ -200,5 +207,6 @@ class Dimension(object):
 
 class Dimensionless(Dimension):
     """Special case to handle dimensionless quantities."""
+
     def __bool__(self):
         return False
