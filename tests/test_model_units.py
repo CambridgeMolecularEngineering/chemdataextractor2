@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-tests.test_units_quantities.py
+tests.test_model_units.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test base types for making quantity models and units.
@@ -30,10 +30,14 @@ from chemdataextractor.model.units.temperature import Temperature, TemperatureMo
 from chemdataextractor.model.units.mass import Mass, Gram
 
 
-
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 places = 3
+
+
+class Speed(Dimension):
+    constituent_dimensions = Length() / Time()
+
 
 class SpeedModel(QuantityModel):
     dimensions = Length() / Time()
@@ -77,10 +81,10 @@ class TestUnitClass(unittest.TestCase):
     def test_unit_convert_error_to_standard(self):
         unusual_temp_unit = Celsius() / Fahrenheit()
         standard_val = unusual_temp_unit.convert_error_to_standard(5.0)
-        self.assertAlmostEqual(standard_val, 26.8224, places=places)
+        self.assertAlmostEqual(standard_val, 9.0, places=places)
 
     # Need to have the updated error functions in length and time
-    def test_unit_convert_error_to_standard(self):
+    def test_unit_convert_error_to_standard_2(self):
         speed = Mile() / Hour()
         standard_err = speed.convert_error_to_standard(60.0)
         self.assertAlmostEqual(standard_err, 26.8224, places=places)
@@ -97,9 +101,14 @@ class TestUnitClass(unittest.TestCase):
         self.assertEqual(dimensionless, dimensionless_div)
 
     def test_composite_unit(self):
-        Newton = Unit.composite_unit(Gram(magnitude=3.0) * Meter() * (Second()) ** (-2.0))
+        class Force(Dimension):
+            constituent_dimensions = Mass() * Length() * Time() ** (-2.0)
+
+        class Newton(Unit):
+            constituent_units = Gram(magnitude=3.0) * Meter() * (Second()) ** (-2.0)
+
         newton = Newton()
-        force = Dimension.composite_dimension(Mass() * Length() * Time() ** (-2.0))()
+        force = Force()
         self.assertEqual(newton.magnitude, 0.0)
         self.assertEqual(newton.dimensions, force)
         self.assertEqual(newton.powers, {Second(): -2.0, Meter(): 1.0, Gram(): 1.0})
@@ -115,15 +124,15 @@ class TestDimensions(unittest.TestCase):
 
     def test_division(self):
         speed = Length() / Time()
-        self.assertEqual(speed.dimensions, {Length(): 1.0, Time(): -1.0})
+        self.assertEqual(speed._dimensions, {Length(): 1.0, Time(): -1.0})
 
     def test_pow(self):
         meters_cubed = Length() ** 3.0
-        self.assertEqual(meters_cubed.dimensions, {Length(): 3.0})
+        self.assertEqual(meters_cubed._dimensions, {Length(): 3.0})
 
     def test_mul(self):
         meterseconds = Length() * Time()
-        self.assertEqual(meterseconds.dimensions, {Length(): 1.0, Time(): 1.0})
+        self.assertEqual(meterseconds._dimensions, {Length(): 1.0, Time(): 1.0})
 
     def test_dimensionless(self):
         dimensionless_div = Length() / Length()
@@ -134,6 +143,9 @@ class TestDimensions(unittest.TestCase):
         dimension1 = Temperature() * Length() / Time()
         dimension2 = (Time() ** (-1)) * Length() * Temperature()
         self.assertEqual(dimension1.__hash__(), dimension2.__hash__())
+
+    def test_units_dict_composite(self):
+        self.assertEqual(Speed.units_dict, (Length() / Time()).units_dict)
 
 
 class TestQuantity(unittest.TestCase):
