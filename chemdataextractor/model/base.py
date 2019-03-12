@@ -116,10 +116,11 @@ class ModelType(BaseType):
 
 class ListType(BaseType):
 
-    def __init__(self, field, default=None, **kwargs):
+    def __init__(self, field, default=None, sorted=False, **kwargs):
         super(ListType, self).__init__(**kwargs)
         self.field = field
         self.default = default if default is not None else []
+        self.sorted = sorted
 
     # def __get__(self, instance, owner):
     #     """Descriptor for retrieving a value from a field in a Model."""
@@ -139,6 +140,9 @@ class ListType(BaseType):
         if value is None:
             instance._values[self.name] = None
         else:
+            processed = [self.field.process(v) for v in value]
+            if self.sorted:
+                processed = sorted(processed)
             instance._values[self.name] = [self.field.process(v) for v in value]
 
     def serialize(self, value, primitive=False):
@@ -150,15 +154,16 @@ class ModelMeta(ABCMeta):
     """"""
 
     def __new__(mcs, name, bases, attrs):
+        cls = super(ModelMeta, mcs).__new__(mcs, name, bases, attrs)
         fields = {}
+        for field_name, field in six.iteritems(cls.fields):
+            fields[field_name] = copy.copy(field)
         for attr_name, attr_value in six.iteritems(attrs):
             if isinstance(attr_value, BaseType):
                 # Set the name attribute on the Type to the attribute name on the Model
                 attr_value.name = six.text_type(attr_name)
                 fields[attr_name] = attr_value
-        cls = super(ModelMeta, mcs).__new__(mcs, name, bases, attrs)
-        cls.fields = cls.fields.copy()
-        cls.fields.update(fields)
+        cls.fields = fields
         parsers = []
         for parser in cls.parsers:
             p = copy.copy(parser)
@@ -305,7 +310,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 if self[field_name] == field.default and field.contextual:
                     return True
                 if hasattr(self[field_name], 'is_contextual') and \
-                  self[field_name].is_contextual:
+                   self[field_name].is_contextual:
                     log.debug('Is contextual')
                     return True
             elif field.contextual and self[field_name] == field.default:
@@ -320,10 +325,10 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         for field_name, field in six.iteritems(self.fields):
             if hasattr(field, 'model_class'):
                 if self[field_name] == field.default and field.contextual \
-                  and field.required:
+                   and field.required:
                     return False
                 if hasattr(self[field_name], 'required_fulfilled') and \
-                  not self[field_name].required_fulfilled:
+                   not self[field_name].required_fulfilled:
                     log.debug('Required unfulfilled')
                     return False
             elif field.contextual and field.required and self[field_name] == field.default:
