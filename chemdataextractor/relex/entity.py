@@ -16,7 +16,7 @@ class Entity(object):
 
         Arguments:
             text {str} -- The text of the entity
-            tag {ParseElement} -- How the Entity is identified
+            tag {str or tuple} -- How the Entity is identified
             start {int} -- The index of the Entity in tokens
             end {int} -- The end index of the entity in tokens
         """
@@ -33,7 +33,10 @@ class Entity(object):
             return False
 
     def __repr__(self):
-        return '(' + self.text + ',' + self.tag + ',' + str(self.start) + ',' + str(self.end) + ')'
+        if isinstance(self.tag, str):
+            return '(' + self.text + ',' + self.tag + ',' + str(self.start) + ',' + str(self.end) + ')'
+        else:
+            return '(' + self.text + ',' + '_'.join([i for i in self.tag]) + ',' + str(self.start) + ',' + str(self.end) + ')'
 
     def __str__(self):
         return self.__repr__()

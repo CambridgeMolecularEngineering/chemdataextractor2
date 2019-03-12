@@ -340,6 +340,30 @@ class Snowball(object):
         f.close()
         return
     
+    def retrieve_entities(self, model, result):
+        """Recursively retrieve the entities from a parse result for a given model
+        
+        Arguments:
+            result {lxml.etree.element} -- The parse result
+        """
+        if isinstance(result, list):
+            for r in result:
+                for entity in self.retrieve_entities(model, r):
+                    yield entity
+        else:
+            print(etree.tostring(result))
+            for key, field in model.fields.items():
+                #: Nested models
+                if hasattr(field, 'model_class'):
+                    for nested_entity in self.retrieve_entities(field.model_class, result.xpath('./' + key)):
+                        yield (nested_entity[0], key + '__' + nested_entity[1])
+                else:
+                    text_list = result.xpath('./' + key + '/text()')
+                    for text in text_list:
+                        print(text, key)
+                        yield (text, key)
+
+    
     def get_candidates(self, s):
         """Find all candidate relationships of this type within a sentence
 
@@ -355,14 +379,12 @@ class Snowball(object):
         sentence_parser = [p for p in self.model.parsers if isinstance(p, AutoSentenceParser)][0]
         for result in sentence_parser.root.scan(s.tagged_tokens):
             if result:
-                for key, field in self.model.fields.items():
-                    text_list = result[0].xpath('./' + key + '/text()')
-                    for i, text in enumerate(text_list):
-                        if not text:
-                            continue
-                        detected.append((text, key))
+                for entity in self.retrieve_entities(self.model, result[0]):
+                    detected.append(entity)
+
         if not detected:
             return []
+        print(detected)
 
         detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
         for text, tag in detected:
@@ -384,13 +406,13 @@ class Snowball(object):
         # check all required entities are present
         required_fields = self.model.required_fields
         print(required_fields)
-        print(entities_dict)
         if not all(e in entities_dict.keys() for e in required_fields):
+            print("missing fields")
             return []
 
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
-
+        print(all_entities)
         # Intra-Candidate sorting (within each candidate)
         for i in range(len(all_entities)):
             all_entities[i] = sorted(all_entities[i], key=lambda t: t.start)
@@ -405,9 +427,7 @@ class Snowball(object):
             candidates[i] = tuple(lst)
 
         for candidate in candidates:
-            new_model = self.model()
             candidate_relationships.append(Relation(candidate, confidence=0))
-        print(candidate_relationships)
         return candidate_relationships
 
     # def followed_by_filter_candidates(self, candidate_rels):

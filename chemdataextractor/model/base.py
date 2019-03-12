@@ -175,8 +175,16 @@ class ModelMeta(ABCMeta):
     
     @property
     def required_fields(cls):
-        return [key for key, value in cls.fields.items() if value.required]
-
+        output = []
+        for key, field in cls.fields.items():
+            if hasattr(field, 'model_class'):
+                nest_req_fields = field.model_class.required_fields
+                for nrf in nest_req_fields:
+                    output.append(key + '__' + nrf)
+            else:
+                if field.required:
+                    output.append(key)
+        return output
 
 @python_2_unicode_compatible
 class BaseModel(six.with_metaclass(ModelMeta)):

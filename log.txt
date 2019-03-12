@@ -1,0 +1,92 @@
+DEBUG      in tokenize.py         --> ChemSentenceTokenizer: Initializing with models/punkt_chem-1.0.pickle
+DEBUG      in data.py             --> Loading model models/clusters_chem1500-1.0.pickle
+DEBUG      in tag.py              --> Loading models/pos_crf_wsj_genia-1.0.pickle
+DEBUG      in tag.py              --> Loading models/cem_crf_chemdner_cemp-1.0.pickle
+DEBUG      in document.py         --> Document: Initializing with 0 elements
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::html: [<Element html at 0x122a77458>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h1: [<Element h1 at 0x122a77278>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h2 | descendant-or-self::h3 | descendant-or-self::h4 | descendant-or-self::h5 | descendant-or-self::h6: [<Element h2 at 0x122a77368>, <Element h2 at 0x122a77e08>, <Element h3 at 0x122a773b8>, <Element h3 at 0x122a77638>, <Element h3 at 0x122a77688>, <Element h3 at 0x122a775e8>, <Element h2 at 0x122a77818>, <Element h2 at 0x122a77868>, <Element h3 at 0x122a77048>, <Element h3 at 0x122a77228>, <Element h3 at 0x122a77c28>, <Element h3 at 0x122a77cc8>, <Element h3 at 0x122a77d18>, <Element h2 at 0x122a77d68>, <Element h2 at 0x122a77db8>, <Element h3 at 0x122a77e58>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::figure: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::table: [<Element table at 0x122a77ef8>, <Element table at 0x122a77f48>, <Element table at 0x122a77f98>, <Element table at 0x122a7b048>, <Element table at 0x122a7b098>, <Element table at 0x122a7b0e8>, <Element table at 0x122a7b138>, <Element table at 0x122a7b188>, <Element table at 0x122a7b1d8>, <Element table at 0x122a7b228>, <Element table at 0x122a7b278>, <Element table at 0x122a7b2c8>, <Element table at 0x122a7b318>, <Element table at 0x122a7b368>, <Element table at 0x122a7b3b8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::cite: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]/descendant-or-self::*/sup: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: [<Element tr at 0x122a77ea8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x122a7b6d8>, <Element th at 0x122a7b5e8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: [<Element tr at 0x122a7b4f8>, <Element tr at 0x122a7b548>, <Element tr at 0x122a7b5e8>, <Element tr at 0x122a7b6d8>, <Element tr at 0x122a7b638>, <Element tr at 0x122a7b408>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a7b868>, <Element td at 0x122a7b728>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a7bb38>, <Element td at 0x122a7b688>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a7bae8>, <Element td at 0x122a7b868>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a7ba98>, <Element td at 0x122a7bb38>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a7ba48>, <Element td at 0x122a7b868>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a7b728>, <Element td at 0x122a7ba98>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: [<Element tr at 0x124f86ef8>, <Element tr at 0x124f86d68>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x122a77138>, <Element th at 0x122a77a48>, <Element th at 0x122a7bdb8>, <Element th at 0x122a7b4f8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x122a77a48>, <Element th at 0x122a77ea8>, <Element th at 0x122a7bae8>, <Element th at 0x122a7bdb8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: [<Element tr at 0x124f86f48>, <Element tr at 0x124f86d68>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a77a48>, <Element td at 0x122a77ea8>, <Element td at 0x122a7b4f8>, <Element td at 0x122a7bdb8>, <Element td at 0x122a7bae8>, <Element td at 0x122a7bea8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a77ea8>, <Element td at 0x122a7b868>, <Element td at 0x122a7b4f8>, <Element td at 0x122a7bdb8>, <Element td at 0x122a7bae8>, <Element td at 0x122a7be08>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: [<Element tr at 0x124f86ef8>, <Element tr at 0x122a7be08>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x122a7be58>, <Element th at 0x122a7bae8>, <Element th at 0x122a9a548>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x122a7bae8>, <Element th at 0x122a7bdb8>, <Element th at 0x122a9a3b8>, <Element th at 0x122a9a4a8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: [<Element tr at 0x122a7b6d8>, <Element tr at 0x122a7be58>, <Element tr at 0x122a7be08>, <Element tr at 0x122a7bae8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a9a2c8>, <Element td at 0x122a9a4a8>, <Element td at 0x122a9a3b8>, <Element td at 0x122a9a548>, <Element td at 0x122a9a458>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a9a138>, <Element td at 0x122a9a2c8>, <Element td at 0x122a9a4a8>, <Element td at 0x122a9a3b8>, <Element td at 0x122a9a548>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a9a458>, <Element td at 0x122a9a138>, <Element td at 0x122a9a2c8>, <Element td at 0x122a9a4a8>, <Element td at 0x122a9a3b8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x122a9a548>, <Element td at 0x122a9a458>, <Element td at 0x122a9a138>, <Element td at 0x122a9a2c8>, <Element td at 0x122a9a4a8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in document.py         --> Document: Initializing with 123 elements
+DEBUG      in document.py         --> Parsed document with HtmlReader
+DEBUG      in data.py             --> Loading model models/punkt_chem-1.0.pickle
+DEBUG      in tag.py              --> Loading models/pos_crf_wsj_genia-1.0.pickle
+DEBUG      in cem.py              --> Killed: co3o4.31

@@ -185,6 +185,7 @@ class BaseAutoParser(BaseParser):
                     log.debug(self.model)
                     log.debug(e)
                     requirements = False
+                    
         model_instance = self.model(**property_entities)
 
         if requirements:
