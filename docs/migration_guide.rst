@@ -8,11 +8,11 @@ v1.5.0 Migration Guide
 Overview
 =================================
 
-Previously, ChemDataExtractor required huge amounts of manual input to create parsers for new models and if the user had multiple new models that were similar, we resulted in huge amounts of duplicated code within the parse model. This system was very user-unfriendly and didn't really follow the logic of how Physics and Chemistry is structured.
+Previously, ChemDataExtractor required huge amounts of manual input to create parsers for new models and if the user had multiple new models that were similar, we resulted in huge amounts of duplicated code within the parse model. This system was very user-unfriendly and didn't really follow the logic of how Physics and Chemistry are structured.
 
 Furthermore, the Interdependency Resolution (IR) for these models was purely backwards-looking and did not account for dynamic or document-specific terminology that was clearly defined in the text.
 
-To resolve some of these issues we have developed a new model-based approach to parsing, that intrinsically links the models and the parsers, enabling completely automated parser creation and forward-looking Interdependecy Resolutioin.
+To resolve some of these issues we have developed a new model-based approach to parsing that intrinsically links the models and the parsers, enabling completely automated parser creation and forward-looking Interdependency Resolution.
 
 This has resulted in some breaking changes to the API for ChemDataExtractor, however, these are all fixable with minor changes to existing code, which are outlined in the section `Migrating Existing Code`_.
 
@@ -32,7 +32,7 @@ This new structure has several advantages:
 
 - The new structure is far safer, that is, it is impossible to use a parser meant for tables on a sentence and a parser meant for sentences on tables.
 
-- The properties are no longer neccesarily tied to the :class:`~chemdataextractor.model.models.Compound` class, meaning one could use ChemDataExtractor for other purposes too, such as extracting the conditions under which an experiment was done.
+- The properties are no longer necessarily tied to the :class:`~chemdataextractor.model.models.Compound` class, meaning one could use ChemDataExtractor for other purposes too, such as extracting the conditions under which an experiment was done.
 
 Changes to Models
 ----------------------------------
@@ -56,7 +56,7 @@ Each entity must have a defined type, for example :class:`~chemdataextractor.mod
 
 The entities also have properties:
 
-- :python:`required`: Whether or not the entitiy is required to form a relationship, if the entity is not found, the relationship will not be output by ChemDataExtractor.
+- :python:`required`: Whether or not the entity is required to form a relationship, if the entity is not found, the relationship will not be output by ChemDataExtractor.
 - :python:`contextual`: Whether or not the entity can be sourced from a different element to the rest of the entities, e.g. whether the entity can be completed with data from another sentence.
 - :python:`mutable`: Whether or not the parse_expression can be updated based on definitions found in the document (see `Forward looking Interdependency resolution`_)
 
@@ -116,7 +116,7 @@ Automatic Parsers
 
 All of the above enhancements to ChemDataExtractor mean that the extraction is much more powerful and context-rich. The forward-looking Interdependency Resolution means that one no longer needs to manually specify as many specifiers when looking for new properties, and the quantity extraction involving units and dimensions means that we have rich new metadata on our extracted values.
 
-We have taken advantage this new data to create automatic parsers for both sentences and tables. Any subclasses of :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` have, by default, automatic parsers enabled, meaning no user intervention is needed to start extracting. These automatic parsers work expecially well with the TableDataExtractor tables, which have the data in a highly standardised format, meaning that more basic parsers can still work exceptionally well.
+We have taken advantage this new data to create automatic parsers for both sentences and tables. Any subclasses of :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` have, by default, automatic parsers enabled, meaning no user intervention is needed to start extracting. These automatic parsers work especially well with the TableDataExtractor tables, which have the data in a highly standardised format, meaning that more basic parsers can still work exceptionally well.
 
 .. note::
 
