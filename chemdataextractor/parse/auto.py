@@ -28,6 +28,7 @@ import xml.etree.ElementTree as etree
 
 log = logging.getLogger(__name__)
 
+
 def construct_unit_element(dimensions):
     """
     Construct an element for detecting units for the dimensions given.
@@ -37,7 +38,7 @@ def construct_unit_element(dimensions):
     :returns: An Element to look for units of given dimensions. If None or Dimensionless are passed in, returns None.
     :rtype: BaseParserElement or None
     """
-    if not dimensions:
+    if not dimensions or not dimensions.units_dict:
         return None
     units_regex = '(('
     for element in magnitudes_dict.keys():

@@ -14,7 +14,7 @@ import six
 from .base import BaseModel, StringType, ListType, ModelType
 from .units.temperature import TemperatureModel
 from .units.length import LengthModel
-from ..parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser
+from ..parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser, names_only, labels_only, roles_only
 from ..parse.ir import IrParser
 from ..parse.mp_new import MpParser
 from ..parse.nmr import NmrParser
@@ -30,9 +30,9 @@ log = logging.getLogger(__name__)
 
 
 class Compound(BaseModel):
-    names = ListType(StringType())
-    labels = ListType(StringType())
-    roles = ListType(StringType())
+    names = ListType(StringType(), parse_expression=names_only)
+    labels = ListType(StringType(), parse_expression=labels_only)
+    roles = ListType(StringType(), parse_expression=roles_only)
     parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
 
     def merge(self, other):
