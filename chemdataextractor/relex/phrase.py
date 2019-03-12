@@ -39,10 +39,10 @@ class Phrase(object):
     def to_string(self):
         output_string = ''
         output_string += ' '.join(self.elements['prefix']['tokens']) + ' '
-        output_string += self.entities[0].tag.name + ' '
+        output_string += self.entities[0].tag + ' '
         for i in range(0, self.number_of_entities - 1):
             output_string += ' '.join(self.elements['middle_' + str(i + 1)]['tokens']) + ' '
-            output_string += self.entities[i + 1].tag.name + ' '
+            output_string += self.entities[i + 1].tag + ' '
         output_string += ' '.join(self.elements['suffix']['tokens'])
 
         return output_string
@@ -61,14 +61,14 @@ class Phrase(object):
                 if entity in combined_entity_list:
                     continue
                 else:
-                    if entity.tag.name not in entity_counter.keys():
-                        entity_counter[entity.tag.name] = 1
+                    if entity.tag not in entity_counter.keys():
+                        entity_counter[entity.tag] = 1
                     else:
-                        entity_counter[entity.tag.name] += 1
+                        entity_counter[entity.tag] += 1
 
-                    new_tag_name = entity.tag.name.split('_')[0] + '_' + str(entity_counter[entity.tag.name])
+                    new_tag_name = entity.tag.split('-')[0] + '-' + str(entity_counter[entity.tag])
                     # print(new_tag_name)
-                    entity.tag.name = new_tag_name
+                    entity.tag = new_tag_name
                     combined_entity_list.append(entity)
 
         # Number of entities
@@ -81,7 +81,7 @@ class Phrase(object):
         self.entities = sorted_entity_list
 
         # Create ordering
-        self.order = [e.tag.name.split('_')[0] for e in self.entities]
+        self.order = [e.tag.split('-')[0] for e in self.entities]
 
         # Create the phrase elements, prefix, middles, suffix
 

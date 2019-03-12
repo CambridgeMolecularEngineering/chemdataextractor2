@@ -11,7 +11,7 @@ class Entity(object):
     """
 
 
-    def __init__(self, text, tag, start ,end):
+    def __init__(self, text, tag, parse_expression, start ,end):
         """Create a new Entity
 
         Arguments:
@@ -22,7 +22,8 @@ class Entity(object):
         """
 
         self.text = six.text_type(text)
-        self.tag = copy.copy(tag)
+        self.tag = tag
+        self.parse_expression = copy.copy(parse_expression)
         self.end = end
         self.start = start
 

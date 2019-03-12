@@ -134,17 +134,17 @@ class Relation(object):
     Essentially a placeholder for a number of entities
     """
 
-    def __init__(self, entities, confidence):
+    def __init__(self, entities, tokens, confidence):
         """Init
 
         Arguments:
             entities {list} -- List of Entity objects that are present in this relationship
             confidence {float} -- The confidence of the relation
         """
-
         self.entities = copy.copy(entities)
+        self.tokens = tokens
         self.confidence = confidence
-
+    
     def __len__(self):
         return len(self.entities)
 

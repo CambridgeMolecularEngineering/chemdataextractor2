@@ -166,7 +166,7 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
         return new_model
 
     def __eq__(self, other):
-        print('eq called')
+        # print('eq called')
         if not isinstance(other, Dimension):
             return False
 

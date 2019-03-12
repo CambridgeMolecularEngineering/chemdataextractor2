@@ -114,6 +114,7 @@ class BaseParserElement(object):
             try:
                 results, next_i = self.parse(tokens, i)
             except ParseException as err:
+                # print(err.msg)
                 i += 1
             else:
                 if next_i > i:
