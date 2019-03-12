@@ -67,7 +67,7 @@ class TestDocument(unittest.TestCase):
                'Finally, the melting point, Tm']
         d = Document(*els)
         defs = d.definitions
-        expected = [{'definition': 'Curie temperature', 'specifier': 'TC', 'start': 4, 'end': 9}, {'definition': 'uv - vis absorption maximum', 'specifier': 'λmax', 'start': 4, 'end': 11}, {'definition': 'melting point', 'specifier': 'Tm', 'start': 3, 'end': 7}]
+        expected = [{'definition': 'Curie temperature', 'specifier': 'TC', 'tokens': [('Curie', 'JJ'), ('temperature', 'NN'), ('(', '-LRB-'), ('TC', 'NN'), (')', '-RRB-')], 'start': 4, 'end': 9}, {'definition': 'uv - vis absorption maximum', 'specifier': 'λmax', 'tokens': [('uv', 'NN'), ('-', 'HYPH'), ('vis', 'NN'), ('absorption', 'NN'), ('maximum', 'NN'), (',', ','), ('λmax', 'NN')], 'start': 4, 'end': 11}, {'definition': 'melting point', 'specifier': 'Tm', 'tokens': [('melting', 'NN'), ('point', 'NN'), (',', ','), ('Tm', 'NN')], 'start': 3, 'end': 7}]
         self.assertEqual(defs, expected)
 
 

@@ -210,6 +210,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         If there is no 'compound' field associated with the model but the compound is contextual
         """
         try:
+            if 'compound' not in self.fields.keys():
+                return False
             if self.compound.is_contextual:
                 return self.compound.is_unidentified
         except AttributeError:
@@ -224,6 +226,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     def __eq__(self, other):
         # TODO: Check this actually works as expected (what about default values?)
         if isinstance(other, self.__class__):
+            log.debug(self._values, other._values)
             return self._values == other._values
         return False
 
@@ -260,6 +263,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         except AttributeError:
             return False
 
+    def __hash__(self):
+        return str(self.serialize()).__hash__()
+
     @classmethod
     def reset_mutables(cls):
         """
@@ -272,7 +278,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     @classmethod
     def update(cls, definitions):
         """Update this Element's mutable attributes with new information from definitions
-        
+
         Arguments:
             definitions {list} -- list of definitions found in this element
         """
@@ -305,27 +311,37 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
     @property
     def is_contextual(self):
-        for k in self:
-            value = getattr(self, k)
-            field = self.fields.get(k)
-            # Not contextual if any contextual=False field has a value
-            if value not in [None, '', []]:
-                # If a ListType, it depends on the contained type
-                if isinstance(field, ListType):
-                    # If a list of Models, not contextual if any of them isn't
-                    if isinstance(field.field, ModelType):
-                        for model_value in value:
-                            if not model_value.is_contextual:
-                                return False
-                    elif not field.field.contextual:
-                        return False
-                else:
-                    # If a single Model type, not contextual if it isn't
-                    if isinstance(field, ModelType):
-                        if not value.is_contextual:
-                            return False
-                    elif not field.contextual:
-                        return False
+        log.debug(self.serialize())
+        for field_name, field in six.iteritems(self.fields):
+            if hasattr(field, 'model_class'):
+                if self[field_name] == field.default and field.contextual:
+                    return True
+                if hasattr(self[field_name], 'is_contextual') and \
+                  self[field_name].is_contextual:
+                    log.debug('Is contextual')
+                    return True
+            elif field.contextual and self[field_name] == field.default:
+                log.debug('Is contextual')
+                return True
+        log.debug('Not contextual')
+        return False
+
+    @property
+    def required_fulfilled(self):
+        log.debug(self.serialize())
+        for field_name, field in six.iteritems(self.fields):
+            if hasattr(field, 'model_class'):
+                if self[field_name] == field.default and field.contextual \
+                  and field.required:
+                    return False
+                if hasattr(self[field_name], 'required_fulfilled') and \
+                  not self[field_name].required_fulfilled:
+                    log.debug('Required unfulfilled')
+                    return False
+            elif field.contextual and field.required and self[field_name] == field.default:
+                log.debug('Required unfulfilled')
+                return False
+        log.debug('Required fulfilled')
         return True
 
     def serialize(self, primitive=False):
@@ -347,6 +363,26 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     def to_json(self, *args, **kwargs):
         """Convert Model to JSON."""
         return json.dumps(self.serialize(primitive=True), *args, **kwargs)
+
+    def merge_contextual(self, other):
+        log.debug(self.serialize())
+        log.debug(other.serialize())
+        if type(other) == type(self):
+            for field_name, field in six.iteritems(self.fields):
+                if (field.contextual
+                   and self[field_name] is None
+                   and other.get(field_name, None) is not None):
+                    self[field_name] = other[field_name]
+        else:
+            for field_name, field in six.iteritems(self.fields):
+                if hasattr(field, 'model_class') and isinstance(other, field.model_class):
+                    log.debug('model class case')
+                    if self[field_name] is not None and self[field_name].is_contextual:
+                        self[field_name] = self[field_name].merge_contextual(other)
+                    elif field.contextual and self[field_name] is None:
+                        log.debug(field_name)
+                        self[field_name] = copy.copy(other)
+        return self
 
 
 @python_2_unicode_compatible
@@ -373,6 +409,12 @@ class ModelList(MutableSequence):
 
     def __str__(self):
         return self.models.__str__()
+
+    def __contains__(self, element):
+        log.debug(element.serialize())
+        log.debug(self.serialize())
+        log.debug(self.models.__contains__(element))
+        return self.models.__contains__(element)
 
     def insert(self, index, value):
         self.models.insert(index, value)

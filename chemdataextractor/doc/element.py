@@ -10,6 +10,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from abc import ABCMeta, abstractproperty
 import json
+import operator
 
 import six
 
@@ -55,6 +56,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
             self.models = models
         else:
             self.models = []
+        self._streamlined_models_list = None
 
     def __repr__(self):
         return '<%s>' % (self.__class__.__name__,)
@@ -87,13 +89,42 @@ class BaseElement(six.with_metaclass(ABCMeta)):
     #     """Convert Element to python dictionary."""
     #     return []
 
-    def set_models(self, models):
+    def add_models(self, models):
         """Set all models on this element
         """
-        print(models)
+        # print(models)
         log.debug("Setting models on %s" % self)
-        self.models += models
-        return
+        self._streamlined_models_list = None
+        self.models.extend(models)
+        self.models = self.models
+
+    @property
+    def models(self):
+        return self._models
+
+    @models.setter
+    def models(self, value):
+        self._models = value
+        self._streamlined_models_list = None
+
+    @property
+    def _streamlined_models(self):
+        if self._streamlined_models_list is None:
+            models = set()
+            log.debug(self.models)
+            for model in self.models:
+                models.update(self._flatten_model(model))
+            self._streamlined_models_list = sorted(list(models),
+                                                   key=operator.attrgetter('__name__'))
+        return self._streamlined_models_list
+
+    def _flatten_model(self, model):
+        model_set = {model}
+        for field_name, field in six.iteritems(model.fields):
+            if hasattr(field, 'model_class'):
+                model_set.update(self._flatten_model(field.model_class))
+        log.debug(model_set)
+        return model_set
 
     def to_json(self, *args, **kwargs):
         """Convert element to JSON string. The content of the JSON will be equivalent

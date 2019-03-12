@@ -102,7 +102,7 @@ class Document(BaseDocument):
                 element.set_config()
         log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
 
-    def set_models(self, models):
+    def add_models(self, models):
         """Set models on all element types
 
         Usage::
@@ -114,9 +114,11 @@ class Document(BaseDocument):
 
         """
         log.debug("Setting models")
+        self.models.extend(models)
+        self.models = self.models
         for element in self.elements:
-            if callable(getattr(element, 'set_models', None)):
-                element.set_models(models)
+            if callable(getattr(element, 'add_models', None)):
+                element.add_models(models)
             # print(element.models)
         return
 
@@ -207,7 +209,7 @@ class Document(BaseDocument):
         """
         log.debug("Getting chemical records")
         records = ModelList()  # Final list of records -- output
-        contextual_records = []  # Records that will be merged with all others
+        contextual_records = ModelList()  # Records that will be merged with all others
         head_def_record = None  # Most recent record from a heading, title or short paragraph
         head_def_record_i = None # Element index of head_def_record
         last_product_record = None
@@ -225,9 +227,9 @@ class Document(BaseDocument):
             for model in el.models:
                 model.update(element_definitions)
 
+            el_records = el.records
             # Save the title compound
             if isinstance(el, Title):
-                el_records = el.records
                 if len(el_records) == 1 and isinstance(el_records[0], Compound) and el_records[0].is_id_only:
                     title_record = el_records[0]  # TODO: why the first only?
 
@@ -239,7 +241,6 @@ class Document(BaseDocument):
 
             # Paragraph with single sentence with single ID record considered a head_def_record
             if isinstance(el, Paragraph) and len(el.sentences) == 1:
-                el_records = el.records
                 if len(el_records) == 1 and isinstance(el_records[0], Compound) and el_records[0].is_id_only:
                     head_def_record = el_records[0]
                     head_def_record_i = i
@@ -247,7 +248,7 @@ class Document(BaseDocument):
             # Paragraph with multiple sentences
             # We assume that if the first sentence of a paragraph contains only 1 ID Record, we can treat it as a header definition record, unless directly proceeding a header def record
             elif isinstance(el, Paragraph) and len(el.sentences) > 0:
-                if not (isinstance(self.elements[i-1], Heading) and head_def_record_i == i - 1):
+                if not (isinstance(self.elements[i - 1], Heading) and head_def_record_i == i - 1):
                     first_sent_records = el.sentences[0].records
                     if len(first_sent_records) == 1 and isinstance(first_sent_records[0], Compound) and first_sent_records[0].is_id_only:
                         sent_record = first_sent_records[0]
@@ -256,7 +257,7 @@ class Document(BaseDocument):
                             head_def_record_i = i
 
             #: BACKWARD INTERDEPENDENCY RESOLUTION BEGINS HERE
-            for record in el.records:
+            for record in el_records:
                 if isinstance(record, Compound):
                     # Keep track of the most recent compound record with labels
                     if isinstance(el, Paragraph) and record.labels:
@@ -281,11 +282,7 @@ class Document(BaseDocument):
 
                 # Unidentified records -- those without compound names or labels
                 if record.is_unidentified:
-                    if record.is_contextual:
-                        # Add contextual record to a list of all from the document for later merging
-                        contextual_records.append(record)
-                        continue
-                    else:
+                    if hasattr(record, 'compound'):
                         # We have property values but no names or labels... try merge those from previous records
                         if isinstance(el, Paragraph) and (head_def_record or last_product_record or last_id_record or title_record):
                             # head_def_record from heading takes priority if the heading directly precedes the paragraph ( NOPE: or the last_id_record has no name)
@@ -334,12 +331,24 @@ class Document(BaseDocument):
                         else:
                             # Consider continue here to filter records missing name/label...
                             pass
-                records.append(record)
+                if record.is_contextual:
+                    log.debug(record.serialize())
+                    # Add contextual record to a list of all from the document for later merging
+                    contextual_records.append(record)
+                    continue
+                if record not in records:
+                    log.debug(record.serialize())
+                    records.append(record)
 
         # Merge in contextual information
         for record in records:
             for contextual_record in contextual_records:
-                record.merge_contextual(contextual_record)
+                # record.merge_contextual(contextual_record)
+                contextual_record.merge_contextual(record)
+                if not contextual_record.is_contextual:
+                    records.append(contextual_record)
+                    contextual_records.remove(contextual_record)
+            log.debug(records.serialize())
 
         # Merge abbreviation definitions
         for record in records:
@@ -355,13 +364,13 @@ class Document(BaseDocument):
 
         # Merge Compound records with any shared name/label
         len_l = len(records)
+        log.debug(records)
         i = 0
         while i < (len_l - 1):
             for j in range(i + 1, len_l):
                 r = records[i]
                 other_r = records[j]
                 if isinstance(r, Compound) and isinstance(other_r, Compound):
-
                     # Strip whitespace and lowercase to compare names
                     rnames_std = {''.join(n.split()).lower() for n in r.names}
                     onames_std = {''.join(n.split()).lower() for n in other_r.names}
@@ -383,6 +392,11 @@ class Document(BaseDocument):
         for el in self.elements:
             for model in el.models:
                 model.reset_mutables()
+
+        # Append contextual records if they've filled required fields
+        for record in contextual_records:
+            if record.required_fulfilled:
+                records.append(record)
 
         return records
 

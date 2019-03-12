@@ -282,7 +282,7 @@ def standardize_role(role):
     return role
 
 #TODO jm2111, Problems here! The parsers don't have a parse method anymore. Ruins parsing of captions.
-class CompoundParser(BaseSentenceParser, BaseTableParser):
+class CompoundParser(BaseSentenceParser):
     """Chemical name possibly with an associated label."""
 
     root = cem_phrase
@@ -298,7 +298,7 @@ class CompoundParser(BaseSentenceParser, BaseTableParser):
             yield c
 
 
-class ChemicalLabelParser(BaseSentenceParser, BaseTableParser):
+class ChemicalLabelParser(BaseSentenceParser):
     """Chemical label occurrences with no associated name."""
 
     root = chemical_label_phrase
@@ -309,7 +309,7 @@ class ChemicalLabelParser(BaseSentenceParser, BaseTableParser):
             yield self.model(labels=[label], roles=roles)
 
 
-class CompoundHeadingParser(BaseSentenceParser, BaseTableParser):
+class CompoundHeadingParser(BaseSentenceParser):
     """Better matching of abbreviated names in dedicated compound headings."""
 
     root = compound_heading_phrase
