@@ -27,7 +27,7 @@ critical_temperature = R('T[C|c|N|n|max|on|1-2|A-Z]')('specifier')
 specifier_options = (greek_symbols | critical_temperature)
 
 #: Definition phrase 1: "definition, specifier" or "definition (specifier)"
-definition_phrase_1 = (OneOrMore(T('JJ') | T('NN') | T('NNP') | T('HYPH'))('phrase').add_action(join) + Optional(delim) + Optional(rbrct) + specifier_options + Optional(rbrct))('definition')
+definition_phrase_1 = (OneOrMore(T('JJ') | T('NN') | T('NNP') | T('HYPH') | T('VBG'))('phrase').add_action(join) + Optional(delim) + Optional(rbrct) + specifier_options + Optional(rbrct))('definition')
 
 #: Add new definitions to this phrase
 specifier_definition = (definition_phrase_1)('definition')
