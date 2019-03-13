@@ -45,44 +45,11 @@ class Compound(BaseModel):
         log.debug('Result: %s' % self.serialize())
         return self
 
-    # def merge_contextual(self, other):
-    #     """Merge in contextual info from a template Compound."""
-    #     # TODO: This is currently dependent on our data model? Make more robust to schema changes
-    #     # Currently we assume all lists at Compound level, with 1 further potential nested level of lists
-    #     for k in self.keys():
-    #         # print('key: %s' % k)
-    #         for item in self[k]:
-    #             # print('item: %s' % item)
-    #             for other_item in other.get(k, []):
-    #                 # Skip text properties (don't merge names, labels, roles)
-    #                 if isinstance(other_item, six.text_type):
-    #                     continue
-    #                 for otherk in other_item.keys():
-    #                     if isinstance(other_item[otherk], list):
-    #                         if len(other_item[otherk]) > 0 and len(item[otherk]) > 0:
-    #                             other_nested_item = other_item[otherk][0]
-    #                             for othernestedk in other_nested_item.keys():
-    #                                 for nested_item in item[otherk]:
-    #                                     if not nested_item[othernestedk]:
-    #                                         nested_item[othernestedk] = other_nested_item[othernestedk]
-    #                     elif not item[otherk]:
-    #                         item[otherk] = other_item[otherk]
-    #     log.debug('Result: %s' % self.serialize())
-    #     return self
-
     @property
     def is_unidentified(self):
         if not self.names and not self.labels:
             return True
         return False
-
-    # @property
-    # def is_contextual(self):
-    #     for k in self:
-    #         # Not contextual if we have any names or labels
-    #         if k in {'names', 'labels'}:
-    #             return False
-    #     return super(Compound, self).is_contextual
 
     @property
     def is_id_only(self):

@@ -59,7 +59,7 @@ class Table(CaptionedElement):
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         try:
             self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
-        except TDEError as e:
+        except (TDEError, TypeError) as e:
             log.error("TableDataExtractor error: {}".format(e))
             self.category_table = []
             self.tde_table = None
@@ -250,8 +250,8 @@ class Table(CaptionedElement):
                     elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
                         table_records.append(record)
 
-        # Addition of the serialized caption records
-        caption_records = [c for c in caption_records if not c.is_contextual]
+        # Addition of the caption records
+        caption_records = [c for c in caption_records if c.contextual_fulfilled]
         table_records += caption_records
 
         # Merge Compound records with any shared name/label
