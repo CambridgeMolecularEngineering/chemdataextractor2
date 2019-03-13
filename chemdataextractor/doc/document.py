@@ -103,9 +103,11 @@ class Document(BaseDocument):
         log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
 
     def add_models(self, models):
-        """Set models on all element types
+        """
+        Add models to all elements.
 
         Usage::
+
             d = Document.from_file(f)
             d.set_models([myModelClass1, myModelClass2,..])
 

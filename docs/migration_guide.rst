@@ -8,9 +8,9 @@ v1.5.0 Migration Guide
 Overview
 =================================
 
-Previously, ChemDataExtractor required huge amounts of manual input to create parsers for new models and if the user had multiple new models that were similar, we resulted in huge amounts of duplicated code within the parse model. This system was very user-unfriendly and didn't really follow the logic of how Physics and Chemistry are structured.
+Previously, ChemDataExtractor required huge amounts of manual input to create parsers for new models and if the user had multiple new models that were similar, we ended up with huge amounts of duplicated code within the parse model. This system was very user-unfriendly and didn't really follow the logic of how Physics and Chemistry are structured.
 
-Furthermore, the Interdependency Resolution (IR) for these models was purely backwards-looking and did not account for dynamic or document-specific terminology that was clearly defined in the text.
+Furthermore, the Interdependency Resolution (IR) for these models was purely backwards-looking and did not account for dynamic or document-specific terminology even when it was clearly defined in the text.
 
 To resolve some of these issues we have developed a new model-based approach to parsing that intrinsically links the models and the parsers, enabling completely automated parser creation and forward-looking Interdependency Resolution.
 
@@ -24,11 +24,11 @@ Overall Structure
 
 At a high level, in previous versions of ChemDataExtractor, the :class:`~chemdataextractor.doc.document.Document` class and each of its subelements (e.g. :class:`~chemdataextractor.doc.text.Paragraph` or :class:`~chemdataextractor.doc.text.Sentence`) had a list of parsers. These parsers each had an associated model which they were parsing for. When these parsers found a sentence (or table cell) that contained the requisite elements, it would create a :class:`~chemdataextractor.doc.text.Compound` and the property would be associated to this instance of a compound.
 
-The new structure changes this hierarchy slightly. The :class:`~chemdataextractor.doc.document.Document` class and its subelements now own models that the documents should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :class:`~chemdataextractor.doc.text.Sentence` or :class:`~chemdataextractor.doc.table_new.Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the model.
+The new structure changes this hierarchy significantly. The :class:`~chemdataextractor.doc.document.Document` class and its subelements now own the models that they should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :class:`~chemdataextractor.doc.text.Sentence` or :class:`~chemdataextractor.doc.table_new.Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the models.
 
 This new structure has several advantages:
 
-- You no longer has to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table_new.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, one just passes in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
+- You no longer has to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table_new.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, you just pass in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
 
 - The new structure is far safer, that is, it is impossible to use a parser meant for tables on a sentence and a parser meant for sentences on tables.
 
@@ -37,7 +37,7 @@ This new structure has several advantages:
 Changes to Models
 ----------------------------------
 
-In addition to the overall change of structure, involving each property optionally owning a Compound, new types of models have  been introduced for the majority usecase, of extracting a physical quantity structure, i.e. the case with a specifier, a value, and units, such as melting points, interatomic distances, and cooling rates. These models are all defined as subclasses of a new type of model, :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`
+In addition to the overall change of structure, involving each property optionally owning a :class:`~chemdataextractor.model.model.Compound`, new types of models have  been introduced for the majority usecase of extracting a physical quantity structure, i.e. the case with a specifier, a value, and units, such as melting points, interatomic distances, and cooling rates. These models are all defined as subclasses of a new type of model, :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`
 
 .. note::
 
@@ -47,18 +47,22 @@ These model types can now be defined with minimal effort as the various base-qua
 
 Models of this type have only 2 requirements:
 
-- A specifier parse expression (Optional, only required if autoparsers are desired)
+- A specifier with an associated parse expression (Optional, only required if autoparsers are desired). These parse expressions will be updated automatically using forward-looking Interdependency Resolution if the :python:`mutable` flag is set to :python:`True`.
 - If applicable, a compound entity, named :python:`compound`
 
-While previous models in ChemDataExtractor stored values and units as strings, these are now automatically extracted and stored as numbers and Unit classes, allowing for easy conversion and comparison. These changes are explored in more detail in `Addition of Units and Dimensions`_.
+While previous models in ChemDataExtractor stored values and units as strings, these are now automatically extracted and stored as numbers and :class:`~chemdataextractor.model.units.unit.Unit` s, allowing for easy conversion and comparison. These changes are explored in more detail in `Addition of Units and Dimensions`_.
 
 Each entity must have a defined type, for example :class:`~chemdataextractor.model.base.StringType`, :class:`~chemdataextractor.model.base.FloatType` or :class:`~chemdataextractor.model.base.ModelType`. Note that by specifying :class:`~chemdataextractor.model.base.ModelType` you must provide another model, allowing for nested model relationships.
 
 The entities also have properties:
 
-- :python:`required`: Whether or not the entity is required to form a relationship, if the entity is not found, the relationship will not be output by ChemDataExtractor.
+- :python:`parse_expression`: A :class:`~chemdataextractor.parse.elements.BaseElement` that is associated with the entity. This parse expression is used by the autoparser in constructing a parse rule.
+
+- :python:`required`: Whether or not the entity is required to form a relationship. If required is :python:`True` and the entity is not found, the relationship will not be output by ChemDataExtractor.
+
 - :python:`contextual`: Whether or not the entity can be sourced from a different element to the rest of the entities, e.g. whether the entity can be completed with data from another sentence.
-- :python:`mutable`: Whether or not the parse_expression can be updated based on definitions found in the document (see `Forward looking Interdependency resolution`_)
+
+- :python:`mutable`: Whether or not the :python:`parse_expression` can be updated based on definitions found in the document (see `Forward looking Interdependency resolution`_)
 
 We can also add arbitrarily-named entities with any parse expressions we like.
 Example::
@@ -75,9 +79,12 @@ Example::
                              required=True,
                              contextual=False,
                              mutable=False)
+        apparatus = ModelType(Apparatus, contextual=True)
         random_entity = StringType(parse_expression=I('complete')+I('nonsense'))
 
-Some model types have not yet been defined. An example of how to create a new model is included in the Examples.
+Notice also that we have added apparatus and compound as sub-models to :python:`BoilingPoint`. If we pass in :python:`BoilingPoint` to a document or a sentence, they will automatically also extract the apparatus and compound and associate them with the boiling point as required.
+
+Model types for certain dimensions have not yet been defined. An example of how to create a new model is included in the Examples.
 
 Addition of Units and Dimensions
 --------------------------------
@@ -87,29 +94,31 @@ Newly included in ChemDataExtractor are the concepts of :class:`~chemdataextract
 Changes to Parsers
 --------------------
 
-Previously, different types of parsers were just distinguished by name. A :class:`MpTableParser` was understood to parse tables, and :class:`~chemdataextractor.parse.mp_new.MpParser` was understood to parse Sentences. However, this was not enforced in any way. This has now been changed, with all parsers now implementing either :meth:`~chemdataextractor.parse.base.BaseSentenceParser.parse_sentence` if they are sentence parsers, or :meth:`~chemdataextractor.parse.base.BaseTableParser.parse_cell` if a table parser. You can get these methods for free by subclassing from :class:`~chemdataextractor.parse.base.BaseSentenceParser` and :class:`~chemdataextractor.parse.base.BaseTableParser` respectively. You then only need to implement the interpret function, just as before.
+Previously, different types of parsers were just distinguished by name. A :class:`MpTableParser` was understood to parse tables, and :class:`~chemdataextractor.parse.mp_new.MpParser` was understood to parse sentences. However, this was not enforced in any way. This has now been changed, with all parsers now implementing either :meth:`~chemdataextractor.parse.base.BaseSentenceParser.parse_sentence` if they are sentence parsers, or :meth:`~chemdataextractor.parse.base.BaseTableParser.parse_cell` if a table parser. You can get these methods for free by subclassing from :class:`~chemdataextractor.parse.base.BaseSentenceParser` and :class:`~chemdataextractor.parse.base.BaseTableParser` respectively. You then only need to implement the interpret function, just as before.
 
-To work with the models now being able to store values and units in a more structured manner, :class:`~chemdataextractor.parse.base.BaseParser` now contains new methods for extracting them. Refer to the API documentation for it for more detail.
+To work with the models now being able to store values and units in a more structured manner, :class:`~chemdataextractor.parse.base.BaseParser` also now contains new methods for extracting them. Refer to the API documentation for more detail.
 
 Forward looking Interdependency Resolution
 ------------------------------------------
 
-More often than not, the specifier you define in your model will be insufficient at capturing all variations of the way in which the model is defined in text. In most cases, the specifier is given a short abbreviation such as:
+More often than not, the specifier you define in your model will be insufficient for capturing all variations of the way in which the model is defined in text. In most cases, the specifier is given a short abbreviation such as:
 
 "...the boiling point, bp,..."
 
-Using the definition parsers within ChemDataExtractor, we now automatically update specifier entities within local document scope when these definitions are found. This means that the specifier parse-expression gets automatically updated to include the new definition. Following the example above, the new specifier parse expression will become::
+Using the definition parsers within ChemDataExtractor, we now automatically update specifier entities at the document scope when these definitions are found. This means that the specifier parse-expression gets automatically updated to include the new definition. Following the example above, the new specifier parse expression will become::
 
 (I('boiling') + I('point')) | I('bp')
 
 Then for all remaining elements in the document, the relationship will be found if this specifier is used.
 
-Note: This information only persists in the current document, so when a new document is parsed, we revert to the default defined specifier.
+.. note::
+
+    This information only persists in the current document, so when a new document is parsed, we revert to the default defined specifier.
 
 Integration with TableDataExtractor
 -----------------------------------
 
-TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances its capabilities for table data extraction. It reads all tables and outputs the data from them in a highly standardised format whilst also retaining information about things including subheadings. More information can be found in the TableDataExtractor documentation, also available online.
+TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances its capabilities for table data extraction. It reads all tables and outputs the data from them in a highly standardised format whilst also retaining information about things including subheadings. TableDataExtractor is a lower-level framework to ChemDataExtractor, and in most cases, it should not be necessary to work directly with it. More information can be found in the TableDataExtractor documentation.
 
 Automatic Parsers
 ----------------------------------
@@ -125,11 +134,11 @@ We have taken advantage this new data to create automatic parsers for both sente
 Migrating Existing Code
 =================================
 
-This section is aimed at moving existing code to run in ChemDataExtractor 1.5.0 without adding any new functionality. For information on how to take advantage of the new features please refer to `Upgrading Existing Code`_.
+This section is aimed at migrating existing code to run in ChemDataExtractor 1.5.0 without adding any new functionality. For information on how to take advantage of the new features please also refer to `Upgrading Existing Code`_.
 
 Migrating Models
 -----------------
-When a model was previously written, a reference to the model would need to be created from Compound. This no longer needs to be done, so where the old version would have been::
+When a model was previously written, a reference to the model would need to be added to  Compound. This no longer needs to be done, so where the old version would have been::
 
     from chemdataextractor.model import BaseModel, StringType, ListType, ModelType
     from chemdataextractor.model import Compound
@@ -217,7 +226,7 @@ you would write::
 
     document.models = [BoilingPoint]
 
-Note that you should now pass in the class for the model we are parsing instead of an instance of the parser as before.
+Note that you should now pass in the class for the model you are parsing instead of an instance of the parser as before.
 
 
 Upgrading Existing Code
@@ -273,7 +282,7 @@ Defining your own dimensions is also easy; an example of how it's done within Ch
 
     class TemperatureUnit(Unit):
         """
-        Base class for units with dimensions of temprature.
+        Base class for units with dimensions of temperature.
         The standard value for temperature is defined to be a Kelvin, implemented in the Kelvin class.
         """
 
@@ -391,7 +400,7 @@ This is actually the easiest part of upgrading to take advantage of 1.5.0's feat
         specifier = StringType(parse_expression=I('Boiling') + I('Point'))
         compound = ModelType(Compound)
 
-Alternatively, if you want to use the automatic parsers and also the parser you wrote yourself, you can do the following::
+Alternatively, if you want to use the automatic parsers and also any parsers you wrote yourself, you can do the following::
 
     from chemdataextractor.model import TemperatureModel, StringType, ModelType
     from chemdataextractor.model import Compound
