@@ -42,8 +42,9 @@ class TestExtract(unittest.TestCase):
             {'Compound': {'names': ['carbon']}},
             {'Compound': {'names': ['hydrogen']}},
             {'Compound': {'names': ['diethyl ether']}},
-            {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride', '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}},
-            {'MeltingPoint': {'value': [130.0, 132.0], 'units': 'Celsius^(1.0)', 'raw_value': '130-132', 'raw_units': '\xb0C', 'compound': {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride', '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}}}}
+            {'MeltingPoint': {'value': [130.0, 132.0], 'units': 'Celsius^(1.0)', 'raw_value': '130-132', 'raw_units': '\xb0C', 'compound': {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride', '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}}}},
+            {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride',
+                                    '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}}
         ]
         self.assertEqual(expected, d.records.serialize())
 
@@ -71,13 +72,14 @@ class TestExtract(unittest.TestCase):
             {'Compound': {'names': ['hydrogen']}},
             {'Compound': {'names': ['diethyl ether']}},
             {'Apparatus': {'name': 'HORIBA F-7000 spectrofluorimeter'}},
-            {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride', '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}},
             {'MeltingPoint': {'value': [130.0, 132.0],
                               'units': 'Celsius^(1.0)',
                               'raw_value': '130-132',
                               'raw_units': '\xb0C',
                               'compound': {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride', '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}},
-                              'apparatus': {'Apparatus': {'name': 'HORIBA F-7000 spectrofluorimeter'}}}}
+                              'apparatus': {'Apparatus': {'name': 'HORIBA F-7000 spectrofluorimeter'}}}},
+            {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride',
+                                    '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}}
         ]
         self.assertEqual(expected, d.records.serialize())
 
