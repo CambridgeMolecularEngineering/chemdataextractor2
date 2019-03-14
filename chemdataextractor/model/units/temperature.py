@@ -37,7 +37,7 @@ class TemperatureModel(QuantityModel):
 
 class TemperatureUnit(Unit):
     """
-    Base class for units with dimensions of temprature.
+    Base class for units with dimensions of temperature.
     The standard value for temperature is defined to be a Kelvin, implemented in the Kelvin class.
     """
 

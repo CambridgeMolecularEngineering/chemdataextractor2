@@ -36,7 +36,7 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
     """
     Class for modelling quantities.
     """
-    raw_value = StringType(contextual=True)
+    raw_value = StringType(required=True, contextual=True)
     raw_units = StringType(contextual=True)
     value = ListType(FloatType(contextual=True), contextual=True, sorted=True)
     units = UnitType(contextual=True)

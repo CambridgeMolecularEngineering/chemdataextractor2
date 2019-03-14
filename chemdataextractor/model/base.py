@@ -217,7 +217,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         try:
             if 'compound' not in self.fields.keys():
                 return False
-            if self.compound.is_contextual:
+            if not self.compound.contextual_fulfilled:
                 return self.compound.is_unidentified
         except AttributeError:
             return True
@@ -315,35 +315,46 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     #         self.fields[field_name].validate()
 
     @property
-    def is_contextual(self):
-        log.debug(self.serialize())
+    def contextual_fulfilled(self):
+        """
+        Whether all the contextual fields have been extracted.
+
+        :return: True if all fields have been found, False if not.
+        :rtype: bool
+        """
+
         for field_name, field in six.iteritems(self.fields):
             if hasattr(field, 'model_class'):
                 if self[field_name] == field.default and field.contextual:
-                    return True
-                if hasattr(self[field_name], 'is_contextual') and \
-                   self[field_name].is_contextual:
+                    return False
+                if hasattr(self[field_name], 'contextual_fulfilled') and \
+                   not self[field_name].contextual_fulfilled:
                     log.debug('Is contextual')
-                    return True
+                    return False
             elif field.contextual and self[field_name] == field.default:
                 log.debug('Is contextual')
-                return True
+                return False
         log.debug('Not contextual')
-        return False
+        return True
 
     @property
     def required_fulfilled(self):
-        log.debug(self.serialize())
+        """
+        Whether all the required fields have been extracted.
+
+        :return: True if all fields have been found, False if not.
+        :rtype: bool
+        """
         for field_name, field in six.iteritems(self.fields):
             if hasattr(field, 'model_class'):
-                if self[field_name] == field.default and field.contextual \
+                if self[field_name] == field.default \
                    and field.required:
                     return False
                 if hasattr(self[field_name], 'required_fulfilled') and \
                    not self[field_name].required_fulfilled:
                     log.debug('Required unfulfilled')
                     return False
-            elif field.contextual and field.required and self[field_name] == field.default:
+            elif field.required and self[field_name] == field.default:
                 log.debug('Required unfulfilled')
                 return False
         log.debug('Required fulfilled')
@@ -370,19 +381,50 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         return json.dumps(self.serialize(primitive=True), *args, **kwargs)
 
     def merge_contextual(self, other):
+        """
+        Merges any fields marked contextual with additional information from other provided that:
+
+        - other is of the same type and they don't have any conflicting fields
+
+        or
+
+        - other is a model type that is part of this model and that field is currently
+        set to be the default value or the field can be merged with the other.
+
+        .. note::
+
+            This method mutates the model it's called on **and** returns it.
+
+        :param other: The other model to merge into this model
+        :type other: BaseModel
+        :return: A merged model
+        :rtype: BaseModel
+        """
+
         log.debug(self.serialize())
         log.debug(other.serialize())
+        if self.contextual_fulfilled:
+            return self
         if type(other) == type(self):
+            # Check if the other seems to be describing the same thing as self.
+            match = True
             for field_name, field in six.iteritems(self.fields):
-                if (field.contextual
-                   and self[field_name] is None
-                   and other.get(field_name, None) is not None):
-                    self[field_name] = other[field_name]
+                if (self[field_name] is not None
+                   and other[field_name] is not None
+                   and self[field_name] != other[field_name]):
+                    match = False
+                    break
+            if match:
+                for field_name, field in six.iteritems(self.fields):
+                    if (field.contextual
+                       and self[field_name] is None
+                       and other.get(field_name, None) is not None):
+                        self[field_name] = other[field_name]
         else:
             for field_name, field in six.iteritems(self.fields):
                 if hasattr(field, 'model_class') and isinstance(other, field.model_class):
                     log.debug('model class case')
-                    if self[field_name] is not None and self[field_name].is_contextual:
+                    if self[field_name] is not None and not self[field_name].contextual_fulfilled:
                         self[field_name] = self[field_name].merge_contextual(other)
                     elif field.contextual and self[field_name] is None:
                         log.debug(field_name)

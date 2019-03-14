@@ -116,6 +116,9 @@ class BaseElement(six.with_metaclass(ABCMeta)):
                 models.update(self._flatten_model(model))
             self._streamlined_models_list = sorted(list(models),
                                                    key=operator.attrgetter('__name__'))
+        for model in self._streamlined_models_list:
+            for parser in model.parsers:
+                parser.model = model
         return self._streamlined_models_list
 
     def _flatten_model(self, model):

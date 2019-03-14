@@ -46,12 +46,12 @@ class TestModel(unittest.TestCase):
         self.assertEqual(Compound(names=['Coumarin 343'], labels=['3a']).is_unidentified, False)
         self.assertEqual(Compound(melting_points=[MeltingPoint(value='250')]).is_unidentified, True)
 
-    def test_is_contextual(self):
-        """Test is_contextual method returns expected result."""
-        self.assertEqual(Compound(names=['Coumarin 343']).is_contextual, False)
-        self.assertEqual(MeltingPoint(value=[240]).is_contextual, True)
-        self.assertEqual(MeltingPoint(raw_units='K').is_contextual, True)
-        self.assertEqual(MeltingPoint(apparatus=Apparatus(apparatus='Some apparatus')).is_contextual, True)
+    def test_contextual_fulfilled(self):
+        """Test contextual_fulfilled method returns expected result."""
+        self.assertEqual(Compound(names=['Coumarin 343']).contextual_fulfilled, True)
+        self.assertEqual(MeltingPoint(value=[240]).contextual_fulfilled, False)
+        self.assertEqual(MeltingPoint(raw_units='K').contextual_fulfilled, False)
+        self.assertEqual(MeltingPoint(apparatus=Apparatus(apparatus='Some apparatus')).contextual_fulfilled, False)
         Compound.fields['names'].contextual = True
         compound = Compound()
         spectrum = UvvisSpectrum(solvent='solvent',
@@ -59,13 +59,13 @@ class TestModel(unittest.TestCase):
                                  temperature_units='units',
                                  concentration='concentration',
                                  concentration_units='units')
-        self.assertEqual(spectrum.is_contextual, True)
+        self.assertEqual(spectrum.contextual_fulfilled, False)
         spectrum.apparatus = Apparatus(apparatus_name='Some apparatus')
-        self.assertEqual(spectrum.is_contextual, False)
+        self.assertEqual(spectrum.contextual_fulfilled, True)
         spectrum.compound = compound
-        self.assertEqual(spectrum.is_contextual, True)
+        self.assertEqual(spectrum.contextual_fulfilled, False)
         spectrum.compound.names = ['Names']
-        self.assertEqual(spectrum.is_contextual, False)
+        self.assertEqual(spectrum.contextual_fulfilled, True)
         Compound.fields['names'].contextual = False
 
     def test_model_update_definitions(self):
