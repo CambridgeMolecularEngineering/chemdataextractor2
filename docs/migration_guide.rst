@@ -28,7 +28,7 @@ The new structure changes this hierarchy significantly. The :class:`~chemdataext
 
 This new structure has several advantages:
 
-- You no longer has to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table_new.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, you just pass in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
+- You no longer have to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table_new.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, you just pass in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
 
 - The new structure is far safer, that is, it is impossible to use a parser meant for tables on a sentence and a parser meant for sentences on tables.
 
@@ -60,7 +60,7 @@ The entities also have properties:
 
 - :python:`required`: Whether or not the entity is required to form a relationship. If required is :python:`True` and the entity is not found, the relationship will not be output by ChemDataExtractor.
 
-- :python:`contextual`: Whether or not the entity can be sourced from a different element to the rest of the entities, e.g. whether the entity can be completed with data from another sentence.
+- :python:`contextual`: Whether or not the entity can be sourced from a different element to the rest of the entities, e.g. whether the entity can be completed with data from another sentence, or a different part of the table.
 
 - :python:`mutable`: Whether or not the :python:`parse_expression` can be updated based on definitions found in the document (see `Forward looking Interdependency resolution`_)
 
@@ -118,7 +118,25 @@ Then for all remaining elements in the document, the relationship will be found 
 Integration with TableDataExtractor
 -----------------------------------
 
-TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances its capabilities for table data extraction. It reads all tables and outputs the data from them in a highly standardised format whilst also retaining information about things including subheadings. TableDataExtractor is a lower-level framework to ChemDataExtractor, and in most cases, it should not be necessary to work directly with it. More information can be found in the TableDataExtractor documentation.
+TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances its capabilities for table data extraction. It reads all tables and outputs the data from them in a highly standardised format whilst also retaining information about all the row or column subheadings that the data point belongs to. The output of TableDataExtractor is a :python:`category table`, where each row corresponds to a single data-cell of the original table, with its corresponding categories.
+The standardized structure of the category table enables automated parsing with ChemDataExtractor.
+
+In most cases it should not be necessary to interact directly with TableDataExtractor. However, it is recommended to test TableDataExtractor for an individual corpus of literature.
+Visual inspection of the ChemDataExtractor :class:`~chemdataextractor.doc.table_new.Table` object is the best option to do so::
+
+    from chemdataextractor import Document
+
+    f = open('my_dicument.xml', 'rb')
+    doc = Document.from_file(f)
+
+    for table in document.tables:
+        table.tde_table.print_raw_table()
+        print(table.tde_table)
+
+This will print the raw table, as found in the source document (before processing with TableDataExtractor) as well as the structured category table, :python:`table.tde_table`.
+
+More information can be found in the TableDataExtractor documentation.
+
 
 Automatic Parsers
 ----------------------------------

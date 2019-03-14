@@ -90,3 +90,6 @@ class TestAddingCellFigure(unittest2.TestCase):
                 d = Document().from_string(xml_string.encode('utf-8'))
             self.assertTrue(cm.output[0].startswith('WARNING'))
 
+
+if __name__ == '__main__':
+    unittest2.main()
