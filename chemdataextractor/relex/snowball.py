@@ -121,25 +121,6 @@ class Snowball(BaseSentenceParser):
         f = open(path, 'rb')
         return pickle.load(f)
     
-    def set_learning_rate(self, alpha):
-        self.learning_rate =  alpha
-        for cluster in self.clusters:
-            cluster.learning_rate = alpha
-        return
-
-    def update(self, sentence_tokens, relations=[]):
-        """Update the learned extraction pattern clusters based on the incoming sentence and relation
-
-        Arguments:
-            sentence_tokens {list} -- the sentence tokenised
-            relation {list} -- The Relation objects that are in the sentence
-        """
-        new_phrase = Phrase(sentence_tokens, relations, self.prefix_length, self.suffix_length)
-        print(new_phrase)
-        self.cluster(new_phrase)
-        self.save()
-        return
-
     def save(self):
         """ Write all snowball settings to file for loading later"""
         save_dir = self.save_dir
@@ -177,6 +158,188 @@ class Snowball(BaseSentenceParser):
                         wf.write(six.text_type(relation) + " Confidence:  " + six.text_type(relation.confidence) + '\n')
 
         return
+    
+    def set_learning_rate(self, alpha):
+        self.learning_rate =  alpha
+        for cluster in self.clusters:
+            cluster.learning_rate = alpha
+        return
+    
+    def train(self, corpus, skip=0):
+        """train the snowball algorithm on a specified corpus
+
+        Arguments:
+            corpus {str or list} -- path to a corpus of documents or list of training sentences
+        """
+        if isinstance(corpus, str):
+            corpus_list = os.listdir(corpus)
+            for i, file_name in enumerate(corpus_list[skip:]):
+                print('{}/{}:'.format(i + 1, len(corpus_list)), ' ', file_name)
+                f = os.path.join(corpus, file_name)
+                self.train_from_file(f)
+        else:
+            assert(isinstance(corpus, list))
+            for s in corpus[skip:]:
+                if isinstance(s, Sentence):
+                    self.train_from_sentence(s)
+                elif isinstance(s, Document):
+                    self.train_from_document(s)
+        return
+    
+    def train_from_file(self, filename):
+        """Train Snowball from the elements of a file
+
+        Arguments:
+            f {str} -- the file path to parse
+        """
+        f = open(filename, 'rb')
+        d = Document().from_file(f)
+        self.train_from_document(d)
+
+        f.close()
+        return
+    
+    def train_from_document(self, d):
+        """Train Snowball from a Document object
+
+        Arguments:
+            d {str} -- the document to parse
+        """
+        for p in d.paragraphs:
+            for s in p.sentences:
+                sent_definitions = s.definitions
+                if sent_definitions:
+                    self.model.update(sent_definitions)
+                self.train_from_sentence(s)
+        return
+
+    def train_from_sentence(self ,s):
+        """Train Snowball from a single sentence
+        
+        Arguments:
+            s {[type]} -- [description]
+        """
+        candidate_dict = {}
+        candidate_relationships = self.candidates(s.tagged_tokens)
+        if len(candidate_relationships) > 0:
+            print("\n\n")
+            print(s)
+            print('\n')
+            for i, candidate in enumerate(candidate_relationships):
+                candidate_dict[str(i)] = candidate
+                print("Candidate " + str(i) + ' ' + str(candidate) + '\n')
+
+            res = six.moves.input("...: ").replace(' ', '')
+            if res:
+                chosen_candidate_idx = res.split(',')
+                chosen_candidates = []
+                for cci in chosen_candidate_idx:
+                    if cci in candidate_dict.keys():
+                        cc = candidate_dict[cci]
+                        cc.confidence = 1.0
+                        chosen_candidates.append(cc)
+                if chosen_candidates:
+                    self.update(s.raw_tokens, chosen_candidates)
+        return
+    
+    def candidates(self, tokens):
+        """Find all candidate relationships of self.model within a sentence
+
+        Arguments:
+            s -- ChemdataExtractor.elements.Sentence -- the sentence to parse
+        Returns
+            relations {list} -- list of relations found in the text
+        """
+        entities_dict = {}
+        candidate_relationships = []
+
+        # Scan the tagged tokens with the parser
+        detected = []
+
+        #: Uses the default autosentenceparser to retrieve candidates
+        sentence_parser = [p for p in self.model.parsers if isinstance(p, AutoSentenceParser)][0]
+        for result in sentence_parser.root.scan(tokens):
+            if result:
+                for entity in self.retrieve_entities(self.model, result[0]):
+                    detected.append(entity)
+        
+        if not detected:
+            return []
+
+        detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
+        for text, tag, parse_expression in detected:
+            text_length = len(text.split(' '))
+            toks = [tok[0] for tok in tokens]
+            start_indices = [s for s in KnuthMorrisPratt(toks, text.split(' '))]
+
+            # Add specifier to dictionary  if it doesn't exist
+            if tag not in entities_dict.keys():
+                entities_dict[tag] = []
+
+            entities = [Entity(text, tag, parse_expression, index, index + text_length) for index in start_indices]
+
+            # Add entities to dictionary if new
+            for entity in entities:
+                if entity not in entities_dict[tag]:
+                    entities_dict[tag].append(entity)
+
+        # check all required entities are present
+        required_fields = self.model.required_fields
+        if not all(e in entities_dict.keys() for e in required_fields):
+            return []
+
+        # Construct all valid combinations of entities
+        all_entities = [e for e in entities_dict.values()]
+        # Intra-Candidate sorting (within each candidate)
+        for i in range(len(all_entities)):
+            all_entities[i] = sorted(all_entities[i], key=lambda t: t.start)
+
+        candidates = list(product(*all_entities))
+
+        # Inter-Candidate sorting (sort all candidates)
+        for i in range(len(candidates)):
+            lst = sorted(candidates[i], key=lambda t: t.start)
+            candidates[i] = tuple(lst)
+
+        for candidate in candidates:
+            candidate_relationships.append(Relation(candidate, confidence=0))
+
+        return candidate_relationships
+
+    def retrieve_entities(self, model, result):
+        """Recursively retrieve the entities from a parse result for a given model
+        
+        Arguments:
+            result {lxml.etree.element} -- The parse result
+        """
+        if isinstance(result, list):
+            for r in result:
+                for entity in self.retrieve_entities(model, r):
+                    yield entity
+        else:
+            for tag, field in model.fields.items():
+                #: Nested models
+                if hasattr(field, 'model_class'):
+                    for nested_entity in self.retrieve_entities(field.model_class, result.xpath('./' + tag)):
+                        yield (nested_entity[0], (tag, nested_entity[1]), nested_entity[2])
+                else:
+                    text_list = result.xpath('./' + tag + '/text()')
+                    for text in text_list:
+                        yield (text, (tag), field.parse_expression)
+
+    def update(self, sentence_tokens, relations=[]):
+        """Update the learned extraction pattern clusters based on the incoming sentence and relation
+
+        Arguments:
+            sentence_tokens {list} -- the sentence tokenised
+            relation {list} -- The Relation objects that are in the sentence
+        """
+        #: Create a new phrase from the sentence and corresponding relations
+        new_phrase = Phrase(sentence_tokens, relations, self.prefix_length, self.suffix_length)
+        # print("New Phrase", new_phrase)
+        self.cluster(new_phrase)
+        self.save()
+        return
 
     def cluster(self, phrase):
         """Assign a phrase object to a cluster
@@ -184,10 +347,7 @@ class Snowball(BaseSentenceParser):
         Arguments:
             phrase {Phrase} -- The Phrase to cluster
         """
-        # print("Clustering new phrase", phrase)
-        # If no clusters, create a new one
         if len(self.clusters) == 0:
-            # print("Creating new cluster", self.cluster_counter)
             cluster0 = Cluster(str(self.cluster_counter), learning_rate=self.learning_rate)
             cluster0.add_phrase(phrase)
             self.clusters.append(cluster0)
@@ -243,15 +403,16 @@ class Snowball(BaseSentenceParser):
         Returns:
             The matching records
         """
-        print("\n\nParsing sentece", tokens)
+        # print("\n\nParsing sentece", ' '.join([t[0] for t in tokens]))
         # Use the default tagger to find candidate relationships
-        candidate_relations = self.get_candidates(tokens)
+        candidate_relations = self.candidates(tokens)
+        # print("Candidates", candidate_relations)
         num_candidates = len(candidate_relations)
         all_combs = []
         unique_names = set()
         for i in candidate_relations:
             for j in i.entities:
-                if j.tag == 'compound__names':
+                if j.tag == ('compound', 'names'):
                     unique_names.add(j.text)
 
         number_of_unique_name = len(unique_names)
@@ -275,7 +436,7 @@ class Snowball(BaseSentenceParser):
         best_candidate_phrase_score = 0
 
         for candidate_phrase in all_candidate_phrases:
-            print("Evaluating candidate", candidate_phrase)
+            # print("Evaluating candidate", candidate_phrase)
             # For each cluster
             # Compare the candidate phrase to the cluster extraction patter
             best_match_score = 0
@@ -285,17 +446,17 @@ class Snowball(BaseSentenceParser):
                 if candidate_phrase.order != cluster.order:
                     continue
                 match_score = match(candidate_phrase, cluster, self.prefix_weight, self.middle_weight, self.suffix_weight)
-                print("Match score %f" % match_score)
+                # print("Match score %f" % match_score)
                 if match_score >= self.minimum_cluster_similarity_score:
                     confidence_term *= (1.0 - (match_score * cluster.pattern.confidence))
-                print("Confidence %f" % confidence_term)
+                
                 if match_score > best_match_score:
                     best_match_cluster = cluster
                     best_match_score = match_score
 
             # Confidence in the relationships we found
             phrase_confidence_score = 1.0 - confidence_term
-            print(phrase_confidence_score)
+            # print("Confidence %f" % phrase_confidence_score)
 
             if phrase_confidence_score > best_candidate_phrase_score:
                 best_candidate_phrase = candidate_phrase
@@ -312,6 +473,7 @@ class Snowball(BaseSentenceParser):
             for relation in best_candidate_phrase.relations:
                 for model in self.interpret(relation):
                     yield model
+
     
     def interpret(self, relation):
         """Convert a detected relation to a ModelType Record
@@ -319,23 +481,29 @@ class Snowball(BaseSentenceParser):
         Arguments:
             relation {[type]} -- [description]
         """
-        requirements = True
-        property_entities = {}
+        # Set the confidence field if not already set
+        if not 'confidence' in self.model.fields.keys():
+            setattr(self.model, 'confidence', FloatType())
 
+
+        # Get the serialized relation data
+        relation_data = relation.serialize()
+
+        # Do conversions etc
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
-            raw_value = [i.text for i in relation.entities if i.tag.split('-') == 'raw_value']
+            raw_value = relation_data['raw_value']
             value = self.extract_value(raw_value)
             error = self.extract_error(raw_value)
-            property_entities.update({"raw_value": raw_value,
+            relation_data.update({"raw_value": raw_value,
                                       "value": value,
                                       "error": error})
 
         elif hasattr(self.model, 'dimensions') and self.model.dimensions:
             # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
             # print(etree.tostring(result))
-            raw_value = [i.text for i in relation.entities if i.tag.split('-')[0] == 'raw_value'][0]
-            raw_units = [i.text for i in relation.entities if i.tag.split('-')[0] == 'raw_units'][0]
+            raw_value = relation_data['raw_value']
+            raw_units = relation_data['raw_units']
             value = self.extract_value(raw_value)
             error = self.extract_error(raw_value)
             units = None
@@ -343,33 +511,29 @@ class Snowball(BaseSentenceParser):
                 units = self.extract_units(raw_units, strict=True)
             except TypeError as e:
                 log.debug(e)
-            property_entities.update({"raw_value": raw_value,
+            relation_data.update({"raw_value": raw_value,
                                       "raw_units": raw_units,
                                       "value": value,
                                       "error": error,
                                       "units": units})
-
         for field_name, field in six.iteritems(self.model.fields):
             if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
                 try:
-                    data = self._get_data(field_name, field, relation)
+                    data = self._get_data(field_name, field, relation_data)
                     if data is not None:
-                        property_entities.update(data)
+                        relation_data.update(data)
                 # if field is required, but empty, the requirements have not been met
                 except TypeError as e:
                     log.debug(self.model)
                     log.debug(e)
-                    requirements = False
-                    
-        model_instance = self.model(**property_entities)
 
-        if requirements:
-            yield model_instance
+        model_instance = self.model(**relation_data)
+
+        yield model_instance
     
-    def _get_data(self, field_name, field, relation):
+    def _get_data(self, field_name, field, relation_data):
         if hasattr(field, 'model_class'):
-            print(field, field_name, relation)
-            field_result = [i.text for i in relation.entities if i.tag.split('-')[0] == field_name][0]
+            field_result = relation_data[field_name]
             if field_result is None and field.required and not field.contextual:
                 raise TypeError('Could not find element for ' + str(field_name))
             elif field_result is None:
@@ -387,9 +551,9 @@ class Snowball(BaseSentenceParser):
             # Case that we have listtype
             # Always only takes the first found one though
             field = field.field
-            field_data = self._get_data(field_name, field, relation)
+            field_data = self._get_data(field_name, field, relation_data)
             if field_data is not None:
-                if field_data[field_name] is None:
+                if field_name not in field_data.keys() or field_data[field_name] is None:
                     return None
                 field_data = [field_data[field_name]]
             elif field_data is None and field.required and not field.contextual:
@@ -398,159 +562,12 @@ class Snowball(BaseSentenceParser):
                 return None
             return {field_name: field_data}
         else:
-            field_result = [i.text for i in relation.entities if i.tag.split('-')[0] == field_name][0]
+            try:
+                field_result = relation_data[field_name]
+            except KeyError:
+                return {}
             if field_result is None and field.required and not field.contextual:
                 raise TypeError('Could not find element for ' + str(field_name))
             return {field_name: field_result}
 
 
-
-    def train_from_sentence(self ,s):
-        """Train Snowball from a single sentence
-        
-        Arguments:
-            s {[type]} -- [description]
-        """
-        candidate_dict = {}
-        candidate_relationships = self.get_candidates(s.tagged_tokens)
-        if len(candidate_relationships) > 0:
-            print("\n\n")
-            print(s)
-            print('\n')
-            for i, candidate in enumerate(candidate_relationships):
-                candidate_dict[str(i)] = candidate
-                print("Candidate " + str(i) + ' ' + str(candidate) + '\n')
-
-            res = six.moves.input("...: ").replace(' ', '')
-            if res:
-                chosen_candidate_idx = res.split(',')
-                chosen_candidates = []
-                for cci in chosen_candidate_idx:
-                    if cci in candidate_dict.keys():
-                        cc = candidate_dict[cci]
-                        cc.confidence = 1.0
-                        chosen_candidates.append(cc)
-                if chosen_candidates:
-                    self.update(s.raw_tokens, chosen_candidates)
-        return
-
-
-    def train_from_file(self, filename):
-        """Train Snowball from the elements of a file
-
-        Arguments:
-            f {str} -- the file path to parse
-        """
-        f = open(filename, 'rb')
-        d = Document().from_file(f)
-        for p in d.paragraphs:
-            for s in p.sentences:
-                sent_definitions = s.definitions
-                if sent_definitions:
-                    self.model.update(sent_definitions)
-                self.train_from_sentence(s)
-
-        f.close()
-        return
-    
-    def retrieve_entities(self, model, result):
-        """Recursively retrieve the entities from a parse result for a given model
-        
-        Arguments:
-            result {lxml.etree.element} -- The parse result
-        """
-        if isinstance(result, list):
-            for r in result:
-                for entity in self.retrieve_entities(model, r):
-                    yield entity
-        else:
-            print(etree.tostring(result))
-            for tag, field in model.fields.items():
-                #: Nested models
-                if hasattr(field, 'model_class'):
-                    for nested_entity in self.retrieve_entities(field.model_class, result.xpath('./' + tag)):
-                        yield (nested_entity[0], tag + '__' + nested_entity[1], nested_entity[2])
-                else:
-                    text_list = result.xpath('./' + tag + '/text()')
-                    for text in text_list:
-                        yield (text, tag, field.parse_expression)
-
-    
-    def get_candidates(self, tokens):
-        """Find all candidate relationships of this type within a sentence
-
-        Arguments:
-            s -- ChemdataExtractor.elements.Sentence -- the sentence to parse
-        Returns
-            relations {list} -- list of relations found in the text
-        """
-        entities_dict = {}
-        candidate_relationships = []
-
-        # Scan the tagged tokens with the parser
-        detected = []
-        sentence_parser = [p for p in self.model.parsers if isinstance(p, AutoSentenceParser)][0]
-        for result in sentence_parser.root.scan(tokens):
-            if result:
-                for entity in self.retrieve_entities(self.model, result[0]):
-                    detected.append(entity)
-        
-        if not detected:
-            return []
-
-        detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
-        for text, tag, parse_expression in detected:
-            text_length = len(text.split(' '))
-            toks = [tok[0] for tok in tokens]
-            start_indices = [s for s in KnuthMorrisPratt(toks, text.split(' '))]
-
-            # Add specifier to dictionary  if it doesn't exist
-            if tag not in entities_dict.keys():
-                entities_dict[tag] = []
-            entities = [Entity(text, tag, parse_expression, index, index + text_length) for index in start_indices]
-
-            # Add entities to dictionary if new
-            for entity in entities:
-                if entity not in entities_dict[tag]:
-                    entities_dict[tag].append(entity)
-
-        # check all required entities are present
-        required_fields = self.model.required_fields
-        if not all(e in entities_dict.keys() for e in required_fields):
-            print("missing fields")
-            return []
-
-        # Construct all valid combinations of entities
-        all_entities = [e for e in entities_dict.values()]
-        # Intra-Candidate sorting (within each candidate)
-        for i in range(len(all_entities)):
-            all_entities[i] = sorted(all_entities[i], key=lambda t: t.start)
-
-        candidates = list(product(*all_entities))
-
-        # Inter-Candidate sorting (sort all candidates)
-        for i in range(len(candidates)):
-            lst = sorted(candidates[i], key=lambda t: t.start)
-            candidates[i] = tuple(lst)
-
-        for candidate in candidates:
-            candidate_relationships.append(Relation(candidate, tokens, confidence=0))
-        return candidate_relationships
-    
-
-    def train(self, corpus, skip=0):
-        """train the snowball algorithm on a specified corpus
-
-        Arguments:
-            corpus {str or list} -- path to a corpus of documents or list of training sentences
-        """
-        if isinstance(corpus, str):
-            corpus_list = os.listdir(corpus)
-            for i, file_name in enumerate(corpus_list[skip:]):
-                print('{}/{}:'.format(i + 1, len(corpus_list)), ' ', file_name)
-                f = os.path.join(corpus, file_name)
-                self.train_from_file(f)
-        else:
-            for s in corpus[skip:]:
-                self.train_from_sentence(s)
-        return

@@ -4,6 +4,7 @@ Extraction pattern object
 """
 import copy
 import six
+from ..parse import Group, join
 
 class Entity(object):
     """A base entity, the fundamental unit of a Relation
@@ -16,14 +17,21 @@ class Entity(object):
 
         Arguments:
             text {str} -- The text of the entity
-            tag {str or tuple} -- How the Entity is identified
+            tag {str or list} -- name of the entity
+            parse_expression -- how the entity is identified in text
             start {int} -- The index of the Entity in tokens
             end {int} -- The end index of the entity in tokens
         """
-
         self.text = six.text_type(text)
         self.tag = tag
         self.parse_expression = copy.copy(parse_expression)
+        if self.parse_expression.name is None:
+            if isinstance(self.tag, tuple):
+                for sub_tag in self.tag:
+                    self.parse_expression = Group(self.parse_expression)(sub_tag)
+            else:
+                self.parse_expression = Group(self.parse_expression)(self.tag).add_action(join)
+        
         self.end = end
         self.start = start
 
@@ -41,3 +49,16 @@ class Entity(object):
 
     def __str__(self):
         return self.__repr__()
+    
+    def serialize(self):
+        output = current = {}
+        if isinstance(self.tag, tuple):
+            for i, t in enumerate(self.tag):
+                if i == len(self.tag)-1:
+                    current[t] = self.text
+                else:
+                    current[t] = {}
+                current = current[t]
+        else:
+            output[self.tag] = self.text
+        return output

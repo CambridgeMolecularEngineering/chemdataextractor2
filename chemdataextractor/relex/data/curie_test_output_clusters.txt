@@ -1,5 +1,0 @@
-Cluster set contains 1 clusters.
-Cluster 0 contains 2 phrases
-	 BiFeO3 is highly ferromagnetic with a curie temperature of 1103 K and that is extremely interesting
-	 BiFeO3 is ferromagnetic with a curie temperature of 1103 K and this is very interesting
-The cluster centroid pattern is: <Blank> name_1 is ferromagnetic with a specifier_1 of value_1 <Blank> units_1 and with confidence score 0.75

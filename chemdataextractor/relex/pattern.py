@@ -38,10 +38,16 @@ class Pattern:
     def to_string(self):
         output_string = ''
         output_string += ' '.join(self.elements['prefix']['tokens']) + ' '
-        output_string += self.entities[0].tag + ' '
+        if isinstance(self.entities[0].tag, tuple):
+            output_string += '(' + ', '.join([i for i in self.entities[0].tag]) + ') '
+        else:
+            output_string += '(' + self.entities[0].tag + ') '
         for i in range(0, self.number_of_entities - 1):
             output_string += ' '.join(self.elements['middle_' + str(i+1)]['tokens']) + ' '
-            output_string += self.entities[i + 1].tag + ' '
+            if isinstance(self.entities[i+1].tag, tuple):
+                output_string += '(' + ', '.join([i for i in self.entities[i+1].tag]) + ') '
+            else:
+                output_string += '(' + self.entities[i+1].tag + ') '
         output_string = output_string
         output_string += ' '.join(self.elements['suffix']['tokens'])
 
@@ -58,7 +64,7 @@ class Pattern:
                 continue
             elements.append(I(token))
 
-        elements.append(R('Cobalt')('compound__names-1'))
+        elements.append(self.entities[0].parse_expression)
         
         for middle in range(0, self.number_of_entities -1):
             middle_tokens = self.elements['middle_' + str(middle+1)]['tokens']
@@ -66,12 +72,7 @@ class Pattern:
                 if token == '<Blank>':
                     continue
                 elements.append(I(token))
-            if middle == 0:
-                elements.append((I('Curie') + I('temperature'))('specifier-1').add_action(join))
-            if middle == 1:
-                elements.append(R('^\d+(\.(\d)+)?$')('raw_value-1'))
-            if middle == 2:
-                elements.append(R('^K$')('raw_units-1'))
+            elements.append(self.entities[middle+1].parse_expression)
 
         
         suffix_tokens = self.elements['suffix']['tokens']

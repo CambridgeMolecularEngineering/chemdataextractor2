@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-Test relex snowball
+Test relex RelationShip
 
 """
 
@@ -35,31 +35,16 @@ class CurieTemperature(TemperatureModel):
     compound = ModelType(Compound, required=True)
 
 
-class TestSnowball(unittest.TestCase):
+class TestRelation(unittest.TestCase):
 
     maxDiff = None
     training_corpus = 'tests/data/relex/curie_training_set/'
 
-    def test_snowball_candidates(self):
-        """Test that Candidate Relation objects are correctly created
+    def test_relation_serialize(self):
+        """Test relation serialization
         """
+        pass
 
-        pass
-    
-    def test_retrieve_entities(self):
-        """Test entity retrieval from a parse result
-        """
-        pass
-    
-    def test_parse_sentence(self):
-        """Test Snowball Sentence Parsing
-        """
-        pass
-    
-    def test_parse_interpret(self):
-        """Test the relation interpretation
-        """
-        pass
 
 
 

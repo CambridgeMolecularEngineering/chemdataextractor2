@@ -1,2 +1,0 @@
-<(curie temperature,specifier_1,6,8), (K,units_1,10,11), (BiFeO3,name_1,0,1), (1103,value_1,9,10)> Confidence:  1.0
-<(1103,value_1,8,9), (curie temperature,specifier_1,5,7), (K,units_1,9,10), (BiFeO3,name_1,0,1)> Confidence:  0.9718472509333108

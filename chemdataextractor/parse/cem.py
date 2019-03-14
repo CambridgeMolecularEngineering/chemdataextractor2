@@ -273,13 +273,13 @@ compound_heading_style4 = label_type + lenient_chemical_label + ZeroOrMore((T('C
 
 compound_heading_phrase = Group(compound_heading_style1 | compound_heading_style2 | compound_heading_style3 | compound_heading_style4 | chemical_label)('compound')
 
-names_only = (solvent_name(None) | chemical_name(None)
-              | likely_abbreviation(None) | lenient_name(None)
-              | (Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and')))(None).add_action(join).add_action(fix_whitespace))))
+names_only = Group((solvent_name | chemical_name
+              | likely_abbreviation | lenient_name
+              | (Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and'))).add_action(join).add_action(fix_whitespace)))))('compound')
 
-labels_only = numeric | R('^([A-Z]\d{1,3})$') | strict_chemical_label.set_name(None)
+labels_only = Group((numeric | R('^([A-Z]\d{1,3})$') | strict_chemical_label))('compound')
 
-roles_only = label_type(None) | synthesis_of(None) | to_give(None)
+roles_only = Group((label_type | synthesis_of | to_give))('compound')
 
 def standardize_role(role):
     """Convert role text into standardized form."""

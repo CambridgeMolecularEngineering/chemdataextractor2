@@ -152,31 +152,32 @@ class Cluster:
                                order=self.order,
                                relations=phrase.relations,
                                confidence=0) 
-        # print(self.pattern)
+        # print("New Pattern", self.pattern)
         
         return
     
     def update_pattern_confidence(self):
         """Determine the confidence of this centroid pattern
         """
-        print("updating pattern confidence")
-        print("Old confidence:", self.old_pattern_confidence)
+        # print("updating pattern confidence")
+        # print("Old confidence:", self.old_pattern_confidence)
+
         total_matches = 0
         total_relations = sum([len(phrase.relations) for phrase in self.phrases])
         # print("Total relations in cluster: %d" % total_relations)
         # compare the centroid pattern to all sentences found in the phrases
         for phrase in self.phrases:
-            print("Phrase", phrase)
+            # print("Phrase", phrase)
             sentence = Sentence(phrase.full_sentence)
             relations = phrase.relations
             found_relations = self.get_relations(sentence.tagged_tokens)
-            print("Found relations", found_relations)
+            # print("Found relations", found_relations)
             for fr in found_relations:
                 if fr in relations:
                     total_matches += 1
         
         new_pattern_confidence = float(total_matches / total_relations)
-        print("new confidence", new_pattern_confidence)
+        # print("new confidence", new_pattern_confidence)
         # Make sure new cluster begins with confidence 1.0
         if len(self.phrases) == 1:
             self.pattern.confidence = new_pattern_confidence
@@ -195,18 +196,33 @@ class Cluster:
         Returns:
             Relations -- The found Relations
         """
-        print("Getting relations from", tokens)
+        # print("Getting relations from", ' '.join([t[0] for t in tokens]))
         relations = []
+        entity_type_indexes = {}
+
         for res in self.pattern.parse_expression.scan(tokens):
             match = res[0]
-            print(etree.tostring(match))
+            # print(etree.tostring(match))
             for pattern_relation in self.pattern.relations:
                 found_entities = []
                 for pattern_entity in pattern_relation.entities:
-                    entity_text = first(match.xpath('./' + pattern_entity.tag + '/text()'))
+                    if pattern_entity.tag not in entity_type_indexes.keys():
+                        entity_type_indexes[pattern_entity.tag] = [pattern_entity]
+                    else:
+                        if pattern_entity not in entity_type_indexes[pattern_entity.tag]:
+                            entity_type_indexes[pattern_entity.tag].append(pattern_entity)
+                    if isinstance(pattern_entity.tag, tuple):
+                        xpath_str = '/'.join([i for i in pattern_entity.tag])
+                    else:
+                        xpath_str = pattern_entity.tag
+                    entity_matches = match.xpath('./' + xpath_str + '/text()')
+                    if len(entity_matches) > 0:
+                        entity_text = entity_matches[entity_type_indexes[pattern_entity.tag].index(pattern_entity)]
+                    else:
+                        entity_text[0]
                     found_entity = Entity(entity_text, pattern_entity.tag, pattern_entity.parse_expression, 0, 0)
                     found_entities.append(found_entity)
-                found_relation = Relation(found_entities, tokens, confidence=0)
+                found_relation = Relation(found_entities, confidence=0)
                 relations.append(found_relation)
         
         return relations
