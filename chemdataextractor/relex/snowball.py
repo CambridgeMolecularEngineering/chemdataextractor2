@@ -22,7 +22,6 @@ from ..parse.cem import chemical_name
 from .cluster import Cluster
 from .entity import Entity
 from .phrase import Phrase
-# from .model import Relation
 from .relationship import Relation
 from .utils import match, vectorise, KnuthMorrisPratt
 from lxml import etree
@@ -262,7 +261,7 @@ class Snowball(BaseSentenceParser):
             if result:
                 for entity in self.retrieve_entities(self.model, result[0]):
                     detected.append(entity)
-        
+                    
         if not detected:
             return []
 

@@ -185,6 +185,7 @@ class BaseAutoParser(BaseParser):
 
 
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
+
     @property
     def root(self):
         if self._specifier is self.model.specifier:
@@ -205,7 +206,7 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
             # the mandatory elements of Quantity model are grouped into a entities list
             # print(self.model, self.model.dimensions)
             unit_element = Group(
-                construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))
+                construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
             specifier = self.model.specifier.parse_expression('specifier')
             value_phrase = value_element(unit_element)
             entities.append(specifier)

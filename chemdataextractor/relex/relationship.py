@@ -32,18 +32,20 @@ class Relation(object):
 
     def __setitem__(self, idx, value):
         self.entities[idx] = value
+    
+    def __eq__(self, other):
+        if len(self.entities) != len(other.entities):
+            return False
+            
+        for i, entity in enumerate(self.entities):
+            if entity != other.entities[i]:
+                return False
+            else:
+                continue
+        return True
 
     def __repr__(self):
         return '<' + ', '.join([str(i) for i in self.entities]) + '>'
-
-    def __eq__(self, other):
-        # compare the text of all entities
-        other_entities = other.entities
-        for entity in self.entities:
-            if not entity.text in [i.text for i in other_entities]:
-                return False
-        return True
-
     def __str__(self):
         return self.__repr__()
     
