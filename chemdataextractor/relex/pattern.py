@@ -11,6 +11,7 @@ Extraction pattern object
 
 import re
 from ..parse.elements import I, W, R, Any, And, Start, OneOrMore, Group
+from ..parse.actions import join
 
 
 class Pattern:
@@ -29,7 +30,7 @@ class Pattern:
         self.order = order
         self.relations = relations
         self.confidence = confidence
-        self.phrase_element = self.generate_cde_element()
+        self.parse_expression = self.generate_cde_parse_expression()
 
     def __repr__(self):
         return self.to_string()
@@ -37,17 +38,24 @@ class Pattern:
     def to_string(self):
         output_string = ''
         output_string += ' '.join(self.elements['prefix']['tokens']) + ' '
-        output_string += self.entities[0].tag.name + ' '
+        if isinstance(self.entities[0].tag, tuple):
+            output_string += '(' + ', '.join([i for i in self.entities[0].tag]) + ') '
+        else:
+            output_string += '(' + self.entities[0].tag + ') '
         for i in range(0, self.number_of_entities - 1):
             output_string += ' '.join(self.elements['middle_' + str(i+1)]['tokens']) + ' '
-            output_string += self.entities[i + 1].tag.name + ' '
+            if isinstance(self.entities[i+1].tag, tuple):
+                output_string += '(' + ', '.join([i for i in self.entities[i+1].tag]) + ') '
+            else:
+                output_string += '(' + self.entities[i+1].tag + ') '
         output_string = output_string
         output_string += ' '.join(self.elements['suffix']['tokens'])
 
         return output_string
-    
-    def generate_cde_element(self):
-        """Create a CDE parse element from the this extraction pattern
+    # TODO: Finish this once new parse_expressions are handled
+
+    def generate_cde_parse_expression(self):
+        """Create a CDE parse expression for this extraction pattern
         """
         elements = []
         prefix_tokens = self.elements['prefix']['tokens']
@@ -56,7 +64,7 @@ class Pattern:
                 continue
             elements.append(I(token))
 
-        elements.append(self.entities[0].tag)
+        elements.append(self.entities[0].parse_expression)
         
         for middle in range(0, self.number_of_entities -1):
             middle_tokens = self.elements['middle_' + str(middle+1)]['tokens']
@@ -64,7 +72,8 @@ class Pattern:
                 if token == '<Blank>':
                     continue
                 elements.append(I(token))
-            elements.append(self.entities[middle+1].tag)
+            elements.append(self.entities[middle+1].parse_expression)
+
         
         suffix_tokens = self.elements['suffix']['tokens']
         for token in suffix_tokens:
@@ -73,5 +82,5 @@ class Pattern:
             elements.append(I(token))
         
         final_phrase = And(exprs=elements)
-        phrase_element = (final_phrase)('phrase')
-        return phrase_element
+        parse_expression = (final_phrase)('phrase')
+        return parse_expression

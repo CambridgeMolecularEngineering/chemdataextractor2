@@ -33,8 +33,7 @@ magnitudes_dict = {R('c(enti)?', group=0): 2.,
                   R('p(ico)?', group=0): -12.}
 
 
-@memoize
-def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('units').add_action(merge)):
+def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('raw_units').add_action(merge)):
     """
     Returns an Element for values with given units. By default, uses tags to guess that a unit exists.
 
@@ -43,13 +42,13 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     :rtype: BaseParserElement
     """
     number = R('^[\+\-–−]?\d+(\.\d+)?$')
-    joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('value').add_action(merge)
-    spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('value').add_action(merge)
-    to_range = (number + Optional(units).hide() + I('to') + number)('value').add_action(join)
+    joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('raw_value').add_action(merge)
+    spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('raw_value').add_action(merge)
+    to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('value').add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('value').add_action(merge)
-    value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('value').add_action(merge)
-    value = Optional(lbrct).hide() + (value_range | value_single)('value') + Optional(rbrct).hide()
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('raw_value').add_action(merge)
+    value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
+    value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     return value + units
 
 
@@ -62,13 +61,13 @@ def value_element_plain():
     :rtype: BaseParserElement
     """
     number = R('^[\+\-–−]?\d+(\.\d+)?$')
-    joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('value').add_action(merge)
-    spaced_range = (number + R('^[\-–−~∼˜]$') + number)('value').add_action(merge)
-    to_range = (number + I('to') + number)('value').add_action(join)
-    plusminus_range = (number + R('±') + number)('value').add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('value').add_action(merge)
-    value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('value').add_action(merge)
-    value = Optional(lbrct).hide() + (value_range | value_single)('value') + Optional(rbrct).hide()
+    joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('raw_value').add_action(merge)
+    spaced_range = (number + R('^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
+    to_range = (number + I('to') + number)('raw_value').add_action(join)
+    plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('raw_value').add_action(merge)
+    value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
+    value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     return value
 
 

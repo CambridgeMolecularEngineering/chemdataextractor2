@@ -21,7 +21,7 @@ from ..parse.nmr import NmrParser
 from ..parse.tg import TgParser
 from ..parse.uvvis import UvvisParser
 from ..parse.elements import R, I, Optional, W
-from ..parse.actions import merge
+from ..parse.actions import merge, join
 from ..model.units.quantity_model import QuantityModel, DimensionlessModel
 from ..parse.auto import AutoTableParser, AutoSentenceParser
 from ..parse.apparatus import ApparatusParser

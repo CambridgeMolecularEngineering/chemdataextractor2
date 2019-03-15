@@ -1,0 +1,1570 @@
+DEBUG      in tokenize.py         --> ChemSentenceTokenizer: Initializing with models/punkt_chem-1.0.pickle
+DEBUG      in document.py         --> Document: Initializing with 0 elements
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::html: [<Element html at 0x104704228>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h1: [<Element h1 at 0x1047045e8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h2 | descendant-or-self::h3 | descendant-or-self::h4 | descendant-or-self::h5 | descendant-or-self::h6: [<Element h2 at 0x104704548>, <Element h2 at 0x104704c78>, <Element h3 at 0x104704bd8>, <Element h3 at 0x104704b38>, <Element h3 at 0x104704598>, <Element h3 at 0x104704b88>, <Element h2 at 0x104704ef8>, <Element h2 at 0x104704728>, <Element h3 at 0x104704778>, <Element h3 at 0x104704818>, <Element h3 at 0x104704e58>, <Element h3 at 0x104704e08>, <Element h3 at 0x104704ea8>, <Element h2 at 0x11f441228>, <Element h2 at 0x11f4411d8>, <Element h3 at 0x11f441278>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::figure: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::table: [<Element table at 0x11f441318>, <Element table at 0x11f441368>, <Element table at 0x11f4413b8>, <Element table at 0x11f441408>, <Element table at 0x11f441458>, <Element table at 0x11f4414a8>, <Element table at 0x11f4414f8>, <Element table at 0x11f441548>, <Element table at 0x11f441598>, <Element table at 0x11f4415e8>, <Element table at 0x11f441638>, <Element table at 0x11f441688>, <Element table at 0x11f4416d8>, <Element table at 0x11f441728>, <Element table at 0x11f441778>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::cite: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]/descendant-or-self::*/sup: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: [<Element tr at 0x11f4412c8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x11f441a98>, <Element th at 0x11f4419a8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: [<Element tr at 0x11f4418b8>, <Element tr at 0x11f441908>, <Element tr at 0x11f4419a8>, <Element tr at 0x11f441a98>, <Element tr at 0x11f4419f8>, <Element tr at 0x11f4417c8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f441c28>, <Element td at 0x11f441ae8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f441ef8>, <Element td at 0x11f441a48>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f441ea8>, <Element td at 0x11f441c28>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f441e58>, <Element td at 0x11f441ef8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f441e08>, <Element td at 0x11f441c28>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f441ae8>, <Element td at 0x11f441e58>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: [<Element tr at 0x11f4412c8>, <Element tr at 0x11f4417c8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x11f45d4a8>, <Element th at 0x11f45d4f8>, <Element th at 0x11f45d2c8>, <Element th at 0x11f45d598>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x11f45d408>, <Element th at 0x11f45d4a8>, <Element th at 0x11f45d4f8>, <Element th at 0x11f45d2c8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: [<Element tr at 0x11f4418b8>, <Element tr at 0x11f4417c8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f45d598>, <Element td at 0x11f45d408>, <Element td at 0x11f45d2c8>, <Element td at 0x11f45d4a8>, <Element td at 0x11f45d4f8>, <Element td at 0x11f45d318>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f45d098>, <Element td at 0x11f45d408>, <Element td at 0x11f45d2c8>, <Element td at 0x11f45d4a8>, <Element td at 0x11f45d4f8>, <Element td at 0x11f45d1d8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: [<Element tr at 0x11f4412c8>, <Element tr at 0x11f45dbd8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x11f45d908>, <Element th at 0x11f45d958>, <Element th at 0x11f45db38>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x11f45d778>, <Element th at 0x11f45d958>, <Element th at 0x11f45d2c8>, <Element th at 0x11f45da98>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: [<Element tr at 0x11f45dae8>, <Element tr at 0x11f45d958>, <Element tr at 0x11f45dbd8>, <Element tr at 0x11f45da98>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f45d818>, <Element td at 0x11f45d2c8>, <Element td at 0x11f45db38>, <Element td at 0x11f45d908>, <Element td at 0x11f45da48>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f45d9f8>, <Element td at 0x11f45d2c8>, <Element td at 0x11f45db38>, <Element td at 0x11f45d908>, <Element td at 0x11f45d778>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f45d818>, <Element td at 0x11f45d2c8>, <Element td at 0x11f45db38>, <Element td at 0x11f45d908>, <Element td at 0x11f45da48>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x11f45d9f8>, <Element td at 0x11f45d2c8>, <Element td at 0x11f45db38>, <Element td at 0x11f45d908>, <Element td at 0x11f45d778>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in document.py         --> Document: Initializing with 123 elements
+DEBUG      in document.py         --> Parsed document with HtmlReader
+DEBUG      in data.py             --> Loading model models/punkt_chem-1.0.pickle
+DEBUG      in data.py             --> Loading model models/clusters_chem1500-1.0.pickle
+DEBUG      in tag.py              --> Loading models/pos_crf_wsj_genia-1.0.pickle
+DEBUG      in tag.py              --> Loading models/cem_crf_chemdner_cemp-1.0.pickle
+DEBUG      in cem.py              --> Killed: co3o4.31
+DEBUG      in tag.py              --> Loading models/pos_crf_wsj_genia-1.0.pickle
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: HDA (hexadecyl amine): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in document.py         --> Document: Initializing with 0 elements
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::html: [<Element html at 0x131f28548>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h1: [<Element h1 at 0x131f286d8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h2 | descendant-or-self::h3 | descendant-or-self::h4 | descendant-or-self::h5 | descendant-or-self::h6: [<Element h2 at 0x131f28368>, <Element h2 at 0x131f28a98>, <Element h3 at 0x131f28818>, <Element h3 at 0x131f28728>, <Element h3 at 0x131f284f8>, <Element h2 at 0x131f28408>, <Element h3 at 0x131f28868>, <Element h3 at 0x131f288b8>, <Element h3 at 0x131f28688>, <Element h3 at 0x131f281d8>, <Element h2 at 0x131f28908>, <Element h2 at 0x131f28958>, <Element h2 at 0x131f289a8>, <Element h3 at 0x131f289f8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::figure: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::table: [<Element table at 0x131f28ae8>, <Element table at 0x131f28b38>, <Element table at 0x131f28b88>, <Element table at 0x131f28bd8>, <Element table at 0x131f28c28>, <Element table at 0x131f28c78>, <Element table at 0x131f28cc8>, <Element table at 0x131f28d18>, <Element table at 0x131f28d68>, <Element table at 0x131f28db8>, <Element table at 0x131f28e08>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::cite: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]/descendant-or-self::*/sup: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in document.py         --> Document: Initializing with 95 elements
+DEBUG      in document.py         --> Parsed document with HtmlReader
+DEBUG      in cem.py              --> Killed: tel : + 351 234370360
+DEBUG      in cem.py              --> Killed: tb' = 4 k
+DEBUG      in text.py             --> Correcting abbreviation tag: EuE (Europium mono-chalcogenides): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in text.py             --> Correcting abbreviation tag: EuE (Europium mono-chalcogenides): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: SDS (sodium dodecyl sulfate): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: KPS (potassium persulfate): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: KPS (potassium persulfate): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: EDS (energy dispersion spectroscopy): ['B-CM'] -> [None]
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: SDS (sodium dodecyl sulfate): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: KPS (potassium persulfate): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: Nadtc (sodium diethyldithiocarbamate monohydrate): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: SDS (sodium dodecyl sulfate): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: KPS (potassium persulfate): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in document.py         --> Document: Initializing with 0 elements
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::html: [<Element html at 0x132419778>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h1: [<Element h1 at 0x132400318>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h2 | descendant-or-self::h3 | descendant-or-self::h4 | descendant-or-self::h5 | descendant-or-self::h6: [<Element h2 at 0x132419db8>, <Element h2 at 0x132419688>, <Element h3 at 0x132419818>, <Element h3 at 0x132419a48>, <Element h3 at 0x132419b88>, <Element h3 at 0x1324197c8>, <Element h3 at 0x132456ae8>, <Element h3 at 0x132456868>, <Element h2 at 0x132456688>, <Element h3 at 0x1324569f8>, <Element h3 at 0x132456818>, <Element h3 at 0x132456548>, <Element h3 at 0x132456958>, <Element h3 at 0x132456a48>, <Element h3 at 0x132456a98>, <Element h2 at 0x132456b38>, <Element h2 at 0x132456b88>, <Element h2 at 0x132456bd8>, <Element h3 at 0x132456c28>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::figure: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::table: [<Element table at 0x132456cc8>, <Element table at 0x132456d18>, <Element table at 0x132456d68>, <Element table at 0x132456db8>, <Element table at 0x132456e08>, <Element table at 0x132456e58>, <Element table at 0x132456ea8>, <Element table at 0x132456ef8>, <Element table at 0x132456f48>, <Element table at 0x132456f98>, <Element table at 0x132463048>, <Element table at 0x132463098>, <Element table at 0x1324630e8>, <Element table at 0x132463138>, <Element table at 0x132463188>, <Element table at 0x1324631d8>, <Element table at 0x132463228>, <Element table at 0x132463278>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::cite: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]/descendant-or-self::*/sup: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: [<Element tr at 0x132456c78>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element th at 0x132463598>, <Element th at 0x1324634a8>, <Element th at 0x1324634f8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: [<Element tr at 0x131f28a48>, <Element tr at 0x1324637c8>, <Element tr at 0x1324634f8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x1324638b8>, <Element td at 0x1324634a8>, <Element td at 0x132463318>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x132463908>, <Element td at 0x1324634a8>, <Element td at 0x132463598>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::th | descendant-or-self::td: [<Element td at 0x132463868>, <Element td at 0x1324634a8>, <Element td at 0x1324638b8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in document.py         --> Document: Initializing with 159 elements
+DEBUG      in document.py         --> Parsed document with HtmlReader
+DEBUG      in cem.py              --> Killed: - 700032
+DEBUG      in text.py             --> Correcting abbreviation tag: TCO (transparent conducting oxide): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: NHS (nanoheterostructures): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: TOP (trioctylphosphine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: OLAM (Oleylamine [): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: TCE (tetrachloroethylene): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: OLAM (Oleylamine [): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: TCE (tetrachloroethylene): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: OLAM (Oleylamine [): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: TOP (trioctylphosphine): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: OLAM (Oleylamine [): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: TOP (trioctylphosphine): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in text.py             --> Correcting abbreviation tag: TCE (tetrachloroethylene): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: TCE (tetrachloroethylene): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: OLAM (Oleylamine [): ['B-CM'] -> [None]
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: TOP (trioctylphosphine): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: TCE (tetrachloroethylene): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: OZn (oxygen at zinc lattice site): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: Zni (zinc interstitial): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: Zni (zinc interstitial): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: OZn (oxygen at zinc lattice site): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: V+O (VO ) , singly): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: Zni (zinc interstitial): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: Zni (zinc interstitial): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: Zni (zinc interstitial): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: V+O (VO ) , singly): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: RhB (Rhodamine B): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: NHS (nanoheterostructures): ['I-CM'] -> [None]
+DEBUG      in base.py             --> Updating model
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in document.py         --> Document: Initializing with 0 elements
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::html: [<Element html at 0x131f0d688>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h1: [<Element h1 at 0x132988638>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h2 | descendant-or-self::h3 | descendant-or-self::h4 | descendant-or-self::h5 | descendant-or-self::h6: [<Element h2 at 0x1329885e8>, <Element h2 at 0x131f28278>, <Element h3 at 0x131f28c78>, <Element h3 at 0x131f28368>, <Element h2 at 0x131f28228>, <Element h3 at 0x131f28e08>, <Element h3 at 0x131f283b8>, <Element h3 at 0x131f286d8>, <Element h3 at 0x131f284a8>, <Element h3 at 0x12ba388b8>, <Element h3 at 0x12ba38548>, <Element h3 at 0x12ba38a48>, <Element h2 at 0x12ba387c8>, <Element h3 at 0x12ba382c8>, <Element h3 at 0x12ba38908>, <Element h3 at 0x12ba38048>, <Element h3 at 0x12ba38228>, <Element h2 at 0x12ba38d18>, <Element h2 at 0x12ba38ae8>, <Element h2 at 0x12ba38408>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::figure: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::table: [<Element table at 0x12ba38728>, <Element table at 0x12ba38c28>, <Element table at 0x12ba38458>, <Element table at 0x12ba389a8>, <Element table at 0x12ba38bd8>, <Element table at 0x12ba389f8>, <Element table at 0x12ba38318>, <Element table at 0x12ba38778>, <Element table at 0x12ba38ea8>, <Element table at 0x12ba385e8>, <Element table at 0x12ba38e08>, <Element table at 0x12ba38f98>, <Element table at 0x12ba38688>, <Element table at 0x1322409f8>, <Element table at 0x132240e08>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::cite: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]/descendant-or-self::*/sup: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in document.py         --> Document: Initializing with 178 elements
+DEBUG      in document.py         --> Parsed document with HtmlReader
+DEBUG      in cem.py              --> Killed: h2.14,15
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: ZnS (Zinc sulfide): ['I-CM'] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: Sb2S3 (sulfide ( Bi2S3 ) , antimony sulfide): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: EuE (Europium mono-chalcogenides): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: Sb2S3 (sulfide ( Bi2S3 ) , antimony sulfide): ['I-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: PbS (lead sulfide): ['I-CM'] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in document.py         --> Document: Initializing with 0 elements
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::html: [<Element html at 0x132463188>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h1: [<Element h1 at 0x132463e08>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h2 | descendant-or-self::h3 | descendant-or-self::h4 | descendant-or-self::h5 | descendant-or-self::h6: [<Element h2 at 0x132463d18>, <Element h2 at 0x132463408>, <Element h3 at 0x132463b88>, <Element h3 at 0x132463b38>, <Element h2 at 0x132463ae8>, <Element h2 at 0x1324639a8>, <Element h2 at 0x132463c28>, <Element h2 at 0x1324634a8>, <Element h3 at 0x1324633b8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::figure: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::table: [<Element table at 0x132463c78>, <Element table at 0x132463a98>, <Element table at 0x1324637c8>, <Element table at 0x132463908>, <Element table at 0x1324639f8>, <Element table at 0x132463458>, <Element table at 0x1324198b8>, <Element table at 0x1324196d8>, <Element table at 0x132419ea8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::cite: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]/descendant-or-self::*/sup: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in document.py         --> Document: Initializing with 67 elements
+DEBUG      in document.py         --> Parsed document with HtmlReader
+DEBUG      in cem.py              --> Killed: fe3+2+0.066fe2+1-0.066o4
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: ODC (1-octadecene): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: ODC (1-octadecene): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: ODC (1-octadecene): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: FeO (iron carboxylate complex , possibly): ['I-CM'] -> [None]
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: FeO (iron carboxylate complex , possibly): ['B-CM'] -> [None]
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in document.py         --> Document: Initializing with 0 elements
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::html: [<Element html at 0x132f8bcc8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h1: [<Element h1 at 0x132f9f0e8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::h2 | descendant-or-self::h3 | descendant-or-self::h4 | descendant-or-self::h5 | descendant-or-self::h6: [<Element h2 at 0x132f9f7c8>, <Element h2 at 0x132f9f548>, <Element h3 at 0x132f8bea8>, <Element h2 at 0x132f8b458>, <Element h3 at 0x132f8b7c8>, <Element h3 at 0x132f8bef8>, <Element h2 at 0x132f8be58>, <Element h3 at 0x132f8bd18>, <Element h3 at 0x1329e0458>, <Element h3 at 0x1329e09a8>, <Element h3 at 0x1329e0f98>, <Element h2 at 0x1329e0d68>, <Element h2 at 0x1329e0368>, <Element h2 at 0x1329e02c8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::figure: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::table: [<Element table at 0x1329e0598>, <Element table at 0x1329e0318>, <Element table at 0x1329e0ea8>, <Element table at 0x1329e0ef8>, <Element table at 0x1329e0db8>, <Element table at 0x1329e0728>, <Element table at 0x1329e0f48>, <Element table at 0x1327961d8>, <Element table at 0x1327963b8>, <Element table at 0x1327964a8>, <Element table at 0x132796408>, <Element table at 0x132796458>, <Element table at 0x132796598>, <Element table at 0x1327965e8>]
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::cite: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::a[@class and contains(concat(' ', normalize-space(@class), ' '), ' ref ')]/descendant-or-self::*/sup: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::caption: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::thead/descendant-or-self::*/tr: []
+DEBUG      in markup.py           --> Selecting XPath: descendant-or-self::tbody/descendant-or-self::*/tr: []
+ERROR      in table_new.py        --> TableDataExtractor error: list index out of range
+DEBUG      in document.py         --> Document: Initializing with 306 elements
+DEBUG      in document.py         --> Parsed document with HtmlReader
+DEBUG      in cem.py              --> Killed: tel : + 65 6514 1047
+DEBUG      in cem.py              --> Killed: la0.67ba0.33mno3-δ
+DEBUG      in base.py             --> Updating model
+DEBUG      in base.py             --> Updating model
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: CMR (colossal magnetoresistance ”): ['B-CM'] -> [None]
+DEBUG      in text.py             --> Correcting abbreviation tag: EuE (Europium mono-chalcogenides): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: LSMO (La1−xSrxMnO3): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: LSMO (La1−xSrxMnO3): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: LSMO (La1−xSrxMnO3): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: LSMO (La1−xSrxMnO3): [None] -> ['B-CM']
+DEBUG      in text.py             --> Correcting abbreviation tag: LSMO (La1−xSrxMnO3): [None] -> ['B-CM']
+DEBUG      in base.py             --> Updating model
+DEBUG      in text.py             --> Correcting abbreviation tag: LSMO (La1−xSrxMnO3): [None] -> ['B-CM']
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in quantity.py         --> 'NoneType' object is not callable
+DEBUG      in element.py          --> [<class '__main__.CurieTemperature'>]
+DEBUG      in element.py          --> {<class 'chemdataextractor.model.model.Compound'>}
+DEBUG      in element.py          --> {<class 'chemdataextractor.model.model.Compound'>, <class '__main__.CurieTemperature'>}
+DEBUG      in base.py             --> {'Compound': {'names': ['Cobalt']}}
+DEBUG      in base.py             --> []
+DEBUG      in base.py             --> False
+DEBUG      in base.py             --> {'Compound': {'names': ['BiFeO3']}}
+DEBUG      in base.py             --> [{'Compound': {'names': ['Cobalt']}}]
+DEBUG      in base.py             --> {'names': ['BiFeO3'], 'labels': [], 'roles': []}
+DEBUG      in base.py             --> False
+DEBUG      in base.py             --> {'names': ['BiFeO3'], 'labels': [], 'roles': []}
+DEBUG      in base.py             --> {'Compound': {'names': ['Cobalt']}}
+DEBUG      in base.py             --> [{'Compound': {'names': ['Cobalt']}}, {'Compound': {'names': ['BiFeO3']}}]
+DEBUG      in base.py             --> {'names': ['Cobalt'], 'labels': [], 'roles': []}
+DEBUG      in base.py             --> True
+DEBUG      in base.py             --> {'names': ['Cobalt'], 'labels': [], 'roles': []}
+DEBUG      in base.py             --> {'Compound': {'names': ['BiFeO3']}}
+DEBUG      in base.py             --> [{'Compound': {'names': ['Cobalt']}}, {'Compound': {'names': ['BiFeO3']}}]
+DEBUG      in base.py             --> {'names': ['BiFeO3'], 'labels': [], 'roles': []}
+DEBUG      in base.py             --> {'names': ['BiFeO3'], 'labels': [], 'roles': []}
+DEBUG      in base.py             --> True
+DEBUG      in base.py             --> {'names': ['BiFeO3'], 'labels': [], 'roles': []}
+DEBUG      in base.py             --> {'names': ['BiFeO3'], 'labels': [], 'roles': []}
+DEBUG      in auto.py             --> b'<root_phrase><compound><names>Cobalt</names></compound><VBZ>has</VBZ><DT>a</DT><specifier>Curie Temperature</specifier><IN>of</IN><raw_value>1388</raw_value><raw_units>K</raw_units><WDT>which</WDT><VBZ>is</VBZ><JJR>higher</JJR><IN>than</IN><compound><names>BiFeO3</names></compound></root_phrase>'
+DEBUG      in auto.py             --> Created forcompound
+DEBUG      in auto.py             --> <Compound>
+DEBUG      in base.py             --> {'CurieTemperature': {'raw_value': '1388', 'raw_units': 'K', 'value': [1388.0], 'units': 'Kelvin^(1.0)', 'specifier': 'Curie Temperature', 'compound': {'Compound': {'names': ['Cobalt']}}}}
+DEBUG      in base.py             --> [{'Compound': {'names': ['Cobalt']}}, {'Compound': {'names': ['BiFeO3']}}]
+DEBUG      in base.py             --> False
