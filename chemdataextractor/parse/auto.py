@@ -101,7 +101,7 @@ class BaseAutoParser(BaseParser):
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
-            raw_value = first(result.xpath('./value/text()'))
+            raw_value = first(result.xpath('./raw_value/text()'))
             log.debug(raw_value)
             if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
                 requirements = False
@@ -114,10 +114,10 @@ class BaseAutoParser(BaseParser):
         elif hasattr(self.model, 'dimensions') and self.model.dimensions:
             # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
             # print(etree.tostring(result))
-            raw_value = first(result.xpath('./value/text()'))
+            raw_value = first(result.xpath('./raw_value/text()'))
             if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
                 requirements = False
-            raw_units = first(result.xpath('./units/text()'))
+            raw_units = first(result.xpath('./raw_units/text()'))
             value = self.extract_value(raw_value)
             error = self.extract_error(raw_value)
             units = None
@@ -141,7 +141,7 @@ class BaseAutoParser(BaseParser):
                     log.debug(self.model)
                     log.debug(e)
                     requirements = False
-                    
+
         model_instance = self.model(**property_entities)
 
         if requirements:
@@ -257,7 +257,7 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
             # the mandatory elements of Quantity model are grouped into a entities list
             # print(self.model, self.model.dimensions)
             unit_element = Group(
-                construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('units'))
+                construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
             specifier = self.model.specifier.parse_expression('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(
                 unit_element) + Optional(rbrct)
             value_phrase = (value_element_plain() + Optional(unit_element))
