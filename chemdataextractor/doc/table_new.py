@@ -59,12 +59,6 @@ class Table(CaptionedElement):
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         try:
             self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
-        except (TDEError, TypeError) as e:
-            log.error("TableDataExtractor error: {}".format(e))
-            self.category_table = []
-            self.tde_table = None
-            self.heading = None
-        else:
             self.category_table = self.tde_table.category_table
             self._subtables = [self.category_table]
             if self.tde_table.subtables:
@@ -72,6 +66,11 @@ class Table(CaptionedElement):
                 for subtable in tde_table.subtables:
                     self._subtables.append(subtable.category_table)
             self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
+        except (TDEError, TypeError) as e:
+            log.error("TableDataExtractor error: {}".format(e))
+            self.category_table = []
+            self.tde_table = None
+            self.heading = None
 
     def serialize(self):
         """
