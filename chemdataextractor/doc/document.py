@@ -328,7 +328,7 @@ class Document(BaseDocument):
                 if entity == 'CM':
                     name = ' '.join(long_)
                     abbrev = ' '.join(short)
-                    if not record.is_unidentified:
+                    if hasattr(record, 'compound'):
                         if name in record.compound.names and not abbrev in record.compound.names:
                             record.copound.names.append(abbrev)
                         if abbrev in record.compound.names and not name in record.compound.names:
