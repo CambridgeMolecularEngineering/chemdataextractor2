@@ -69,6 +69,7 @@ class Table(CaptionedElement):
         except (TDEError, TypeError) as e:
             log.error("TableDataExtractor error: {}".format(e))
             self.category_table = []
+            self._subtables = []
             self.tde_table = None
             self.heading = None
 
