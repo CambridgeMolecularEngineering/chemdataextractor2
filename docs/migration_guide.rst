@@ -118,11 +118,14 @@ Then for all remaining elements in the document, the relationship will be found 
 Integration with TableDataExtractor
 -----------------------------------
 
-TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances its capabilities for table data extraction. It reads all tables and outputs the data from them in a highly standardised format whilst also retaining information about all the row or column subheadings that the data point belongs to. The output of TableDataExtractor is a :python:`category table`, where each row corresponds to a single data-cell of the original table, with its corresponding categories.
-The standardized structure of the category table enables automated parsing with ChemDataExtractor.
+TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances its capabilities for table data extraction.
+Previously, rule-based parsers had to be written specifically for tables, for every new property. These would usually be very limited, due to the complexity of tables found in the literature.
 
-In most cases it should not be necessary to interact directly with TableDataExtractor. However, it is recommended to test TableDataExtractor for an individual corpus of literature.
-Visual inspection of the ChemDataExtractor :class:`~chemdataextractor.doc.table_new.Table` object is the best option to do so::
+TableDataExtractor reads all tables and outputs their data in a highly standardised format whilst also retaining information about all the row or column headings and subheadings that the data point belongs to. The output of TableDataExtractor is a *category table*, where each row corresponds to a single data-cell of the original table, along with its corresponding header structure.
+The standardized structure of the category table enables fully automated parsing with ChemDataExtractor. Within ChemDataExtractor all of the functionality of TableDataExtractor can be accessed via an instance of the :class:`~chemdataextractor.doc.table_new.Table` object, ``table``, as ``table.tde_table``.
+
+In most cases it should not be necessary to interact directly with TableDataExtractor. However, it is recommended to test it on an individual corpus of literature, before a production run.
+Visual inspection is the best option to do so::
 
     from chemdataextractor import Document
 
@@ -134,20 +137,50 @@ Visual inspection of the ChemDataExtractor :class:`~chemdataextractor.doc.table_
         print(table.tde_table)
 
 This will print the raw table, as found in the source document (before processing with TableDataExtractor) as well as the structured category table, :python:`table.tde_table`.
+For more information the following TableDataExtractor functionality:
 
-More information can be found in the TableDataExtractor documentation.
+    * ``print(table.tde_table.history)`` will return information about the algorithms within TableDataExtractor that have been used on the particular table. If needed these can be tweaked by providing configuration parameters for TableDataExtractor (see TableDataExtractor documentation).
+    * ``table.tde_table.print()`` will print a more verbose output that includes the raw input table, the cleaned table (cleaned-up by TableDataExtractor), as well as a table that shows the labelling of the sections of the table.
+    * ``table.tde_table.to_pandas()`` outputs the table as Pandas DataFrame. This can be useful for further analysis.
+
+More information can be found in the `TableDataExtractor documentation <https://cambridgemolecularengineering-tabledataextractor.readthedocs-hosted.com/en/latest/>`_.
 
 
 Automatic Parsers
 ----------------------------------
 
-All of the above enhancements to ChemDataExtractor mean that the extraction is much more powerful and context-rich. The forward-looking Interdependency Resolution means that one no longer needs to manually specify as many specifiers when looking for new properties, and the quantity extraction involving units and dimensions means that we have rich new metadata on our extracted values.
+Due to the built-in forward-looking Interdependency Resolution we no longer have to manually specify as many specifiers when looking for new properties. The quantity extraction involving units and dimensions provides rich new metadata on our extracted values.
+These features make data extraction with ChemDataExtractor inherently much more powerful and context-rich.
 
-We have taken advantage this new data to create automatic parsers for both sentences and tables. Any subclasses of :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` have, by default, automatic parsers enabled, meaning no user intervention is needed to start extracting. These automatic parsers work especially well with the TableDataExtractor tables, which have the data in a highly standardised format, meaning that more basic parsers can still work exceptionally well.
+We have taken advantage this new data to create automatic parsers for both sentences and tables. Any subclasses of :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` have, by default, automatic parsers enabled, meaning no user intervention is needed to start extracting. These automatic parsers work especially well with the TableDataExtractor tables, which store the data in a highly standardised format.
 
 .. note::
 
-    These parsers rely on the specifier and units information provided in :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`, so cannot be used with existing subclasses of :class:`~chemdataextractor.model.base.BaseModel` s.
+    These parsers rely on the specifier and units information provided in :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`, and described above. Therefore, they cannot be used with existing subclasses of :class:`~chemdataextractor.model.base.BaseModel` and, if needed, new model classes resembling the old ones can be written for that purpose.
+
+
+Integration with Snowball
+-----------------------------------
+
+Due to the new ability of ChemDataExtractor to construct simple parsers automatically, the integration with Snowball is now much smoother than before. Still, training of the Snowball algorithm needs to be performed. However, this is now much simpler to invoke. The Snowball algorithm is now simply another parser that can optionally be used and can be passed into the models in the same way as any other custom created parser. Here is an example of using Snowball to extract Curie temperatures::
+
+    class CurieTemperature(TemperatureModel):
+        specifier_expression = (I('Curie')+I('temperature') | I('TC')).add_action(join)
+        specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, mutable=True)
+        compound = ModelType(Compound, required=True, contextual=True)
+
+
+    #1. Train from a single/multiple sentences/documents
+    s = Sentence('Cobalt displays a Curie Temperature of 1388 K which is higher than BiFeO3.')
+    corpus = [s]
+
+    #2. A path to files
+    corpus = './tests/data/relex/curie_training_set/'
+
+    sb = Snowball(CurieTemperature)
+    sb.train(corpus)
+    CurieTemperature.parsers.append(sb)
+
 
 Migrating Existing Code
 =================================
@@ -255,7 +288,7 @@ The above small alterations are enough to get your code up and running, but to m
 Upgrading Models
 ------------------
 
-A key new feature of version 1.5.0 are the new :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` s. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
+A key new feature of version 1.5.0 are the new :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` classes. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
 
 For example, the :python:`BoilingPoint` class we wrote earlier can be further transformed::
 
