@@ -62,9 +62,8 @@ class TestSnowball(unittest.TestCase):
             if result:
                 for entity in sb.retrieve_entities(CurieTemperature, result[0]):
                     detected.append((entity[0], entity[1]))
-        print(detected)
         expected = [('1103', 'raw_value'), ('K', 'raw_units'), ('Curie temperature', 'specifier'), ('BiFeO3', ('compound', 'names'))]
-        self.assertListEqual(detected, expected)
+        self.assertCountEqual(detected, expected)
     
     def test_parse_sentence(self):
         """Test Snowball Sentence Parsing
