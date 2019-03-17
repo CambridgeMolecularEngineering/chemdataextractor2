@@ -170,3 +170,9 @@ def KnuthMorrisPratt(text, pattern):
         matchLen += 1
         if matchLen == len(pattern):
             yield startPos
+
+def subfinder(mylist, pattern):
+    for i in range(len(mylist)):
+        if mylist[i] == pattern[0] and mylist[i:i+len(pattern)] == pattern:
+            return (i, i+len(pattern))
+    return None, None
