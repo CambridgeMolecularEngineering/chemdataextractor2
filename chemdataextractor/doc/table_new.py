@@ -63,7 +63,7 @@ class Table(CaptionedElement):
             self._subtables = [self.category_table]
             if self.tde_table.subtables:
                 self._subtables = []
-                for subtable in tde_table.subtables:
+                for subtable in self.tde_table.subtables:
                     self._subtables.append(subtable.category_table)
             self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
         except (TDEError, TypeError) as e:
