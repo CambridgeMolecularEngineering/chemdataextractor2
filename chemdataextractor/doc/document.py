@@ -387,7 +387,7 @@ class Document(BaseDocument):
         # clean up records
         cleaned_records = ModelList()
         for record in records:
-            if record.required_fulfilled and record not in cleaned_records:
+            if record.required_fulfilled and record not in cleaned_records and type(record) in self.models:
                 cleaned_records.append(record)
 
         # Reset mutables
