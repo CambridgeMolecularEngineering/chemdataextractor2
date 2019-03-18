@@ -164,9 +164,9 @@ class CaptionedElement(BaseElement):
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
         """
         # TODO: docs for label
-        super(CaptionedElement, self).__init__(**kwargs)
         self.caption = caption
         self.label = label
+        super(CaptionedElement, self).__init__(**kwargs)
 
     def __repr__(self):
         return '%s(id=%r, references=%r, caption=%r)' % (self.__class__.__name__, self.id, self.references, self.caption.text)
@@ -225,6 +225,15 @@ class CaptionedElement(BaseElement):
         """
 
         return self.caption.definitions
+
+    @property
+    def models(self):
+        return self._models
+
+    @models.setter
+    def models(self, value):
+        self._models = value
+        self.caption.models = value
 
     def serialize(self):
         """
