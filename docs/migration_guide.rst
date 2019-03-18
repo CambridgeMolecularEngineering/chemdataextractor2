@@ -8,7 +8,7 @@ v1.5.0 Migration Guide
 Overview
 =================================
 
-Previously, ChemDataExtractor required huge amounts of manual input to create parsers for new models and if the user had multiple new models that were similar, we ended up with huge amounts of duplicated code within the parse model. This system was very user-unfriendly and didn't really follow the logic of how Physics and Chemistry are structured.
+Previously, ChemDataExtractor required huge amounts of manual input to create parsers for new models and if the user had multiple new models that were similar, we ended up with huge amounts of duplicated code. This system was very user-unfriendly and didn't really follow the logic of how Physics and Chemistry are structured.
 
 Furthermore, the Interdependency Resolution (IR) for these models was purely backwards-looking and did not account for dynamic or document-specific terminology even when it was clearly defined in the text.
 
@@ -22,7 +22,7 @@ Changes to ChemDataExtractor
 Overall Structure
 -------------------------
 
-At a high level, in previous versions of ChemDataExtractor, the :class:`~chemdataextractor.doc.document.Document` class and each of its subelements (e.g. :class:`~chemdataextractor.doc.text.Paragraph` or :class:`~chemdataextractor.doc.text.Sentence`) had a list of parsers. These parsers each had an associated model which they were parsing for. When these parsers found a sentence (or table cell) that contained the requisite elements, it would create a :class:`~chemdataextractor.doc.text.Compound` and the property would be associated to this instance of a compound.
+At a high level, in previous versions of ChemDataExtractor, the :class:`~chemdataextractor.doc.document.Document` class and each of its subelements (e.g. :class:`~chemdataextractor.doc.text.Paragraph`, :class:`~chemdataextractor.doc.table.Table` or :class:`~chemdataextractor.doc.text.Sentence`) had a list of parsers. These parsers each had an associated model which they were parsing for. When these parsers found a sentence (or table cell) that matched to the parse phrase root, it would create a :class:`~chemdataextractor.doc.text.Compound` and the property would be associated to this instance of a compound.
 
 The new structure changes this hierarchy significantly. The :class:`~chemdataextractor.doc.document.Document` class and its subelements now own the models that they should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :class:`~chemdataextractor.doc.text.Sentence` or :class:`~chemdataextractor.doc.table_new.Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the models.
 
@@ -34,10 +34,13 @@ This new structure has several advantages:
 
 - The properties are no longer necessarily tied to the :class:`~chemdataextractor.model.models.Compound` class, meaning one could use ChemDataExtractor for other purposes too, such as extracting the conditions under which an experiment was done.
 
+- You can easily build nested model hierarchies that more closely resemble the structure of Physics and Chemistry.
+
 Changes to Models
 ----------------------------------
 
-In addition to the overall change of structure, involving each property optionally owning a :class:`~chemdataextractor.model.model.Compound`, new types of models have  been introduced for the majority usecase of extracting a physical quantity structure, i.e. the case with a specifier, a value, and units, such as melting points, interatomic distances, and cooling rates. These models are all defined as subclasses of a new type of model, :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`
+In addition to the overall change of structure, involving each property optionally owning a :class:`~chemdataextractor.model.model.Compound`, new types of models have  been introduced for the majority usecase of extracting a physical quantity structure, i.e. the case with a specifier, a value, and units, such as melting points, interatomic distances, and cooling rates. 
+These models are all defined as subclasses of a new type of model, :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`.
 
 .. note::
 
@@ -95,6 +98,7 @@ Changes to Parsers
 --------------------
 
 Previously, different types of parsers were just distinguished by name. A :class:`MpTableParser` was understood to parse tables, and :class:`~chemdataextractor.parse.mp_new.MpParser` was understood to parse sentences. However, this was not enforced in any way. This has now been changed, with all parsers now implementing either :meth:`~chemdataextractor.parse.base.BaseSentenceParser.parse_sentence` if they are sentence parsers, or :meth:`~chemdataextractor.parse.base.BaseTableParser.parse_cell` if a table parser. You can get these methods for free by subclassing from :class:`~chemdataextractor.parse.base.BaseSentenceParser` and :class:`~chemdataextractor.parse.base.BaseTableParser` respectively. You then only need to implement the interpret function, just as before.
+The role of the interpret function is identical to before, it takes a parse result and formats it to the desired model.
 
 To work with the models now being able to store values and units in a more structured manner, :class:`~chemdataextractor.parse.base.BaseParser` also now contains new methods for extracting them. Refer to the API documentation for more detail.
 
@@ -113,12 +117,12 @@ Then for all remaining elements in the document, the relationship will be found 
 
 .. note::
 
-    This information only persists in the current document, so when a new document is parsed, we revert to the default defined specifier.
+    This information only persists in the current document, so when a new document is parsed, we revert to the default defined specifier. This is to avoid the specifier parse expressions becoming too far removed from the original definition.
 
 Integration with TableDataExtractor
 -----------------------------------
 
-TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances its capabilities for table data extraction.
+TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances its capabilities for information extraction from tabular data.
 Previously, rule-based parsers had to be written specifically for tables, for every new property. These would usually be very limited, due to the complexity of tables found in the literature.
 
 TableDataExtractor reads all tables and outputs their data in a highly standardised format whilst also retaining information about all the row or column headings and subheadings that the data point belongs to. The output of TableDataExtractor is a *category table*, where each row corresponds to a single data-cell of the original table, along with its corresponding header structure.
@@ -162,7 +166,7 @@ We have taken advantage this new data to create automatic parsers for both sente
 Integration with Snowball
 -----------------------------------
 
-Due to the new ability of ChemDataExtractor to construct simple parsers automatically, the integration with Snowball is now much smoother than before. Still, training of the Snowball algorithm needs to be performed. However, this is now much simpler to invoke. The Snowball algorithm is now simply another parser that can optionally be used and can be passed into the models in the same way as any other custom created parser. Here is an example of using Snowball to extract Curie temperatures::
+Due to the new ability of ChemDataExtractor to construct simple parsers automatically, Snowball is now fully integrated into the ChemDataExtractor workflow. Still, training of the Snowball algorithm needs to be performed. However, this is now much simpler to invoke. The Snowball algorithm is simply another parser that can optionally be used and can be passed into the models in the same way as any other custom created parser. Here is an example of using Snowball to extract Curie temperatures::
 
     class CurieTemperature(TemperatureModel):
         specifier_expression = (I('Curie')+I('temperature') | I('TC')).add_action(join)
@@ -174,12 +178,24 @@ Due to the new ability of ChemDataExtractor to construct simple parsers automati
     s = Sentence('Cobalt displays a Curie Temperature of 1388 K which is higher than BiFeO3.')
     corpus = [s]
 
-    #2. A path to files
+    #2. Or train from a path to files
     corpus = './tests/data/relex/curie_training_set/'
 
     sb = Snowball(CurieTemperature)
     sb.train(corpus)
     CurieTemperature.parsers.append(sb)
+
+Parsing
+-----------------------------------
+
+As a result we now have 3 different parsing methods, each with its own adantages and disadvantages when it comes to extraction precision and recall.
+
+The auto-generated text-parsers, of type :class:`~chemdataextractor.parse.auto.AutoSentenceParser` are very lenient. The root phrases for these parsers find any sentences that contain the required entities and return the first match to the models. As such, parsing with only the autosentence parser will yield high recall but low precision.
+Furthermore, you will only extract correct relations from sentences that contain single instances of your model.
+
+Snowball parsing is the opposite end of the precision-recall spectrum. Snowball is designed to be high precision and low recall based on the training data. 
+
+Therefore, if you wish to extract with both high precision and high recall, you will still need to write parse rules for complicated sentence structures, or train Snowball very extensively.
 
 
 Migrating Existing Code
