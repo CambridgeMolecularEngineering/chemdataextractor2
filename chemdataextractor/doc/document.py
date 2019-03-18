@@ -92,9 +92,9 @@ class Document(BaseDocument):
         else:
             self.config = Config()
         if 'models' in kwargs.keys():
-            self.models = kwargs['models']
+            self._models = kwargs['models']
         else:
-            self.models = []
+            self._models = []
 
         # Sets parameters from configuration file
         for element in elements:
@@ -116,13 +116,22 @@ class Document(BaseDocument):
 
         """
         log.debug("Setting models")
-        self.models.extend(models)
-        self.models = self.models
+        self._models.extend(models)
         for element in self.elements:
             if callable(getattr(element, 'add_models', None)):
                 element.add_models(models)
             # print(element.models)
         return
+
+    @property
+    def models(self):
+        return self._models
+
+    @models.setter
+    def models(self, value):
+        self._models = value
+        for element in self.elements:
+            element.models = value
 
     @classmethod
     def from_file(cls, f, fname=None, readers=None):
