@@ -65,7 +65,7 @@ class TestTable(unittest.TestCase):
         result = []
         for record in table.records:
             result.append(record.serialize())
-        self.assertListEqual(expected, result)
+        self.assertCountEqual(expected, result)
 
     def test_contextual_required_combinations(self):
         """
@@ -296,7 +296,7 @@ class TestTable(unittest.TestCase):
                     {'InteratomicDistance': {'raw_value': '2.7552', 'raw_units': 'Å', 'value': [2.7552], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Mg-Si', 'compound': {'Compound': {'names': ['Mg2Si']}}}},
                     {'InteratomicDistance': {'raw_value': '4.4992', 'raw_units': 'Å', 'value': [4.4992], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Si-Si', 'compound': {'Compound': {'names': ['Mg2Si']}}}},
                     {'Compound': {'names': ['Mg2Si']}}]
-        self.assertListEqual(expected, result)
+        self.assertCountEqual(expected, result)
 
     def test_unidentified_records_1(self):
         """
@@ -318,7 +318,7 @@ class TestTable(unittest.TestCase):
         expected = [['unidentified', {'InteratomicDistance': {'raw_value': '3.1814', 'raw_units': 'Å', 'value': [3.1814], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Mg-Mg'}}],
                     ['unidentified', {'InteratomicDistance': {'raw_value': '2.7552', 'raw_units': 'Å', 'value': [2.7552], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Mg-Si'}}],
                     ['unidentified', {'InteratomicDistance': {'raw_value': '4.4992', 'raw_units': 'Å', 'value': [4.4992], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Si-Si'}}]]
-        self.assertListEqual(expected, result)
+        self.assertCountEqual(expected, result)
 
     def test_unidentified_records_2(self):
         """
@@ -341,15 +341,14 @@ class TestTable(unittest.TestCase):
                     {'InteratomicDistance': {'raw_value': '2.7552', 'raw_units': 'Å', 'value': [2.7552], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Mg-Si', 'compound': {'Compound': {'names': ['Mg2Si']}}}},
                     {'InteratomicDistance': {'raw_value': '4.4992', 'raw_units': 'Å', 'value': [4.4992], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Si-Si', 'compound': {'Compound': {'names': ['Mg2Si']}}}},
                     {'Compound': {'names': ['Mg2Si']}}]
-        self.assertListEqual(expected, result)
+        self.assertCountEqual(expected, result)
 
     def test_model_updating_from_caption_1(self):
         f = open('tests/data/tables/table_test.html', 'rb')
         d = Document.from_file(f, readers=[SpringerHtmlReader()])
-        d.add_models([CurieTemperature, NeelTemperature])
+        d.models = [CurieTemperature, NeelTemperature]
         results = d.records.serialize()
         expected = [
-            {'Compound': {'names': ['MnO']}},
             {'CurieTemperature': {'raw_value': '122.0', 'raw_units': 'K', 'value': [122.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
             {'CurieTemperature': {'raw_value': '143.5', 'raw_units': 'K', 'value': [143.5], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
             {'CurieTemperature': {'raw_value': '0.4', 'raw_units': 'K', 'value': [0.4], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
@@ -362,10 +361,10 @@ class TestTable(unittest.TestCase):
             {'NeelTemperature': {'raw_value': '278.0', 'raw_units': 'K', 'value': [278.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
             {'NeelTemperature': {'raw_value': '181.9', 'raw_units': 'K', 'value': [181.9], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
             {'NeelTemperature': {'raw_value': '1.0', 'raw_units': 'K', 'value': [1.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'Compound': {'names': ['PrMnO3']}}]
+            ]
         log.debug(expected)
         log.debug(results)
-        self.assertListEqual(results, expected)
+        self.assertCountEqual(results, expected)
 
 
 
