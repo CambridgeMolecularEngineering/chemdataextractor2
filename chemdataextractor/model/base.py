@@ -44,6 +44,10 @@ class BaseType(six.with_metaclass(ABCMeta)):
         self.contextual = contextual
         self.parse_expression = parse_expression
         self.mutable = mutable
+        if self.parse_expression is None and self.mutable:
+            print('No parse_expression supplied but mutable set as True for ', type(self))
+            print('mutable refers to whether parse_expression can be changed by the document as parsing occurs. Setting mutable to False.')
+            self.mutable = False
         if mutable:
             self._default_parse_expression = copy.copy(parse_expression)
 
@@ -177,7 +181,7 @@ class ModelMeta(ABCMeta):
             value.name = six.text_type(key)
             cls.fields[key] = value
         return super(ModelMeta, cls).__setattr__(key, value)
-    
+
     @property
     def required_fields(cls):
         output = []
@@ -190,6 +194,7 @@ class ModelMeta(ABCMeta):
                 if field.required:
                     output.append(key)
         return output
+
 
 @python_2_unicode_compatible
 class BaseModel(six.with_metaclass(ModelMeta)):
