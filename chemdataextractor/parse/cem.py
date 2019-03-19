@@ -273,6 +273,13 @@ compound_heading_style4 = label_type + lenient_chemical_label + ZeroOrMore((T('C
 
 compound_heading_phrase = Group(compound_heading_style1 | compound_heading_style2 | compound_heading_style3 | compound_heading_style4 | chemical_label)('compound')
 
+names_only = Group((solvent_name | chemical_name
+              | likely_abbreviation | lenient_name
+              | (Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and'))).add_action(join).add_action(fix_whitespace)))))('compound')
+
+labels_only = Group((numeric | R('^([A-Z]\d{1,3})$') | strict_chemical_label))('compound')
+
+roles_only = Group((label_type | synthesis_of | to_give))('compound')
 
 def standardize_role(role):
     """Convert role text into standardized form."""
@@ -281,7 +288,8 @@ def standardize_role(role):
         return 'product'
     return role
 
-#TODO jm2111, Problems here! The parsers don't have a parse method anymore. Ruins parsing of captions.
+
+# TODO jm2111, Problems here! The parsers don't have a parse method anymore. Ruins parsing of captions.
 class CompoundParser(BaseSentenceParser):
     """Chemical name possibly with an associated label."""
 

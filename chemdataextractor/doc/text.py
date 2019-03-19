@@ -723,7 +723,7 @@ class Sentence(BaseText):
                             continue
                         if isinstance(record, Compound):
                             seen_labels.update(record.labels)
-                            # This can be super slow if we find lots of things
+                            # This could be super slow if we find lots of things
                             found = False
                             for seen_record in records:
                                 if (isinstance(seen_record, Compound)

@@ -22,7 +22,7 @@ class Figure(CaptionedElement):
     def records(self):
         caption_records = self.caption.records
         # Filter contextual records, because they normally only apply to the data within the figure.
-        caption_records = [c for c in caption_records if not c.is_contextual and not c.is_unidentified]
+        caption_records = [c for c in caption_records if c.contextual_fulfilled and not c.is_unidentified]
         return caption_records
 
     def _repr_html_(self):

@@ -16,7 +16,7 @@ from __future__ import unicode_literals
 import logging
 import os
 from .snowball import Snowball
-from.relationship import ChemicalRelationship, Relation
+from.relationship import Relation
 from.entity import Entity
 from .phrase import Phrase
 from .cluster import Cluster

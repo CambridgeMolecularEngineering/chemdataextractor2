@@ -92,9 +92,9 @@ class Document(BaseDocument):
         else:
             self.config = Config()
         if 'models' in kwargs.keys():
-            self.models = kwargs['models']
+            self._models = kwargs['models']
         else:
-            self.models = []
+            self._models = []
 
         # Sets parameters from configuration file
         for element in elements:
@@ -103,9 +103,11 @@ class Document(BaseDocument):
         log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
 
     def add_models(self, models):
-        """Set models on all element types
+        """
+        Add models to all elements.
 
         Usage::
+
             d = Document.from_file(f)
             d.set_models([myModelClass1, myModelClass2,..])
 
@@ -114,13 +116,22 @@ class Document(BaseDocument):
 
         """
         log.debug("Setting models")
-        self.models.extend(models)
-        self.models = self.models
+        self._models.extend(models)
         for element in self.elements:
             if callable(getattr(element, 'add_models', None)):
                 element.add_models(models)
             # print(element.models)
         return
+
+    @property
+    def models(self):
+        return self._models
+
+    @models.setter
+    def models(self, value):
+        self._models = value
+        for element in self.elements:
+            element.models = value
 
     @classmethod
     def from_file(cls, f, fname=None, readers=None):
@@ -209,7 +220,6 @@ class Document(BaseDocument):
         """
         log.debug("Getting chemical records")
         records = ModelList()  # Final list of records -- output
-        contextual_records = ModelList()  # Records that will be merged with all others
         head_def_record = None  # Most recent record from a heading, title or short paragraph
         head_def_record_i = None # Element index of head_def_record
         last_product_record = None
@@ -289,78 +299,54 @@ class Document(BaseDocument):
                             if head_def_record_i and head_def_record_i + 1 == i: # or (last_id_record and not last_id_record.names)):
                                 if head_def_record:
                                     record.compound = head_def_record
-                                    # record.names = head_def_record.names
-                                    # record.labels = head_def_record.labels
-                                    # record.roles = head_def_record.roles
                                 elif last_id_record:
                                     record.compound = last_id_record
-                                    # record.names = last_id_record.names
-                                    # record.labels = last_id_record.labels
-                                    # record.roles = last_id_record.roles
                                 elif last_product_record:
                                     record.compound = last_product_record
-                                    # record.names = last_product_record.names
-                                    # record.labels = last_product_record.labels
-                                    # record.roles = last_product_record.roles
                                 elif title_record:
                                     record.compound = title_record
-                                    # record.names = title_record.names
-                                    # record.labels = title_record.labels
-                                    # record.roles = title_record.roles
                             else:
                                 if last_id_record:
                                     record.compound = last_id_record
-                                    # record.names = last_id_record.names
-                                    # record.labels = last_id_record.labels
-                                    # record.roles = last_id_record.roles
                                 elif head_def_record:
                                     record.compound = head_def_record
-                                    # record.names = head_def_record.names
-                                    # record.labels = head_def_record.labels
-                                    # record.roles = head_def_record.roles
                                 elif last_product_record:
                                     record.compound = last_product_record
-                                    # record.names = last_product_record.names
-                                    # record.labels = last_product_record.labels
-                                    # record.roles = last_product_record.roles
                                 elif title_record:
                                     record.compound = title_record
-                                    # record.names = title_record.names
-                                    # record.labels = title_record.labels
-                                    # record.roles = title_record.roles
                         else:
                             # Consider continue here to filter records missing name/label...
                             pass
-                if record.is_contextual:
-                    log.debug(record.serialize())
-                    # Add contextual record to a list of all from the document for later merging
-                    contextual_records.append(record)
-                    continue
                 if record not in records:
                     log.debug(record.serialize())
                     records.append(record)
 
-        # Merge in contextual information
-        for record in records:
-            for contextual_record in contextual_records:
-                # record.merge_contextual(contextual_record)
-                contextual_record.merge_contextual(record)
-                if not contextual_record.is_contextual:
-                    records.append(contextual_record)
-                    contextual_records.remove(contextual_record)
-            log.debug(records.serialize())
+        # for record in records:
+        #     for contextual_record in contextual_records:
+        #         # record.merge_contextual(contextual_record)
+        #         contextual_record.merge_contextual(record)
+        #         if not contextual_record.is_contextual:
+        #             print("No longer contextual:", contextual_record)
+        #             records.append(contextual_record)
+        #             contextual_records.remove(contextual_record)
+        #     log.debug(records.serialize())
 
         # Merge abbreviation definitions
         for record in records:
-            for short, long_, entity in self.abbreviation_definitions:
-                if entity == 'CM':
-                    name = ' '.join(long_)
-                    abbrev = ' '.join(short)
-                    if not record.is_unidentified:
-                        if name in record.compound.names and not abbrev in record.compound.names:
-                            record.copound.names.append(abbrev)
-                        if abbrev in record.compound.names and not name in record.compound.names:
-                            record.compound.names.append(name)
+            compound = None
+            if hasattr(record, 'compound'):
+                compound = record.compound
+            elif isinstance(record, Compound):
+                compound = record
+            if compound is not None:
+                for short, long_, entity in self.abbreviation_definitions:
+                    if entity == 'CM':
+                        name = ' '.join(long_)
+                        abbrev = ' '.join(short)
+                        if name in compound.names and abbrev not in compound.names:
+                            compound.names.append(abbrev)
+                        if abbrev in compound.names and name not in compound.names:
+                            compound.names.append(name)
 
         # Merge Compound records with any shared name/label
         len_l = len(records)
@@ -388,17 +374,34 @@ class Document(BaseDocument):
                         break
             i += 1
 
+        i = 0
+        length = len(records)
+        while i < length:
+            j = 0
+            while j < length:
+                if i != j:
+                    records[j].merge_contextual(records[i])
+                j += 1
+            i += 1
+
+        # clean up records
+        cleaned_records = ModelList()
+        for record in records:
+            if record.required_fulfilled and record not in cleaned_records:
+                if (self.models and type(record) in self.models) or not self.models:
+                    cleaned_records.append(record)
+
         # Reset mutables
         for el in self.elements:
             for model in el.models:
                 model.reset_mutables()
 
         # Append contextual records if they've filled required fields
-        for record in contextual_records:
-            if record.required_fulfilled:
-                records.append(record)
+        # for record in contextual_records:
+        #     if record.required_fulfilled:
+        #         records.append(record)
 
-        return records
+        return cleaned_records
 
     def get_element_with_id(self, id):
         """

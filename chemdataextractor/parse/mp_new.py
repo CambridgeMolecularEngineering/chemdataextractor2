@@ -28,7 +28,7 @@ prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct) 
 delim = R('^[:;\.,]$')
 
 # TODO: Consider allowing degree symbol to be optional. The prefix should be restrictive enough to stop false positives.
-units = ((W('°') + Optional(R('^[CFK]\.?$'))) | W('K\.?'))('units').add_action(merge)
+units = ((W('°') + Optional(R('^[CFK]\.?$'))) | W('K\.?'))('raw_units').add_action(merge)
 
 mp = (prefix + Optional(delim).hide() + value_element(units))('mp')
 
@@ -52,8 +52,8 @@ class MpParser(BaseSentenceParser):
         log.debug(etree.tostring(result))
         try:
             compound = self.model.fields['compound'].model_class()
-            raw_value = first(result.xpath('./mp/value/text()'))
-            raw_units = first(result.xpath('./mp/units/text()'))
+            raw_value = first(result.xpath('./mp/raw_value/text()'))
+            raw_units = first(result.xpath('./mp/raw_units/text()'))
             melting_point = self.model(raw_value=raw_value,
                         raw_units=raw_units,
                         value=self.extract_value(raw_value),

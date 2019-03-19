@@ -59,14 +59,19 @@ class Table(CaptionedElement):
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         try:
             self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
-        except TDEError as e:
+            self.category_table = self.tde_table.category_table
+            self._subtables = [self.category_table]
+            if self.tde_table.subtables:
+                self._subtables = []
+                for subtable in self.tde_table.subtables:
+                    self._subtables.append(subtable.category_table)
+            self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
+        except (TDEError, TypeError) as e:
             log.error("TableDataExtractor error: {}".format(e))
             self.category_table = []
+            self._subtables = []
             self.tde_table = None
             self.heading = None
-        else:
-            self.category_table = self.tde_table.category_table
-            self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
 
     def serialize(self):
         """
@@ -183,8 +188,16 @@ class Table(CaptionedElement):
 
     @property
     def records(self):
-        # get the compounds from the caption
+        table_records = []
         caption_records = self.caption.records
+        for subtable in self._subtables:
+            table_records.extend(self._records_for_subtable(subtable, caption_records))
+        return table_records
+
+    def _records_for_subtable(self, subtable, caption_records=None):
+        # get the compounds from the caption
+        if not caption_records:
+            caption_records = ModelList()
         log.debug(caption_records.serialize())
         caption_compounds = []
         for record in caption_records:
@@ -200,7 +213,7 @@ class Table(CaptionedElement):
             for parser in model.parsers:
 
                 # the partial records are obtained from the autoparser
-                for record in self._parse_table(parser, self.category_table):
+                for record in self._parse_table(parser, subtable):
 
                     # add caption compound if necessary, and append to record
                     if 'compound' in model.fields \
@@ -237,8 +250,8 @@ class Table(CaptionedElement):
                     elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
                         table_records.append(record)
 
-        # Addition of the serialized caption records
-        caption_records = [c for c in caption_records if not c.is_contextual]
+        # Addition of the caption records
+        caption_records = [c for c in caption_records if c.contextual_fulfilled]
         table_records += caption_records
 
         # Merge Compound records with any shared name/label

@@ -16,9 +16,6 @@ class _DimensionMeta(ABCMeta):
     def __new__(mcs, name, bases, attrs):
         cls = super(_DimensionMeta, mcs).__new__(mcs, name, bases, attrs)
         if hasattr(cls, 'constituent_dimensions') and cls.constituent_dimensions is not None:
-            print('CLSCONSTDIMS', cls.constituent_dimensions)
-            print('CLSUNITSDICT', cls.units_dict)
-            print('CLSCONSTUNITSDICT', cls.constituent_dimensions.units_dict)
             cls.units_dict = copy.copy(cls.constituent_dimensions.units_dict)
             cls._dimensions = cls.constituent_dimensions._dimensions
         return cls
@@ -166,7 +163,6 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
         return new_model
 
     def __eq__(self, other):
-        print('eq called')
         if not isinstance(other, Dimension):
             return False
 
@@ -188,7 +184,7 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
 
     def __hash__(self):
         string = str(self.__class__.__name__)
-        # TODO: Should use the dimensions as part of the hash as well, but does not seem to work.
+        # TODO: Should use the _dimensions as part of the hash as well, but does not seem to work.
         # Can't just hash the dictionary as that would lead to two units that are actually equal hashing to different values depending on the order in which the dictionary is iterated through, which is not neccesarily deterministic. Better to have it this way, as it's okay for two hashes to clash.
         # if self._dimensions is not None:
         #     for key in sorted(str(six.iteritems(self._dimensions))):

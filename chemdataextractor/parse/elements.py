@@ -114,6 +114,7 @@ class BaseParserElement(object):
             try:
                 results, next_i = self.parse(tokens, i)
             except ParseException as err:
+                # print(err.msg)
                 i += 1
             else:
                 if next_i > i:
@@ -132,7 +133,8 @@ class BaseParserElement(object):
         """
         Parse given tokens and return results
 
-        :param list(tuple(string, string)) tokens: A tokenized representation of the text to scan. The first string in the tuple is the content, typically a word, and the second string is the part of speech tag.
+        :param tokens: A tokenized representation of the text to scan. The first string in the tuple is the content, typically a word, and the second string is the part of speech tag.
+        :type tokens: list(tuple(string, string))
         :param int i: The index at which to start scanning from
         :param bool actions: Whether the actions attached to this element will be executed. Default True.
         :returns: A tuple where the first element is a list of elements found (can be None if no results were found), and the last index investigated.

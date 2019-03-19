@@ -9,20 +9,36 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from ..base import BaseModel, BaseType, FloatType, StringType, ListType
+import six
+import copy
+from abc import ABCMeta
+from ..base import BaseModel, BaseType, FloatType, StringType, ListType, ModelMeta
 from .unit import Unit, UnitType
 from .dimension import Dimensionless
 from ...parse.elements import Any
-from ...parse.auto import AutoSentenceParser, AutoTableParser
+from ...parse.auto import AutoSentenceParser, AutoTableParser, construct_unit_element, match_dimensions_of
+from ...parse.quantity import magnitudes_dict, value_element_plain
 
 
-class QuantityModel(BaseModel):
+class _QuantityModelMeta(ModelMeta):
+    """"""
+
+    def __new__(mcs, name, bases, attrs):
+        cls = super(_QuantityModelMeta, mcs).__new__(mcs, name, bases, attrs)
+        unit_element = construct_unit_element(cls.dimensions)
+        if unit_element:
+            cls.fields['raw_units'].parse_expression = unit_element(None)
+        cls.fields['raw_value'].parse_expression = value_element_plain()(None)
+        return cls
+
+
+class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
     """
     Class for modelling quantities.
     """
-    raw_value = StringType(contextual=True)
+    raw_value = StringType(required=True, contextual=True)
     raw_units = StringType(contextual=True)
-    value = ListType(FloatType(contextual=True), contextual=True)
+    value = ListType(FloatType(contextual=True), contextual=True, sorted=True)
     units = UnitType(contextual=True)
     error = FloatType(contextual=True)
     dimensions = None
@@ -55,19 +71,16 @@ class QuantityModel(BaseModel):
 
     def __pow__(self, other):
 
-        # Handle case that we have a dimensionless quantity, so we don't get dimensionless units squared.
         new_model = QuantityModel()
         new_model.dimensions = self.dimensions ** other
         if self.value is not None:
-            if type(self.value) is list:
-                new_val = []
-                for val in self.value:
-                    new_val.append(val ** other)
-                new_model.value = new_val
-            else:
-                new_model.value = self.value ** other
+            new_val = []
+            for val in self.value:
+                new_val.append(val ** other)
+            new_model.value = new_val
         if self.units is not None:
             new_model.units = self.units ** other
+        # Handle case that we have a dimensionless quantity, so we don't get dimensionless units squared.
         if isinstance(new_model.dimensions, Dimensionless):
             dimensionless_model = DimensionlessModel()
             dimensionless_model.value = new_model.value
@@ -83,7 +96,7 @@ class QuantityModel(BaseModel):
         if self.value is not None and other.value is not None:
             if len(self.value) == 2 and len(other.value) == 2:
                 # The following always encompasses the whole range because
-                # OptionalRangeType tries to always sort the lists
+                # value has sorted=True, so it should sort any values.
                 new_val = [self.value[0] * other.value[0],
                            self.value[1] * other.value[1]]
                 new_model.value = new_val
