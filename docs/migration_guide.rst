@@ -156,7 +156,7 @@ Automatic Parsers
 Due to the built-in forward-looking Interdependency Resolution we no longer have to manually specify as many specifiers when looking for new properties. The quantity extraction involving units and dimensions provides rich new metadata on our extracted values.
 These features make data extraction with ChemDataExtractor inherently much more powerful and context-rich.
 
-We have taken advantage this new data to create automatic parsers for both sentences and tables. Any subclasses of :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` have, by default, automatic parsers enabled, meaning no user intervention is needed to start extracting. These automatic parsers work especially well with the TableDataExtractor tables, which store the data in a highly standardised format.
+We have taken advantage this new data to create automatic parsers for both sentences and tables. Any subclasses of :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` have, by default, automatic parsers enabled, meaning no user intervention is needed to start extracting. These automatic parsers work especially well with the TableDataExtractor tables, which store the data in a highly standardised format. Thus, no user adjustments will be needed to extract data from tables.
 
 .. note::
 
@@ -188,7 +188,7 @@ Due to the new ability of ChemDataExtractor to construct simple parsers automati
 Parsing
 -----------------------------------
 
-As a result we now have 3 different parsing methods, each with its own adantages and disadvantages when it comes to extraction precision and recall.
+As a result we now have 3 different text parsing methods, each with its own adantages and disadvantages when it comes to extraction precision and recall.
 
 The auto-generated text-parsers, of type :class:`~chemdataextractor.parse.auto.AutoSentenceParser` are very lenient. The root phrases for these parsers find any sentences that contain the required entities and return the first match to the models. As such, parsing with only the autosentence parser will yield high recall but low precision.
 Furthermore, you will only extract correct relations from sentences that contain single instances of your model.
@@ -197,6 +197,7 @@ Snowball parsing is the opposite end of the precision-recall spectrum. Snowball 
 
 Therefore, if you wish to extract with both high precision and high recall, you will still need to write parse rules for complicated sentence structures, or train Snowball very extensively.
 
+On the other hand, if you only wish to extract data from tables, the automated table parsers normally don't require any further adjustments for simple models.
 
 Migrating Existing Code
 =================================
