@@ -1,4 +1,4 @@
-python_version == 3.6
+python_version > '3.6'
 sphinx == 1.8.2
 ipykernel
 m2r == 0.2.1
