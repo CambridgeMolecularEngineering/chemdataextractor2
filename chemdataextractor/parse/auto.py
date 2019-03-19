@@ -285,5 +285,3 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
         return root_phrase
-
-
