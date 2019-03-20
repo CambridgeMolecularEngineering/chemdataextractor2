@@ -26,7 +26,7 @@ author = 'University of Cambridge, Molecular Engineering Group'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v1.3.0'
+release = 'v1.5.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -49,11 +49,11 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
     'm2r',
     'nbsphinx',
     'nbsphinx_link',
 ]
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -88,26 +88,16 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
 html_theme_options = {
-    "sidebar_width": "37ch",
-    "fixed_sidebar": 'true',
-    "page_width": "128ch",
-    'github_user': 'CambridgeMolecularEngineering',
-    'github_repo': 'chemdataextractor',
-    'logo': 'logo.png',
-    'logo_text_align': 'match-parent',
-    'logo_name': 'true',
-    'github_banner': 'true',
-    'github_button': 'true',
-    'travis_button': 'true',
-    'touch_icon': 'logo.png',
-    'description': 'Extract chemical information from scientific documents.'
+    # "page_width": "128ch",
+    'logo_only': 'true'
 }
 
 
@@ -125,6 +115,8 @@ html_static_path = ['_static']
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
+
+html_logo = 'logo.svg'
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
@@ -214,3 +206,6 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
+autodoc_default_options = {'special-members': '__init__',
+                           'show-inheritance': 'true'}
+autodoc_member_order = 'bysource'

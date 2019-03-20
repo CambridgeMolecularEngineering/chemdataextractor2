@@ -17,6 +17,7 @@ from lxml.builder import E
 import six
 import types
 
+log = logging.getLogger(__name__)
 
 class ParseException(Exception):
     """Exception thrown by a ParserElement when it doesn't match input."""
@@ -32,10 +33,8 @@ class ParseException(Exception):
         return cls(parse_exception.tokens, parse_exception.loc, parse_exception.msg, parse_exception.element)
 
     def __str__(self):
-        return ('%s (at token %d)' % (self.msg, self.i)).encode('utf8')
+        return ('%s (at token %d)' % (self.msg, self.i))
 
-
-log = logging.getLogger(__name__)
 
 XML_SAFE_TAGS = {
     '-LRB-': 'LRB',
@@ -62,8 +61,11 @@ class BaseParserElement(object):
 
     def __init__(self):
         self.name = None
+        """str or None: name for BaseParserElement. This is used to set the name of the Element when a result is found"""
         self.actions = []
+        """list(chemdataextractor.parse.actions): list of actions that will be applied to the results after parsing. Actions are functions with arguments of (tokens, start, result)"""
         self.streamlined = False
+        self.condition = None
 
     def set_action(self, *fns):
         self.actions = fns
@@ -71,6 +73,16 @@ class BaseParserElement(object):
 
     def add_action(self, *fns):
         self.actions += fns
+        return self
+
+    def with_condition(self, condition):
+        """
+        Add a condition to the parser element. The condition must be a function that takes
+        a match and return True or False, i.e. a function which takes tuple(list(Element), int)
+        and returns bool. If the function evaluates True, the match is kept, while if the function
+        evaluates False, the match is discarded. The condition is executed after any other actions.
+        """
+        self.condition = condition
         return self
 
     def copy(self):
@@ -84,7 +96,15 @@ class BaseParserElement(object):
         return new
 
     def scan(self, tokens, max_matches=six.MAXSIZE, overlap=False):
-        """"""
+        """
+        Scans for matches in given tokens.
+
+        :param list(tuple(string, string)) tokens: A tokenized representation of the text to scan. The first string in the tuple is the content, typically a word, and the second string is the part of speech tag.
+        :param int max_matches: The maximum number of matches to look for. Default is the maximum size possible for a list.
+        :param bool overlap: Whether the found results are allowed to overlap. Default False.
+        :returns: A generator of the results found. Each result is a tuple with the first element being a list of elements found, and the second and third elements are the start and end indices representing the span of the result.
+        :rtype: generator(tuple(list(lxml.etree.Element), int, int))
+        """
         if not self.streamlined:
             self.streamline()
         matches = 0
@@ -94,6 +114,7 @@ class BaseParserElement(object):
             try:
                 results, next_i = self.parse(tokens, i)
             except ParseException as err:
+                # print(err.msg)
                 i += 1
             else:
                 if next_i > i:
@@ -109,6 +130,16 @@ class BaseParserElement(object):
                     i += 1
 
     def parse(self, tokens, i, actions=True):
+        """
+        Parse given tokens and return results
+
+        :param tokens: A tokenized representation of the text to scan. The first string in the tuple is the content, typically a word, and the second string is the part of speech tag.
+        :type tokens: list(tuple(string, string))
+        :param int i: The index at which to start scanning from
+        :param bool actions: Whether the actions attached to this element will be executed. Default True.
+        :returns: A tuple where the first element is a list of elements found (can be None if no results were found), and the last index investigated.
+        :rtype: tuple(list(Element) or None, int)
+        """
         start = i
         try:
             result, i = self._parse_tokens(tokens, i, actions)
@@ -119,17 +150,31 @@ class BaseParserElement(object):
                 action_result = action(tokens, start, result)
                 if action_result is not None:
                     result = action_result
+        if self.condition is not None:
+            if not self.condition(result):
+                raise ParseException(tokens, i, 'Did not satisfy condition', self)
         return result, i
 
     def try_parse(self, tokens, i):
         return self.parse(tokens, i, actions=False)[1]
 
     def _parse_tokens(self, tokens, i, actions=True):
-        """Implemented by subclasses. """
+        """
+        Implemented by subclasses, parses given tokens and returns the results
+
+        :param list(tuple(string, string)) tokens: A tokenized representation of the text to scan. The first string in the tuple is the content, typically a word, and the second string is the part of speech tag.
+        :param int i: The index at which to start scanning from
+        :param bool actions: Whether the actions attached to this element will be executed. Default True.
+        :returns: A tuple where the first element is a list of elements found (can be None if no results were found), and the last index investigated.
+        :rtype: tuple(list(Element) or None, int)
+        """
         # TODO: abstractmethod?
         return None, i
 
     def streamline(self):
+        """
+        Streamlines internal representations. e.g., if we have something like And(And(And(And(a), b), c), d), streamline this to And(a, b, c, d)
+        """
         self.streamlined = True
         return self
 
@@ -195,6 +240,13 @@ class BaseParserElement(object):
         return Not(self)
 
     def __call__(self, name):
+        """
+        If a BaseParserElement is called, returns the BaseParserElement with its name set to the argument. The name is used to identify the results parsed by this element.
+
+        :param str name: Name to give BaseParserElement
+        :returns: A BaseParserElement with the given name
+        :rtype: BaseParserElement
+        """
         return self.set_name(name)
 
     def hide(self):
@@ -364,6 +416,30 @@ class And(ParseExpression):
         return self.append(other)
 
 
+# class All(BaseParserElement):
+#     """
+#     All elements are present in any order. Other elements can be in between.
+#     This is primarily used for table parsing, to see if all required elements are found in a row of the category table.
+#     """
+#
+#     def __init__(self, *exprs):
+#         super(All, self).__init__(*exprs)
+#
+#     # i am not sure if this has the correct parent, but essentially, for every expression provided we have to do
+#     # something like a simple Match() not And() and then go on to the next expression with resetting the tokens to zero
+#     # if all expressions are found individually return the result.
+#
+#     def _parse_tokens(self, tokens, i, actions=True):
+#         results = []
+#         for expression in self.exprs:
+#             for e in expression:
+#                 exprresults, i = e.parse(tokens, i)
+#                 if exprresults is not None:
+#                     results.extend(exprresults)
+#         return ([E(self.name, *results)] if self.name else results), i
+
+
+
 class Or(ParseExpression):
     """
     Match the longest.
@@ -524,6 +600,7 @@ class OneOrMore(ParseElementEnhance):
     """Repetition of one or more of the given expression."""
 
     def _parse_tokens(self, tokens, i, actions=True):
+        #print(tokens)
         # must be at least one
         results, i = self.expr.parse(tokens, i, actions)
         try:
@@ -568,6 +645,18 @@ class Group(ParseElementEnhance):
 
 
 class SkipTo(ParseElementEnhance):
+    """
+    Skips to the next occurance of expression. Does not add the next occurance of expression to the parse tree.
+    For example::
+
+        entities + SkipTo(entities)
+
+    will output ``entities`` only once. Whereas::
+
+        entities + SkipTo(entities) + entities
+
+    will output ``entities`` as well as the second occurrence of ``entities`` after an arbitrary number of tokens in between.
+    """
 
     def __init__(self, expr, include=False):
         super(SkipTo, self).__init__(expr)

@@ -1,2 +1,0 @@
-<Blank> name_1 is ferromagnetic with a specifier_1 of value_1 <Blank> units_1 and with confidence score 0.75
-

@@ -1,0 +1,7 @@
+,,Temperatures,Temperatures,Magnetic moment
+Type,Compound,Tc/K,Tn/K,B [T]
+Inorganic,BiFeO3,1100,643,
+Inorganic, LaCrO3,257,150,0.1 mT
+Organic,LaCrO2,,10,500
+Inorganic,Gd,,294,659 T
+* This table is nothing,,,,

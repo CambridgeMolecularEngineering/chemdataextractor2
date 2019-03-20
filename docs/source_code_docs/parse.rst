@@ -2,7 +2,7 @@
 .parse
 ========================
 
-Chemical property parsers
+Chemical property parsers. Parsers have been refactored in 1.5.0 which has introduced breaking changes to older code. Please refer to the examples and the migration guide for 1.5.0 for an overview of the changes.
 
 .. automodule:: chemdataextractor.parse
     :members:
@@ -14,6 +14,14 @@ Chemical property parsers
 .. automodule:: chemdataextractor.parse.actions
     :members:
     :undoc-members:
+
+.parse.auto
+------------------------------------------------
+
+.. automodule:: chemdataextractor.parse.auto
+    :members:
+    :undoc-members:
+
 
 .parse.base
 ------------------------------------------------
@@ -69,13 +77,6 @@ Chemical property parsers
 ------------------------------------------------
 
 .. automodule:: chemdataextractor.parse.nmr
-    :members:
-    :undoc-members:
-
-.parse.table
-------------------------------------------------
-
-.. automodule:: chemdataextractor.parse.table
     :members:
     :undoc-members:
 

@@ -20,11 +20,14 @@ class BibtexParser(object):
 
     Example usage:
 
+    .. code-block:: python
+
         with open(example.bib, 'r') as f:
             bib = BibtexParser(f.read())
             bib.parse()
             print bib.records_list
             print bib.json
+
     """
 
     def __init__(self, data, **kwargs):
@@ -34,6 +37,8 @@ class BibtexParser(object):
         e.g. collection, label, description, id, owner, created, modified, source
 
         Example usage:
+
+        .. code-block:: python
 
             bib = BibtexParser(data, created=unicode(datetime.utcnow()), owner='mcs07')
 

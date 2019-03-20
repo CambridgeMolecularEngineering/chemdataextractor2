@@ -11,17 +11,16 @@ from __future__ import unicode_literals
 import logging
 import re
 
-from chemdataextractor.parse.cem import cem, chemical_label, lenient_chemical_label, solvent_name
-from chemdataextractor.parse.common import lbrct, dt, rbrct
+from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
+from .common import lbrct, dt, rbrct
 from ..utils import first
-from ..model import Compound, MeltingPoint
 from .actions import merge, join
 from .base import BaseParser
 from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
 
-prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct)| R('^m\.?pt?\.?$', re.I) | I('melting') + Optional((I('point') | I('temperature')| I('range'))) | R('^m\.?$', re.I) + R('^pt?\.?$', re.I)).hide() + Optional(lbrct + W('Tm') + rbrct) + Optional(W('=') | I('of') | I('was') | I('is') | I('at')).hide() + Optional(I('in') + I('the') + I('range') + Optional(I('of')) | I('about')).hide()
+prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct) | R('^m\.?pt?\.?$', re.I) | I('melting') + Optional((I('point') | I('temperature') | I('range'))) | R('^m\.?$', re.I) + R('^pt?\.?$', re.I)).hide() + Optional(lbrct + W('Tm') + rbrct) + Optional(W('=') | I('of') | I('was') | I('is') | I('at')).hide() + Optional(I('in') + I('the') + I('range') + Optional(I('of')) | I('about')).hide()
 
 delim = R('^[:;\.,]$')
 
@@ -47,21 +46,18 @@ obtained_mp_phrase = ((cem | chemical_label) + (I('is') | I('are') | I('was')).h
 
 mp_phrase = cem_mp_phrase | to_give_mp_phrase | obtained_mp_phrase
 
+
 class MpParser(BaseParser):
     """"""
     root = mp_phrase
 
     def interpret(self, result, start, end):
-        compound = Compound(
-            melting_points=[
-                MeltingPoint(
-                    value=first(result.xpath('./mp/value/text()')),
-                    units=first(result.xpath('./mp/units/text()'))
-                )
-            ]
-        )
+        compound_class = self.model.fields['compound'].model_class()
+        melting_point = self.model(value=first(result.xpath('./mp/value/text()')),
+                                   units=first(result.xpath('./mp/units/text()')))
+        melting_point.compound = compound_class()
         cem_el = first(result.xpath('./cem'))
         if cem_el is not None:
-            compound.names = cem_el.xpath('./name/text()')
-            compound.labels = cem_el.xpath('./label/text()')
-        yield compound
+            melting_point.compound.names = cem_el.xpath('./name/text()')
+            melting_point.compound.labels = cem_el.xpath('./label/text()')
+        yield melting_point

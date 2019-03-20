@@ -11,14 +11,15 @@ from __future__ import unicode_literals
 import logging
 from collections import defaultdict
 
-from ..model import Compound, ModelList
-from ..parse.table import CompoundHeadingParser, CompoundCellParser, UvvisAbsHeadingParser, UvvisAbsCellParser, \
-    QuantumYieldHeadingParser, QuantumYieldCellParser, UvvisEmiHeadingParser, UvvisEmiCellParser, ExtinctionCellParser, \
-    ExtinctionHeadingParser, FluorescenceLifetimeHeadingParser, FluorescenceLifetimeCellParser, \
-    ElectrochemicalPotentialHeadingParser, ElectrochemicalPotentialCellParser, IrHeadingParser, IrCellParser, \
-    SolventCellParser, SolventHeadingParser, SolventInHeadingParser, UvvisAbsEmiQuantumYieldHeadingParser, \
-    UvvisAbsEmiQuantumYieldCellParser, MeltingPointHeadingParser, MeltingPointCellParser, GlassTransitionHeadingParser, GlassTransitionCellParser, TempInHeadingParser, \
-    UvvisAbsDisallowedHeadingParser, UvvisEmiQuantumYieldHeadingParser, UvvisEmiQuantumYieldCellParser
+from ..model.base import ModelList
+from ..model import Compound
+# from ..parse.table import CompoundHeadingParser, CompoundCellParser, UvvisAbsHeadingParser, UvvisAbsCellParser, \
+#     QuantumYieldHeadingParser, QuantumYieldCellParser, UvvisEmiHeadingParser, UvvisEmiCellParser, ExtinctionCellParser, \
+#     ExtinctionHeadingParser, FluorescenceLifetimeHeadingParser, FluorescenceLifetimeCellParser, \
+#     ElectrochemicalPotentialHeadingParser, ElectrochemicalPotentialCellParser, IrHeadingParser, IrCellParser, \
+#     SolventCellParser, SolventHeadingParser, SolventInHeadingParser, UvvisAbsEmiQuantumYieldHeadingParser, \
+#     UvvisAbsEmiQuantumYieldCellParser, MeltingPointHeadingParser, MeltingPointCellParser, GlassTransitionHeadingParser, GlassTransitionCellParser, TempInHeadingParser, \
+#     UvvisAbsDisallowedHeadingParser, UvvisEmiQuantumYieldHeadingParser, UvvisEmiQuantumYieldCellParser
 # TODO: Sort out the above import... import module instead
 from ..nlp.tag import NoneTagger
 from ..nlp.tokenize import FineWordTokenizer
@@ -29,13 +30,13 @@ from .text import Sentence
 
 log = logging.getLogger(__name__)
 
-TABLE_PARSERS = {
-    'CompoundTableParser': (CompoundHeadingParser(), CompoundCellParser()),
-    'UvvisAbsQuantumYieldTableParser': (UvvisAbsEmiQuantumYieldHeadingParser(), UvvisAbsEmiQuantumYieldCellParser()),
-    'UvvisEmiQuantumYieldTableParser': (UvvisEmiQuantumYieldHeadingParser(), UvvisEmiQuantumYieldCellParser()),
-    'UvvisAbsHeadingTableParser': (UvvisEmiHeadingParser(), UvvisEmiCellParser()),
-    'UvvisAbsHeadingTableParser': (UvvisAbsHeadingParser(), UvvisAbsCellParser(), UvvisAbsDisallowedHeadingParser()),
-}
+# TABLE_PARSERS = {
+#     'CompoundTableParser': (CompoundHeadingParser(), CompoundCellParser()),
+#     'UvvisAbsQuantumYieldTableParser': (UvvisAbsEmiQuantumYieldHeadingParser(), UvvisAbsEmiQuantumYieldCellParser()),
+#     'UvvisEmiQuantumYieldTableParser': (UvvisEmiQuantumYieldHeadingParser(), UvvisEmiQuantumYieldCellParser()),
+#     'UvvisAbsHeadingTableParser': (UvvisEmiHeadingParser(), UvvisEmiCellParser()),
+#     'UvvisAbsHeadingTableParser': (UvvisAbsHeadingParser(), UvvisAbsCellParser(), UvvisAbsDisallowedHeadingParser()),
+# }
 
 
 class Table(CaptionedElement):
@@ -46,35 +47,23 @@ class Table(CaptionedElement):
         self.rows = rows if rows is not None else []  # list(list(Cell))
         self.footnotes = footnotes if footnotes is not None else []
 
-        self.parsers = [
-            (CompoundHeadingParser(), CompoundCellParser()),
-            (UvvisAbsEmiQuantumYieldHeadingParser(), UvvisAbsEmiQuantumYieldCellParser()),
-            (UvvisEmiQuantumYieldHeadingParser(), UvvisEmiQuantumYieldCellParser()),
-            (UvvisEmiHeadingParser(), UvvisEmiCellParser()),
-            (UvvisAbsHeadingParser(), UvvisAbsCellParser(), UvvisAbsDisallowedHeadingParser()),
-            (IrHeadingParser(), IrCellParser()),
-            (ExtinctionHeadingParser(), ExtinctionCellParser()),
-            (QuantumYieldHeadingParser(), QuantumYieldCellParser()),
-            (FluorescenceLifetimeHeadingParser(), FluorescenceLifetimeCellParser()),
-            (ElectrochemicalPotentialHeadingParser(), ElectrochemicalPotentialCellParser()),
-            (MeltingPointHeadingParser(), MeltingPointCellParser()),
-            (GlassTransitionHeadingParser(), GlassTransitionCellParser()),
-            (SolventHeadingParser(), SolventCellParser()),
-            (SolventInHeadingParser(),),
-            (TempInHeadingParser(),)
-        ]
-        self.set_parsers()
-
-    def set_parsers(self):
-        #: Table cell parsers
-        if self.document:
-            try:
-                c = self.document.config
-                conf_parsers = c['PARSERS'][self.__class__.__name__]
-                self.parsers =[TABLE_PARSERS[p] for p in conf_parsers]
-            except KeyError:
-                pass
-        return self
+        # self.parsers = [
+        #     (CompoundHeadingParser(), CompoundCellParser()),
+        #     (UvvisAbsEmiQuantumYieldHeadingParser(), UvvisAbsEmiQuantumYieldCellParser()),
+        #     (UvvisEmiQuantumYieldHeadingParser(), UvvisEmiQuantumYieldCellParser()),
+        #     (UvvisEmiHeadingParser(), UvvisEmiCellParser()),
+        #     (UvvisAbsHeadingParser(), UvvisAbsCellParser(), UvvisAbsDisallowedHeadingParser()),
+        #     (IrHeadingParser(), IrCellParser()),
+        #     (ExtinctionHeadingParser(), ExtinctionCellParser()),
+        #     (QuantumYieldHeadingParser(), QuantumYieldCellParser()),
+        #     (FluorescenceLifetimeHeadingParser(), FluorescenceLifetimeCellParser()),
+        #     (ElectrochemicalPotentialHeadingParser(), ElectrochemicalPotentialCellParser()),
+        #     (MeltingPointHeadingParser(), MeltingPointCellParser()),
+        #     (GlassTransitionHeadingParser(), GlassTransitionCellParser()),
+        #     (SolventHeadingParser(), SolventCellParser()),
+        #     (SolventInHeadingParser(),),
+        #     (TempInHeadingParser(),)
+        # ]
 
     @property
     def document(self):
@@ -200,7 +189,7 @@ class Table(CaptionedElement):
             # If no CompoundCellParser() in value_parsers and value_parsers[0] == [] then set CompoundCellParser()
             if not seen_compound_col and 0 not in value_parsers:
                 log.debug('No compound column found in table, assuming first column')
-                value_parsers[0] = CompoundCellParser()
+                # value_parsers[0] = CompoundCellParser()
 
             for row in self.rows:
                 row_compound = Compound()

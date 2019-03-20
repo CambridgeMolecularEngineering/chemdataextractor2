@@ -2,7 +2,7 @@
 .biblio
 ==============================================
 
-Misc tools for parsing bibliographic information such as bibtex files, author names etc. test
+Misc tools for parsing bibliographic information such as bibtex files, author names etc.
 
 .. automodule:: chemdataextractor.biblio
     :members:

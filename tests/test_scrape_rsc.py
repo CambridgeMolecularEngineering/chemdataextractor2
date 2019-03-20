@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-test_scrape_rsc
-~~~~~~~~~~~~~~~
-
 Test scraping documents from the Royal Society of Chemistry.
 
 """

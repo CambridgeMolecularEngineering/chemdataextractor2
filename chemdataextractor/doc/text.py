@@ -15,16 +15,7 @@ import re
 
 import six
 
-from ..model import ModelList
-from ..parse.context import ContextParser
-from ..parse.cem import ChemicalLabelParser, CompoundHeadingParser, CompoundParser, chemical_name
-from ..parse.definitions import specifier_definition
-from ..parse.table import CaptionContextParser
-from ..parse.ir import IrParser
-from ..parse.mp import MpParser
-from ..parse.tg import TgParser
-from ..parse.nmr import NmrParser
-from ..parse.uvvis import UvvisParser
+from ..model.base import ModelList
 from ..nlp.lexicon import ChemLexicon, Lexicon
 from ..nlp.cem import CemTagger, IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
 from ..nlp.abbrev import ChemAbbreviationDetector
@@ -34,6 +25,9 @@ from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_
 from ..text import CONTROL_RE
 from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
+from ..parse.definitions import specifier_definition
+from ..parse.cem import chemical_name
+from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
 
 from lxml import etree
 
@@ -45,8 +39,32 @@ log = logging.getLogger(__name__)
 class BaseText(BaseElement):
     """Abstract base class for a text Document Element."""
 
-    def __init__(self, text, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, parsers=None, **kwargs):
-        """"""
+    def __init__(self, text, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, **kwargs):
+        """
+        .. note::
+
+            If intended as part of a :class:`~chemdataextractor.doc.document.Document`,
+            an element should either be initialized with a reference to its containing document,
+            or its :attr:`document` attribute should be set as soon as possible.
+            If the element is being passed in to a :class:`~chemdataextractor.doc.document.Document`
+            to initialise it, the :attr:`document` attribute is automatically set
+            during the initialisation of the document, so the user does not need to worry about this.
+
+        :param str text: The text contained in this element.
+        :param WordTokenizer word_tokenizer: (Optional) Word tokenizer for this element.
+        :param Lexicon lexicon: (Optional) Lexicon for this element. The lexicon stores all the occurences of unique words and can provide
+            Brown clusters for the words.
+        :param AbbreviationDetector abbreviation_detector: (Optional) The abbreviation detector for this element.
+        :param BaseTagger pos_tagger: (Optional) The part of speech tagger for this element.
+        :param BaseTagger ner_tagger: (Optional) The named entity recognition tagger for this element.
+        :param Document document: (Optional) The document containing this element.
+        :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
+        :param Any id: (Optional) Some identifier for this element. Must be equatable.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
+            If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
+            inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
+            this is set automatically to be the same as that of the containing element, unless manually set otherwise.
+        """
         if not isinstance(text, six.text_type):
             raise TypeError('Text must be a unicode string')
         super(BaseText, self).__init__(**kwargs)
@@ -56,7 +74,6 @@ class BaseText(BaseElement):
         self.abbreviation_detector = abbreviation_detector if abbreviation_detector is not None else self.abbreviation_detector
         self.pos_tagger = pos_tagger if pos_tagger is not None else self.pos_tagger
         self.ner_tagger = ner_tagger if ner_tagger is not None else self.ner_tagger
-        self.parsers = parsers if parsers is not None else self.parsers
 
     def __repr__(self):
         return '%s(id=%r, references=%r, text=%r)' % (self.__class__.__name__, self.id, self.references, self._text)
@@ -66,52 +83,56 @@ class BaseText(BaseElement):
 
     @property
     def text(self):
-        """The raw text string for this passage of text."""
+        """The raw text :class:`str` for this passage of text."""
         return self._text
 
     @abstractproperty
     def word_tokenizer(self):
-        """The word tokenizer to use."""
+        """The :class:`~chemdataextractor.nlp.tokenize.WordTokenizer` used by this element."""
         return
 
     @abstractproperty
     def lexicon(self):
-        """The lexicon to use."""
+        """The :class:`~chemdataextractor.nlp.lexicon.Lexicon` used by this element."""
         return
 
     @abstractproperty
     def pos_tagger(self):
-        """The part of speech tagger use."""
+        """The part of speech tagger used by this element. A subclass of :class:`~chemdataextractor.nlp.tag.BaseTagger`"""
         return
 
     @abstractproperty
     def ner_tagger(self):
-        """The named entity recognition tagger to use."""
-        return
-
-    @abstractproperty
-    def parsers(self):
-        """The parsers to use."""
+        """The named entity recognition tagger used by this element. A subclass of :class:`~chemdataextractor.nlp.tag.BaseTagger`"""
         return
 
     @abstractproperty
     def tokens(self):
-        """Return a list of tokens."""
+        """A list of :class:`Token` s for this object."""
         return
 
     @abstractproperty
     def tags(self):
-        """Return a list of tags."""
+        """
+        A list of tags corresponding to each of the tokens in the object.
+        For information on what each of the tags can be, check the documentation on
+        the specific :attr:`ner_tagger` and :attr:`pos_tagger` used for this class.
+        """
         return
-    
+
     @abstractproperty
     def definitions(self):
-        """Return a list of all specifier definitions
+        """
+        A list of all specifier definitions
         """
         return
 
     def serialize(self):
-        """Convert Text element to python dictionary."""
+        """
+        Convert self to a dictionary. The key 'type' will contain
+        the name of the class being serialized, and the key 'content' will contain
+        a serialized representation of :attr:`text`, which is a :class:`str`
+        """
         data = {'type': self.__class__.__name__, 'content': self.text}
         return data
 
@@ -128,10 +149,39 @@ class Text(collections.Sequence, BaseText):
     abbreviation_detector = ChemAbbreviationDetector()
     pos_tagger = ChemCrfPosTagger()  # ChemPerceptronTagger()
     ner_tagger = CemTagger()
-    parsers = []
 
     def __init__(self, text, sentence_tokenizer=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, parsers=None, **kwargs):
-        """"""
+        """
+        .. note::
+
+            If intended as part of a :class:`~chemdataextractor.doc.document.Document`,
+            an element should either be initialized with a reference to its containing document,
+            or its :attr:`document` attribute should be set as soon as possible.
+            If the element is being passed in to a :class:`~chemdataextractor.doc.document.Document`
+            to initialise it, the :attr:`document` attribute is automatically set
+            during the initialisation of the document, so the user does not need to worry about this.
+
+        :param str text: The text contained in this element.
+        :param SentenceTokenizer sentence_tokenizer: (Optional) Sentence tokenizer for this element.
+            Default :class:`~chemdataextractor.nlp.tokenize.ChemSentenceTokenizer`.
+        :param WordTokenizer word_tokenizer: (Optional) Word tokenizer for this element.
+            Default :class:`~chemdataextractor.nlp.tokenize.ChemWordTokenizer`.
+        :param Lexicon lexicon: (Optional) Lexicon for this element. The lexicon stores all the occurences of unique words and can provide
+            Brown clusters for the words. Default :class:`~chemdataextractor.nlp.lexicon.ChemLexicon`
+        :param AbbreviationDetector abbreviation_detector: (Optional) The abbreviation detector for this element.
+            Default :class:`~chemdataextractor.nlp.abbrev.ChemAbbreviationDetector`.
+        :param BaseTagger pos_tagger: (Optional) The part of speech tagger for this element.
+            Default :class:`~chemdataextractor.nlp.pos.ChemCrfPosTagger`.
+        :param BaseTagger ner_tagger: (Optional) The named entity recognition tagger for this element.
+            Default :class:`~chemdataextractor.nlp.cem.CemTagger`
+        :param Document document: (Optional) The document containing this element.
+        :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
+        :param Any id: (Optional) Some identifier for this element. Must be equatable.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
+            If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
+            inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
+            this is set automatically to be the same as that of the containing element, unless manually set otherwise.
+        """
         super(Text, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, parsers=None, **kwargs)
         self.sentence_tokenizer = sentence_tokenizer if sentence_tokenizer is not None else self.sentence_tokenizer
 
@@ -162,22 +212,11 @@ class Text(collections.Sequence, BaseText):
             if 'LEXICON' in c.keys():
                 self.lexicon = eval(c['LEXICON'])()
             if 'PARSERS' in c.keys():
-                self.set_parsers(c['PARSERS'])
-
-    def set_parsers(self, p_dict):
-        """ Sets parsers from config when defined
-
-        :param dict[str: str] p_dict : Dictionary of parsers
-        """
-
-        class_type = self.__class__.__name__
-        if class_type in p_dict:
-            conf_parsers = p_dict[class_type]
-            self.parsers = [eval(p)() for p in conf_parsers]
+                raise(DeprecationWarning('Manually setting parsers deprecated, any settings from config files for this will be ignored.'))
 
     @memoized_property
     def sentences(self):
-        """Return a list of Sentences that make up this text passage."""
+        """A list of :class:`Sentence` s that make up this text passage."""
         sents = []
         spans = self.sentence_tokenizer.span_tokenize(self.text)
         for span in spans:
@@ -190,40 +229,41 @@ class Text(collections.Sequence, BaseText):
                 abbreviation_detector=self.abbreviation_detector,
                 pos_tagger=self.pos_tagger,
                 ner_tagger=self.ner_tagger,
-                parsers=self.parsers,
-                document=self.document
+                document=self.document,
+                models=self.models
             )
             sents.append(sent)
         return sents
 
     @property
     def raw_sentences(self):
-        """Return a list of sentence strings that make up this text passage."""
+        """A list of :class:`str` for the sentences that make up this text passage."""
         return [sentence.text for sentence in self.sentences]
 
     @property
     def tokens(self):
-        """Return a list of tokens for each sentence in this text passage."""
         return [sent.tokens for sent in self.sentences]
 
     @property
     def raw_tokens(self):
-        """Return a list of tokens for each sentence in this text passage."""
+        """A list of :class:`str` representations for the tokens of each sentence in this text passage."""
         return [sent.raw_tokens for sent in self.sentences]
 
     @property
     def pos_tagged_tokens(self):
-        """Return a list of (token, tag) tuples for each sentence in this text passage."""
+        """A list of (:class:`Token` token, :class:`str` tag) tuples for each sentence in this text passage."""
         return [sent.pos_tagged_tokens for sent in self.sentences]
 
     @property
     def pos_tags(self):
-        """Return a list of part of speech tags for each sentence in this text passage."""
+        """A list of :class:`str` part of speech tags for each sentence in this text passage."""
         return [sent.pos_tags for sent in self.sentences]
 
     @memoized_property
     def unprocessed_ner_tagged_tokens(self):
-        """Return a list of unprocessed named entity recognition tags for the tokens in this sentence.
+        """
+        A list of (:class:`Token` token, :class:`str` named entity recognition tag)
+        from the text.
 
         No corrections from abbreviation detection are performed.
         """
@@ -231,7 +271,8 @@ class Text(collections.Sequence, BaseText):
 
     @memoized_property
     def unprocessed_ner_tags(self):
-        """Return a list of unprocessed named entity tags for the tokens in this sentence.
+        """
+        A list of :class:`str` unprocessed named entity tags for the tokens in this sentence.
 
         No corrections from abbreviation detection are performed.
         """
@@ -239,19 +280,28 @@ class Text(collections.Sequence, BaseText):
 
     @property
     def ner_tagged_tokens(self):
-        """Return a list of (token, tag) tuples for each sentence in this text passage."""
+        """
+        A list of (:class:`Token` token, :class:`str` named entity recognition tag)
+        from the text.
+        """
         return [sent.ner_tagged_tokens for sent in self.sentences]
 
     @property
     def ner_tags(self):
-        """Return a list of part of speech tags for each sentence in this text passage."""
+        """
+        A list of named entity tags corresponding to each of the tokens in the object.
+        For information on what each of the tags can be, check the documentation on
+        the specific :attr:`ner_tagger` used for this object.
+        """
         return [sent.ner_tags for sent in self.sentences]
 
     @property
     def cems(self):
-        """Return a list of part of speech tags for each sentence in this text passage."""
+        """
+        A list of all Chemical Entity Mentions in this text as :class:`chemdataextractor.doc.text.span`
+        """
         return [cem for sent in self.sentences for cem in sent.cems]
-    
+
     @property
     def definitions(self):
         """
@@ -261,22 +311,27 @@ class Text(collections.Sequence, BaseText):
 
     @property
     def tagged_tokens(self):
-        """Return a list of (token, tag) tuples for each sentence in this text passage."""
+        """
+        A list of (:class:`Token` token, :class:`str` named entity recognition tag)
+        from the text.
+        """
         return [sent.tagged_tokens for sent in self.sentences]
 
     @property
     def tags(self):
-        """Return a list of tags for each sentence in this text passage."""
         return [sent.tags for sent in self.sentences]
 
     @property
     def abbreviation_definitions(self):
-        """"""
+        """
+        A list of all abbreviation definitions in this Document. Each abbreviation is in the form
+        (:class:`str` abbreviation, :class:`str` long form of abbreviation, :class:`str` ner_tag)
+        """
         return [ab for sent in self.sentences for ab in sent.abbreviation_definitions]
 
     @property
     def records(self):
-        """Return a list of records for this text passage."""
+        """All records found in the object, as a list of :class:`~chemdataextractor.model.base.BaseModel`."""
         return ModelList(*[r for sent in self.sentences for r in sent.records])
 
     def __add__(self, other):
@@ -291,7 +346,6 @@ class Text(collections.Sequence, BaseText):
                 abbreviation_detector=self.abbreviation_detector,
                 pos_tagger=self.pos_tagger,
                 ner_tagger=self.ner_tagger,
-                parsers=self.parsers
             )
             return merged
         return NotImplemented
@@ -301,8 +355,7 @@ class Title(Text):
 
     def __init__(self, text, **kwargs):
         super(Title, self).__init__(text, **kwargs)
-        default_parsers = [CompoundParser()]
-        self.parsers = default_parsers
+        self.models = [Compound]
 
     def _repr_html_(self):
         return '<h1 class="cde-title">' + self.text + '</h1>'
@@ -312,8 +365,8 @@ class Heading(Text):
 
     def __init__(self, text, **kwargs):
         super(Heading, self).__init__(text, **kwargs)
-        default_parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
-        self.parsers = default_parsers
+        self.models = [Compound]
+        # default_parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
 
     def _repr_html_(self):
         return '<h2 class="cde-title">' + self.text + '</h2>'
@@ -323,9 +376,9 @@ class Paragraph(Text):
 
     def __init__(self, text, **kwargs):
         super(Paragraph, self).__init__(text, **kwargs)
-        default_parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(),
-               TgParser(), ContextParser()]
-        self.parsers = default_parsers
+        # default_parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(),
+        #        TgParser(), ContextParser()]
+        self.models = [Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition]
 
     def _repr_html_(self):
         return '<p class="cde-paragraph">' + self.text + '</p>'
@@ -335,17 +388,16 @@ class Footnote(Text):
 
     def __init__(self, text, **kwargs):
         super(Footnote, self).__init__(text, **kwargs)
-        default_parsers = [ContextParser(), CaptionContextParser()]
-        self.parsers = default_parsers
+        # default_parsers = [ContextParser(), CaptionContextParser()]
+        self.models = [Compound]
 
     def _repr_html_(self):
         return '<p class="cde-footnote">' + self.text + '</p>'
 
 
 class Citation(Text):
-    # No tagging in citations
-    ner_tagger = NoneTagger()
-    abbreviation_detector = False
+    ner_tagger = NoneTagger()  #: No tagging is done for citations
+    abbreviation_detector = None
     # TODO: Citation parser
     # TODO: Store number/label
 
@@ -357,12 +409,12 @@ class Caption(Text):
 
     def __init__(self, text, **kwargs):
         super(Caption, self).__init__(text, **kwargs)
-        default_parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
-        self.parsers = default_parsers
+        self.models = [Compound]
+        # default_parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
 
     def _repr_html_(self):
         return '<caption class="cde-caption">' + self.text + '</caption>'
-    
+
     @memoized_property
     def definitions(self):
         return [definition for sent in self.sentences for definition in sent.definitions]
@@ -376,10 +428,41 @@ class Sentence(BaseText):
     abbreviation_detector = ChemAbbreviationDetector()
     pos_tagger = ChemCrfPosTagger()  # ChemPerceptronTagger()
     ner_tagger = CemTagger()
-    parsers = []
 
-    def __init__(self, text, start=0, end=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, parsers=None, **kwargs):
-        super(Sentence, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, parsers=parsers, **kwargs)
+    def __init__(self, text, start=0, end=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, **kwargs):
+        """
+        .. note::
+
+            If intended as part of a :class:`chemdataextractor.doc.document.Document`,
+            an element should either be initialized with a reference to its containing document,
+            or its :attr:`document` attribute should be set as soon as possible.
+            If the element is being passed in to a :class:`chemdataextractor.doc.document.Document`
+            to initialise it, the :attr:`document` attribute is automatically set
+            during the initialisation of the document, so the user does not need to worry about this.
+
+        :param str text: The text contained in this element.
+        :param int start: (Optional) The starting index of the sentence within the containing element. Default 0.
+        :param int end: (Optional) The end index of the sentence within the containing element. Defualt None
+        :param WordTokenizer word_tokenizer: (Optional) Word tokenizer for this element.
+            Default :class:`~chemdataextractor.nlp.tokenize.ChemWordTokenizer`.
+        :param Lexicon lexicon: (Optional) Lexicon for this element. The lexicon stores all the occurences of unique words and can provide
+            Brown clusters for the words. Default :class:`~chemdataextractor.nlp.lexicon.ChemLexicon`
+        :param AbbreviationDetector abbreviation_detector: (Optional) The abbreviation detector for this element.
+            Default :class:`~chemdataextractor.nlp.abbrev.ChemAbbreviationDetector`.
+        :param BaseTagger pos_tagger: (Optional) The part of speech tagger for this element.
+            Default :class:`~chemdataextractor.nlp.pos.ChemCrfPosTagger`.
+        :param BaseTagger ner_tagger: (Optional) The named entity recognition tagger for this element.
+            Default :class:`~chemdataextractor.nlp.cem.CemTagger`
+        :param Document document: (Optional) The document containing this element.
+        :param str label: (Optional) The label for the captioned element, e.g. Table 1 would have a label of 1.
+        :param Any id: (Optional) Some identifier for this element. Must be equatable.
+        :param list[chemdataextractor.models.BaseModel] models: (Optional) A list of models for this element to parse.
+            If the element is part of another element (e.g. a :class:`~chemdataextractor.doc.text.Sentence`
+            inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
+            this is set automatically to be the same as that of the containing element, unless manually set otherwise.
+        """
+        self.models = [Compound]
+        super(Sentence, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, **kwargs)
         #: The start index of this sentence within the text passage.
         self.start = start
         #: The end index of this sentence within the text passage.
@@ -390,7 +473,6 @@ class Sentence(BaseText):
 
     @memoized_property
     def tokens(self):
-        """Return a list of token Spans for this sentence."""
         spans = self.word_tokenizer.span_tokenize(self.text)
         toks = [Token(
             text=self.text[span[0]:span[1]],
@@ -402,23 +484,25 @@ class Sentence(BaseText):
 
     @property
     def raw_tokens(self):
-        """Return a list of token strings that make up this sentence."""
+        """A list of :class:`str` representations for the tokens in the object."""
         return [token.text for token in self.tokens]
 
     @memoized_property
     def pos_tagged_tokens(self):
-        """Return a list of part of speech tags for the tokens in this sentence."""
+        """A list of (:class:`Token` token, :class:`str` tag) tuples for each sentence in this sentence."""
         # log.debug('Getting pos tags')
         return self.pos_tagger.tag(self.raw_tokens)
 
     @property
     def pos_tags(self):
-        """Return a list of part of speech tags for the tokens in this sentence."""
+        """A list of :class:`str` part of speech tags for each sentence in this sentence."""
         return [tag for token, tag in self.pos_tagged_tokens]
 
     @memoized_property
     def unprocessed_ner_tagged_tokens(self):
-        """Return a list of unprocessed named entity recognition tags for the tokens in this sentence.
+        """
+        A list of (:class:`Token` token, :class:`str` named entity recognition tag)
+        from the text.
 
         No corrections from abbreviation detection are performed.
         """
@@ -427,7 +511,8 @@ class Sentence(BaseText):
 
     @memoized_property
     def unprocessed_ner_tags(self):
-        """Return a list of unprocessed named entity tags for the tokens in this sentence.
+        """
+        A list of :class:`str` unprocessed named entity tags for the tokens in this sentence.
 
         No corrections from abbreviation detection are performed.
         """
@@ -435,7 +520,10 @@ class Sentence(BaseText):
 
     @memoized_property
     def abbreviation_definitions(self):
-        """Return a list of (abbreviation, long, ner_tag) tuples."""
+        """
+        A list of all abbreviation definitions in this Document. Each abbreviation is in the form
+        (:class:`str` abbreviation, :class:`str` long form of abbreviation, :class:`str` ner_tag)
+        """
         abbreviations = []
         if self.abbreviation_detector:
             # log.debug('Detecting abbreviations')
@@ -452,12 +540,19 @@ class Sentence(BaseText):
 
     @memoized_property
     def ner_tagged_tokens(self):
-        """"""
+        """
+        A list of (:class:`Token` token, :class:`str` named entity recognition tag)
+        from the sentence.
+        """
         return list(zip(self.raw_tokens, self.ner_tags))
 
     @memoized_property
     def ner_tags(self):
-        """"""
+        """
+        A list of named entity tags corresponding to each of the tokens in the object.
+        For information on what each of the tags can be, check the documentation on
+        the specific :attr:`ner_tagger` used for this object.
+        """
         # log.debug('Getting ner_tags')
         ner_tags = self.unprocessed_ner_tags
         abbrev_defs = self.document.abbreviation_definitions if self.document else self.abbreviation_definitions
@@ -485,6 +580,9 @@ class Sentence(BaseText):
 
     @memoized_property
     def cems(self):
+        """
+        A list of all Chemical Entity Mentions in this text as :class:`~chemdataextractor.doc.text.Span`
+        """
         # log.debug('Getting cems')
         spans = []
         # print(self.text.encode('utf8'))
@@ -557,13 +655,13 @@ class Sentence(BaseText):
                 else:
                     spans.append(split_span)
         return spans
-    
+
     @memoized_property
     def definitions(self):
         """
         Return specifier definitions from this sentence
 
-        A definition consists of: 
+        A definition consists of:
         a) A definition -- The quantitity being defined e.g. "Curie Temperature"
         b) A specifier -- The symbol used to define the quantity e.g. "Tc"
         c) Start -- The index of the starting point of the definition
@@ -572,13 +670,15 @@ class Sentence(BaseText):
         :return: list -- The specifier definitions
         """
         defs = []
-        for result in specifier_definition.scan(self.tagged_tokens):
+        tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
+        for result in specifier_definition.scan(tagged_tokens):
             definition = result[0]
             start = result[1]
             end = result[2]
             new_def = {
                        'definition': first(definition.xpath('./phrase/text()')),
                        'specifier': first(definition.xpath('./specifier/text()')),
+                       'tokens': tagged_tokens[start:end],
                        'start': start,
                        'end': end}
             defs.append(new_def)
@@ -586,7 +686,6 @@ class Sentence(BaseText):
 
     @memoized_property
     def tags(self):
-        """Return combined POS and NER tags."""
         tags = self.pos_tags
         for i, tag in enumerate(self.ner_tags):
             if tag is not None:
@@ -595,29 +694,60 @@ class Sentence(BaseText):
 
     @property
     def tagged_tokens(self):
+        """
+        A list of (:class:`Token` token, :class:`str` named entity recognition tag)
+        from the text.
+        """
         return list(zip(self.raw_tokens, self.tags))
 
     @property
     def records(self):
-        """Return a list of records for this sentence."""
-        compounds = ModelList()
+        """All records found in the object, as a list of :class:`~chemdataextractor.model.base.BaseModel`."""
+        records = ModelList()
         seen_labels = set()
         # Ensure no control characters are sent to a parser (need to be XML compatible)
         tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
-        for parser in self.parsers:
-            for record in parser.parse(tagged_tokens):
-                p = record.serialize()
-                if not p:  # TODO: Potential performance issues?
-                    continue
-                # Skip duplicate records
-                if record in compounds:
-                    continue
-                # Skip just labels that have already been seen (bit of a hack)
-                if all(k in {'labels', 'roles'} for k in p.keys()) and set(record.labels).issubset(seen_labels):
-                    continue
-                seen_labels.update(record.labels)
-                compounds.append(record)
-        return compounds
+        for model in self._streamlined_models:
+            for parser in model.parsers:
+                if hasattr(parser, 'parse_sentence'):
+                    for record in parser.parse_sentence(tagged_tokens):
+                        p = record.serialize()
+                        if not p:  # TODO: Potential performance issues?
+                            continue
+                        # Skip duplicate records
+                        if record in records:
+                            continue
+                        # Skip just labels that have already been seen (bit of a hack)
+                        if (isinstance(record, Compound) and all(k in {'labels', 'roles'} for k in p['Compound'].keys()) and
+                          set(record.labels).issubset(seen_labels)):
+                            continue
+                        if isinstance(record, Compound):
+                            seen_labels.update(record.labels)
+                            # This could be super slow if we find lots of things
+                            found = False
+                            for seen_record in records:
+                                if (isinstance(seen_record, Compound)
+                                  and (not set(record.names).isdisjoint(seen_record.names)
+                                       or not set(record.labels).isdisjoint(seen_record.labels))):
+                                    seen_record.names = sorted(list(set(seen_record.names).union(record.names)))
+                                    seen_record.labels = sorted(list(set(seen_record.labels).union(record.labels)))
+                                    seen_record.roles = sorted(list(set(seen_record.roles).union(record.roles)))
+                                    found = True
+                            if found:
+                                continue
+                        elif hasattr(record, 'compound') and record.compound is not None:
+                            seen_labels.update(record.compound.labels)
+                        records.append(record)
+        i = 0
+        length = len(records)
+        while i < length:
+            j = 0
+            while j < length:
+                if i != j:
+                    records[j].merge_all(records[i])
+                j += 1
+            i += 1
+        return records
 
     def __add__(self, other):
         if type(self) == type(other):
@@ -632,10 +762,28 @@ class Sentence(BaseText):
                 abbreviation_detector=self.abbreviation_detector,
                 pos_tagger=self.pos_tagger,
                 ner_tagger=self.ner_tagger,
-                parsers=self.parsers
             )
             return merged
         return NotImplemented
+
+
+class Cell(Sentence):
+    """Data cell for tables. One row of the category table"""
+    # It appears that using different tokenizers/taggers is making the cem recognition worse.
+    # This is also consistent with the use of the regular expressions etc we have defined so far.
+    # word_tokenizer = FineWordTokenizer()
+    # pos_tagger = NoneTagger()
+    # ner_tagger = NoneTagger()
+
+    @memoized_property
+    def abbreviation_definitions(self):
+        """Empty list. Abbreviation detection is disabled within table cells."""
+        return []
+
+    @property
+    def records(self):
+        """Empty list. Individual cells don't provide records, this is handled by the parent Table."""
+        return []
 
 
 @python_2_unicode_compatible
@@ -643,12 +791,17 @@ class Span(object):
     """A text span within a sentence."""
 
     def __init__(self, text, start, end):
+        """
+        :param str text: The text contained by this span.
+        :param int start: The start offset of this token in the original text.
+        :param int end: The end offsent of this token in the original text.
+        """
         self.text = text
-        """The text content of this span."""
+        """The :class:`str` text content of this span."""
         self.start = start
-        """The start offset of this token in the original text."""
+        """The :class:`int` start offset of this token in the original text."""
         self.end = end
-        """The end offset of this token in the original text."""
+        """The :class:`int` end offset of this token in the original text."""
 
     def __repr__(self):
         return '%s(%r, %r, %r)' % (self.__class__.__name__, self.text, self.start, self.end)
@@ -670,7 +823,7 @@ class Span(object):
 
     @property
     def length(self):
-        """The offset length of this span in the original text."""
+        """The :class:`int` offset length of this span in the original text."""
         return self.end - self.start
 
 
@@ -678,7 +831,12 @@ class Token(Span):
     """A single token within a sentence. Corresponds to a word, character, punctuation etc."""
 
     def __init__(self, text, start, end, lexicon):
-        """"""
+        """
+        :param str text: The text contained by this token.
+        :param int start: The start offset of this token in the original text.
+        :param int end: The end offsent of this token in the original text.
+        :param Lexicon lexicon: The lexicon which contains this token.
+        """
         super(Token, self).__init__(text, start, end)
         #: The lexicon for this token.
         self.lexicon = lexicon
@@ -686,5 +844,5 @@ class Token(Span):
 
     @property
     def lex(self):
-        """The corresponding Lexeme entry in the Lexicon for this token."""
+        """The corresponding :class:`chemdataextractor.nlp.lexicon.Lexeme` entry in the Lexicon for this token."""
         return self.lexicon[self.text]

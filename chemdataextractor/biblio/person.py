@@ -61,7 +61,7 @@ NOT_SUFFIX = {'I.', 'V.'}
 
 # Make attributes instead of dict style.
 # Parse from string as a class method.
-# Mutable attributes that can be set via constructor or modified at any time.
+# updatable attributes that can be set via constructor or modified at any time.
 # to_dict, to_json method?
 
 
@@ -70,21 +70,21 @@ class PersonName(dict):
 
     Parses a name string into title, firstname, middlename, nickname, prefix, lastname, suffix.
 
-    Example usage:
+    Example usage::
 
         p = PersonName('von Beethoven, Ludwig')
 
-    PersonName acts like a dict:
+    PersonName acts like a dict::
 
         print p
         print p['firstname']
         print json.dumps(p)
 
-    Name components can also be access as attributes:
+    Name components can also be access as attributes::
 
         print p.lastname
 
-    Instances can be reused by setting the name property:
+    Instances can be reused by setting the name property::
 
         p.name = 'Henry Ford Jr. III'
         print p
@@ -106,8 +106,8 @@ class PersonName(dict):
     def __init__(self, fullname=None, from_bibtex=False):
         """Initialize with a name string.
 
-        :param fullname: A person name as a string.
-
+        :param str fullname: The person's name.
+        :param bool from_bibtex: (Optional) Whether the fullname parameter is in BibTeX format. Default False.
         """
         super(PersonName, self).__init__()
         self._from_bibtex = from_bibtex

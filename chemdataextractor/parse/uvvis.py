@@ -11,9 +11,9 @@ from __future__ import unicode_literals
 import logging
 import re
 
-from ..model import Compound, UvvisSpectrum, UvvisPeak
+
 from .common import hyphen
-from .base import BaseParser
+from .base import BaseSentenceParser
 from ..utils import first
 from .actions import strip_stop
 from .elements import W, I, T, R, Optional, ZeroOrMore, OneOrMore
@@ -45,22 +45,23 @@ peaks = (peak + ZeroOrMore(ZeroOrMore(delim | W('and')).hide() + peak))('peaks')
 uvvis = (prelude + peaks + Optional(delim) + Optional(units) + Optional(insolvent))('uvvis')
 
 
-class UvvisParser(BaseParser):
+class UvvisParser(BaseSentenceParser):
     """"""
     root = uvvis
 
     def interpret(self, result, start, end):
-        c = Compound()
-        u = UvvisSpectrum(
+        c = self.model.fields['compound'].model_class()
+        u = self.model(
             solvent=first(result.xpath('./solvent/text()'))
         )
+        peak_model = self.model.fields['peaks'].field.model_class
         units = first(result.xpath('./units/text()'))
         for peak_result in result.xpath('./peaks/peak'):
-            uvvis_peak = UvvisPeak(
+            uvvis_peak = peak_model(
                 value=first(peak_result.xpath('./value/text()')),
                 units=units,
                 shape=first(peak_result.xpath('./shape/text()'))
             )
             u.peaks.append(uvvis_peak)
-        c.uvvis_spectra.append(u)
-        yield c
+        u.compound = c
+        yield u

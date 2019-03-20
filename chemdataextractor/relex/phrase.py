@@ -39,10 +39,17 @@ class Phrase(object):
     def to_string(self):
         output_string = ''
         output_string += ' '.join(self.elements['prefix']['tokens']) + ' '
-        output_string += self.entities[0].tag.name + ' '
+        if isinstance(self.entities[0].tag, tuple):
+            output_string += '(' + ', '.join([i for i in self.entities[0].tag]) + ') '
+        else:
+            output_string += '(' + self.entities[0].tag + ') '
         for i in range(0, self.number_of_entities - 1):
-            output_string += ' '.join(self.elements['middle_' + str(i + 1)]['tokens']) + ' '
-            output_string += self.entities[i + 1].tag.name + ' '
+            output_string += ' '.join(self.elements['middle_' + str(i+1)]['tokens']) + ' '
+            if isinstance(self.entities[i+1].tag, tuple):
+                output_string += '(' + ', '.join([i for i in self.entities[i+1].tag]) + ') '
+            else:
+                output_string += '(' + self.entities[i+1].tag + ') '
+        output_string = output_string
         output_string += ' '.join(self.elements['suffix']['tokens'])
 
         return output_string
@@ -53,6 +60,7 @@ class Phrase(object):
         relations = self.relations
         entity_counter = {}
         # print("Creating phrase")
+
         combined_entity_list = []
         for relation in relations:
             # print(relation)
@@ -61,14 +69,14 @@ class Phrase(object):
                 if entity in combined_entity_list:
                     continue
                 else:
-                    if entity.tag.name not in entity_counter.keys():
-                        entity_counter[entity.tag.name] = 1
+                    if entity.tag not in entity_counter.keys():
+                        entity_counter[entity.tag] = 1
                     else:
-                        entity_counter[entity.tag.name] += 1
+                        entity_counter[entity.tag] += 1
 
-                    new_tag_name = entity.tag.name.split('_')[0] + '_' + str(entity_counter[entity.tag.name])
-                    # print(new_tag_name)
-                    entity.tag.name = new_tag_name
+                    # new_tag_name = entity.tag.split('-')[0] + '-' + str(entity_counter[entity.tag])
+                    # # print(new_tag_name)
+                    # entity.tag = new_tag_name
                     combined_entity_list.append(entity)
 
         # Number of entities
@@ -81,23 +89,13 @@ class Phrase(object):
         self.entities = sorted_entity_list
 
         # Create ordering
-        self.order = [e.tag.name.split('_')[0] for e in self.entities]
+        self.order = [e.tag for e in self.entities]
 
         # Create the phrase elements, prefix, middles, suffix
-
-        """ Assign each empty element a token '<Blank>' so that the similarity calculation could be performed correctly.
-            Modification made by jz449
-        E.g. Before: {'prefix' : {'tokens' : []}}
-             After:  {'prefix' : {'tokens' : ['<Blank>']}}
-
-        """
-
         prefix_tokens = [t for t in sentence[sorted_entity_list[0].start - self.prefix_length:sorted_entity_list[0].start]]
         if len(prefix_tokens) == 0:
             prefix_tokens = ['<Blank>']
         self.elements['prefix'] = {'tokens': prefix_tokens}
-
-
 
         for m in range(0, number_of_middles):
             prev_entity_end = sorted_entity_list[m].end

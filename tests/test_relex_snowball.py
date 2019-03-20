@@ -1,87 +1,91 @@
-# # -*- coding: utf-8 -*-
-# """
+# -*- coding: utf-8 -*-
+"""
 
-# Test relex snowball
+Test relex snowball
 
-# """
+"""
 
-# from __future__ import absolute_import
-# from __future__ import division
-# from __future__ import print_function
-# from __future__ import unicode_literals
-# import io
-# import sys
-# import logging
-# import os
-# import unittest
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+import io
+import sys
+import logging
+import os
+import unittest
 
-# from chemdataextractor.relex import Snowball, ChemicalRelationship, Relation, Entity
-# from chemdataextractor.model import BaseModel, StringType, ListType, ModelType, Compound
-# from chemdataextractor.parse.elements import I, R, Any, OneOrMore, Optional
-# from chemdataextractor.parse.common import lrb, rrb, delim
-# from chemdataextractor.parse.actions import join, merge
-# from chemdataextractor.parse.cem import chemical_name
-# from chemdataextractor.doc import Sentence
-
-
-# logging.basicConfig(level=logging.DEBUG)
-# log = logging.getLogger(__name__)
+from chemdataextractor.relex import Snowball, Relation, Entity, Cluster, Pattern, Phrase
+from chemdataextractor.model import TemperatureModel
+from chemdataextractor.model import BaseModel, StringType, ListType, ModelType, Compound
+from chemdataextractor.parse.elements import I, R, Any, OneOrMore, Optional, W
+from chemdataextractor.parse.common import lrb, rrb, delim
+from chemdataextractor.parse.actions import join, merge
+from chemdataextractor.parse.cem import chemical_name
+from chemdataextractor.doc import Sentence
+from chemdataextractor.parse.auto import AutoSentenceParser
 
 
-# # Create a new model
-# class CurieTemperature(BaseModel):
-#     specifier = StringType()
-#     value = StringType()
-#     units = StringType()
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
 
-# # Add to the available models
-# Compound.curie_temperatures = ListType(ModelType(CurieTemperature))
+# Define a test model
+class CurieTemperature(TemperatureModel):
+    specifier_expression = (W('Curie') + I('temperature')).add_action(join)
+    specifier = StringType(parse_expression=specifier_expression, required=True, updatable=True)
+    compound = ModelType(Compound, required=True)
 
-
-# # Define a very basic entity tagger
-# specifier = (I('curie') + I('temperature') + Optional(lrb | delim) + Optional(R('^T(C|c)(urie)?')) + Optional(rrb) | R('^T(C|c)(urie)?'))('specifier').add_action(join)
-# units = (R('^[CFK]\.?$'))('units').add_action(merge)
-# value = (R('^\d+(\.\,\d+)?$'))('value')
-
-# # Let the entities be any combination of chemical names, specifier values and units
-# entities = (chemical_name | specifier | value + units)
-
-# # Now create a very generic parse phrase that will match any combination of these entities
-# curie_temperature_phrase = (entities + OneOrMore(entities | Any()))('curie_temperature')
-# curie_temp_entities = [chemical_name, specifier, value, units]
-
-# # Define the relationship and give it a name
-# curie_temp_relationship = ChemicalRelationship(curie_temp_entities, curie_temperature_phrase, name='curie_temperatures')
+sb = Snowball(CurieTemperature, tc=0.5, tsim=0.5)
 
 
-# class TestSnowball(unittest.TestCase):
 
-#     maxDiff = None
-#     training_corpus = 'tests/data/relex/curie_training/'
-#     snowball_pkl = 'tests/data/relex/curie_temperatures.pkl'
-#     snowball_pkl_py2 = 'tests/data/relex/curie_temperatures_py2.pkl'
+class TestSnowball(unittest.TestCase):
 
-#     def test_load_snowball(self):
-#         if sys.version_info[0] == 2:
-#             sb = Snowball.load(self.snowball_pkl_py2)
-#         else:
-#             sb = Snowball.load(self.snowball_pkl)
-#         self.assertIsInstance(sb, Snowball)
+    maxDiff = None
+    training_corpus = 'tests/data/relex/curie_training_set/'
 
-#     # def test_extract(self):
-#     #     if sys.version_info[0] == 2:
-#     #         curie_temp_snowball = Snowball.load(self.snowball_pkl_py2)
-#     #     else:
-#     #         curie_temp_snowball = Snowball.load(self.snowball_pkl)
-#     #     curie_temp_snowball.save_file_name = 'curie_test_output'
-#     #     test_sentence = Sentence('BiFeO3 is ferromagnetic with a curie temperature of 1103 K and this is very interesting')
-#     #     result = curie_temp_snowball.extract(test_sentence)
-#     #     self.assertEqual(len(result), 1)
-#     #     expected_entities = [Entity('BiFeO3', chemical_name, 0, 1), Entity('curie temperature', specifier, 0,0), Entity('1103', value, 0,0), Entity('K', units, 0,0)]
-#     #     expected_relation = Relation(expected_entities, confidence=1.0)
-#     #     self.assertEqual(result[0], expected_relation)
-#     #     self.assertEqual(result[0].confidence, expected_relation.confidence)
+    def test_snowball_candidates(self):
+        """Test that Candidate Relation objects are correctly created
+        """
+        sentence = Sentence('The Curie temperature Tc of MnO is 120 K,')
+        candidates = [r.serialize() for r in sb.candidates(sentence.tagged_tokens)]
+        expected = [{'specifier': 'Curie temperature', 'compound': {'names': 'MnO'}, 'raw_value': '120', 'raw_units': 'K', 'confidence': 0}]
+        self.assertEqual(expected, candidates)
+    
+    def test_retrieve_entities(self):
+        """Test entity retrieval from a parse result
+        """
+        sentence = Sentence('BiFeO3 displays a Curie temperature of 1103 K,')
+        sentence_parser = [p for p in sb.model.parsers if isinstance(p, AutoSentenceParser)][0]
+        detected = []
+        for result in sentence_parser.root.scan(sentence.tagged_tokens):
+            if result:
+                for entity in sb.retrieve_entities(CurieTemperature, result[0]):
+                    detected.append((entity[0], entity[1]))
+        expected = [('1103', 'raw_value'), ('K', 'raw_units'), ('Curie temperature', 'specifier'), ('BiFeO3', ('compound', 'names'))]
+        self.assertCountEqual(detected, expected)
+    
+    def test_parse_sentence(self):
+        """Test Snowball Sentence Parsing
+        """
+        train_sentence = Sentence('The Curie temperature of BiFeO3 is 1103 K')
+        candidates = sb.candidates(train_sentence.tagged_tokens)
+        sb.update(train_sentence.raw_tokens, candidates)
+
+        test_sentence = Sentence('The Curie temperature for MnO is 120 K')
+        models = []
+        for model in sb.parse_sentence(test_sentence.tagged_tokens):
+            models.append(model.serialize())
+        expected = [{'CurieTemperature': {'compound': {'Compound': {'names': ['MnO']}},
+                        'confidence': 0.7333333333333333,
+                        'raw_units': 'K',
+                        'raw_value': '120',
+                        'specifier': 'Curie temperature',
+                        'units': 'Kelvin^(1.0)',
+                        'value': [120.0]}}]
+        self.assertEqual(expected, models)
 
 
-# if __name__ == '__main__':
-#     unittest.main()
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1021,7 +1021,7 @@ So, in the bash shell, from within the working directory you would use:
 
     .. code-block:: bash
 
-        $ sphinx-build -b html chemdataextractor-development/docs chemdataextractor-development/docs/_build/html
+        $ sphinx-build -b html docs docs/_build/html
 
 However, it is encouraged to set up a Sphinx Run configuration in the IDE you are using for development. It is very easy to do in Pycharm,
 where you can run sphinx within the same Python virtual environment you are using for the development of ChemDataExtractor.

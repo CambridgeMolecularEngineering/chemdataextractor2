@@ -1,27 +1,28 @@
 .. _source_code_docs:
 
 =====================
-Source Code Docs
+API Documentation
 =====================
 
 .. note:: Private methods are not included in the documentation!
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
    :caption: Contents
    :hidden:
 
+   source_code_docs/chemdataextractor
    source_code_docs/biblio
    source_code_docs/cli
    source_code_docs/doc
+   source_code_docs/model
    source_code_docs/nlp
    source_code_docs/parse
    source_code_docs/reader
    source_code_docs/relex
    source_code_docs/scrape
    source_code_docs/text
-   source_code_docs/chemdataextractor
 
 
 .. currentmodule:: chemdataextractor
@@ -31,7 +32,6 @@ Source Code Docs
    config
    data
    errors
-   model
    utils
 
 ---------------------------------------------------------
@@ -67,7 +67,24 @@ Source Code Docs
    doc.element
    doc.figure
    doc.table
+   doc.table_new
    doc.text
+
+---------------------------------------------------------
+
+.. autosummary::
+
+   model
+   model.base
+   model.model
+   model.units
+   model.units.unit
+   model.units.dimension
+   model.units.quantity_model
+   model.units.length
+   model.units.mass
+   model.units.time
+   model.units.temperature
 
 ---------------------------------------------------------
 
@@ -88,6 +105,7 @@ Source Code Docs
 
    parse
    parse.actions
+   parse.auto
    parse.base
    parse.cem
    parse.common
@@ -96,7 +114,6 @@ Source Code Docs
    parse.ir
    parse.mp
    parse.nmr
-   parse.table
    parse.tg
    parse.uvvis
 
@@ -116,6 +133,20 @@ Source Code Docs
    reader.uspto
    reader.elsevier
    reader.springer
+
+---------------------------------------------------------
+
+.. autosummary::
+
+   relex
+   relex.cluster
+   relex.entity
+   relex.pattern
+   relex.phrase
+   relex.relationship
+   relex.snowball
+   relex.utils
+
 
 ---------------------------------------------------------
 
@@ -145,20 +176,6 @@ Source Code Docs
    text.normalize
    text.processors
    text.unwrap
-
----------------------------------------------------------
-
-.. autosummary::
-
-   relex
-   relex.cluster
-   relex.entity
-   relex.pattern
-   relex.phrase
-   relex.relationship
-   relex.snowball
-   relex.utils
-
 
 
 

@@ -18,6 +18,7 @@ from lxml import etree
 
 from chemdataextractor.doc.text import Sentence
 from chemdataextractor.parse.ir import ir, IrParser
+from chemdataextractor.model import IrSpectrum
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -34,7 +35,9 @@ class TestParseIr(unittest.TestCase):
         result = next(ir.scan(s.tagged_tokens))[0]
         log.debug(etree.tostring(result, pretty_print=True, encoding='unicode'))
         self.assertEqual(expected, etree.tostring(result, encoding='unicode'))
-        for c in IrParser().parse(s.tagged_tokens):
+        parser = IrParser()
+        parser.model = IrSpectrum
+        for c in parser.parse_sentence(s.tagged_tokens):
             print(c.serialize())
 
     def test_ir1(self):

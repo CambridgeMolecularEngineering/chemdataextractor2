@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1301px" height="231px" viewBox="0 0 1301 231" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.6 (67491) - http://www.bohemiancoding.com/sketch -->
+    <title>Artboard</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Artboard" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="cde-logo" transform="translate(4.500000, 4.500000)">
+            <path d="M117.514,192.187 L82.022,171.696 L82.022,130.712 L117.514,110.221 L153.007,130.712 L153.007,171.696 L117.514,192.187 Z" id="Path" stroke="#FFFFFF" stroke-width="12" fill-opacity="0" fill="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="41.04,41.04,41.016,41.016,41.016,1200"></path>
+            <g id="Group" transform="translate(106.424000, 0.588000)" fill="#FFFFFF">
+                <path d="M0.979,0.912 L0.979,20.354" id="Path"></path>
+                <path d="M0.979,0.912 L0.979,20.354" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(106.424000, 20.588000)" fill="#FFFFFF">
+                <path d="M0.979,0.354 C0.979,5.889 6.134,10.376 12.493,10.376" id="Path"></path>
+                <path d="M0.979,0.354 C0.979,5.889 6.134,10.376 12.493,10.376" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(118.424000, 29.588000)" fill="#FFFFFF">
+                <path d="M0.493,1.376 L18.019,1.376" id="Path"></path>
+                <path d="M0.493,1.376 L18.019,1.376" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(129.424000, 23.588000)" fill="#FFFFFF">
+                <path d="M6.552,0.317 L6.552,44.462" id="Path"></path>
+                <polygon id="Path" points="12.552 0.317 12.552 58.556 0.552 51.871 0.552 0.317"></polygon>
+            </g>
+            <g id="Group" transform="translate(11.424000, 182.588000)" fill="#FFFFFF">
+                <path d="M33.413,1.22 L0.791,1.22" id="Path"></path>
+                <path d="M33.413,1.22 L0.791,1.22" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(1.424000, 173.588000)" fill="#FFFFFF">
+                <path d="M11.59,10.22 C5.231,10.22 0.076,5.733 0.076,0.198" id="Path"></path>
+                <path d="M11.59,10.22 C5.231,10.22 0.076,5.733 0.076,0.198" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(0.424000, 10.588000)" fill="#FFFFFF">
+                <path d="M1.076,164.494 L1.076,0.451" id="Path"></path>
+                <path d="M1.076,164.494 L1.076,0.451" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(1.424000, 0.588000)" fill="#FFFFFF">
+                <path d="M0.076,10.934 C0.076,5.399 5.231,0.912 11.59,0.912" id="Path"></path>
+                <path d="M0.076,10.934 C0.076,5.399 5.231,0.912 11.59,0.912" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(11.424000, 0.588000)" fill="#FFFFFF">
+                <path d="M0.791,0.912 L95.979,0.912" id="Path"></path>
+                <path d="M0.791,0.912 L95.979,0.912" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(20.424000, 48.588000)" fill="#FFFFFF" fill-opacity="0.77">
+                <path d="M0.622,0.95 L96.474,0.95" id="Path"></path>
+                <path d="M0.622,0.95 L96.474,0.95" id="Path" stroke-opacity="0.768512228" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(20.424000, 77.588000)" fill="#FFFFFF" fill-opacity="0.77">
+                <path d="M0.622,6.655 L67.11,6.655" id="Path"></path>
+                <polygon id="Path" points="79.531 0.655 58.528 12.655 0.622 12.655 0.622 0.655"></polygon>
+            </g>
+            <g id="Group" transform="translate(20.424000, 118.588000)" fill="#FFFFFF" fill-opacity="0.77">
+                <path d="M0.622,1.359 L24.413,1.359" id="Path"></path>
+                <path d="M0.622,1.359 L24.413,1.359" id="Path" stroke-opacity="0.768512228" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <g id="Group" transform="translate(20.424000, 148.588000)" fill="#FFFFFF" fill-opacity="0.77">
+                <path d="M0.622,0.564 L24.413,0.564" id="Path"></path>
+                <path d="M0.622,0.564 L24.413,0.564" id="Path" stroke-opacity="0.768512228" stroke="#FFFFFF" stroke-width="12"></path>
+            </g>
+            <path d="M113.888,1.5 L136.443,24.659 L136.443,30.964 L118.917,30.964 C112.558,30.964 107.403,26.477 107.403,20.942 L107.403,1.5 L113.888,1.5 Z" id="Path" stroke="#FFFFFF" stroke-width="12" fill-opacity="0" fill="#FFFFFF"></path>
+            <polygon id="Path" stroke="#FFFFFF" stroke-width="12" fill-opacity="0" fill="#000000" stroke-linecap="round" stroke-linejoin="round" points="117.514 219.804 58.105 185.504 58.105 116.904 117.514 82.604 176.924 116.904 176.924 185.504"></polygon>
+        </g>
+        <text id="ChemDataExtractor" font-family="HelveticaNeue, Helvetica Neue" font-size="120" font-weight="normal" letter-spacing="2.02588105" fill="#FFFFFF">
+            <tspan x="216.226655" y="159.876953">ChemDataExtractor</tspan>
+        </text>
+    </g>
+</svg>

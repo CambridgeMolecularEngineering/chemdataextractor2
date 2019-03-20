@@ -10,8 +10,9 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from ..scrape.clean import clean
-from ..doc.table import Table, Cell
-from ..doc.text import Caption, Footnote
+#from ..doc.table import Table
+from ..doc.table_new import Table
+from ..doc.text import Caption, Footnote, Cell
 from .markup import XmlReader
 
 

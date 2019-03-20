@@ -12,9 +12,7 @@ import logging
 import re
 
 from lxml.builder import E
-
-from ..model import Compound, IrSpectrum, IrPeak
-from .base import BaseParser
+from .base import BaseSentenceParser
 from ..utils import first
 from .actions import join, merge, strip_stop
 from .common import hyphen
@@ -77,23 +75,24 @@ peaks = (peak + ZeroOrMore(ZeroOrMore(delim | W('and')).hide() + peak))('peaks')
 ir = (prelude + peaks + Optional(delim) + Optional(units))('ir')
 
 
-class IrParser(BaseParser):
+class IrParser(BaseSentenceParser):
     """"""
     root = ir
 
     def interpret(self, result, start, end):
-        c = Compound()
-        i = IrSpectrum(
+        c = self.model.fields['compound'].model_class()
+        i = self.model(
             solvent=first(result.xpath('./solvent/text()'))
         )
+        peak_model = self.model.fields['peaks'].field.model_class
         units = first(result.xpath('./units/text()'))
         for peak_result in result.xpath('./peaks/peak'):
-            ir_peak = IrPeak(
+            ir_peak = peak_model(
                 value=first(peak_result.xpath('./value/text()')),
                 units=units,
                 strength=first(peak_result.xpath('./strength/text()')),
                 bond=first(peak_result.xpath('./bond/text()'))
             )
             i.peaks.append(ir_peak)
-        c.ir_spectra.append(i)
-        yield c
+        i.compound = c
+        yield i

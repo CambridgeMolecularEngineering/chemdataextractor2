@@ -27,13 +27,6 @@ chemdataextractor
     :members:
     :undoc-members:
 
-.model
-------------------------------------------------
-
-.. automodule:: chemdataextractor.model
-    :members:
-    :undoc-members:
-
 .utils
 ------------------------------------------------
 
