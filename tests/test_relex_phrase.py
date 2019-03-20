@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 # Define a test model
 class CurieTemperature(TemperatureModel):
     specifier_expression = (W('Curie') + I('temperature')).add_action(join)
-    specifier = StringType(parse_expression=specifier_expression, required=True, mutable=True)
+    specifier = StringType(parse_expression=specifier_expression, required=True, updatable=True)
     compound = ModelType(Compound, required=True)
 
 

@@ -391,10 +391,10 @@ class Document(BaseDocument):
                 if (self.models and type(record) in self.models) or not self.models:
                     cleaned_records.append(record)
 
-        # Reset mutables
+        # Reset updatables
         for el in self.elements:
             for model in el.models:
-                model.reset_mutables()
+                model.reset_updatables()
 
         # Append contextual records if they've filled required fields
         # for record in contextual_records:

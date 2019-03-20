@@ -50,7 +50,7 @@ These model types can now be defined with minimal effort as the various base-qua
 
 Models of this type have only 2 requirements:
 
-- A specifier with an associated parse expression (Optional, only required if autoparsers are desired). These parse expressions will be updated automatically using forward-looking Interdependency Resolution if the :python:`mutable` flag is set to :python:`True`.
+- A specifier with an associated parse expression (Optional, only required if autoparsers are desired). These parse expressions will be updated automatically using forward-looking Interdependency Resolution if the :python:`updatable` flag is set to :python:`True`.
 - If applicable, a compound entity, named :python:`compound`
 
 While previous models in ChemDataExtractor stored values and units as strings, these are now automatically extracted and stored as numbers and :class:`~chemdataextractor.model.units.unit.Unit` s, allowing for easy conversion and comparison. These changes are explored in more detail in `Addition of Units and Dimensions`_.
@@ -65,7 +65,7 @@ The entities also have properties:
 
 - :python:`contextual`: Whether or not the entity can be sourced from a different element to the rest of the entities, e.g. whether the entity can be completed with data from another sentence, or a different part of the table.
 
-- :python:`mutable`: Whether or not the :python:`parse_expression` can be updated based on definitions found in the document (see `Forward looking Interdependency resolution`_)
+- :python:`updatable`: Whether or not the :python:`parse_expression` can be updated based on definitions found in the document (see `Forward looking Interdependency resolution`_)
 
 We can also add arbitrarily-named entities with any parse expressions we like.
 Example::
@@ -77,11 +77,11 @@ Example::
         specifier = StringType(parse_expression=I('boiling')+I('point'),
                                required=True,
                                contextual=True,
-                               mutable=True)
+                               updatable=True)
         compound = ModelType(Compound,
                              required=True,
                              contextual=False,
-                             mutable=False)
+                             updatable=False)
         apparatus = ModelType(Apparatus, contextual=True)
         random_entity = StringType(parse_expression=I('complete')+I('nonsense'))
 
@@ -170,7 +170,7 @@ Due to the new ability of ChemDataExtractor to construct simple parsers automati
 
     class CurieTemperature(TemperatureModel):
         specifier_expression = (I('Curie')+I('temperature') | I('TC')).add_action(join)
-        specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, mutable=True)
+        specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, updatable=True)
         compound = ModelType(Compound, required=True, contextual=True)
 
 

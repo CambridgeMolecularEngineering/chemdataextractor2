@@ -213,15 +213,14 @@ class NeelTemperature(TemperatureModel):
     # expression = (I('T')+I('N')).add_action(merge)
     expression = I('TN')
     # specifier = I('TN')
-    # specifier = MutableAttribute(I('TN'))
-    specifier = StringType(parse_expression=expression, required=True, contextual=False, mutable=False)
+    specifier = StringType(parse_expression=expression, required=True, contextual=False, updatable=False)
     compound = ModelType(Compound, required=False, contextual=False)
 
 
 class CurieTemperature(TemperatureModel):
     # expression = (I('T') + I('C')).add_action(merge)
     expression = I('TC')
-    specifier = StringType(parse_expression=expression, required=True, contextual=False, mutable=False)
+    specifier = StringType(parse_expression=expression, required=True, contextual=False, updatable=False)
     compound = ModelType(Compound, required=False, contextual=False)
 
 

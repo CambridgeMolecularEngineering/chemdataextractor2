@@ -28,7 +28,7 @@ class BaseType(six.with_metaclass(ABCMeta)):
     # This is assigned by ModelMeta to match the attribute on the Model
     name = None
 
-    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None, mutable=False):
+    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None, updatable=False):
         """
 
         :param default: (Optional) The default value for this field if none is set.
@@ -36,26 +36,26 @@ class BaseType(six.with_metaclass(ABCMeta)):
         :param bool required: (Optional) Whether a value is required. Default False.
         :param bool contextual: (Optional) Whether this value is contextual. Default False.
         :param BaseParserElement parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement. Default None.
-        :param bool mutable: (Optional) Whether the parse_expression can be changed by the document as parsing occurs. Default False
+        :param bool updatable: (Optional) Whether the parse_expression can be changed by the document as parsing occurs. Default False
         """
         self.default = copy.deepcopy(default)
         self.null = null
         self.required = required
         self.contextual = contextual
         self.parse_expression = parse_expression
-        self.mutable = mutable
-        if self.parse_expression is None and self.mutable:
-            print('No parse_expression supplied but mutable set as True for ', type(self))
-            print('mutable refers to whether parse_expression can be changed by the document as parsing occurs. Setting mutable to False.')
-            self.mutable = False
-        if mutable:
+        self.updatable = updatable
+        if self.parse_expression is None and self.updatable:
+            print('No parse_expression supplied but updatable set as True for ', type(self))
+            print('updatable refers to whether parse_expression can be changed by the document as parsing occurs. Setting updatable to False.')
+            self.updatable = False
+        if updatable:
             self._default_parse_expression = copy.copy(parse_expression)
 
     def reset(self):
         """
         Reset the parse expression to the initial value.
         """
-        if self.mutable:
+        if self.updatable:
             self.parse_expression = copy.copy(self._default_parse_expression)
 
     def __get__(self, instance, owner):
@@ -277,17 +277,17 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         return str(self.serialize()).__hash__()
 
     @classmethod
-    def reset_mutables(cls):
+    def reset_updatables(cls):
         """
-        Reset all mutable parse_expressions of properties associated with the class.
+        Reset all updatable parse_expressions of properties associated with the class.
         """
         for key, field in six.iteritems(cls.fields):
-            if cls.fields[key].mutable:
+            if cls.fields[key].updatable:
                 cls.fields[key].reset()
 
     @classmethod
     def update(cls, definitions):
-        """Update this Element's mutable attributes with new information from definitions
+        """Update this Element's updatable attributes with new information from definitions
 
         Arguments:
             definitions {list} -- list of definitions found in this element
@@ -295,7 +295,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         log.debug("Updating model")
         for definition in definitions:
             for field in cls.fields:
-                if cls.fields[field].mutable:
+                if cls.fields[field].updatable:
                     matches = [i for i in cls.fields[field].parse_expression.scan(definition['tokens'])]
                     # print(matches)
                     if any(matches):

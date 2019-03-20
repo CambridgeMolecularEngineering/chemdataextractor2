@@ -43,13 +43,13 @@ class InteratomicDistance(LengthModel):
 
 class NeelTemperature(TemperatureModel):
     specifier_expression = (I('Néel') + I('temperature'))
-    specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, mutable=True)
+    specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, updatable=True)
     compound = ModelType(Compound, required=False, contextual=True)
 
 
 class CurieTemperature(TemperatureModel):
     specifier_expression = (I('Curie') + I('temperature'))
-    specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, mutable=True)
+    specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, updatable=True)
     compound = ModelType(Compound, required=False, contextual=True)
 
 
