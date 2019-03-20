@@ -14,7 +14,7 @@ from __future__ import unicode_literals
 import logging
 import unittest
 
-from chemdataextractor.model import Compound, MeltingPoint, UvvisSpectrum, UvvisPeak, Apparatus
+from chemdataextractor.model import Compound, MeltingPoint, UvvisSpectrum, UvvisPeak, Apparatus, BaseModel
 from chemdataextractor.model.units.temperature import TemperatureModel
 from chemdataextractor.parse.elements import I, W
 from chemdataextractor.model.base import StringType, ModelType
@@ -67,6 +67,22 @@ class TestModel(unittest.TestCase):
         spectrum.compound.names = ['Names']
         self.assertEqual(spectrum.contextual_fulfilled, True)
         Compound.fields['names'].contextual = False
+
+    def test_required_fulfilled(self):
+        class A(BaseModel):
+            attribute_1 = StringType(required=True)
+            attribute_2 = StringType(required=False)
+
+        class B(BaseModel):
+            a = ModelType(A, required=False)
+
+        a = A(attribute_2='Test')
+        self.assertFalse(a.required_fulfilled)
+        b = B(a=a)
+        self.assertTrue(b.required_fulfilled)
+        B.fields['a'].required = True
+        b = B(a=a)
+        self.assertFalse(b.required_fulfilled)
 
     def test_model_update_definitions(self):
         """Test that the model parse expressions update method.

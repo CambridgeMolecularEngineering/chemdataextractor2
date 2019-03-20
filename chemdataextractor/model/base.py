@@ -355,14 +355,12 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 if self[field_name] == field.default \
                    and field.required:
                     return False
-                if hasattr(self[field_name], 'required_fulfilled') and \
+                if field.required and hasattr(self[field_name], 'required_fulfilled') and \
                    not self[field_name].required_fulfilled:
                     log.debug('Required unfulfilled')
                     return False
             elif field.required and self[field_name] == field.default:
-                log.debug('Required unfulfilled')
                 return False
-        log.debug('Required fulfilled')
         return True
 
     def serialize(self, primitive=False):
