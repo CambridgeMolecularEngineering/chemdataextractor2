@@ -442,7 +442,7 @@ class TestParseDocument(unittest.TestCase):
             {'Compound': {'names': [u'5-Bromo-6-pentadecyl-2-hydroxybenzoic acid', u'DBAA'], 'roles': ['product']}},
             {'Compound': {'labels': [u'VII'], 'roles': [u'formula']}},
             {'MeltingPoint': {'units': u'Celsius^(1.0)', 'value': [70.0, 75.0], 'raw_value': '70-75', 'raw_units': '\xb0C.',
-             'compound': {'Compound': {'names': [u'5-Bromo-6-pentadecyl-2-hydroxybenzoic acid', u'DBAA'], 'roles': ['product']}}}}
+             'compound': {'Compound': {'labels': [u'VII'], 'roles': ['formula']}}}}
              ])  # example-3?
 
 
