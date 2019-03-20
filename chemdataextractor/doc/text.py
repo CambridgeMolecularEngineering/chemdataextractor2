@@ -738,6 +738,15 @@ class Sentence(BaseText):
                         elif hasattr(record, 'compound') and record.compound is not None:
                             seen_labels.update(record.compound.labels)
                         records.append(record)
+        i = 0
+        length = len(records)
+        while i < length:
+            j = 0
+            while j < length:
+                if i != j:
+                    records[j].merge_all(records[i])
+                j += 1
+            i += 1
         return records
 
     def __add__(self, other):

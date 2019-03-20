@@ -353,25 +353,41 @@ class Document(BaseDocument):
         log.debug(records)
         i = 0
         while i < (len_l - 1):
-            for j in range(i + 1, len_l):
+            j = i + 1
+            while j < len_l:
                 r = records[i]
                 other_r = records[j]
-                if isinstance(r, Compound) and isinstance(other_r, Compound):
+                r_compound = None
+                if isinstance(r, Compound):
+                    r_compound = r
+                elif hasattr(r, 'compound') and isinstance(r.compound, Compound):
+                    r_compound = r.compound
+                other_r_compound = None
+                if isinstance(other_r, Compound):
+                    other_r_compound = other_r
+                elif hasattr(other_r, 'compound') and isinstance(other_r.compound, Compound):
+                    other_r_compound = other_r.compound
+                if r_compound and other_r_compound:
                     # Strip whitespace and lowercase to compare names
-                    rnames_std = {''.join(n.split()).lower() for n in r.names}
-                    onames_std = {''.join(n.split()).lower() for n in other_r.names}
+                    rnames_std = {''.join(n.split()).lower() for n in r_compound.names}
+                    onames_std = {''.join(n.split()).lower() for n in other_r_compound.names}
 
                     # Clashing labels, don't merge
-                    if len(set(r.labels) - set(other_r.labels)) > 0 and len(set(other_r.labels) - set(r.labels)) > 0:
+                    if len(set(r_compound.labels) - set(other_r_compound.labels)) > 0 and len(set(other_r_compound.labels) - set(r_compound.labels)) > 0:
+                        j += 1
                         continue
 
-                    if any(n in rnames_std for n in onames_std) or any(l in r.labels for l in other_r.labels):
-                        records.pop(j)
-                        records.pop(i)
-                        records.append(r.merge(other_r))
-                        len_l -= 1
-                        i -= 1
+                    if any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels):
+                        r_compound.merge(other_r_compound)
+                        other_r_compound.merge(r_compound)
+                        if isinstance(r, Compound) and isinstance(other_r, Compound):
+                            records.pop(j)
+                            records.pop(i)
+                            records.append(r_compound)
+                            len_l -= 1
+                            i -= 1
                         break
+                j += 1
             i += 1
 
         i = 0

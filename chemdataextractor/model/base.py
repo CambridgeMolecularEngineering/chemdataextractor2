@@ -436,6 +436,49 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         self[field_name] = copy.copy(other)
         return self
 
+    def merge_all(self, other):
+        """
+        Merges any properties between other and self, regardless of whether that field is contextual.
+        Checks to make sure that there are no conflicts between the values contained in self and those in other.
+
+        .. note::
+
+            This method mutates the model it's called on **and** returns it.
+
+        :param other: The other model to merge into this model
+        :type other: BaseModel
+        :return: A merged model
+        :rtype: BaseModel
+        """
+
+        log.debug(self.serialize())
+        log.debug(other.serialize())
+        if type(other) == type(self):
+            # Check if the other seems to be describing the same thing as self.
+            match = True
+            for field_name, field in six.iteritems(self.fields):
+                if (self[field_name] is not None
+                  and other[field_name] is not None
+                  and self[field_name] != other[field_name]):
+                    match = False
+                    break
+            if match:
+                for field_name, field in six.iteritems(self.fields):
+                    if (self[field_name] is None
+                      and other.get(field_name, None) is not None):
+                        self[field_name] = other[field_name]
+        else:
+            for field_name, field in six.iteritems(self.fields):
+                if hasattr(field, 'model_class') and isinstance(other, field.model_class):
+                    log.debug('model class case')
+                    if self[field_name] is not None:
+                        self[field_name] = self[field_name].merge_all(
+                            other)
+                    elif self[field_name] is None:
+                        log.debug(field_name)
+                        self[field_name] = copy.copy(other)
+        return self
+
 
 @python_2_unicode_compatible
 class ModelList(MutableSequence):
