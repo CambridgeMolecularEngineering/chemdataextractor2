@@ -61,7 +61,7 @@ NOT_SUFFIX = {'I.', 'V.'}
 
 # Make attributes instead of dict style.
 # Parse from string as a class method.
-# Mutable attributes that can be set via constructor or modified at any time.
+# updatable attributes that can be set via constructor or modified at any time.
 # to_dict, to_json method?
 
 
