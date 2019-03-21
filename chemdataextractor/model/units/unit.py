@@ -322,9 +322,12 @@ class Unit(object):
         string = ''
         if self.magnitude != 0:
             string += '(10^' + str(self.magnitude) + ') * '
+        name_list = []
         if self.powers is not None:
             for key, value in six.iteritems(self.powers):
-                string += (type(key).__name__ + '^(' + str(value) + ')  ')
+                name_list.append((type(key).__name__ + '^(' + str(value) + ')  '))
+            for name in sorted(name_list):
+                string += name
             string = string[:-2]
         else:
             string += type(self).__name__
