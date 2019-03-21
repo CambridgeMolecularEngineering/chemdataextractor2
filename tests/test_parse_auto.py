@@ -47,6 +47,14 @@ class SpeedModel(QuantityModel):
     compound = ModelType(Compound)
 
 
+class AreaPerTime(Dimension):
+    constituent_dimensions = Length() ** 2 / Time()
+
+
+class AreaPerTimeModel(QuantityModel):
+    dimensions = AreaPerTime()
+
+
 class TestAutoRules(unittest.TestCase):
 
     def test_unit_element(self):
@@ -59,6 +67,15 @@ class TestAutoRules(unittest.TestCase):
         expected = [b'<raw_units>m/s</raw_units>']
         self.assertEqual(expected, results_list)
 
+    def test_unit_element_nospace(self):
+        test_sentence = Sentence('Area was increasing at 31 m2/s and')
+        units_expression = construct_unit_element(AreaPerTime()).with_condition(match_dimensions_of(AreaPerTimeModel))('raw_units')
+        results = units_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_units>m2/s</raw_units>']
+        self.assertEqual(expected, results_list)
 
 class TestAutoSentenceParser(unittest.TestCase):
 
