@@ -9,7 +9,7 @@ before_install:
   - tar -xzf geckodriver-v0.11.1-linux64.tar.gz -C geckodriver
   - export PATH=$PATH:$PWD/geckodriver
 install:
-  - sudo apt-get update
+  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
     else
