@@ -51,8 +51,11 @@ def construct_unit_element(dimensions):
     units_regex += '(\/)'
     units_regex2 = units_regex + '|([\+\-–−]?\d+(\.\d+)?)'
     units_regex2 += '))+$'
-    units_regex += '))+$'
-    return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex2))).add_action(merge)
+    units_regex += '))+'
+    units_regex += (units_regex2[1:-2] + '*')
+    units_regex += '$'
+    print(units_regex)
+    return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex) | R(pattern=units_regex2))).add_action(merge)
 
 
 def match_dimensions_of(model):
