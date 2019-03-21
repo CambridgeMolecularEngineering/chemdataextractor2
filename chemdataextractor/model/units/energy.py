@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 class Energy(Dimension):
-    constituent_dimensions = Mass() * Length()**2 / Time()**2
+    constituent_dimensions = Mass() * Length() / Time()
 
 
 class EnergyModel(QuantityModel):
@@ -72,6 +72,22 @@ class ElectronVolt(EnergyUnit):
         return error / 1.6021766208e-19
 
 
+class KiloWattHours(EnergyUnit):
+
+    def convert_value_to_standard(self, value):
+        return value * 3.6e6
+
+    def convert_value_from_standard(self, value):
+        return value / 3.6e6
+
+    def convert_error_to_standard(self, error):
+        return error * 3.6e6
+
+    def convert_error_from_standard(self, error):
+        return error / 3.6e6
+
+
 units_dict = {R('(J|j)(oule(s)?)?', group=0): Joule,
-              R('(E|e)(lectron)( )?(V|v)(olts)?', group=0): ElectronVolt}
+              R('(E|e)(lectron)( )?(V|v)(olts)?', group=0): ElectronVolt,
+              R('(K|k)(ilo)?[ -]?(W|w)(att)?[ -]?(H|h)(ours)?', group=0): KiloWattHours}
 Energy.units_dict.update(units_dict)
