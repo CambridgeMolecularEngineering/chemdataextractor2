@@ -40,7 +40,7 @@ def construct_unit_element(dimensions):
     """
     if not dimensions or not dimensions.units_dict:
         return None
-    units_regex = '(('
+    units_regex = '^(('
     for element in magnitudes_dict.keys():
         units_regex += '(' + element.pattern + ')|'
     units_regex = units_regex[:-1]
@@ -48,10 +48,11 @@ def construct_unit_element(dimensions):
     units_regex += '('
     for element in dimensions.units_dict:
         units_regex += '(' + element.pattern + ')|'
-    units_regex = units_regex[:-1]
-    units_regex += ')'
-    units_regex += ')+'
-    return OneOrMore(R(pattern=units_regex)).add_action(merge)
+    units_regex += '(\/)'
+    units_regex2 = units_regex + '|([\+\-–−]?\d+(\.\d+)?)'
+    units_regex2 += '))+$'
+    units_regex += '))+$'
+    return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex2))).add_action(merge)
 
 
 def match_dimensions_of(model):
