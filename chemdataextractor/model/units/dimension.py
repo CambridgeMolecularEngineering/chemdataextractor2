@@ -194,8 +194,12 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
     def __str__(self):
         string = ''
         if self._dimensions is not None:
+            name_list = []
             for key, value in six.iteritems(self._dimensions):
-                string += (type(key).__name__ + '^(' + str(value) + ')  ')
+                name_list.append((type(key).__name__ + '^(' + str(value) + ')  '))
+            for name in sorted(name_list):
+                string += name
+            string = string[:-2]
         else:
             string += type(self).__name__
         return string
