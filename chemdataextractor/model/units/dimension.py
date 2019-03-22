@@ -158,6 +158,16 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
             new_model._dimensions = dimensions
 
         new_model.units_dict = {}
+        # Look at whether the units_dict for self is different from the units_dict for each of the dimensions combined.
+        # If they're the same, then we can start from scratch, if they're different, that means we have some things that
+        # are specific to the parent, e.g. J for energy as opposed to as a combination of SI, so we need to
+        # preserve the units_dict.
+        trial_units_dict = {}
+        if self._dimensions:
+            for dimension in self._dimensions.keys():
+                trial_units_dict.update(dimension.units_dict)
+        if trial_units_dict != self.units_dict:
+            new_model.units_dict = copy.copy(self.units_dict)
         for dimension in dimensions.keys():
             new_model.units_dict.update(dimension.units_dict)
         return new_model
