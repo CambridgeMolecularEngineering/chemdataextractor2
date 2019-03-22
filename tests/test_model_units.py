@@ -112,6 +112,11 @@ class TestUnitClass(unittest.TestCase):
         dimensionless = DimensionlessUnit()
         self.assertEqual(dimensionless, dimensionless_div)
 
+    def test_unit_as_string(self):
+        test_unit = Hour(magnitude=3) / (Meter(magnitude=2) * Celsius())
+        expected = "(10^1.0) * Celsius^(-1.0)  Hour^(1.0)  Meter^(-1.0)"
+        self.assertEqual(str(test_unit), expected)
+
     def test_composite_unit(self):
         class Force(Dimension):
             constituent_dimensions = Mass() * Length() * Time() ** (-2.0)
@@ -172,6 +177,11 @@ class TestDimensions(unittest.TestCase):
         class NewDimension2(Dimension):
             constituent_dimensions = NewDimension() / Length()
         self.assertDictEqual(NewDimension2.units_dict, Time.units_dict)
+
+    def test_dimension_as_string(self):
+        test_dimension = Length() * Time() / Mass()
+        expected = 'Length^(1.0)  Mass^(-1.0)  Time^(1.0)'
+        self.assertEqual(str(test_dimension), expected)
 
 
 class TestQuantity(unittest.TestCase):
