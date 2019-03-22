@@ -209,4 +209,4 @@ autodoc_default_options = {'special-members': '__init__',
                            'show-inheritance': 'true'}
 autodoc_member_order = 'bysource'
 autodoc_mock_imports = ['appdirs', 'bs4', 'click', 'cssselect', 'DAWG', 'lxml', 'nltk',
-                        'six', 'PyYAML', 'selenium', 'tabledataextractor']
+                        'six', 'PyYAML', 'selenium', 'tabledataextractor', 'yaml']
