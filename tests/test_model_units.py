@@ -16,18 +16,18 @@ from __future__ import unicode_literals
 import six
 import logging
 import unittest
+import copy
 
-
-#from chemdataextractor.parse.units.quantity import Dimensionless, DimensionlessUnit, DimensionlessModel, QuantityModel
 from chemdataextractor.model.units.quantity_model import QuantityModel, DimensionlessModel
 from chemdataextractor.model.units.dimension import Dimensionless, Dimension
 from chemdataextractor.model.units.unit import DimensionlessUnit, Unit
-
 
 from chemdataextractor.model.units.time import Second, Minute, Hour, Time, TimeModel
 from chemdataextractor.model.units.length import Meter, Mile, Length, LengthModel
 from chemdataextractor.model.units.temperature import Temperature, TemperatureModel, Kelvin, Celsius, Fahrenheit
 from chemdataextractor.model.units.mass import Mass, Gram
+
+from chemdataextractor.parse.elements import R
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -41,6 +41,18 @@ class Speed(Dimension):
 
 class SpeedModel(QuantityModel):
     dimensions = Length() / Time()
+
+
+class SpeedUnit(QuantityModel):
+    def __init__(self, magnitude=0.0, powers=None):
+        super(SpeedUnit, self).__init__(Speed(), magnitude, powers)
+
+
+class WeirdUnit(SpeedUnit):
+    pass
+
+weird_entry = {R('weirdunit', group=0): WeirdUnit}
+Speed.units_dict.update(weird_entry)
 
 
 class TestUnitClass(unittest.TestCase):
@@ -145,7 +157,21 @@ class TestDimensions(unittest.TestCase):
         self.assertEqual(dimension1.__hash__(), dimension2.__hash__())
 
     def test_units_dict_composite(self):
-        self.assertEqual(Speed.units_dict, (Length() / Time()).units_dict)
+        expected_dict = copy.copy((Length() / Time()).units_dict)
+        expected_dict.update(weird_entry)
+        self.assertDictEqual(Speed.units_dict, expected_dict)
+
+    def test_units_dict_divide_composite_1(self):
+        class NewDimension(Dimension):
+            constituent_dimensions = Speed() / Length()
+        self.assertDictEqual(NewDimension.units_dict, Speed.units_dict)
+
+    def test_units_dict_divide_composite_2(self):
+        class NewDimension(Dimension):
+            constituent_dimensions = Length() / Time()
+        class NewDimension2(Dimension):
+            constituent_dimensions = NewDimension() / Length()
+        self.assertDictEqual(NewDimension2.units_dict, Time.units_dict)
 
 
 class TestQuantity(unittest.TestCase):
