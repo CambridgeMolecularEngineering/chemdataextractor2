@@ -38,8 +38,8 @@ API Documentation
 
 .. autosummary::
 
-   chemdataextractor.biblio
-   chemdataextractor.biblio.bibtex
+   biblio
+   biblio.bibtex
    biblio.person
    biblio.xmp
 

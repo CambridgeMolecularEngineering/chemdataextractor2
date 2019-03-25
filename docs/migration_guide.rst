@@ -39,7 +39,7 @@ This new structure has several advantages:
 Changes to Models
 ----------------------------------
 
-In addition to the overall change of structure, involving each property optionally owning a :class:`~chemdataextractor.model.model.Compound`, new types of models have  been introduced for the majority usecase of extracting a physical quantity structure, i.e. the case with a specifier, a value, and units, such as melting points, interatomic distances, and cooling rates. 
+In addition to the overall change of structure, involving each property optionally owning a :class:`~chemdataextractor.model.model.Compound`, new types of models have  been introduced for the majority usecase of extracting a physical quantity structure, i.e. the case with a specifier, a value, and units, such as melting points, interatomic distances, and cooling rates.
 These models are all defined as subclasses of a new type of model, :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`.
 
 .. note::
@@ -188,12 +188,12 @@ Due to the new ability of ChemDataExtractor to construct simple parsers automati
 Parsing
 -----------------------------------
 
-As a result we now have 3 different text parsing methods, each with its own adantages and disadvantages when it comes to extraction precision and recall.
+As a result we now have 3 different text parsing methods, each with its own advantages and disadvantages when it comes to extraction precision and recall.
 
-The auto-generated text-parsers, of type :class:`~chemdataextractor.parse.auto.AutoSentenceParser` are very lenient. The root phrases for these parsers find any sentences that contain the required entities and return the first match to the models. As such, parsing with only the autosentence parser will yield high recall but low precision.
+The auto-generated text-parsers, of type :class:`~chemdataextractor.parse.auto.AutoSentenceParser` are very lenient. The root phrases for these parsers find any sentences that contain the required entities and return the first match to the models. As such, parsing with only the auto sentence parser will yield high recall but low precision.
 Furthermore, you will only extract correct relations from sentences that contain single instances of your model.
 
-Snowball parsing is the opposite end of the precision-recall spectrum. Snowball is designed to be high precision and low recall based on the training data. 
+Snowball parsing is the opposite end of the precision-recall spectrum. Snowball is designed to be high precision and low recall based on the training data.
 
 Therefore, if you wish to extract with both high precision and high recall, you will still need to write parse rules for complicated sentence structures, or train Snowball very extensively.
 
@@ -450,8 +450,7 @@ To define this model is great, but we also need to upgrade the parser to make su
                             raw_units=raw_units,
                             value=self.extract_value(raw_value),
                             error=self.extract_error(raw_value),
-                            units=self.extract_units(raw_units, strict=True),
-                            compound=Compound())
+                            units=self.extract_units(raw_units, strict=True))
                 yield boiling_point
             except TypeError as e:
                 log.debug(e)
@@ -463,22 +462,96 @@ This is actually the easiest part of upgrading to take advantage of 1.5.0's feat
 
     from chemdataextractor.model import TemperatureModel, StringType, ModelType
     from chemdataextractor.model import Compound
+    from chemdataextractor.parse.actions import join
+    from chemdataextractor.parse import I
 
     class BoilingPoint(TemperatureModel):
-        specifier = StringType(parse_expression=I('Boiling') + I('Point'))
+        specifier = StringType(parse_expression=I('Boiling') + I('Point'), required=True)
         compound = ModelType(Compound)
 
-Alternatively, if you want to use the automatic parsers and also any parsers you wrote yourself, you can do the following::
+Alternatively, if you want to use the parser you wrote yourself instead of the automatic sentence parser, you can do the following::
 
     from chemdataextractor.model import TemperatureModel, StringType, ModelType
     from chemdataextractor.model import Compound
+       from chemdataextractor.parse.actions import join
+    from chemdataextractor.parse import I
     from chemdataextractor.parse.auto import AutoSentenceParser, AutoTableParser
 
-    class BoilingPoint(TemperatureModel):
-        specifier = StringType(parse_expression=I('Boiling') + I('Point'))
-        compound = ModelType(Compound)
-        parsers = [BpParser(), AutoSentenceParser(), AutoTableParser()]
 
+    class BoilingPoint(TemperatureModel):
+        specifier = StringType(parse_expression=(I('Boiling') + I('Point')).add_action(join), required=True)
+        compound = ModelType(Compound)
+        parsers = [BpParser(), AutoTableParser()]
+
+.. note::
+
+    All parsers added to a class under parsers will be run on the document, so it's best not to have more than one parser which acts on the same type of element to avoid having a large number of duplicated results.
+
+.. note::
+
+    For autoparsers to work correctly, it is **strongly** recommended that you set :python:`required=True` on specifier, but in that case, it's also important that you set some value for the specifier (it doesn't matter what) when extracted with a manual parser, else the record will not be returned.
+
+    Also key to making autoparsers work correctly is to always include :python:`add_action(join)` to the end of any parse expressions to ensure that multi-word parse expressions can be picked up correctly by the autoparser.
+
+Preview: Nested Models
+-----------------------
+
+v1.5.0 brings the capability to nest models within other models. A simple example of this is that many models, such as the :python:`BoilingPoint` model we defined earlier, contains a model for compound. However, this also works with user-defined properties, and each of these models only needs to parse its surface-level properties, with everything else being merged in later. This nesting can in theory go multiple levels.
+
+As a toy example, say we wanted to associate some additional properties to the boiling point, like the specific heat capacity of the material, and we're in turn interested in the dimensions of the apparatus used to measure the specific heat capacity::
+
+    from chemdataextractor.model import TemperatureModel, LengthModel, StringType, ModelType, QuantityModel, Compound
+    from chemdataextractor.model.units import Length, Mass, Temperature, Time
+    from chemdataextractor.parse.actions import join
+    from chemdataextractor.parse import I
+    from chemdataextractor.doc import Document, Paragraph, Heading
+
+
+    class ApparatusLength(LengthModel):
+        specifier = StringType(parse_expression=(I('measured') + I('with')).add_action(join), required=True)
+
+
+    class SpecificHeatCapacity(QuantityModel):
+        dimensions = ((Length() ** 2) * Mass()) / ((Time() ** 2) * Temperature())
+        specifier = StringType(parse_expression=(I('Specific') + I('Heat') + I('Capacity')).add_action(join), required=True)
+        apparatuslength = ModelType(ApparatusLength, contextual=True)
+
+
+    class BoilingPoint(TemperatureModel):
+        specifier = StringType(parse_expression=(I('Boiling') + I('Point')).add_action(join), required=True)
+        compound = ModelType(Compound, contextual=True)
+        heat_capacity = ModelType(SpecificHeatCapacity, required=True, contextual=True)
+
+
+    document = Document(
+        Heading('H2O boiling point, measured with a 200cm long apparatus'),
+        Paragraph('H2O was found to have a boiling point of 100 °C, with a specific heat capacity of 200 kgm2K-1s-2).'))
+    document.models = [BoilingPoint]
+    print(document.records.serialize())
+
+The above code will print::
+
+     [{'BoilingPoint':
+    {'raw_value': '100',
+    'raw_units': '°C',
+    'value': [100.0],
+    'units': 'Celsius^(1.0)',
+    'specifier': 'boiling point',
+    'compound': {'Compound': {'names': ['H2O']}},
+    'heat_capacity': {'SpecificHeatCapacity':
+                     {'raw_value': '200',
+                     'raw_units': 'kgm2K-1s-2',
+                     'value': [200.0],
+                     'units': '(10^3.0) * Gram^(1.0)  Kelvin^(-1.0)  Meter^(2.0)  Second^(-2.0)',
+                     'specifier': 'specific heat capacity',
+                     'apparatuslength': {'ApparatusLength':
+                                        {'raw_value': '200',
+                                        'raw_units': 'cm',
+                                        'value': [200.0],
+                                        'units': '(10^-2.0) * Meter^(1.0)',
+                                        'specifier': 'measured with'}}}}}}]
+
+While this is obviously a toy example, we believe this is a powerful paradigm that represents the long-term future of ChemDataExtractor. It's still a preview as some parts of ChemDataExtractor may not work on it yet, but as shown above, it's already quite advanced in what it can do.
 
 
 
