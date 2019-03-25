@@ -209,5 +209,4 @@ todo_include_todos = True
 autodoc_default_options = {'special-members': '__init__',
                            'show-inheritance': 'true'}
 autodoc_member_order = 'bysource'
-autodoc_mock_imports = ['bs4', 'click', 'cssselect', 'lxml', 'nltk',
-                        'six', 'PyYAML', 'selenium', 'tabledataextractor', 'yaml', 'pycrfsuite']
+autodoc_mock_imports = ['tabledataextractor']
