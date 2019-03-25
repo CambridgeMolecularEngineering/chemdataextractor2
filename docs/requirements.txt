@@ -4,4 +4,4 @@ ipykernel
 m2r == 0.2.1
 nbsphinx == 0.3.5
 nbsphinx-link == 1.1.1
-
+appdirs>=1.4.0
