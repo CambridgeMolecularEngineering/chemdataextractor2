@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 
 
 class Compound(BaseModel):
-    names = ListType(StringType(), parse_expression=names_only, required=True)
+    names = ListType(StringType(), parse_expression=names_only)
     labels = ListType(StringType(), parse_expression=labels_only)
     roles = ListType(StringType(), parse_expression=roles_only)
     parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
