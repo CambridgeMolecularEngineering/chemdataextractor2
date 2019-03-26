@@ -1,3 +1,5 @@
+.. _migration_guide:
+
 .. role:: python(code)
    :language: python
 
@@ -278,7 +280,6 @@ would now be written as::
         def interpret(self, result, start, end):
             boiling_point = self.model(value=first(result.xpath('./value/text()')),
                                        units=first(result.xpath('./units/text()')))
-            boiling_point.compound = Compound()
             yield boiling_point
 
 Note also that the parser now inherits from :class:`~chemdataextractor.parse.base.BaseSentenceParser` as opposed to :class:`~chemdataextractor.parse.base.BaseParser` as it is a parser for sentences.
@@ -316,7 +317,7 @@ For example, the :python:`BoilingPoint` class we wrote earlier can be further tr
         compound = ModelType(Compound)
         parsers = [BpParser()]
 
-Defining your own dimensions is also easy; an example of how it's done within ChemDataExtractor for temperatures is provided below, and further information can be found in the :mod:`API documentation <chemdataextractor.model.units>`. ::
+Defining your own dimensions is also easy; an example of how it's done within ChemDataExtractor for temperatures is provided below, and further information can be found in the :mod:`API documentation <chemdataextractor.model.units>`, and in the documentation on :ref:`creating new units and dimensions<creating_units>`. ::
 
     from __future__ import absolute_import
     from __future__ import division
