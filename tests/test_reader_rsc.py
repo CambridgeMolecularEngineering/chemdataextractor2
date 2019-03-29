@@ -43,14 +43,14 @@ class TestRscHtmlReader(unittest.TestCase):
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'rsc', fname), 'rb')
         content = f.read()
         d = r.readstring(content)
-        self.assertEqual(len(d.elements), 61)
+        self.assertEqual(len(d.elements), 62)
 
     def test_document_usage(self):
         """Test RscHtmlReader used via Document.from_file."""
         fname = '10.1039_C6OB02074G.html'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'rsc', fname), 'rb')
         d = Document.from_file(f, readers=[RscHtmlReader()])
-        self.assertEqual(len(d.elements), 61)
+        self.assertEqual(len(d.elements), 62)
 
 
 if __name__ == '__main__':

@@ -218,6 +218,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
 
     def parse(self, fstring):
         root = self._make_tree(fstring)
+        self.root = root
 
         if root is None:
             raise ReaderError
