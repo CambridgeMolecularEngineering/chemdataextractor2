@@ -2,7 +2,7 @@
 """
 Elsevier XML reader
 
-::codeauthor: Callum Court (cc889@cam.ac.uk)
+.. codeauthor:: Callum Court <cc889@cam.ac.uk>
 
 
 Readers for Elsevier XML files.
