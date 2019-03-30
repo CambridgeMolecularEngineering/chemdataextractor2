@@ -5,7 +5,7 @@ chemdataextractor.tests.test_reader_els.py
 
 Test reader for Elsevier.
 
-Juraj Mavračić (jm2111@cam.ac.uk)
+.. codeauthor:: Juraj Mavračić <jm2111@cam.ac.uk>
 Callum Court (cc889@cam.ac.uk)
 
 """
