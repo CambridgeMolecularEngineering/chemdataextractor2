@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Readers for Elsevier XML files.
+Elsevier XML reader
 
-jm2111
+.. codeauthor:: Callum Court <cc889@cam.ac.uk>
+
+
+Readers for Elsevier XML files.
 
 """
 
@@ -10,122 +13,80 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
-from ..scrape.clean import Cleaner
+import six
+from ..scrape.clean import clean, Cleaner
+from ..doc.table import Cell, Table
+from ..doc.text import Caption
 from .markup import XmlReader
 from lxml import etree
-import six
 import re
 
-from ..scrape import BLOCK_ELEMENTS
+# XML stripper that removes the tags around numbers in chemical formulas
+strip_els_xml = Cleaner(strip_xpath='.//ce:inf | .//ce:italic | .//ce:bold | .//ce:formula | .//mml:* | .//ce:sup', 
+                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:table//ce:sup | .//ce:cross-ref | .//ce:cross-refs')
 
-class CleanerElsevier(Cleaner):
-    """Some modifications for cleaning Elsevier XML documents"""
-    def __init__(self, **kwargs):
-        super(CleanerElsevier, self).__init__(**kwargs)
 
-    def __call__(self, doc):
-        """Clean the document."""
-        if hasattr(doc, 'getroot'):
-            doc = doc.getroot()
-
-        if self.fix_whitespace:
-            # Ensure newlines around block elements
-            for el in doc.iterdescendants():
-                if el.tag in BLOCK_ELEMENTS:
-                    el.tail = (el.tail or '') + '\n'
-                    previous = el.getprevious()
-                    parent = el.getparent()
-                    if previous is None:
-                        parent.text = (parent.text or '') + '\n'
+def fix_elsevier_xml_whitespace(document):
+    """ Fix tricky xml tags"""
+    # space hsp  and refs correctly
+    for el in document.xpath('.//ce:hsp'):
+        parent = el.getparent()
+        previous = el.getprevious()
+        if parent is None:
+            continue
+        # Append the text to previous tail (or parent text if no previous), ensuring newline if block level
+        if el.text and isinstance(el.tag, six.string_types):
+            if previous is None:
+                if parent.text:
+                    if parent.text.endswith(' '):
+                        parent.text = (parent.text or '') + '' + el.text
                     else:
-                        previous.tail = (previous.tail or '') + '\n'
-
-        # Remove elements that match kill_xpath
-        if self.kill_xpath:
-            for el in doc.xpath(self.kill_xpath, namespaces=self.namespaces):
-                parent = el.getparent()
-                # We can't kill the root element!
-                if parent is None:
-                    continue
-                if el.tail:
-                    previous = el.getprevious()
-                    if previous is None:
-                        parent.text = (parent.text or '') + el.tail
+                        parent.text = (parent.text or '') + ' ' + el.text
+            else:
+                if previous.tail:
+                    if previous.tail.endswith(' '):
+                        previous.tail = (previous.tail or '') + '' + el.text
                     else:
-                        previous.tail = (previous.tail or '') + el.tail
-                parent.remove(el)
+                        previous.tail = (previous.tail or '') + ' ' + el.text
+        # Append the tail to last child tail, or previous tail, or parent text, ensuring newline if block level
+        if el.tail:
+            if len(el):
+                last = el[-1]
+                last.tail = (last.tail or '') + el.tail
+            elif previous is None:
+                if el.tail.startswith(' '):
+                    parent.text = (parent.text or '') + '' + el.tail
+                else:
+                    parent.text = (parent.text or '') + ' ' + el.tail
+            else:
+                if el.tail.startswith(' '):
+                    previous.tail = (previous.tail or '') + '' + el.tail
+                else:
+                    previous.tail = (previous.tail or '') + ' ' + el.tail
 
-        # Collect all the allowed elements
-        to_keep = [el for el in doc.xpath(self.allow_xpath, namespaces=self.namespaces)] if self.allow_xpath else []
-
-        # Replace elements that match strip_xpath with their contents
-        if self.strip_xpath:
-            for el in doc.xpath(self.strip_xpath, namespaces=self.namespaces):
-                # Skip if allowed by allow_xpath
-                if el in to_keep:
-                    continue
-                parent = el.getparent()
-                previous = el.getprevious()
-                # We can't strip the root element!
-                if parent is None:
-                    continue
-                # Append the text to previous tail (or parent text if no previous), ensuring newline if block level
-                if el.text and isinstance(el.tag, six.string_types):
-                    if previous is None:
-                        parent.text = (parent.text or '') + el.text
-                    else:
-                        previous.tail = (previous.tail or '') + el.text
-                # Append the tail to last child tail, or previous tail, or parent text, ensuring newline if block level
-                if el.tail:
-                    if len(el):
-                        last = el[-1]
-                        last.tail = (last.tail or '') + el.tail
-                    elif previous is None:
-                        parent.text = (parent.text or '') + el.tail
-                    else:
-                        previous.tail = (previous.tail or '') + el.tail
-                index = parent.index(el)
-                parent[index:index+1] = el[:]
-
-        # Collapse whitespace down to a single space or a single newline
-        if self.fix_whitespace:
-            for el in doc.iter():
-                if el.text is not None:
-                    # changed by jm2111 for elsevier, we don't need newline characters
-                    el.text = re.sub(r'\s*\n\s*', ' ', el.text)
-                    el.text = re.sub(r'[ \t]+', ' ', el.text)
-                    el.text = re.sub(r'\s+', ' ', el.text)
-                if el.tail is not None:
-                    # changed by jm2111 for elsevier, we don't need newline characters
-                    el.tail = re.sub(r'\s*\n\s*', ' ', el.tail)
-                    el.tail = re.sub(r'[ \t]+', ' ', el.tail)
-                    el.tail = re.sub(r'\s+', ' ', el.tail)
-
-# Override default cleaner
-clean = CleanerElsevier()
-
-# XML stripper that removes the taggs around numbers in chemical formulas
-strip_els_xml = CleanerElsevier(strip_xpath='.//ce:inf | .//ce:italic | .//ce:sup')
+        index = parent.index(el)
+        parent[index:index + 1] = el[:]
+    return document
 
 
-def elsevier_xml_whitespace(document):
+def els_xml_whitespace(document):
     """ Remove whitespace in xml.text or xml.tails for all elements, if it is only whitespace """
     # selects all tags and checks if the text or tail are spaces
     for el in document.xpath('//*'):
-        if six.text_type(el.text).isspace():
+        if str(el.text).isspace():
             el.text = ''
-        if six.text_type(el.tail).isspace():
+        if str(el.tail).isspace():
             el.tail = ''
-    # DEBUG, check the document
-    # print(etree.tostring(document, pretty_print=True))
+    # debug, check the document
+    #print(etree.tostring(document, pretty_print=True))
     # sys.exit()
     return document
+
 
 class ElsevierXmlReader(XmlReader):
     """Reader for Elsevier XML documents."""
 
-    cleaners = [clean, elsevier_xml_whitespace, strip_els_xml]
+    cleaners = [clean, fix_elsevier_xml_whitespace, els_xml_whitespace, strip_els_xml]
 
     etree.FunctionNamespace("http://www.elsevier.com/xml/svapi/article/dtd").prefix = 'default'
     etree.FunctionNamespace("http://www.elsevier.com/xml/bk/dtd").prefix = 'bk'
@@ -151,18 +112,23 @@ class ElsevierXmlReader(XmlReader):
     table_head_row_css = 'cals|thead cals|row'
     table_body_row_css = 'cals|tbody cals|row'
     table_cell_css = 'ce|entry'
+    table_footnote_css = 'table-wrap-foot p'
     figure_css = 'ce|figure'
     figure_caption_css = 'ce|figure ce|caption'
+    figure_label_css = 'ce|figure ce|label'
     reference_css = 'ce|cross-refs'
     citation_css = 'ce|bib-reference'
-    ignore_css = 'xocs|ref-info, default|scopus-eid, xocs|normalized-srctitle,' \
+    ignore_css = 'ce|bibliography, ce|acknowledgment, ce|correspondence, ce|author, ce|doi, ja|jid, ja|aid, ce|pii, xocs|oa-sponsor-type, xocs|open-access, default|openaccess,'\
+                 'default|openaccessArticle, dc|format, dc|creator, dc|identifier,'\
+                'default|eid, default|pii, xocs|meta, xocs|ref-info, default|scopus-eid,'\
+                 'xocs|normalized-srctitle,' \
                  'xocs|eid, xocs|hub-eid, xocs|normalized-first-auth-surname,' \
                  'xocs|normalized-first-auth-initial, xocs|refkeys,' \
                  'xocs|attachment-eid, xocs|attachment-type,' \
                  'ja|jid, ce|given-name, ce|surname, ce|affiliation, ce|cross-refs, ce|cross-ref,' \
                  'ce|grant-sponsor, ce|grant-number, prism|copyright,' \
                  'xocs|pii-unformatted, xocs|ucs-locator, ce|copyright,' \
-                 'prism|publisher, xocs|copyright-line, xocs|cp-notice,' \
+                 'prism|publisher, prism|*, xocs|copyright-line, xocs|cp-notice,' \
                  'dc|description'
 
     def detect(self, fstring, fname=None):

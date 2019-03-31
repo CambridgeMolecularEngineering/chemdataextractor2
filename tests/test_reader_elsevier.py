@@ -5,7 +5,8 @@ chemdataextractor.tests.test_reader_els.py
 
 Test reader for Elsevier.
 
-Juraj Mavračić (jm2111@cam.ac.uk)
+.. codeauthor:: Juraj Mavračić <jm2111@cam.ac.uk>
+.. codeauthor:: Callum Court <cc889@cam.ac.uk>
 
 """
 
@@ -42,14 +43,14 @@ class TestElsXMLReader(unittest.TestCase):
         content = f.read()
         d = r.readstring(content)
         f.close()
-        self.assertEqual(len(d.elements), 913)
+        self.assertEqual(len(d.elements), 165)
 
     def test_document_usage(self):
         """Test RscXMLReader used via Document.from_file."""
         fname = 'j.jnoncrysol.2017.07.006.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'elsevier', fname), 'rb')
         d = Document.from_file(f, readers=[ElsevierXmlReader()])
-        self.assertEqual(len(d.elements), 913)
+        self.assertEqual(len(d.elements), 165)
 
 
 if __name__ == '__main__':
