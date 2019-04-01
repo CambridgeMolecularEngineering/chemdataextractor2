@@ -72,6 +72,21 @@ class ElectronVolt(EnergyUnit):
         return error / 1.6021766208e-19
 
 
+class Erg(EnergyUnit):
+    def convert_value_to_standard(self, value):
+        return 1e-7 * value
+
+    def convert_value_from_standard(self, value):
+        return 1e7 * value
+
+    def convert_error_to_standard(self, error):
+        return 1e-7 * error
+
+    def convert_error_from_standard(self, error):
+        return 1e7 * error
+
+
 units_dict = {R('(J|j)(oule(s)?)?', group=0): Joule,
-              R('(E|e)(lectron)( )?(V|v)(olts)?', group=0): ElectronVolt}
+              R('(E|e)(lectron)( )?(V|v)(olts)?', group=0): ElectronVolt,
+              R('(E|e)rg', group=0): Erg}
 Energy.units_dict.update(units_dict)
