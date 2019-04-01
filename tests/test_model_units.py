@@ -178,6 +178,12 @@ class TestDimensions(unittest.TestCase):
             constituent_dimensions = NewDimension() / Length()
         self.assertDictEqual(NewDimension2.units_dict, Time.units_dict)
 
+    def test_units_dict_divide_composite_3(self):
+        self.maxDiff = None
+        class NewDimension(Dimension):
+            constituent_dimensions = Length() / Speed()
+        self.assertDictEqual(NewDimension.units_dict, Speed.units_dict)
+
     def test_dimension_as_string(self):
         test_dimension = Length() * Time() / Mass()
         expected = 'Length^(1.0)  Mass^(-1.0)  Time^(1.0)'

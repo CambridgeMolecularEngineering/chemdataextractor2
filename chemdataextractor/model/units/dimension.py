@@ -168,6 +168,14 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
                 trial_units_dict.update(dimension.units_dict)
         if trial_units_dict != self.units_dict:
             new_model.units_dict = copy.copy(self.units_dict)
+
+        trial_units_dict_other = {}
+        if other._dimensions:
+            for dimension in other._dimensions.keys():
+                trial_units_dict_other.update(dimension.units_dict)
+        if trial_units_dict_other != other.units_dict:
+            new_model.units_dict.update(other.units_dict)
+
         for dimension in dimensions.keys():
             new_model.units_dict.update(dimension.units_dict)
         return new_model
