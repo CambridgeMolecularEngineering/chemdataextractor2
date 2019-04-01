@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Chemical entity mention parser elements.
+..codeauthor:: Matt Swain (mcs07@cam.ac.uk)
+..codeauthor:: Callum Court (cc889@cam.ac.uk)
 
 """
 
@@ -14,7 +16,7 @@ from lxml import etree
 
 from .actions import join, fix_whitespace
 from .common import roman_numeral, cc, nnp, hyph, nns, nn, cd, ls, optdelim, bcm, icm, rbrct, lbrct, sym, jj, hyphen, quote, \
-    dt
+    dt, delim
 from .base import BaseSentenceParser, BaseTableParser
 from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any
 from lxml import etree
@@ -66,7 +68,51 @@ chemical_label_phrase2 = (synthesis_of + Optional(label_type) + lenient_chemical
 # Chemical label with to give/afforded etc. before, and some restriction after.
 chemical_label_phrase3 = (to_give + Optional(dt) + Optional(label_type) + lenient_chemical_label + Optional(lbrct + OneOrMore(Not(rbrct) + Any()) + rbrct).hide() + (End() | I('as') | colon | comma).hide())
 
-chemical_label_phrase = Group(chemical_label_phrase1 | chemical_label_phrase2 | chemical_label_phrase3)('chemical_label_phrase')
+###### DOPED CHEMICAL LABELS ##########
+doped_chemical_identifier = (W('x') | W('y'))
+doping_value = R('^(\d\.?)+$')
+doping_range = (doping_value + (T('HYPH')|I('to')) + doping_value)
+
+doping_label_1 = (doping_value + R('^\<$') + doped_chemical_identifier +
+                  R('^\<$') + doping_value)
+doping_label_2 = (
+    doped_chemical_identifier
+    + W('=') 
+    + OneOrMore(doping_range | doping_value | R('^[,:;\.]$') | I('or') | I('and')))
+
+doped_chemical_label = Group((doping_label_1 | doping_label_2)('labels')).add_action(join)
+chemical_label_phrase = Group(doped_chemical_label | chemical_label_phrase1 | chemical_label_phrase2 | chemical_label_phrase3)('chemical_label_phrase')
+
+###### INFORMAL CHEMICAL LABELS ##########
+# Identifiers typically used as informal chemical symbols
+informal_chemical_symbol = (W('AE') | W('T') | W('RE') | (W('R') + Not(lbrct + W('Å') + rbrct)) | W('REM') | W('REO') | W('REY') | W('LREE') | W('HREE') | I('Ln') | R('^B\′?$') | W('M') | W('ET')
+                                | W('IM2py') | W('NN′3') | W('TDAE') | W('X') | I('H2mal') | (W('A') + Not(lbrct + W('Å') + rbrct)))
+
+# list of chemical elements or ion symbols by type
+metals = (R('^(Li|Be|Na|Mg|Al|Ca|Sc|Ti|V|Cr|K|Mn|Fe|Co|Ni|Cu|Zn|Ga|Rb|Sr|Y|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|In|Sn|Cs|Ba|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu|Hf|Ta|W|Re|Os|Ir|Pt|Au|Hg|Tl|Pb|Bi|Po|Fr|Ra|Ac|Th|Pa|U|Np|Pu|Am|Cm|Bk|Cf|Es|Fm|Md|No|Lr|Rf|Db|Sg|Bh|Hs|Mt|Ds|Rg|Cn|Uut|Fl|Uup|Lv)$') | R('^metal(s)?$'))
+transition_metals = (R('^(Sc|Ti|V|Cr|Mn|Fe|Co|Ni|Cu|Zn|Y|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu|Hf|Ta|W|Re|Os|Ir|Pt|Au|Hg|Ac|Th|Pa|U|Np|Pu|Am|Cm|Bk|Cf|Em|Fm|Md|No|Lr|Rf|Db|Sg|Bh|Hs|Mt|Ds|Rg|Cn)$') | (
+    I('transition') + (I('metal') | I('metals'))))
+lanthanides = (R('^(Sc|Y|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu)$') | R('^[Ll]anthanide(s)?$') | (
+    R('^[Rr]are\-?earth(s)?$') | (I('rare') + Optional(T('HYPH')) + R(('^earth(s)?$')) + Optional(R('^metal(s)?$')))))
+ion_symbol = (
+    R('^(Ti|V|Cr|Mn|Fe|Co|Ni|Cu|Ce|Ir|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Li|Be|Na|Al|As)(([2|3|4|5|6|7]?\+?)|\(I{2,7}\))?$'))
+
+other_symbol = (W('NO3') | W('HF2') | W('ClO4') | W('BF4'))
+
+informal_values = (metals | transition_metals | lanthanides | ion_symbol | other_symbol)
+
+# Informal labelling, used for associating properties to informal compounds
+informal_chemical_label_1 = (informal_chemical_symbol
+                             + W('=')
+                             + OneOrMore(informal_values | R('^[,:;\.]$') | I('and')))('label').add_action(join)
+
+# Informal label phrase 2, "property = value for the <element> compound"
+informal_chemical_label_2 = (informal_values
+                            + (I('compound') | I('sample') | I('material')).hide())('label').add_action(join)
+
+informal_chemical_label = Group((informal_chemical_label_1 | informal_chemical_label_2)('labels')).add_action(join)
+chemical_label_phrase = Group(informal_chemical_label | doped_chemical_label | chemical_label_phrase1 | chemical_label_phrase2 | chemical_label_phrase3)('chemical_label_phrase')
+
 # TODO: "Compound 3a-c" - in parser expand out into multiple compounds
 
 element_name = R('^(actinium|aluminium|aluminum|americium|antimony|argon|arsenic|astatine|barium|berkelium|beryllium|bismuth|bohrium|boron|bromine|cadmium|caesium|calcium|californium|carbon|cerium|cesium|chlorine|chromium|cobalt|copernicium|copper|curium|darmstadtium|dubnium|dysprosium|einsteinium|erbium|europium|fermium|flerovium|fluorine|francium|gadolinium|gallium|germanium|hafnium|hassium|helium|holmium|hydrargyrum|hydrogen|indium|iodine|iridium|iron|kalium|krypton|lanthanum|laIrencium|lithium|livermorium|lutetium|magnesium|manganese|meitnerium|mendelevium|mercury|molybdenum|natrium|neodymium|neon|neptunium|nickel|niobium|nitrogen|nobelium|osmium|oxygen|palladium|phosphorus|platinum|plumbum|plutonium|polonium|potassium|praseodymium|promethium|protactinium|radium|radon|rhenium|rhodium|roentgenium|rubidium|ruthenium|rutherfordium|samarium|scandium|seaborgium|selenium|silicon|silver|sodium|stannum|stibium|strontium|sulfur|tantalum|technetium|tellurium|terbium|thallium|thorium|thulium|tin|titanium|tungsten|ununoctium|ununpentium|ununseptium|ununtrium|uranium|vanadium|Iolfram|xenon|ytterbium|yttrium|zinc|zirconium)$', re.I)
@@ -246,13 +292,20 @@ lenient_name_with_bracketed_label = (Start() + Optional(synthesis_of) + lenient_
 # chemical name with a comma in it that hasn't been tagged.
 name_with_comma_within = Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and')))('names').add_action(join).add_action(fix_whitespace))('compound')
 
+# Chemical name with a doped label after
+name_with_doped_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + doped_chemical_label)('compound')
+
+# Chemical name with an informal label after
+name_with_informal_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + informal_chemical_label)('compound')
+
 # to_give_bracketed_label = to_give + lenient_name  # TODO: Come back to this
 
 # TODO: Currently ensuring roles are captured from text preceding cem/cem_phrase ... abstract out the 'to_give"
 
-cem = (lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label)
+cem = (name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label)
 
-cem_phrase = Group(cem)('cem_phrase')
+
+cem_phrase = Group(cem)('cem_phrase').add_action(fix_whitespace)
 
 r_equals = R('^[R]$') + W('=') + OneOrMore(Not(rbrct) + (bcm | icm | nn | nnp | nns | hyph | cd | ls))
 of_table = (I('of') | I('in')) + Optional(dt) + I('table')
@@ -269,15 +322,17 @@ compound_heading_style1 = Start() + Optional(section_no.hide()) + Optional(synth
 compound_heading_style2 = chemical_name + Optional(bracketed_after_name)
 compound_heading_style3 = synthesis_of + (lenient_name | chemical_name) + Optional(bracketed_after_name | comma_after_name)  # Possibly redundant?
 compound_heading_style4 = label_type + lenient_chemical_label + ZeroOrMore((T('CC') | comma) + lenient_chemical_label) + (lenient_name | chemical_name) + Optional(bracketed_after_name | comma_after_name)
+compound_heading_style5 = informal_chemical_label
+compound_heading_style6 = doped_chemical_label
 # TODO: Capture label type in output
 
-compound_heading_phrase = Group(compound_heading_style1 | compound_heading_style2 | compound_heading_style3 | compound_heading_style4 | chemical_label)('compound')
+compound_heading_phrase = Group(compound_heading_style6 | compound_heading_style5 | compound_heading_style1 | compound_heading_style2 | compound_heading_style3 | compound_heading_style4 | chemical_label)('compound')
 
 names_only = Group((solvent_name | chemical_name
               | likely_abbreviation | lenient_name
               | (Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and'))).add_action(join).add_action(fix_whitespace)))))('compound')
 
-labels_only = Group((numeric | R('^([A-Z]\d{1,3})$') | strict_chemical_label))('compound')
+labels_only = Group((doped_chemical_label | informal_chemical_label | numeric | R('^([A-Z]\d{1,3})$') | strict_chemical_label))('compound')
 
 roles_only = Group((label_type | synthesis_of | to_give))('compound')
 
@@ -304,6 +359,7 @@ class CompoundParser(BaseSentenceParser):
                 roles=[standardize_role(r) for r in cem_el.xpath('./roles/text()')]
             )
             yield c
+
 
 
 class ChemicalLabelParser(BaseSentenceParser):

@@ -195,6 +195,7 @@ class TestParseCem(unittest.TestCase):
         expected = ['<cem_phrase><compound><names>Ba0.55K0.45As2Fe2+δ</names></compound></cem_phrase>']
         self.do_parse(s, expected)
 
+    
 
 
 class TestParseCemHeading(unittest.TestCase):
@@ -366,6 +367,7 @@ class TestParseHeading(unittest.TestCase):
         self.do_parse(s, expected)
 
 
+
 class TestParseLabelPhrase(unittest.TestCase):
 
     maxDiff = None
@@ -411,6 +413,26 @@ class TestParseLabelPhrase(unittest.TestCase):
         """Test afforded phrase."""
         s = 'Subsequent chromatography (silica, CH2Cl2/MeOH, 7:3) afforded 12 as green solid (4 mg, 63%).'
         expected = ['<chemical_label_phrase><roles>afforded</roles><labels>12</labels></chemical_label_phrase>']
+        self.do_parse(s, expected)
+    
+    def test_doped_label_1(self):
+        s = 'La1-xSrxMnO3 with x = 0.1, 0.2, 0.3 and 0.4'
+        expected = ['<chemical_label_phrase><labels>x = 0.1 , 0.2 , 0.3 and 0.4</labels></chemical_label_phrase>']
+        self.do_parse(s, expected)
+    
+    def test_doped_label_2(self):
+        s = 'La1-xSrxMnO3 (x = 0.1-0.5)'
+        expected = ['<chemical_label_phrase><labels>x = 0.1 - 0.5</labels></chemical_label_phrase>']
+        self.do_parse(s, expected)
+    
+    def test_doped_label_3(self):
+        s = 'La1-ySryMnO3 (y = 0 to 1)'
+        expected = ['<chemical_label_phrase><labels>y = 0 to 1</labels></chemical_label_phrase>']
+        self.do_parse(s, expected)
+    
+    def test_informal_label_1(self):
+        s = 'LNMnO3 with LN = Ho, Dy, La and Tb'
+        expected = ['<chemical_label_phrase><labels>LN = Ho , Dy , La and Tb</labels></chemical_label_phrase>']
         self.do_parse(s, expected)
 
 
