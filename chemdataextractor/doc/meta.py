@@ -40,54 +40,70 @@ class MetaData(BaseElement):
 
     @property
     def title(self):
+        """The article title"""
+
         return self._title
 
     @property
     def authors(self):
+        """The article Authors
+        type:: list()
+        """
         return self._authors
 
     @property
     def publisher(self):
+        """The source publisher"""
         return self._publisher
 
     @property
     def journal(self):
+        """The source journal"""
         return self._journal
 
     @property
     def volume(self):
+        """The source volume"""
         return self._volume
     
     @property
     def issue(self):
+        """The source issue"""
         return self._issue
     
     @property
     def firstpage(self):
+        """The source first page title"""
         return self._firstpage
     
     @property
     def lastpage(self):
+        """The source last page"""
         return self._lastpage
     
     @property
     def doi(self):
+        """The source DOI"""
         return self._doi
     
     @property
     def pdf_url(self):
+        """The source url to the PDF version"""
         return self._pdf_url
     
     @property
     def html_url(self):
+        """The source url to the HTML version"""
         return self._html_url
     
     @property
     def date(self):
+        """The source publish date"""
         return self._date
     
     @property
     def data(self):
+        """Returns all data as a dict()"""
         return {k.lstrip('_'): v for k, v in self._data.items()}
     
     @property

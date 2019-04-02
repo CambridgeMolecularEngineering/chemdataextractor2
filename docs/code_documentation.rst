@@ -66,6 +66,7 @@ API Documentation
    doc.document
    doc.element
    doc.figure
+   doc.meta
    doc.table
    doc.table_new
    doc.text
