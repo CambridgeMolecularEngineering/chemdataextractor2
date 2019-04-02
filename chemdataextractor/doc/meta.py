@@ -3,42 +3,14 @@
 MetaData Document elements
 
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-from abc import abstractproperty, abstractmethod
-import collections
-import logging
-import re
-
-import six
-
-from ..model.base import ModelList
-from ..nlp.lexicon import ChemLexicon, Lexicon
-from ..nlp.cem import CemTagger, IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
-from ..nlp.abbrev import ChemAbbreviationDetector
-from ..nlp.tag import NoneTagger
-from ..nlp.pos import ChemCrfPosTagger, CrfPosTagger, ApPosTagger, ChemApPosTagger
-from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_tokenize, SentenceTokenizer, WordTokenizer, FineWordTokenizer
-from ..text import CONTROL_RE
-from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
-from ..parse.definitions import specifier_definition
-from ..parse.cem import chemical_name
-from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
-
-from lxml import etree
-
-
+import logging
 log = logging.getLogger(__name__)
 
 class MetaData(BaseElement):
 
     def __init__(self, data):
         super(MetaData, self).__init__()
-        print(data)
         self._data = data
         self._title = None
         self._authors = None
@@ -63,7 +35,7 @@ class MetaData(BaseElement):
     def records(self):
         return []
 
-    def to_dict(self):
+    def serialize(self):
         return {k: v for k, v in self.data.items() if v}
 
     @property
