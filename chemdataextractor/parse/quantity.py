@@ -237,26 +237,28 @@ def _split(string):
     # Split at brackets
     split_by_bracket = []
     for element in split_by_slash:
-        split = re.split('(\()', element)
+        split = re.split('(\()|(\))', element)
         split_by_bracket += split
 
     # Merge bits that were split too much
     final_list = []
     for element in split_by_bracket:
-        # Merge /s with forward brackets, or text,
-        # e.g. ['/', '('] -> ['/('] and ['/n', 's'] -> ['/ns']
-        if (re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
-            or (final_list != [] and re.match('[\/]\D*', final_list[-1])
-                and not re.match('\)\w*', element) and not re.match('\/\(', final_list[-1]))):
-            final_list[-1] = final_list[-1] + element
-        else:
-            final_list.append(element)
+        if element is not None:
+            # Merge /s with forward brackets, or text,
+            # e.g. ['/', '('] -> ['/('] and ['/n', 's'] -> ['/ns']
+            if (re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
+                or (final_list != [] and re.match('[\/]\D*', final_list[-1])
+                    and not re.match('\)\w*', element) and not re.match('\/\(', final_list[-1]))):
+                final_list[-1] = final_list[-1] + element
+            else:
+                final_list.append(element)
 
     # Remove empty substrings
     final_list_cleaned = []
     for element in final_list:
         if element != '' and element != ' ':
             final_list_cleaned.append(element)
+
     return final_list_cleaned
 
 
@@ -334,26 +336,36 @@ def _find_powers(units_list):
     :returns: A list containing tuples of the found units and the string split by the units, in the format (units found, string in which this occured, power associated with the unit, string which matched with the unit's definition)
     :rtype: list((chemdataextractor.quantities.Unit, str, str, str))
     """
-
     powers = []
     i = 0
-
+    # base_power to account for examples such as K/km2s, where a series of units after the division should be accounted for
+    base_power = 1.0
     # Go through list of found units/substrings and associate a power with each of them. Ignores brackets in the loop, which are handled in _remove_brackets
     while i in range(len(units_list)):
 
         element = units_list[i][1]
-
-        power = 1.0
+        power = base_power
         if element[0] == '/':
-            power = power * -1.0
+            power = -1.0
+            base_power = -1.0
             element = re.split('/', element)[1]
+        # Reset base_power at end of brackets, to account for cases like K/(km/s)-1/2
+        # Without this, this would be parsed as Kkm-1/2s1/2 as the base_power would carry to the
+        # -1/2 after the end of the brackets
+        elif element[0] == ')':
+            power = 1.0
+            base_power = 1.0
         # Look for strings involving numbers.
         found_power = re.search('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
         if found_power is not None:
             power = power * float(sum(Fraction(s) for s in found_power.group(0).split()))
             element = re.split(found_power.group(0), element)[0]
-
         powers.append((units_list[i][0], element, power, units_list[i][2]))
+        # Reset base_power at the start of a bracket, as that's handled by _remove_brackets
+        # This also ensures desired behaviour on e.g. K/(km/s)A, which should resolve to
+        # KAskm-1
+        if element[0] == '(':
+            base_power = 1.0
         i += 1
     powers_cleaned, _ = _remove_brackets(powers)
     return powers_cleaned
