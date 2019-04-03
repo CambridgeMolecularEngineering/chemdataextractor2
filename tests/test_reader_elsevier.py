@@ -43,14 +43,26 @@ class TestElsXMLReader(unittest.TestCase):
         content = f.read()
         d = r.readstring(content)
         f.close()
-        self.assertEqual(len(d.elements), 165)
+        self.assertEqual(len(d.elements), 166)
 
     def test_document_usage(self):
-        """Test RscXMLReader used via Document.from_file."""
+        """Test XMLReader used via Document.from_file."""
         fname = 'j.jnoncrysol.2017.07.006.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'elsevier', fname), 'rb')
         d = Document.from_file(f, readers=[ElsevierXmlReader()])
-        self.assertEqual(len(d.elements), 165)
+        self.assertEqual(len(d.elements), 166)
+    
+    def test_metadata(self):
+        """Test that the retrieved metadata is correct
+        """
+        fname = 'j.jnoncrysol.2017.07.006.xml'
+        f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'elsevier', fname), 'rb')
+        d = Document.from_file(f, readers=[ElsevierXmlReader()])
+        meta = d.metadata.serialize()
+        expected = {'title': 'STRUCTURALELECTROCHEMICALCHARACTERIZATIONCA50MG20CU25ZN5AMORPHOUSALLOY', 'authors': ['BABILAS'], 'publisher': '© 2017 Elsevier B.V. All rights reserved.', 'journal': 'Journal of Non-Crystalline Solids', 'date': '2017-07-14', 'volume': '471', 'issue': '0022-3093', 'firstpage': '467', 'lastpage': '475', 'doi': '10.1016/j.jnoncrysol.2017.07.006', 'html_url': 'https://sciencedirect.com/science/article/pii/S0022309317303496'}
+        self.assertDictEqual(meta, expected)
+
+
 
 
 if __name__ == '__main__':

@@ -23,6 +23,7 @@ from .element import CaptionedElement
 # from .table import Table
 from .table_new import Table
 from .figure import Figure
+from .meta import MetaData
 from ..errors import ReaderError
 from ..model.base import ModelList
 from ..model.model import Compound
@@ -499,6 +500,13 @@ class Document(BaseDocument):
         A list of all :class:`~chemdataextractor.doc.element.CaptionedElement` elements in this Document.
         """
         return [el for el in self.elements if isinstance(el, CaptionedElement)]
+    
+    @property
+    def metadata(self):
+        """Return metadata information
+        """
+        return [el for el in self.elements if isinstance(el, MetaData)][0]
+
 
     @property
     def abbreviation_definitions(self):
