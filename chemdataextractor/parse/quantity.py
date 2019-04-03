@@ -46,7 +46,8 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('raw_value').add_action(merge)
     to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('value').add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('raw_value').add_action(merge)
+    between_range = (I('between').hide() + number + I('and') + number).add_action(join)
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     return value + units
@@ -65,7 +66,8 @@ def value_element_plain():
     spaced_range = (number + R('^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
     to_range = (number + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('raw_value').add_action(merge)
+    between_range = (I('between').hide() + number + I('and') + number).add_action(join)
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     return value
