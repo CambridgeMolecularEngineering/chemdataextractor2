@@ -300,7 +300,7 @@ class Unit(object):
                 if self.powers == (other**1.0).powers:
                     return True
         elif other.powers:
-            if other.powers == (self**1.0).dimensions:
+            if other.powers == (self**1.0).powers:
                 return True
         else:
             if type(self) == type(other) and self.magnitude == other.magnitude and self.dimensions == other.dimensions:
