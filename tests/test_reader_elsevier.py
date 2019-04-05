@@ -61,6 +61,17 @@ class TestElsXMLReader(unittest.TestCase):
         meta = d.metadata.serialize()
         expected = {'title': 'STRUCTURALELECTROCHEMICALCHARACTERIZATIONCA50MG20CU25ZN5AMORPHOUSALLOY', 'authors': ['BABILAS'], 'publisher': '© 2017 Elsevier B.V. All rights reserved.', 'journal': 'Journal of Non-Crystalline Solids', 'date': '2017-07-14', 'volume': '471', 'issue': '0022-3093', 'firstpage': '467', 'lastpage': '475', 'doi': '10.1016/j.jnoncrysol.2017.07.006', 'html_url': 'https://sciencedirect.com/science/article/pii/S0022309317303496'}
         self.assertDictEqual(meta, expected)
+    
+    def test_parse_table_rows(self):
+        """Test that the elsevier colspan and rowspan work correctly
+        """
+        fname = 'j.jnoncrysol.2018.02.024.xml'
+        f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'elsevier', fname), 'rb')
+        d = Document.from_file(f, readers=[ElsevierXmlReader()])
+        table_1 = d.tables[0].category_table
+        expected = [['1500', ['Tm (K)'], ['MD simulations with ReaxFF potential []']], ['1750', ['Tm (K)'], ['MC simulations with ARK parameters []']], ['1775', ['Tm (K)'], ['MD simulations with SW potential []']], ['2.36\u202f×\u202f10', ['γC (K/s)'], ['MD simulations with ReaxFF potential []']], ['4.25\u202f×\u202f10', ['γC (K/s)'], ['MC simulations with ARK parameters []']], ['4.95\u202f×\u202f10', ['γC (K/s)'], ['MD simulations with SW potential []']]]
+        self.assertEqual(table_1, expected)
+
 
 
 
