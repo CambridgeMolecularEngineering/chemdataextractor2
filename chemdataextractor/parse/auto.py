@@ -11,7 +11,7 @@ Models must be constructed in a certain way for them to work optimally with auto
 
 Any parse_expressions set in the model should have an added action to ensure that the results are a single word. An example would be to call add_action(join) on each parse expression.
 
-:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
+.. codeauthor:: Taketomo Isazawa <ti250@cam.ac.uk>
 
 :codeauthor: Juraj Mavračić (jm2111@cam.ac.uk)
 """
