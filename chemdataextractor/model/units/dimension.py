@@ -2,7 +2,7 @@
 """
 Base types for dimensions. Refer to the example on :ref:`creating new units and dimensions<creating_units>` for more detail on how to create your own dimensions.
 
-:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
+.. codeauthor:: Taketomo Isazawa <ti250@cam.ac.uk>
 """
 
 import six
