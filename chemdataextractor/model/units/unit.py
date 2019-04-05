@@ -132,7 +132,11 @@ class Unit(object):
     magnitudes placed in front of the units, e.g. kilometers, are handled automatically.
     Care must be taken that the 'standard' unit chosen is obvious, consistent, and documented,
     else another user may implement new units with the same dimensions but a different
-    standard unit, resulting in unexpected errors.
+    standard unit, resulting in unexpected errors. To ensure correct behaviour, one should also define
+    the standard unit in code by setting the corresponding dimension's
+    :attr:`~chemdataextractor.model.units.dimension.Dimension.standard_units`, unless the
+    dimension is a composite one, in which case the standard unit can often be inferred from
+    the constituent units' standard untis
     """
 
     base_magnitude = 0.0
