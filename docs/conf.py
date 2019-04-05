@@ -15,7 +15,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
-
+sys.path.insert(0, os.path.abspath('../chemdataextractor'))
 
 # -- Project information -----------------------------------------------------
 
@@ -209,3 +209,4 @@ todo_include_todos = True
 autodoc_default_options = {'special-members': '__init__',
                            'show-inheritance': 'true'}
 autodoc_member_order = 'bysource'
+autodoc_mock_imports = ['tabledataextractor']

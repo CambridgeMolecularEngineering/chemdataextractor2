@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Base types for dimensions.
+Base types for dimensions. Refer to the example on :ref:`creating new units and dimensions<creating_units>` for more detail on how to create your own dimensions.
 
-:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
+.. codeauthor:: Taketomo Isazawa <ti250@cam.ac.uk>
 """
 
 import six
@@ -94,6 +94,14 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
               R('°?((F|f)ahrenheit|F)\.?', group=0): Fahrenheit,
               R('°|C', group=0): None}
 
+    .. note::
+
+        The units_dict has been extensively tested using regex elements, and while in theory it may work with other parse
+        elements, it is strongly recommended that you use a regex element.
+        If a regex element is specified, it should
+
+        - Not have a $ symbol at the end: the units can be passed in with numbers or other symbols after it, and these are also used in the autoparser to find candidate tokens which may contain units, and a $ symbol at the end would stop this from working
+        - Have the group attribute set to 0. Unless this is set, the default behaviour of the regex element is to return the whole token in which the match was found. This is unhelpful behaviour for our logic for extracting units, as we want to extract only the exact characters that matched the unit.
     """
 
     _standard_units = None

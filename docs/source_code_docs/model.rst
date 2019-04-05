@@ -3,7 +3,7 @@
 ======================
 
 Models for storing relationships extracted using chemdataextractor.
-The hierarchy for models has been greatly rewritten in 1.5.0, introducing breaking changes to older scripts using ChemDataExtractor. Please refer to the migration guide and the examples for an overview of the changes.
+The hierarchy for models has been greatly rewritten in 1.5.0, introducing breaking changes to older scripts using ChemDataExtractor. Please refer to the :ref:`migration guide<migration_guide>` and the examples for an overview of the changes.
 
 .. automodule:: chemdataextractor.model
     :members:

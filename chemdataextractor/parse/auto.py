@@ -3,9 +3,17 @@
 Parser for automatic parsing, without user-written parsing rules.
 Mainly used for tables.
 
-:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
+Models must be constructed in a certain way for them to work optimally with autoparsers. Namely, they should have:
 
-:codeauthor: Juraj Mavračić (jm2111@cam.ac.uk)
+- A specifier field with an associated parse expression (Optional, only required if autoparsers are desired). These parse expressions will be updated automatically using forward-looking Interdependency Resolution if the updatable flag is set to True.
+- These specifiers should also have required set to True so that spurious matches are not found.
+- If applicable, a compound entity, named compound.
+
+Any parse_expressions set in the model should have an added action to ensure that the results are a single word. An example would be to call add_action(join) on each parse expression.
+
+.. codeauthor:: Taketomo Isazawa <ti250@cam.ac.uk>
+
+.. codeauthor:: Juraj Mavračić <jm2111@cam.ac.uk>
 """
 
 from __future__ import absolute_import

@@ -15,7 +15,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import six
 from ..scrape.clean import clean, Cleaner
-from ..doc.table import Cell, Table
+from ..doc.table_new import Cell, Table
 from ..doc.text import Caption
 from ..doc.meta import MetaData
 from .markup import XmlReader
@@ -190,3 +190,32 @@ class ElsevierXmlReader(XmlReader):
                 }
         meta = MetaData(metadata)
         return [meta]
+    
+    def _parse_table_rows(self, els, refs, specials):
+        hdict = {}
+        for row, tr in enumerate(els):
+            colnum = 0
+            for td in self._css(self.table_cell_css, tr):
+                cell = self._parse_text(td, refs=refs, specials=specials, element_cls=Cell)
+                namest = int([i for i in td.get('namest', '1').split('col') if i][0])
+                nameend = int([i for i in td.get('nameend', '1').split('col') if i][0])
+                colspan = (nameend - namest) + 1
+                rowspan = int(td.get('morerows', '0')) + 1
+                for i in range(colspan):
+                    for j in range(rowspan):
+                        rownum = row + j
+                        if not rownum in hdict:
+                            hdict[rownum] = {}
+                        while colnum in hdict[rownum]:
+                            colnum += 1
+                        hdict[rownum][colnum] = cell[0]
+                    colnum += 1
+        rows = []
+        for row in sorted(hdict):
+            rows.append([])
+            for col in sorted(hdict[row]):
+                rows[-1].append(hdict[row][col])
+        for r in rows:
+            r.extend([Cell('')] * (len(max(rows, key=len)) - len(r)))
+        rows = [r for r in rows if any(r)]
+        return rows

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Base types for making units.
+Base types for making units. Refer to the example on :ref:`creating new units and dimensions<creating_units>` for more detail on how to create your own units.
 
-:codeauthor: Taketomo Isazawa (ti250@cam.ac.uk)
+.. codeauthor:: Taketomo Isazawa <ti250@cam.ac.uk>
 """
 
 import six

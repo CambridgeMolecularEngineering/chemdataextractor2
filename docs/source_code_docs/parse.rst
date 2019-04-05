@@ -2,7 +2,7 @@
 .parse
 ========================
 
-Chemical property parsers. Parsers have been refactored in 1.5.0 which has introduced breaking changes to older code. Please refer to the examples and the migration guide for 1.5.0 for an overview of the changes.
+Chemical property parsers. Parsers have been refactored in 1.5.0 which has introduced breaking changes to older code. Please refer to the examples and the :ref:`migration guide<migration_guide>` for 1.5.0 for an overview of the changes.
 
 .. automodule:: chemdataextractor.parse
     :members:

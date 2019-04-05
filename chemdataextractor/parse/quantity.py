@@ -22,7 +22,7 @@ from ..utils import memoize
 
 log = logging.getLogger(__name__)
 
-magnitudes_dict = {R('c(enti)?', group=0): 2.,
+magnitudes_dict = {R('c(enti)?', group=0): -2.,
                   R('k(ilo)?', group=0): 3.,
                   R('M(ega)?', group=0): 6.,
                   R('G(iga)?', group=0): 9.,
