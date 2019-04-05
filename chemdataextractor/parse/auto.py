@@ -13,7 +13,7 @@ Any parse_expressions set in the model should have an added action to ensure tha
 
 .. codeauthor:: Taketomo Isazawa <ti250@cam.ac.uk>
 
-:codeauthor: Juraj Mavračić (jm2111@cam.ac.uk)
+.. codeauthor:: Juraj Mavračić <jm2111@cam.ac.uk>
 """
 
 from __future__ import absolute_import
