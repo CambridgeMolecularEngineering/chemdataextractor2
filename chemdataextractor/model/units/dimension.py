@@ -11,6 +11,28 @@ from abc import abstractmethod, ABCMeta
 from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 
 
+@property
+def standard_units(self):
+    if self._standard_units and len(self._standard_units) == 1:
+        for unit, power in six.iteritems(self._standard_units):
+            if power == 1.:
+                return unit
+            else:
+                return unit ** power
+    product_unit = None
+    for (unit, power) in six.iteritems(self._standard_units):
+        if not product_unit:
+            product_unit = unit ** power
+        else:
+            product_unit = product_unit * (unit ** power)
+    return product_unit
+
+
+@standard_units.setter
+def standard_units(self, value):
+    self._standard_units = {value: 1.0}
+
+
 class _DimensionMeta(ABCMeta):
 
     def __new__(mcs, name, bases, attrs):
@@ -18,7 +40,15 @@ class _DimensionMeta(ABCMeta):
         if hasattr(cls, 'constituent_dimensions') and cls.constituent_dimensions is not None:
             cls.units_dict = copy.copy(cls.constituent_dimensions.units_dict)
             cls._dimensions = cls.constituent_dimensions._dimensions
+            cls._standard_units = cls.constituent_dimensions._standard_units
+        cls.standard_units = standard_units
         return cls
+
+    def __setattr__(cls, key, value):
+        if key == 'standard_units' and not isinstance(value, property):
+            cls._standard_units = {value: 1.0}
+        else:
+            return super(_DimensionMeta, cls).__setattr__(key, value)
 
 
 class Dimension(six.with_metaclass(_DimensionMeta)):
@@ -66,6 +96,19 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
 
     """
 
+    _standard_units = None
+
+    standard_units = None
+    """
+    The standard units for this dimension. Of type :class:`~chemdataextractor.model.units.unit.Unit`.
+
+    Set this attribute when creating a new dimension to make converting to the standard units easy via
+    :meth:`~chemdataextractor.model.units.quantity_model.QuantityModel.convert_to_standard`, and to make it clear in the code what the
+    standard units are.
+
+    The standard units when you multiply dimensions together/ have composite dimensions are automatically handled by the class.
+    """
+
     """
     Operators are implemented so that composite dimensions can be created easily
     on the fly, for use in creating custom QuantityModels:
@@ -108,6 +151,13 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
 
             new_model._dimensions = dimensions
             new_model.units_dict = copy.copy(self.units_dict)
+            if self._standard_units is not None:
+                _standard_units = {}
+                for unit, power in six.iteritems(self._standard_units):
+                    _standard_units[unit] = power * other
+                new_model._standard_units = _standard_units
+            else:
+                new_model._standard_units = None
         return new_model
 
     def __mul__(self, other):
@@ -178,6 +228,25 @@ class Dimension(six.with_metaclass(_DimensionMeta)):
 
         for dimension in dimensions.keys():
             new_model.units_dict.update(dimension.units_dict)
+
+        if self._standard_units is not None and other._standard_units is not None:
+            _standard_units = {}
+            for unit, power in six.iteritems(self._standard_units):
+                if unit not in _standard_units.keys():
+                    _standard_units[unit] = power
+                else:
+                    _standard_units[unit] += power
+
+            for unit, power in six.iteritems(other._standard_units):
+                if unit not in _standard_units.keys():
+                    _standard_units[unit] = power
+                else:
+                    _standard_units[unit] += power
+            new_model._standard_units = _standard_units
+
+        else:
+            new_model._standard_units = None
+
         return new_model
 
     def __eq__(self, other):
