@@ -85,6 +85,6 @@ class RscHtmlReader(HtmlReader):
         """"""
         if fname and not (fname.endswith('.html') or fname.endswith('.htm')):
             return False
-        if b'meta name="citation_doi" content="10.1039' in fstring:
+        if b'meta name="citation_doi" content="10.1039' in fstring or b'meta content="Royal Society of Chemistry"' in fstring:
             return True
         return False
