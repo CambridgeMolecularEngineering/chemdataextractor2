@@ -90,3 +90,4 @@ units_dict = {R('(J|j)(oule(s)?)?', group=0): Joule,
               R('(E|e)(lectron)( )?(V|v)(olts)?', group=0): ElectronVolt,
               R('(E|e)rg', group=0): Erg}
 Energy.units_dict.update(units_dict)
+Energy.standard_units = Joule()

@@ -101,3 +101,4 @@ class Tonne(MassUnit):
 units_dict = {R('g(ram(s)?)?', group=0): Gram, R('pound[s]?', group=0): Pound, R('lb[s]?', group=0): Pound,
 R('t(onne)?', group=0): Tonne}
 Mass.units_dict = units_dict
+Mass.standard_units = Gram(magnitude=3.0)
