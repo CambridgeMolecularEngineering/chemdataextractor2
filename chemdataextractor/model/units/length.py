@@ -100,3 +100,4 @@ class Angstrom(LengthUnit):
 
 units_dict = {R('m(eter(s)?)?', group=0): Meter, R('mile[s]?', group=0): Mile, R('Å', group=0): Angstrom}
 Length.units_dict = units_dict
+Length.standard_units = Meter()

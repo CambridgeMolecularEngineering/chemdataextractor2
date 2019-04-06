@@ -133,6 +133,10 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
         Convert from current units to the given units.
         Raises AttributeError if the current unit is not set.
 
+        .. note::
+
+            This method both modifies the current model and returns the modified model.
+
         :param Unit unit: The Unit to convert to
         :returns: The quantity in the given units.
         :rtype: QuantityModel
@@ -145,6 +149,28 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
                 converted_error = self.convert_error(self.units, unit)
                 self.error = converted_error
 
+        return self
+
+    def convert_to_standard(self):
+        """
+        Convert from current units to the standard units.
+        Raises AttributeError if the current unit has not been set or the dimensions do not have standard units.
+
+        .. note::
+
+            This method both modifies the current model and returns the modified model.
+
+        :returns: The quantity in the given units.
+        :rtype: QuantityModel
+        """
+        standard_units = self.dimensions.standard_units
+        if self.units and standard_units is not None:
+            self.convert_to(standard_units)
+        else:
+            if not self.units:
+                raise AttributeError('Current units not set')
+            elif not self.dimensions.standard_units:
+                raise AttributeError('Standard units for dimension', self.dimension, 'not set')
         return self
 
     def convert_value(self, from_unit, to_unit):

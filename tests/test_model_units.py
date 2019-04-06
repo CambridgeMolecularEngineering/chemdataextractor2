@@ -51,6 +51,7 @@ class SpeedUnit(QuantityModel):
 class WeirdUnit(SpeedUnit):
     pass
 
+
 weird_entry = {R('weirdunit', group=0): WeirdUnit}
 Speed.units_dict.update(weird_entry)
 
@@ -74,6 +75,9 @@ class TestUnitClass(unittest.TestCase):
         self.assertEqual(meterseconds.dimensions, Length() * Time())
         self.assertEqual(meterseconds.magnitude, 3.0)
         self.assertEqual(meterseconds.powers, {Meter(): 1.0, Second(): 1.0})
+
+    def test_equality(self):
+        self.assertEqual(Second(), Second()**(1.0))
 
     def test_convert_value_to_standard_temp(self):
         temp = Celsius()
@@ -142,14 +146,17 @@ class TestDimensions(unittest.TestCase):
     def test_division(self):
         speed = Length() / Time()
         self.assertEqual(speed._dimensions, {Length(): 1.0, Time(): -1.0})
+        self.assertEqual(speed.standard_units, Meter() / Second())
 
     def test_pow(self):
         meters_cubed = Length() ** 3.0
         self.assertEqual(meters_cubed._dimensions, {Length(): 3.0})
+        self.assertEqual(meters_cubed.standard_units, Meter() ** 3.0)
 
     def test_mul(self):
         meterseconds = Length() * Time()
         self.assertEqual(meterseconds._dimensions, {Length(): 1.0, Time(): 1.0})
+        self.assertEqual(meterseconds.standard_units, Meter() * Second())
 
     def test_dimensionless(self):
         dimensionless_div = Length() / Length()
@@ -166,23 +173,30 @@ class TestDimensions(unittest.TestCase):
         expected_dict.update(weird_entry)
         self.assertDictEqual(Speed.units_dict, expected_dict)
 
+    def test_standard_units_composite(self):
+        self.assertEqual(Speed().standard_units, Meter() / Second())
+
     def test_units_dict_divide_composite_1(self):
         class NewDimension(Dimension):
             constituent_dimensions = Speed() / Length()
         self.assertDictEqual(NewDimension.units_dict, Speed.units_dict)
+        self.assertEqual(NewDimension().standard_units, Second() ** (-1.0))
 
     def test_units_dict_divide_composite_2(self):
         class NewDimension(Dimension):
             constituent_dimensions = Length() / Time()
+
         class NewDimension2(Dimension):
             constituent_dimensions = NewDimension() / Length()
         self.assertDictEqual(NewDimension2.units_dict, Time.units_dict)
+        self.assertEqual(NewDimension2().standard_units, Second() ** (-1.0))
 
     def test_units_dict_divide_composite_3(self):
-        self.maxDiff = None
         class NewDimension(Dimension):
             constituent_dimensions = Length() / Speed()
         self.assertDictEqual(NewDimension.units_dict, Speed.units_dict)
+        print(NewDimension().standard_units)
+        self.assertEqual(NewDimension().standard_units, Second())
 
     def test_dimension_as_string(self):
         test_dimension = Length() * Time() / Mass()
@@ -268,6 +282,13 @@ class TestQuantity(unittest.TestCase):
             print(unit, power)
         speed.convert_to(Mile() / Second())
         self.assertAlmostEqual(speed.value[0], 0.0172603109, places=places)
+
+    def test_convert_to_standard(self):
+        speed = SpeedModel()
+        speed.value = [100.0]
+        speed.units = Mile() / Hour()
+        speed.convert_to_standard()
+        self.assertAlmostEqual(speed.value[0], 44.70400, places=places)
 
     def test_dimensionless(self):
         speed = SpeedModel()

@@ -19,7 +19,7 @@ If you're implementing a completely new type of unit, then the first step you ne
     class Temperature(Dimension):
         pass
 
-As you can see, it's incredibly simple to define a dimension from scratch; all that really matters is the name of the dimension, so you just need to define the name fo the dimension and the rest can be empty. If you want to implement *composite dimensions*, that is, dimensions which are composed of other, more basic dimensions, such as speed, you just need one more line of code::
+As you can see, it's incredibly simple to define a dimension from scratch; all that really matters is the name of the dimension, so you just need to define the name for the dimension and the rest can be empty. If you want to implement *composite dimensions*, that is, dimensions which are composed of other, more basic dimensions, such as speed, you just need one more line of code::
 
     class Speed(Dimension):
         constituent_dimensions = Length() / Time()
@@ -34,7 +34,7 @@ Defining a unit for a certain dimension is also straightforward, but each unit n
 
 Where the first argument passed to the superclass should be the dimensions that you want the unit to have. Writing this for each unit would be wasteful, so for each commonly used type of unit, we have defined a subclass of :class:`~chemdataextractor.model.units.unit.Unit`, such as :class:`~chemdataextractor.models.units.temperature.TemperatureUnit`, which you can subclass from to get these initializers for free. We would encourage you to do the same.
 
-Once that's done, each unit needs to implement functions to convert values and errors to the standard value. The four functions that need to be implemented are :meth:`~chemdataextractor.model.units.unit.Unit.convert_value_to_standard`, :meth:`~chemdataextractor.model.units.unit.Unit.convert_value_from_standard`, :meth:`~chemdataextractor.model.units.unit.Unit.convert_error_to_standard`, and :meth:`~chemdataextractor.model.units.unit.Unit.convert_error_from_standard`. It is crucial that you provide documentation about what the standard value is for each type of unit so that when people build other units of the same type, they know what each function should do. An example of a unit is the Fahrenheit class::
+Once that's done, each unit needs to implement functions to convert values and errors to the standard value. The four functions that need to be implemented are :meth:`~chemdataextractor.model.units.unit.Unit.convert_value_to_standard`, :meth:`~chemdataextractor.model.units.unit.Unit.convert_value_from_standard`, :meth:`~chemdataextractor.model.units.unit.Unit.convert_error_to_standard`, and :meth:`~chemdataextractor.model.units.unit.Unit.convert_error_from_standard`. It is crucial that you provide documentation about what the standard unit is for each type of unit so that when people build other units of the same type, they know what each function should do. An example of a unit is the Fahrenheit class::
 
     class Fahrenheit(TemperatureUnit):
         """
@@ -52,6 +52,15 @@ Once that's done, each unit needs to implement functions to convert values and e
 
         def convert_error_from_standard(self, error):
             return error * (9. / 5.)
+
+Defining a standard unit
+------------------------
+
+In addition to documenting what the standard unit is, you should also enforce it in code by setting the dimension's standard units. This can simply be done as follows, in the example of temperature::
+
+    Temperature.standard_units = Kelvin()
+
+After which all instances of temperature will hold a reference to the correct standard units. This is used in :meth:`~chemdataextractor.model.units.quantity_model.QuantityModel.convert_to_standard` to make it easy to convert any models to the standard values. If you define a composite dimension and this property not set, the standard units will be automatically inferred from the constituent units' standard units, e.g. a speed dimension will automatically have a standard unit of m/s.
 
 Adding facilities for parsing
 ==============================

@@ -78,3 +78,27 @@ class TestUnitClass(unittest.TestCase):
         expected = ((Meter(magnitude=3.0) / Second()) ** 0.5) * (Kelvin() * Hour()**2)
         log.debug(extracted, expected)
         self.assertEqual(extracted, expected)
+
+    def test_complicated_division_1(self):
+        self.qp.model.dimensions = Temperature() * Length()**(-2.) * Time() ** (-1.)
+        test_string = 'K/km2s'
+        extracted = self.qp.extract_units(test_string, strict=True)
+        expected = (Kelvin() / ((Meter(magnitude=3.0) ** 2.) * Second()))
+        log.debug(extracted, expected)
+        self.assertEqual(extracted, expected)
+
+    def test_complicated_division_2(self):
+        self.qp.model.dimensions = Temperature() * Length()**(-2.) * Time() ** (-1.)
+        test_string = 'K/km2/s'
+        extracted = self.qp.extract_units(test_string, strict=True)
+        expected = (Kelvin() / ((Meter(magnitude=3.0) ** 2.) * Second()))
+        log.debug(extracted, expected)
+        self.assertEqual(extracted, expected)
+
+    def test_complicated_division_3(self):
+        self.qp.model.dimensions = Temperature() * Length()**(-6.) * Time() ** (1.)
+        test_string = 'K/(km2)3s'
+        extracted = self.qp.extract_units(test_string, strict=True)
+        expected = (Kelvin() / ((Meter(magnitude=3.0) ** 6.)) * Second())
+        log.debug(extracted, expected)
+        self.assertEqual(extracted, expected)

@@ -59,3 +59,4 @@ class Coulomb(ChargeUnit):
 
 units_dict = {R('(C|c)(oulomb(s)?)?', group=0): Coulomb}
 Charge.units_dict.update(units_dict)
+Charge.standard_units = Coulomb()
