@@ -197,6 +197,10 @@ class BaseAutoParser(BaseParser):
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
     @property
+    def condition_phrase(self):
+        return self.model.specifier.parse_expression
+
+    @property
     def root(self):
         if self._specifier is self.model.specifier:
             return self._root_phrase

@@ -17,7 +17,7 @@ from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
 from .actions import merge
-from .quantity import value_element
+from .quantity import value_element, value_element_plain
 from .base import BaseSentenceParser
 from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 
@@ -47,6 +47,7 @@ class MpParser(BaseSentenceParser):
     MpParser rewritten to extract values and errors.
     """
     root = mp_phrase
+    condition_phrase = value_element_plain()
 
     def interpret(self, result, start, end):
         log.debug(etree.tostring(result))

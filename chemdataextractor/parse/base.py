@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 class BaseParser(object):
     """"""
     model = None
+    condition_phrase = None
 
     @abstractproperty
     def root(self):
@@ -104,9 +105,12 @@ class BaseSentenceParser(BaseParser):
         :returns: All the models found in the sentence.
         :rtype: Iterator[:class:`chemdataextractor.model.base.BaseModel`]
         """
-        for result in self.root.scan(tokens):
-            for model in self.interpret(*result):
-                yield model
+        if self.condition_phrase is not None:
+            condition_phrase_results = [result for result in self.condition_phrase.scan(tokens)]
+        if self.condition_phrase is None or condition_phrase_results:
+            for result in self.root.scan(tokens):
+                for model in self.interpret(*result):
+                    yield model
 
 
 class BaseTableParser(BaseParser):
