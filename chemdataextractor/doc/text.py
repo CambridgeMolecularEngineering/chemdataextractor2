@@ -256,7 +256,7 @@ class Text(collections.Sequence, BaseText):
         """A list of :class:`str` part of speech tags for each sentence in this text passage."""
         return [sent.pos_tags for sent in self.sentences]
 
-    @memoized_property
+    @property
     def unprocessed_ner_tagged_tokens(self):
         """
         A list of (:class:`Token` token, :class:`str` named entity recognition tag)
@@ -266,7 +266,7 @@ class Text(collections.Sequence, BaseText):
         """
         return [sent.unprocessed_ner_tagged_tokens for sent in self.sentences]
 
-    @memoized_property
+    @property
     def unprocessed_ner_tags(self):
         """
         A list of :class:`str` unprocessed named entity tags for the tokens in this sentence.
@@ -412,7 +412,7 @@ class Caption(Text):
     def _repr_html_(self):
         return '<caption class="cde-caption">' + self.text + '</caption>'
 
-    @memoized_property
+    @property
     def definitions(self):
         return [definition for sent in self.sentences for definition in sent.definitions]
 
@@ -697,7 +697,7 @@ class Sentence(BaseText):
         """
         return list(zip(self.raw_tokens, self.tags))
 
-    @property
+    @memoized_property
     def records(self):
         """All records found in the object, as a list of :class:`~chemdataextractor.model.base.BaseModel`."""
         records = ModelList()
@@ -772,7 +772,7 @@ class Cell(Sentence):
     # pos_tagger = NoneTagger()
     # ner_tagger = NoneTagger()
 
-    @memoized_property
+    @property
     def abbreviation_definitions(self):
         """Empty list. Abbreviation detection is disabled within table cells."""
         return []
