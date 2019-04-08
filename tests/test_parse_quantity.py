@@ -23,6 +23,8 @@ from chemdataextractor.model.units import QuantityModel
 from chemdataextractor.model.units.temperature import Temperature, Celsius, Kelvin
 from chemdataextractor.model.units.length import Length, Meter, Mile
 from chemdataextractor.model.units.time import Time, Second, Hour
+from chemdataextractor.model.units.energy import Joule, Energy
+from chemdataextractor.model.units.mass import Mass, Gram
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -100,5 +102,13 @@ class TestUnitClass(unittest.TestCase):
         test_string = 'K/(km2)3s'
         extracted = self.qp.extract_units(test_string, strict=True)
         expected = (Kelvin() / ((Meter(magnitude=3.0) ** 6.)) * Second())
+        log.debug(extracted, expected)
+        self.assertEqual(extracted, expected)
+
+    def test_complicated_division_4(self):
+        self.qp.model.dimensions = Energy() / Mass()
+        test_string = 'Jkg−1'
+        extracted = self.qp.extract_units(test_string, strict=True)
+        expected = Joule() / Gram(magnitude=3.0)
         log.debug(extracted, expected)
         self.assertEqual(extracted, expected)
