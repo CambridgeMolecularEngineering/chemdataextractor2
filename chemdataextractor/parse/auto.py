@@ -108,7 +108,6 @@ class BaseAutoParser(BaseParser):
             return
         requirements = True
         property_entities = {}
-        log.debug(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
