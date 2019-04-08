@@ -20,6 +20,7 @@ import six
 from ..errors import ReaderError
 from ..doc.document import Document
 from ..doc.text import Title, Heading, Paragraph, Caption, Citation, Footnote, Text, Sentence, Cell
+from ..doc.meta import MetaData
 # from ..doc.table import Table, Cell
 from ..doc.table_new import Table
 from ..doc.figure import Figure
@@ -52,6 +53,22 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
     figure_css = 'figure'
     figure_caption_css = 'figcaption'
     citation_css = 'cite'
+
+    metadata_css = 'head'
+    metadata_publisher_css = 'meta[name="DC.publisher"]::attr("content"), meta[name="citation_publisher"]::attr("content")'
+    metadata_author_css = 'meta[name="DC.Creator"]::attr("content"), meta[name="citation_author"]::attr("content")'
+    metadata_title_css = 'meta[name="DC.title"]::attr("content"), meta[name="citation_title"]::attr("content")'
+    metadata_date_css = 'meta[name="DC.Date"]::attr("content"), meta[name="citation_date"]::attr("content"), meta[name="citation_online_date"]::attr("content")'
+    metadata_doi_css = 'meta[name="DC.Identifier"]::attr("content"), meta[name="citation_doi"]::attr("content")'
+    metadata_language_css = 'meta[name="DC.Language"]::attr("content"), meta[name="citation_language"]::attr("content")'
+    metadata_journal_css = 'meta[name="citation_journal_title"]::attr("content")'
+    metadata_volume_css = 'meta[name="citation_volume"]::attr("content")'
+    metadata_issue_css = 'meta[name="citation_issue"]::attr("content")'
+    metadata_firstpage_css = 'meta[name="citation_firstpage"]::attr("content")'
+    metadata_lastpage_css = 'meta[name="citation_lastpage"]::attr("content")'
+    metadata_pdf_url_css = 'meta[name="citation_pdf_url"]::attr("content")'
+    metadata_html_url_css = 'meta[name="citation_fulltext_html_url"]::attr("content"), meta[name="citation_abstract_html_url"]::attr("content")'
+
     ignore_css = 'a.ref sup'
 
     #: Inline elements
@@ -194,6 +211,39 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
         table = Table(caption, table_data=data)
 
         return [table]
+    
+    def _parse_metadata(self, el, refs, specials):
+        title = self._css(self.metadata_title_css, el)
+        authors = self._css(self.metadata_author_css,el)
+        publisher = self._css(self.metadata_publisher_css,el)
+        journal = self._css(self.metadata_journal_css,el)
+        date = self._css(self.metadata_date_css,el)
+        language = self._css(self.metadata_language_css,el)
+        volume = self._css(self.metadata_volume_css,el)
+        issue = self._css(self.metadata_issue_css,el)
+        firstpage =self._css(self.metadata_firstpage_css,el)
+        lastpage=self._css(self.metadata_lastpage_css,el)
+        doi = self._css(self.metadata_doi_css,el)
+        pdf_url = self._css(self.metadata_pdf_url_css,el)
+        html_url = self._css(self.metadata_html_url_css,el)
+
+        metadata = {
+                '_title': title[0] if title else None,
+                '_authors': authors if authors else None,
+                '_publisher': publisher[0] if publisher else None,
+                '_journal': journal[0] if journal else None,
+                '_date': date[0] if date else None,
+                '_language': language[0] if language else None,
+                '_volume': volume[0] if volume else None,
+                '_issue': issue[0] if issue else None,
+                '_firstpage': firstpage[0] if firstpage else None,
+                '_lastpage': lastpage[0] if lastpage else None,
+                '_doi': doi[0] if doi else None,
+                '_pdf_url': pdf_url[0] if pdf_url else None,
+                '_html_url': html_url[0] if html_url else None
+                }
+        meta = MetaData(metadata)
+        return [meta]
 
     def _xpath(self, query, root):
         result = root.xpath(query, smart_strings=False)
@@ -235,6 +285,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
         citations = self._css(self.citation_css, root)
         references = self._css(self.reference_css, root)
         ignores = self._css(self.ignore_css, root)
+        metadata = self._css(self.metadata_css, root)
         for reference in references:
             refs[reference.getparent()].extend(self._parse_reference(reference))
         for ignore in ignores:
@@ -249,6 +300,8 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
             specials[table] = self._parse_table(table, refs=refs, specials=specials)
         for citation in citations:
             specials[citation] = self._parse_text(citation, element_cls=Citation, refs=refs, specials=specials)
+        for md in metadata:
+            specials[md] = self._parse_metadata(md, refs=refs, specials=specials)
         elements = self._parse_element(root, specials=specials, refs=refs)
         return Document(*elements)
 

@@ -15,8 +15,9 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import six
 from ..scrape.clean import clean, Cleaner
-from ..doc.table import Cell, Table
+from ..doc.table_new import Cell, Table
 from ..doc.text import Caption
+from ..doc.meta import MetaData
 from .markup import XmlReader
 from lxml import etree
 import re
@@ -118,6 +119,21 @@ class ElsevierXmlReader(XmlReader):
     figure_label_css = 'ce|figure ce|label'
     reference_css = 'ce|cross-refs'
     citation_css = 'ce|bib-reference'
+
+    metadata_css = 'xocs|meta'
+    metadata_title_css = 'xocs|normalized-article-title'
+    metadata_author_css = 'xocs|normalized-first-auth-surname'
+    metadata_journal_css = 'xocs|srctitle'
+    metadata_volume_css = 'xocs|vol-first, xocs|volume-list xocs|volume'
+    metadata_issue_css = 'xocs|issns xocs|issn-primary-formatted'
+    metadata_publisher_css = 'xocs|copyright-line'
+    metadata_date_css = 'xocs|available-online-date, xocs|orig-load-date'
+    metadata_firstpage_css = 'xocs|first-fp'
+    metadata_lastpage_css = 'xocs|last-lp'
+    metadata_doi_css = 'xocs|doi, xocs|eii'
+    metadata_pii_css = 'xocs|pii-unformatted'
+
+    
     ignore_css = 'ce|bibliography, ce|acknowledgment, ce|correspondence, ce|author, ce|doi, ja|jid, ja|aid, ce|pii, xocs|oa-sponsor-type, xocs|open-access, default|openaccess,'\
                  'default|openaccessArticle, dc|format, dc|creator, dc|identifier,'\
                 'default|eid, default|pii, xocs|meta, xocs|ref-info, default|scopus-eid,'\
@@ -131,6 +147,8 @@ class ElsevierXmlReader(XmlReader):
                  'prism|publisher, prism|*, xocs|copyright-line, xocs|cp-notice,' \
                  'dc|description'
 
+    url_prefix = 'https://sciencedirect.com/science/article/pii/'
+
     def detect(self, fstring, fname=None):
         """Elsevier document detection based on string found in xml"""
         if fname and not fname.endswith('.xml'):
@@ -138,3 +156,66 @@ class ElsevierXmlReader(XmlReader):
         if b'xmlns="http://www.elsevier.com/xml/svapi/article/dtd"' in fstring:
             return True
         return False
+    
+    def _parse_metadata(self, el, refs, specials):
+        title = self._css(self.metadata_title_css, el)
+        authors = self._css(self.metadata_author_css,el)
+        publisher = self._css(self.metadata_publisher_css,el)
+        journal = self._css(self.metadata_journal_css,el)
+        date = self._css(self.metadata_date_css,el)
+        language = self._css(self.metadata_language_css,el)
+        volume = self._css(self.metadata_volume_css,el)
+        issue = self._css(self.metadata_issue_css,el)
+        firstpage =self._css(self.metadata_firstpage_css,el)
+        lastpage=self._css(self.metadata_lastpage_css,el)
+        doi = self._css(self.metadata_doi_css,el)
+        pii = self._css(self.metadata_pii_css, el)
+        pdf_url = self._css(self.metadata_pdf_url_css,el)
+        html_url = self._css(self.metadata_html_url_css,el)
+
+        metadata = {
+                '_title': title[0].text if title else None,
+                '_authors': [i.text for i in authors] if authors else None,
+                '_publisher': publisher[0].text if publisher else None,
+                '_journal': journal[0].text if journal else None,
+                '_date': date[0].text if date else None,
+                '_language': language[0].text if language else None,
+                '_volume': volume[0].text if volume else None,
+                '_issue': issue[0].text if issue else None,
+                '_firstpage': firstpage[0].text if firstpage else None,
+                '_lastpage': lastpage[0].text if lastpage else None,
+                '_doi': doi[0].text if doi else None,
+                '_pdf_url': self.url_prefix + pdf_url[0].text if pdf_url else None,
+                '_html_url': self.url_prefix + html_url[0].text if html_url else self.url_prefix + pii[0].text
+                }
+        meta = MetaData(metadata)
+        return [meta]
+    
+    def _parse_table_rows(self, els, refs, specials):
+        hdict = {}
+        for row, tr in enumerate(els):
+            colnum = 0
+            for td in self._css(self.table_cell_css, tr):
+                cell = self._parse_text(td, refs=refs, specials=specials, element_cls=Cell)
+                namest = int([i for i in td.get('namest', '1').split('col') if i][0])
+                nameend = int([i for i in td.get('nameend', '1').split('col') if i][0])
+                colspan = (nameend - namest) + 1
+                rowspan = int(td.get('morerows', '0')) + 1
+                for i in range(colspan):
+                    for j in range(rowspan):
+                        rownum = row + j
+                        if not rownum in hdict:
+                            hdict[rownum] = {}
+                        while colnum in hdict[rownum]:
+                            colnum += 1
+                        hdict[rownum][colnum] = cell[0]
+                    colnum += 1
+        rows = []
+        for row in sorted(hdict):
+            rows.append([])
+            for col in sorted(hdict[row]):
+                rows[-1].append(hdict[row][col])
+        for r in rows:
+            r.extend([Cell('')] * (len(max(rows, key=len)) - len(r)))
+        rows = [r for r in rows if any(r)]
+        return rows

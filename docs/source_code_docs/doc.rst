@@ -2,7 +2,7 @@
 .doc
 ======================
 
-Logic for reading/creating documents. That is, splitting documents down into its various elements. The API for documents has been slightly changed as of version 1.5.0. Please refer to the migration guide and the examples for an overview of the changes.
+Logic for reading/creating documents. That is, splitting documents down into its various elements. The API for documents has been slightly changed as of version 1.5.0. Please refer to the :ref:`migration guide<migration_guide>` and the examples for an overview of the changes.
 
 .. automodule:: chemdataextractor.doc
     :members:
@@ -27,6 +27,13 @@ Logic for reading/creating documents. That is, splitting documents down into its
 ------------------------------------------------
 
 .. automodule:: chemdataextractor.doc.figure
+    :members:
+    :undoc-members:
+
+.doc.meta
+------------------------------------------------
+
+.. automodule:: chemdataextractor.doc.meta
     :members:
     :undoc-members:
 

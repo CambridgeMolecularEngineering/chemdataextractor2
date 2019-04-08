@@ -108,3 +108,4 @@ units_dict = {R('°?(((K|k)elvin(s)?)|K)\.?', group=0): Kelvin,
 # this means that this element will be ignored when extracting units, but will
 # be taken into account for autoparsers to extract from sentences.
 Temperature.units_dict = units_dict
+Temperature.standard_units = Kelvin()

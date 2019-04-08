@@ -22,7 +22,7 @@ from ..utils import memoize
 
 log = logging.getLogger(__name__)
 
-magnitudes_dict = {R('c(enti)?', group=0): 2.,
+magnitudes_dict = {R('c(enti)?', group=0): -2.,
                   R('k(ilo)?', group=0): 3.,
                   R('M(ega)?', group=0): 6.,
                   R('G(iga)?', group=0): 9.,
@@ -46,7 +46,8 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('raw_value').add_action(merge)
     to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('value').add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('raw_value').add_action(merge)
+    between_range = (I('between').hide() + number + I('and') + number).add_action(join)
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     return value + units
@@ -65,7 +66,8 @@ def value_element_plain():
     spaced_range = (number + R('^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
     to_range = (number + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range))('raw_value').add_action(merge)
+    between_range = (I('between').hide() + number + I('and') + number).add_action(join)
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     return value
@@ -235,26 +237,30 @@ def _split(string):
     # Split at brackets
     split_by_bracket = []
     for element in split_by_slash:
-        split = re.split('(\()', element)
+        split = re.split('(\()|(\))', element)
         split_by_bracket += split
 
     # Merge bits that were split too much
     final_list = []
     for element in split_by_bracket:
-        # Merge /s with forward brackets, or text,
-        # e.g. ['/', '('] -> ['/('] and ['/n', 's'] -> ['/ns']
-        if (re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
-            or (final_list != [] and re.match('[\/]\D*', final_list[-1])
-                and not re.match('\)\w*', element) and not re.match('\/\(', final_list[-1]))):
-            final_list[-1] = final_list[-1] + element
-        else:
-            final_list.append(element)
+        if element is not None:
+            # Merge /s with forward brackets, or text,
+            # e.g. ['/', '('] -> ['/('] and ['/n', 's'] -> ['/ns']
+            # Also merge numbers
+            if (re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
+                or (final_list != [] and re.match('[\/]\D*', final_list[-1])
+                    and not re.match('\)\w*', element) and not re.match('\/\(', final_list[-1]))
+                    and not re.match('/', element)):
+                final_list[-1] = final_list[-1] + element
+            else:
+                final_list.append(element)
 
     # Remove empty substrings
     final_list_cleaned = []
     for element in final_list:
         if element != '' and element != ' ':
             final_list_cleaned.append(element)
+
     return final_list_cleaned
 
 
@@ -289,38 +295,38 @@ def _find_unit_types(tokenized_sentence, dimensions):
             splitting_symbols = splitting_symbols[:-1]
             splitting_symbols += ')'
             split = re.split(splitting_symbols, element)
-            most_recent_unit = None
-            most_recent_key = ''
-            prev_key = ''
+
+            # Iterate through the substrings to find the occurences of the units.
+            # Constructs a list of tuples of (Unit, string in which the unit was found, string corresponding to the unit itself)
+            # Algorithm is as follows:
+            # - If the token corresponds to a unit (path 1):
+            #   + Append it and its string to the units_list, (path 1a), unless
+            #   + The token corresponds to the same unit as the previous token, then that probably represents a magnitude (e.g. mm),
+            #     so add the string to the 'string in which the unit was found' for the previous tuple (path 1b).
+            # - If the token's a number, it's a power of some sort, so add it to the previous tuple (path 2).
+            # - Else add it to the current_string so that it's incorporated in the next unit that comes along's tuple, as it
+            # represents a magnitude of some sort, e.g. kilo or mega (path 3).
+            prev_unit = None
             current_string = ''
-            # Iterate through the substrings to find the occurences of the units. prev_key is used to deal with cases like mm, where if you have two occurences of the same symbol, it's likely that the first letter was a modifier, hopefully an magnitude, on the first.
             for index, string in enumerate(split):
                 if string in found_units.keys():
-                    if most_recent_unit is not None:
-                        new_unit = found_units[string]
-                        new_key = string
-                        if len(units_list) != 0 and prev_key != '' and most_recent_key == prev_key:
-                            old_unit, old_string, old_key = units_list.pop(-1)
-                            units_list.append((most_recent_unit, old_string + current_string, most_recent_key))
-                        else:
-                            units_list.append((most_recent_unit, current_string, most_recent_key))
-                        most_recent_unit = new_unit
-                        current_string = string
-                        prev_key = most_recent_key
-                        most_recent_key = new_key
+                    # path 1
+                    if found_units[string] == prev_unit:
+                        # path 1a
+                        units_list[-1] = (prev_unit, units_list[-1][1] + string, units_list[-1][2])
                     else:
-                        most_recent_unit = found_units[string]
-                        current_string += string
-                        prev_key = most_recent_key
-                        most_recent_key = string
+                        # path 1b
+                        units_list.append((found_units[string], current_string + string, string))
+                    current_string = ''
+                    prev_unit = found_units[string]
+                elif re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', string):
+                    # path 2
+                    units_list[-1] = (units_list[-1][0], units_list[-1][1] + string, units_list[-1][2])
                 else:
+                    # path 3
                     current_string += string
-                    if index == (len(split) - 1):
-                        if prev_key != '' and most_recent_key == prev_key:
-                            unit, string, key = units_list.pop(-1)
-                            units_list.append((most_recent_unit, string + current_string, most_recent_key))
-                        else:
-                            units_list.append((most_recent_unit, current_string, most_recent_key))
+                    if index == len(split) - 1:
+                        units_list[-1] = (units_list[-1][0], units_list[-1][1] + current_string, units_list[-1][2])
     return units_list
 
 
@@ -332,26 +338,36 @@ def _find_powers(units_list):
     :returns: A list containing tuples of the found units and the string split by the units, in the format (units found, string in which this occured, power associated with the unit, string which matched with the unit's definition)
     :rtype: list((chemdataextractor.quantities.Unit, str, str, str))
     """
-
     powers = []
     i = 0
-
+    # base_power to account for examples such as K/km2s, where a series of units after the division should be accounted for
+    base_power = 1.0
     # Go through list of found units/substrings and associate a power with each of them. Ignores brackets in the loop, which are handled in _remove_brackets
     while i in range(len(units_list)):
 
         element = units_list[i][1]
-
-        power = 1.0
+        power = base_power
         if element[0] == '/':
-            power = power * -1.0
+            power = -1.0
+            base_power = -1.0
             element = re.split('/', element)[1]
+        # Reset base_power at end of brackets, to account for cases like K/(km/s)-1/2
+        # Without this, this would be parsed as Kkm-1/2s1/2 as the base_power would carry to the
+        # -1/2 after the end of the brackets
+        elif element[0] == ')':
+            power = 1.0
+            base_power = 1.0
         # Look for strings involving numbers.
         found_power = re.search('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
         if found_power is not None:
             power = power * float(sum(Fraction(s) for s in found_power.group(0).split()))
             element = re.split(found_power.group(0), element)[0]
-
         powers.append((units_list[i][0], element, power, units_list[i][2]))
+        # Reset base_power at the start of a bracket, as that's handled by _remove_brackets
+        # This also ensures desired behaviour on e.g. K/(km/s)A, which should resolve to
+        # KAskm-1
+        if element[0] == '(':
+            base_power = 1.0
         i += 1
     powers_cleaned, _ = _remove_brackets(powers)
     return powers_cleaned
