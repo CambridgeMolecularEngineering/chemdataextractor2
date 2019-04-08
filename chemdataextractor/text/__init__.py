@@ -219,10 +219,10 @@ def get_encoding(input_string, guesses=None, is_html=False):
     """Return the encoding of a byte string. Uses bs4 UnicodeDammit.
 
     :param string input_string: Encoded byte string.
-    :param list[string] guesses: (Optional) List of encoding guesses to prioritize.
+    :param list[string] guesses: (Optional) List of encoding guesses to prioritize. Default is ['utf-8']
     :param bool is_html: Whether the input is HTML.
     """
-    converted = UnicodeDammit(input_string, override_encodings=[guesses] if guesses else [], is_html=is_html)
+    converted = UnicodeDammit(input_string, override_encodings=[guesses] if guesses else ['utf-8'], is_html=is_html)
     return converted.original_encoding
 
 
