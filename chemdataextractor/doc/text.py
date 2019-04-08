@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from abc import abstractproperty, abstractmethod
+from abc import abstractproperty
 import collections
 import logging
 import re
@@ -28,9 +28,6 @@ from .element import BaseElement
 from ..parse.definitions import specifier_definition
 from ..parse.cem import chemical_name
 from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
-
-from lxml import etree
-
 
 log = logging.getLogger(__name__)
 
