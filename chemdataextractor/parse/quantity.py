@@ -32,6 +32,18 @@ magnitudes_dict = {R('c(enti)?', group=0): -2.,
                   R('n(ano)?', group=0): -9.,
                   R('p(ico)?', group=0): -12.}
 
+_number_pattern = re.compile('(\d+\.?(?:\d+)?)')
+_negative_number_pattern = re.compile('(-?\d+\.?(?:\d+)?)')
+_simple_number_pattern = re.compile('(\d+(?!\d+))')
+_error_pattern = re.compile('(\d+\.?(?:\d+)?)|(±)')
+_fraction_or_decimal_pattern = re.compile('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?')
+_unit_fraction_pattern = re.compile('(/[^\d])')
+_brackets_pattern = re.compile('(\()|(\))')
+_slash_pattern = re.compile('/')
+_end_bracket_pattern = re.compile('\)\w*')
+_open_bracket_pattern = re.compile('/\(')
+_division_pattern = re.compile('[/]\D*')
+
 
 def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('raw_units').add_action(merge)):
     """
@@ -93,7 +105,7 @@ def extract_error(string):
     string = string.replace("–", "-")
     string = string.replace("−", "-")
     string = string.replace(" ", "")
-    split_by_num_and_error = [r for r in re.split('(\d+\.?(?:\d+)?)|(±)', string) if r]
+    split_by_num_and_error = [r for r in re.split(_error_pattern, string) if r]
     error = None
     for index, value in enumerate(split_by_num_and_error):
         if value == '±':
@@ -129,7 +141,7 @@ def extract_value(string):
     split_by_space = [r for r in re.split(' |(-)', string) if r]
     split_by_num = []
     for elem in split_by_space:
-        split_by_num.extend([r for r in re.split('(\d+\.?(?:\d+)?)', elem) if r])
+        split_by_num.extend([r for r in re.split(_number_pattern, elem) if r])
     if split_by_num[0] == "-":
         split_by_num[0] = "-" + split_by_num.pop(1)
     flag = 0
@@ -139,11 +151,11 @@ def extract_value(string):
             new_split_by_num.append(split_by_num[index - 2])
             new_split_by_num.append(split_by_num[index - 1] + value)
             flag = 0
-        elif flag == 1 and re.match('(-?\d+\.?(?:\d+)?)', value):
+        elif flag == 1 and re.match(_negative_number_pattern, value):
             new_split_by_num.append(split_by_num[index - 1])
             new_split_by_num.append(value)
             flag = 0
-        elif not re.match('(-?\d+\.?(?:\d+)?)', value):
+        elif not re.match(_negative_number_pattern, value):
             flag += 1
         else:
             new_split_by_num.append(value)
@@ -214,7 +226,7 @@ def _split(string):
     """
 
     # Split at numbers
-    split_by_num = re.split('(\d+(?!\d+))', string)
+    split_by_num = re.split(_simple_number_pattern, string)
     split_by_num_cleaned = []
     for element in split_by_num:
         try:
@@ -231,13 +243,13 @@ def _split(string):
     # Split at slashes
     split_by_slash = []
     for element in split_by_num_cleaned:
-        split = re.split('(/[^\d])', element)
+        split = re.split(_unit_fraction_pattern, element)
         split_by_slash += split
 
     # Split at brackets
     split_by_bracket = []
     for element in split_by_slash:
-        split = re.split('(\()|(\))', element)
+        split = re.split(_brackets_pattern, element)
         split_by_bracket += split
 
     # Merge bits that were split too much
@@ -247,10 +259,10 @@ def _split(string):
             # Merge /s with forward brackets, or text,
             # e.g. ['/', '('] -> ['/('] and ['/n', 's'] -> ['/ns']
             # Also merge numbers
-            if (re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
-                or (final_list != [] and re.match('[\/]\D*', final_list[-1])
-                    and not re.match('\)\w*', element) and not re.match('\/\(', final_list[-1]))
-                    and not re.match('/', element)):
+            if (re.match(_fraction_or_decimal_pattern, element)
+                or (final_list != [] and re.match(_division_pattern, final_list[-1])
+                    and not re.match(_end_bracket_pattern, element) and not re.match(_open_bracket_pattern, final_list[-1]))
+                    and not re.match(_slash_pattern, element)):
                 final_list[-1] = final_list[-1] + element
             else:
                 final_list.append(element)
@@ -319,7 +331,7 @@ def _find_unit_types(tokenized_sentence, dimensions):
                         units_list.append((found_units[string], current_string + string, string))
                     current_string = ''
                     prev_unit = found_units[string]
-                elif re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', string):
+                elif re.match(_fraction_or_decimal_pattern, string):
                     # path 2
                     units_list[-1] = (units_list[-1][0], units_list[-1][1] + string, units_list[-1][2])
                 else:
@@ -350,7 +362,7 @@ def _find_powers(units_list):
         if element[0] == '/':
             power = -1.0
             base_power = -1.0
-            element = re.split('/', element)[1]
+            element = re.split(_slash_pattern, element)[1]
         # Reset base_power at end of brackets, to account for cases like K/(km/s)-1/2
         # Without this, this would be parsed as Kkm-1/2s1/2 as the base_power would carry to the
         # -1/2 after the end of the brackets
@@ -358,7 +370,7 @@ def _find_powers(units_list):
             power = 1.0
             base_power = 1.0
         # Look for strings involving numbers.
-        found_power = re.search('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
+        found_power = re.search(_fraction_or_decimal_pattern, element)
         if found_power is not None:
             power = power * float(sum(Fraction(s) for s in found_power.group(0).split()))
             element = re.split(found_power.group(0), element)[0]
