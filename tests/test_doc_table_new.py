@@ -32,6 +32,12 @@ class CoordinationNumber(DimensionlessModel):
     cn_label = StringType(parse_expression=coordination_number_label)
     compound = ModelType(Compound)
 
+class CoordinationNumber2(DimensionlessModel):
+    coordination_number_label = R('^((X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr)\-?(X|Ac|Ag|Al|Am|Ar|As|At|Au|B|Ba|Be|Bh|Bi|Bk|Br|C|Ca|Cd|Ce|Cf|Cl|Cm|Cn|Co|Cr|Cs|Cu|Db|Ds|Dy|Er|Es|Eu|F|Fe|Fl|Fm|Fr|Ga|Gd|Ge|H|He|Hf|Hg|Ho|Hs|I|In|Ir|K|Kr|La|Li|Lr|Lu|Lv|Mc|Md|Mg|Mn|Mo|Mt|N|Na|Nb|Nd|Ne|Nh|Ni|No|Np|O|Og|Os|P|Pa|Pb|Pd|Pm|Po|Pr|Pt|Pu|Ra|Rb|Re|Rf|Rg|Rh|Rn|Ru|S|Sb|Sc|Se|Sg|Si|Sm|Sn|Sr|Ta|Tb|Tc|Te|Th|Ti|Tl|Tm|Ts|U|V|W|Xe|Y|Yb|Zn|Zr))$')
+    specifier_expression = R('^(N|n|k)$')
+    specifier = StringType(parse_expression=specifier_expression, required=True, contextual=True, updatable=True)
+    cn_label = StringType(parse_expression=coordination_number_label, required=True, contextual=True)
+    compound = ModelType(Compound, required=True, contextual=True)
 
 class InteratomicDistance(LengthModel):
     specifier_expression = (R('^bond$') + R('^distance')).add_action(merge)
@@ -366,6 +372,25 @@ class TestTable(unittest.TestCase):
         log.debug(results)
         self.assertCountEqual(results, expected)
 
+    def test_table_2(self):
+        table = Table(caption=Caption("Example table."),
+                      table_data="tests/data/tables/table_example_2.csv",
+                      models=[CoordinationNumber2])
+        result = []
+        expected = [
+            {'CoordinationNumber2': {'raw_value': '78.31676', 'value': [78.31676], 'specifier': 'k', 'cn_label': 'Ti-O', 'compound': {'Compound': {'names': ['TiO2']}}}},
+            {'CoordinationNumber2': {'raw_value': '1319.193', 'value': [1319.193], 'specifier': 'k', 'cn_label': 'O-O', 'compound': {'Compound': {'names': ['TiO3']}}}},
+            {'CoordinationNumber2': {'raw_value': '23707.91', 'value': [23707.91], 'specifier': 'k', 'cn_label': 'Ti-O', 'compound': {'Compound': {'names': ['TiO4']}}}},
+            {'CoordinationNumber2': {'raw_value': '1844.746', 'value': [1844.746], 'specifier': 'k', 'cn_label': 'O-O', 'compound': {'Compound': {'names': ['TiO5']}}}},
+            {'CoordinationNumber2': {'raw_value': '23707.91', 'value': [23707.91], 'specifier': 'k', 'cn_label': 'Ti-O', 'compound': {'Compound': {'names': ['TiO6']}}}},
+            {'CoordinationNumber2': {'raw_value': '1881.641', 'value': [1881.641], 'specifier': 'k', 'cn_label': 'O-O', 'compound': {'Compound': {'names': ['TiO7']}}}},
+            {'CoordinationNumber2': {'raw_value': '2963.489', 'value': [2963.489], 'specifier': 'k', 'cn_label': 'Ti-O', 'compound': {'Compound': {'names': ['TiO8']}}}},
+            {'CoordinationNumber2': {'raw_value': '2213.910', 'value': [2213.91], 'specifier': 'k', 'cn_label': 'O-O', 'compound': {'Compound': {'names': ['TiO9']}}}},
+            {'CoordinationNumber2': {'raw_value': '18000.00', 'value': [18000.0], 'specifier': 'k', 'cn_label': 'Ti-Ti', 'compound': {'Compound': {'names': ['TiO10']}}}}
+        ]
+        for record in table.records:
+            result.append(record.serialize())
+        self.assertCountEqual(expected, result)
 
 
 if __name__ == '__main__':
