@@ -117,7 +117,7 @@ class ElsevierXmlReader(XmlReader):
     figure_css = 'ce|figure'
     figure_caption_css = 'ce|figure ce|caption'
     figure_label_css = 'ce|figure ce|label'
-    reference_css = 'ce|cross-refs'
+    reference_css = 'ce|cross-ref, ce|cross-refs'
     citation_css = 'ce|bib-reference'
 
     metadata_css = 'xocs|meta'
