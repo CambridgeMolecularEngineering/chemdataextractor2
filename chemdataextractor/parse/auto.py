@@ -24,7 +24,6 @@ import logging
 import six
 import copy
 
-from .common import lbrct, rbrct
 from .cem import cem, chemical_label, lenient_chemical_label
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
@@ -274,8 +273,8 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
             # print(self.model, self.model.dimensions)
             unit_element = Group(
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
-            specifier = self.model.specifier.parse_expression('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(
-                unit_element) + Optional(rbrct)
+            specifier = self.model.specifier.parse_expression('specifier') + Optional(W('/')) + Optional(
+                unit_element)
             value_phrase = (value_element_plain() + Optional(unit_element))
             entities.append(specifier)
             entities.append(value_phrase)
