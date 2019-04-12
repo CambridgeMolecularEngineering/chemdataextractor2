@@ -456,6 +456,8 @@ To define this model is great, but we also need to upgrade the parser to make su
             except TypeError as e:
                 log.debug(e)
 
+These parsers can also be made faster by setting the optional :attr:`~chemdataextractor.parse.base.BaseParser.condition_phrase` attribute. The parse element contained in this attribute is run before the root phrase is run, which can result in substantial performance improvements if the root phrase is large and complicated. However, in the case of :python:`BpParser` above, setting this attribute would make the parser slightly slower. For real, more complicated parsers, if you are finding the parser to be running too slowly, it may be worth setting this attribute.
+
 Using Automatic Parsers
 ----------------------------
 

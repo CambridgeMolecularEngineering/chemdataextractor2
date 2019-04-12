@@ -18,6 +18,18 @@ class BaseParser(object):
     """"""
     model = None
     condition_phrase = None
+    """
+    Optional :class:`~chemdataextractor.parse.elements.BaseParserElement` instance.
+    All sentences are run through this before the full root phrase is applied to the
+    sentence. If nothing is found for this phrase, the sentence will not go through
+    the full root phrase. This is done for performance reasons, and if not set,
+    ChemDataExtractor will perform as it did in previous versions. If this phrase is
+    set to some appropriate value, it can help ChemDataExtractor perform at up to 2x
+    its previous speed.
+
+    To ensure that this works as intended, the :class:`~chemdataextractor.parse.elements.BaseParserElement`
+    should be a simple parse rule that takes little time to process.
+    """
 
     @abstractproperty
     def root(self):
