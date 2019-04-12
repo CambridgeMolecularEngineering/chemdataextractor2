@@ -103,6 +103,10 @@ class BaseAutoParser(BaseParser):
     _specifier = None
     _root_phrase = None
 
+    def __init__(self):
+        super(BaseAutoParser, self).__init__()
+        self._condition_property = None
+
     def interpret(self, result, start, end):
         if result is None:
             return
@@ -198,7 +202,22 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
     @property
     def condition_phrase(self):
-        return self.model.specifier.parse_expression
+        # Generalised case of condition_phrase. We go through the fields of the model and
+        # try to find one that is both required and not contextual, and remember the name
+        # of that field so that the condition_phrase will be that parse expression next time it's called
+        # If none of these are found, condition_property is set to False, and None is returned.
+        if self._condition_property is False:
+            return None
+        elif self._condition_property is not None:
+            return self.model.fields[self._condition_property].parse_expression
+        else:
+            for field_name, field in six.iteritems(self.model.fields):
+                if field.required and not field.contextual:
+                    self._condition_property = field_name
+                    return self.model.fields[self._condition_property].parse_expression
+            if self._condition_property is None:
+                self._condition_property = False
+                return None
 
     @property
     def root(self):
