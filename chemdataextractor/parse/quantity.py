@@ -246,9 +246,11 @@ def _split(string):
         if element is not None:
             # Merge /s with forward brackets, or text,
             # e.g. ['/', '('] -> ['/('] and ['/n', 's'] -> ['/ns']
+            # Also merge numbers
             if (re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
                 or (final_list != [] and re.match('[\/]\D*', final_list[-1])
-                    and not re.match('\)\w*', element) and not re.match('\/\(', final_list[-1]))):
+                    and not re.match('\)\w*', element) and not re.match('\/\(', final_list[-1]))
+                    and not re.match('/', element)):
                 final_list[-1] = final_list[-1] + element
             else:
                 final_list.append(element)
@@ -293,38 +295,38 @@ def _find_unit_types(tokenized_sentence, dimensions):
             splitting_symbols = splitting_symbols[:-1]
             splitting_symbols += ')'
             split = re.split(splitting_symbols, element)
-            most_recent_unit = None
-            most_recent_key = ''
-            prev_key = ''
+
+            # Iterate through the substrings to find the occurences of the units.
+            # Constructs a list of tuples of (Unit, string in which the unit was found, string corresponding to the unit itself)
+            # Algorithm is as follows:
+            # - If the token corresponds to a unit (path 1):
+            #   + Append it and its string to the units_list, (path 1a), unless
+            #   + The token corresponds to the same unit as the previous token, then that probably represents a magnitude (e.g. mm),
+            #     so add the string to the 'string in which the unit was found' for the previous tuple (path 1b).
+            # - If the token's a number, it's a power of some sort, so add it to the previous tuple (path 2).
+            # - Else add it to the current_string so that it's incorporated in the next unit that comes along's tuple, as it
+            # represents a magnitude of some sort, e.g. kilo or mega (path 3).
+            prev_unit = None
             current_string = ''
-            # Iterate through the substrings to find the occurences of the units. prev_key is used to deal with cases like mm, where if you have two occurences of the same symbol, it's likely that the first letter was a modifier, hopefully an magnitude, on the first.
             for index, string in enumerate(split):
                 if string in found_units.keys():
-                    if most_recent_unit is not None:
-                        new_unit = found_units[string]
-                        new_key = string
-                        if len(units_list) != 0 and prev_key != '' and most_recent_key == prev_key:
-                            old_unit, old_string, old_key = units_list.pop(-1)
-                            units_list.append((most_recent_unit, old_string + current_string, most_recent_key))
-                        else:
-                            units_list.append((most_recent_unit, current_string, most_recent_key))
-                        most_recent_unit = new_unit
-                        current_string = string
-                        prev_key = most_recent_key
-                        most_recent_key = new_key
+                    # path 1
+                    if found_units[string] == prev_unit:
+                        # path 1a
+                        units_list[-1] = (prev_unit, units_list[-1][1] + string, units_list[-1][2])
                     else:
-                        most_recent_unit = found_units[string]
-                        current_string += string
-                        prev_key = most_recent_key
-                        most_recent_key = string
+                        # path 1b
+                        units_list.append((found_units[string], current_string + string, string))
+                    current_string = ''
+                    prev_unit = found_units[string]
+                elif re.match('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', string):
+                    # path 2
+                    units_list[-1] = (units_list[-1][0], units_list[-1][1] + string, units_list[-1][2])
                 else:
+                    # path 3
                     current_string += string
-                    if index == (len(split) - 1):
-                        if prev_key != '' and most_recent_key == prev_key:
-                            unit, string, key = units_list.pop(-1)
-                            units_list.append((most_recent_unit, string + current_string, most_recent_key))
-                        else:
-                            units_list.append((most_recent_unit, current_string, most_recent_key))
+                    if index == len(split) - 1:
+                        units_list[-1] = (units_list[-1][0], units_list[-1][1] + current_string, units_list[-1][2])
     return units_list
 
 
