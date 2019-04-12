@@ -142,13 +142,17 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
         :rtype: QuantityModel
         """
         if self.units:
-            converted_values = self.convert_value(self.units, unit)
-            self.value = converted_values
-            self.units = unit
-            if self.error:
-                converted_error = self.convert_error(self.units, unit)
-                self.error = converted_error
-
+            try:
+                converted_values = self.convert_value(self.units, unit)
+                if self.error:
+                    converted_error = self.convert_error(self.units, unit)
+                    self.error = converted_error
+                self.value = converted_values
+                self.units = unit
+            except ZeroDivisionError as e:
+                raise ValueError('Model not converted due to zero division error')
+        else:
+            raise AttributeError('Current units not set')
         return self
 
     def convert_to_standard(self):
