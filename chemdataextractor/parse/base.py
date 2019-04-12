@@ -24,11 +24,12 @@ class BaseParser(object):
     sentence. If nothing is found for this phrase, the sentence will not go through
     the full root phrase. This is done for performance reasons, and if not set,
     ChemDataExtractor will perform as it did in previous versions. If this phrase is
-    set to some appropriate value, it can help ChemDataExtractor perform at up to 2x
+    set to an appropriate value, it can help ChemDataExtractor perform at up to 2x
     its previous speed.
 
     To ensure that this works as intended, the :class:`~chemdataextractor.parse.elements.BaseParserElement`
-    should be a simple parse rule that takes little time to process.
+    should be a simple parse rule (substantially simpler than the :class:`~chemdataextractor.parse.base.BaseParser.root`)
+    that takes little time to process.
     """
 
     @abstractproperty
