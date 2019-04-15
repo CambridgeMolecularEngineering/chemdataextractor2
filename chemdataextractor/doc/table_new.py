@@ -68,23 +68,9 @@ class Table(CaptionedElement):
 
         except (TDEError, TypeError) as e:
             log.error("TableDataExtractor error: {}".format(e))
-            self.category_table = []
-            self.subtables = []
+            self.tde_subtables = []
             self.tde_table = None
             self.heading = None
-
-    def _get_category_tables(self, table):
-        """
-        Returns a list of category table and row category tables for a given TableDataExtractor table
-        :param table:
-        :type table: TableDataExtractor.Table
-        :return: list of category tables (python lists)
-        """
-        category_tables = table.category_table
-        while table.row_categories is not None:
-            category_tables.append(table.row_categories)
-            table = table.row_categories
-        return category_tables
 
     def serialize(self):
         """
@@ -210,6 +196,18 @@ class Table(CaptionedElement):
             table_records.extend(self._records_for_tde_table(self.tde_table, caption_records))
         return table_records
 
+    def _category_tables(self, table):
+        """
+        Returns a list of category table and row category tables for a given TableDataExtractor table
+        :param table:
+        :type table: TableDataExtractor.Table
+        :return: list of category tables (python lists)
+        """
+        yield table.category_table
+        while table.row_categories is not None:
+            yield table.row_categories.category_table
+            table = table.row_categories
+
     def _records_for_tde_table(self, table, caption_records=None):
         """
         :param table: Input TDE table for which we want to obtain the records
@@ -230,48 +228,51 @@ class Table(CaptionedElement):
         # obtain table records
         table_records = ModelList()
 
-        for model in self._streamlined_models:
-            # different parsers can yield different partial table records, but each model is independent
-            partial_table_records = []
-            for parser in model.parsers:
+        # process each category table associated with a TDE table object
+        for category_table in self._category_tables(table):
 
-                # the partial records are obtained from the autoparser
-                for record in self._parse_table(parser, table.category_table):
+            for model in self._streamlined_models:
+                # different parsers can yield different partial table records, but each model is independent
+                partial_table_records = []
+                for parser in model.parsers:
 
-                    # add caption compound if necessary, and append to record
-                    if 'compound' in model.fields \
-                            and not record.compound \
-                            and caption_compounds \
-                            and model.compound.contextual:
-                        record.compound = caption_compounds[0]  # the first compound from the caption is used by default
+                    # the partial records are obtained from the autoparser
+                    for record in self._parse_table(parser, category_table):
 
-                    partial_table_records.append(record)
+                        # add caption compound if necessary, and append to record
+                        if 'compound' in model.fields \
+                                and not record.compound \
+                                and caption_compounds \
+                                and model.compound.contextual:
+                            record.compound = caption_compounds[0]  # the first compound from the caption is used by default
 
-                # the partial records are merged
-                partial_table_records_merged = self._merge_partial_records(partial_table_records)
+                        partial_table_records.append(record)
 
-                # a check is performed to see if all the 'required' elements of the merged table records are satisfied
-                for record in partial_table_records_merged:
-                    requirements = True
+                    # the partial records are merged
+                    partial_table_records_merged = self._merge_partial_records(partial_table_records)
 
-                    # check if all required elements are present
-                    unmet_requirements = []
-                    for field in model.fields:
-                        if model.fields[field].required \
-                                and not record.__getattribute__(field):
-                            unmet_requirements.append(field)
-                            requirements = False
-                    # check if unknown elements from a different model are present
-                    for field in record.fields:
-                        if field not in model.fields:
-                            requirements = False
+                    # a check is performed to see if all the 'required' elements of the merged table records are satisfied
+                    for record in partial_table_records_merged:
+                        requirements = True
 
-                    if requirements:
-                        table_records.append(record)
+                        # check if all required elements are present
+                        unmet_requirements = []
+                        for field in model.fields:
+                            if model.fields[field].required \
+                                    and not record.__getattribute__(field):
+                                unmet_requirements.append(field)
+                                requirements = False
+                        # check if unknown elements from a different model are present
+                        for field in record.fields:
+                            if field not in model.fields:
+                                requirements = False
 
-                    # add the record if only the compound is missing
-                    elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
-                        table_records.append(record)
+                        if requirements:
+                            table_records.append(record)
+
+                        # add the record if only the compound is missing
+                        elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
+                            table_records.append(record)
 
         # Addition of the caption records
         caption_records = [c for c in caption_records if c.contextual_fulfilled]
