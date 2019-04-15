@@ -59,20 +59,32 @@ class Table(CaptionedElement):
         """
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         try:
-            self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
-            self.category_table = self.tde_table.category_table
-            self._subtables = [self.category_table]
-            if self.tde_table.subtables:
-                self._subtables = []
-                for subtable in self.tde_table.subtables:
-                    self._subtables.append(subtable.category_table)
+            #: TableDataExtractor `Table` object. Can pass any kwargs into TDE directly
+            self.tde_table = TdeTable(table_data, **kwargs)
+            self.tde_subtables = self.tde_table.subtables
+
+            # adjust the CDE heading from TDE results
             self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
+
         except (TDEError, TypeError) as e:
             log.error("TableDataExtractor error: {}".format(e))
             self.category_table = []
-            self._subtables = []
+            self.subtables = []
             self.tde_table = None
             self.heading = None
+
+    def _get_category_tables(self, table):
+        """
+        Returns a list of category table and row category tables for a given TableDataExtractor table
+        :param table:
+        :type table: TableDataExtractor.Table
+        :return: list of category tables (python lists)
+        """
+        category_tables = table.category_table
+        while table.row_categories is not None:
+            category_tables.append(table.row_categories)
+            table = table.row_categories
+        return category_tables
 
     def serialize(self):
         """
@@ -191,11 +203,21 @@ class Table(CaptionedElement):
     def records(self):
         table_records = []
         caption_records = self.caption.records
-        for subtable in self._subtables:
-            table_records.extend(self._records_for_subtable(subtable, caption_records))
+        if self.tde_subtables:
+            for subtable in self.tde_subtables:
+                table_records.extend(self._records_for_tde_table(subtable, caption_records))
+        elif not self.tde_subtables:
+            table_records.extend(self._records_for_tde_table(self.tde_table, caption_records))
         return table_records
 
-    def _records_for_subtable(self, subtable, caption_records=None):
+    def _records_for_tde_table(self, table, caption_records=None):
+        """
+        :param table: Input TDE table for which we want to obtain the records
+        :type table: TableDataExtractor.Table
+        :param caption_records:
+        :return:
+        """
+
         # get the compounds from the caption
         if not caption_records:
             caption_records = ModelList()
@@ -214,7 +236,7 @@ class Table(CaptionedElement):
             for parser in model.parsers:
 
                 # the partial records are obtained from the autoparser
-                for record in self._parse_table(parser, subtable):
+                for record in self._parse_table(parser, table.category_table):
 
                     # add caption compound if necessary, and append to record
                     if 'compound' in model.fields \
