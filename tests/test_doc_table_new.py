@@ -355,18 +355,18 @@ class TestTable(unittest.TestCase):
         d.models = [CurieTemperature, NeelTemperature]
         results = d.records.serialize()
         expected = [
-            {'CurieTemperature': {'raw_value': '122.0', 'raw_units': 'K', 'value': [122.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'CurieTemperature': {'raw_value': '143.5', 'raw_units': 'K', 'value': [143.5], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'CurieTemperature': {'raw_value': '0.4', 'raw_units': 'K', 'value': [0.4], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'CurieTemperature': {'raw_value': '0.6', 'raw_units': 'K', 'value': [0.6], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'CurieTemperature': {'raw_value': '0.8', 'raw_units': 'K', 'value': [0.8], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'CurieTemperature': {'raw_value': '116.5', 'raw_units': 'K', 'value': [116.5], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'NeelTemperature': {'raw_value': '0.0', 'raw_units': 'K', 'value': [0.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'NeelTemperature': {'raw_value': '0.2', 'raw_units': 'K', 'value': [0.2], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'NeelTemperature': {'raw_value': '167.6', 'raw_units': 'K', 'value': [167.6], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'NeelTemperature': {'raw_value': '278.0', 'raw_units': 'K', 'value': [278.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'NeelTemperature': {'raw_value': '181.9', 'raw_units': 'K', 'value': [181.9], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
-            {'NeelTemperature': {'raw_value': '1.0', 'raw_units': 'K', 'value': [1.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'CurieTemperature': {'raw_value': '122.0', 'raw_units': '(K)', 'value': [122.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'CurieTemperature': {'raw_value': '143.5', 'raw_units': '(K)', 'value': [143.5], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'CurieTemperature': {'raw_value': '0.4', 'raw_units': '(K)', 'value': [0.4], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'CurieTemperature': {'raw_value': '0.6', 'raw_units': '(K)', 'value': [0.6], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'CurieTemperature': {'raw_value': '0.8', 'raw_units': '(K)', 'value': [0.8], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'CurieTemperature': {'raw_value': '116.5', 'raw_units': '(K)', 'value': [116.5], 'units': 'Kelvin^(1.0)', 'specifier': 'TD', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'NeelTemperature': {'raw_value': '0.0', 'raw_units': '(K)', 'value': [0.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'NeelTemperature': {'raw_value': '0.2', 'raw_units': '(K)', 'value': [0.2], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'NeelTemperature': {'raw_value': '167.6', 'raw_units': '(K)', 'value': [167.6], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'NeelTemperature': {'raw_value': '278.0', 'raw_units': '(K)', 'value': [278.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'NeelTemperature': {'raw_value': '181.9', 'raw_units': '(K)', 'value': [181.9], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
+            {'NeelTemperature': {'raw_value': '1.0', 'raw_units': '(K)', 'value': [1.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN', 'compound': {'Compound': {'names': ['PrMnO3']}}}},
             ]
         log.debug(expected)
         log.debug(results)

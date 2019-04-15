@@ -290,6 +290,15 @@ class TestQuantity(unittest.TestCase):
         speed.convert_to_standard()
         self.assertAlmostEqual(speed.value[0], 44.70400, places=places)
 
+    def test_convert_zero(self):
+        class InvTempModel(QuantityModel):
+            dimensions = Temperature() ** -1.0
+        with self.assertRaises(ValueError):
+            invtemp = InvTempModel()
+            invtemp.value = [0.0]
+            invtemp.units = Celsius() ** -1.0
+            invtemp.convert_to_standard()
+
     def test_dimensionless(self):
         speed = SpeedModel()
         speed.value = [100.0]
