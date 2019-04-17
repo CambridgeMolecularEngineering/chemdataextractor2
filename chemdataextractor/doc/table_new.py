@@ -198,7 +198,7 @@ class Table(CaptionedElement):
 
     def _category_tables(self, table):
         """
-        Returns a list of category table and row category tables for a given TableDataExtractor table
+        Yields the category table and row category tables for a given TableDataExtractor table.
         :param table:
         :type table: TableDataExtractor.Table
         :return: list of category tables (python lists)
