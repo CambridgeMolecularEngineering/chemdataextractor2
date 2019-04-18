@@ -21,7 +21,7 @@ from tabledataextractor import Table as TdeTable
 from tabledataextractor.exceptions import TDEError
 from ..doc.text import Cell
 from ..model.model import Compound
-from ..model.base import ModelList
+from ..model.base import ModelList, ModelType
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -179,7 +179,8 @@ class Table(CaptionedElement):
                     log.debug("Record j = {}: {}".format(j, record_j.serialize()))
                     log.debug("Record inside i = {}, j = {}: {}".format(i, j, record.serialize()))
                     contextual_records.append(record)
-            if i not in updated_records and record_i not in contextual_records:
+            if i not in updated_records:
+            #if i not in updated_records and record_i not in contextual_records:
                 log.debug("Record outside i = {}: {}".format(i, record_i.serialize()))
                 contextual_records.append(record_i)
 
@@ -208,6 +209,65 @@ class Table(CaptionedElement):
             yield table.row_categories.category_table
             table = table.row_categories
 
+    def _merge_nested_models(self, records):
+        """
+        Merges nested records based on models.
+
+        Algorithm:
+
+            1. for every record, check if the corresponding model has a 'ModelType' field
+            2. if yes, and the field is empty, loop through all the records and associate the record that has:
+              a) the same name as the 'ModelType' field,
+              b) the same shared element, for example 'compound',
+                 to the outer record field. Don't copy the records, but just use referencing. In that way many-level
+                 nested models are supported automatically
+
+        :param records: All the individual model records that have been found beforehand
+        :return: updated records, where nested models are merged
+        """
+
+        #: field based on which merging is done
+        shared_element = 'compound'
+
+        # updated record list
+        updated = ModelList()
+
+        # a record that is on this list has already been merged into a bigger one and cannot be merged again
+        # for each outer model type there is a list of merged records that have already been included in
+        # that particular model type
+        merged_records = dict()
+        for record in records:
+            model_name = record.__class__.__name__
+            merged_records[model_name] = []
+
+        for i, record_i in enumerate(records):
+            for field in record_i.fields:
+                if isinstance(record_i.fields[field], ModelType):
+                    submodel_name = record_i.fields[field].model_name
+                    model_name = record_i.__class__.__name__
+
+                    for j, record_j in enumerate(records):
+                        if j not in merged_records[model_name] and \
+                                record_i.__getattribute__(field) is None and \
+                                record_j.__class__.__name__ == submodel_name and \
+                                shared_element in record_i.fields and shared_element in record_j.fields and \
+                                record_i.__getattribute__(shared_element) == record_j.__getattribute__(shared_element):
+
+                            record_i.__setitem__(field, record_j)
+                            merged_records[model_name].append(j)
+
+            log.debug(u"{}: {}".format(i, record_i.serialize()))
+            updated.append(record_i)
+        log.debug(u"Merged nested models: {}".format(merged_records))
+
+        # print(merged_records)
+        # print("Merged records:")
+        # for i, rec in enumerate(updated):
+        #     print(i, rec.serialize())
+        # print("\n===============================================================================================\n")
+
+        return updated
+
     def _records_for_tde_table(self, table, caption_records=None):
         """
         :param table: Input TDE table for which we want to obtain the records
@@ -225,18 +285,24 @@ class Table(CaptionedElement):
             if isinstance(record, Compound):
                 caption_compounds += [record]
 
-        # obtain table records
+        #: complete table records
         table_records = ModelList()
+        #: complete single-model records - not merged with submodels
+        single_model_records = ModelList()
+        #: partial records for non-full models
+        partial_table_records = ModelList()
 
-        # process each category table associated with a TDE table object
-        for category_table in self._category_tables(table):
 
-            for model in self._streamlined_models:
-                # different parsers can yield different partial table records, but each model is independent
-                partial_table_records = []
-                for parser in model.parsers:
+        #print("Collecting partial records.")
+        for model in self._streamlined_models:
+            #print("model", model)
 
-                    # the partial records are obtained from the autoparser
+            for parser in model.parsers:
+                #print("parser", parser)
+
+                for category_table in self._category_tables(table):
+                    #print("category_table", category_table)
+
                     for record in self._parse_table(parser, category_table):
 
                         # add caption compound if necessary, and append to record
@@ -246,33 +312,99 @@ class Table(CaptionedElement):
                                 and model.compound.contextual:
                             record.compound = caption_compounds[0]  # the first compound from the caption is used by default
 
+                        #print(record.serialize())
                         partial_table_records.append(record)
 
-                    # the partial records are merged
-                    partial_table_records_merged = self._merge_partial_records(partial_table_records)
+        # the partial records are merged
+        partial_table_records_merged = self._merge_partial_records(partial_table_records)
 
-                    # a check is performed to see if all the 'required' elements of the merged table records are satisfied
-                    for record in partial_table_records_merged:
-                        requirements = True
+        # print("\n")
+        # for record in partial_table_records_merged:
+        #     print(record.serialize())
+        # print("\n")
 
-                        # check if all required elements are present
-                        unmet_requirements = []
-                        for field in model.fields:
-                            if model.fields[field].required \
-                                    and not record.__getattribute__(field):
-                                unmet_requirements.append(field)
-                                requirements = False
-                        # check if unknown elements from a different model are present
-                        for field in record.fields:
-                            if field not in model.fields:
-                                requirements = False
+        # a check is performed to see if all the 'required' elements of the merged table records are satisfied
+        for model in self._streamlined_models:
 
-                        if requirements:
-                            table_records.append(record)
+            # print("MODEL: {}".format(model))
+            # print(model.fields)
 
-                        # add the record if only the compound is missing
-                        elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
-                            table_records.append(record)
+            for record in partial_table_records_merged:
+                requirements = True
+
+                # check if all required elements are present, do not check for requirement if the field is
+                # of 'ModelType', this will be checked later, after merging of nested models
+                unmet_requirements = []
+                for field in model.fields:
+                    if not isinstance(model.fields[field], ModelType) and \
+                            model.fields[field].required and \
+                            not record.__getattribute__(field):
+                        unmet_requirements.append(field)
+                        requirements = False
+
+                # check if record is of the correct class
+                if record.__class__.__name__ != model.__name__:
+                    requirements = False
+
+                # check if unknown elements from a different model are present
+                for field in record.fields:
+                    if field not in model.fields:
+                        requirements = False
+
+                if requirements:
+                    #print(record.serialize())
+                    single_model_records.append(record)
+
+                # TODO This should be impossible considering that 'ModelType' fields are not taken into consideration
+                # add the record if only the compound is missing
+                elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
+                    single_model_records.append(record)
+
+        print("\n\n")
+
+        # for rec in single_model_records:
+        #     print(rec.serialize(), "\n")
+
+        merged_model_records = self._merge_nested_models(single_model_records)
+
+        # for rec in merged_model_records:
+        #     print(rec.serialize())
+
+        # TODO: Check if all the elements of the records have been satisfied
+
+        for model in self.models:
+            for record in merged_model_records:
+                requirements = True
+                unmet_requirements = []
+
+                # check if record is of the correct class
+                if record.__class__.__name__ != model.__name__:
+                    requirements = False
+
+                # check if all required fields are present
+                for field in model.fields:
+                    if model.fields[field].required and field in record.fields and not record.__getattribute__(field):
+                        unmet_requirements.append(field)
+                        requirements = False
+
+                # TODO If it is a field check deeper, recursively, for as long as the field is required
+                # TODO Check if this has already been done? Why don't we have records with the current run?
+                    
+
+                # check if unknown fields from a different model are present
+                for field in record.fields:
+                    if field not in model.fields:
+                        requirements = False
+
+                # finally, append to table records if the requirements have been met
+                if requirements:
+                    table_records.append(record)
+
+                # also append to table records if all elements but the compound have been met
+                elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
+                    table_records.append(record)
+
+
 
         # Addition of the caption records
         caption_records = [c for c in caption_records if c.contextual_fulfilled]
