@@ -111,7 +111,7 @@ class Table(CaptionedElement):
     def _merge_partial_records(self, partial_table_records):
         """
         Merges partial records found in different rows of the table, based on the 'contextual' flags.
-        A 'shared_element' can be defined below based on which the merging will be performed.
+        A 'shared_element' is defined below based on which the merging will be performed.
         The function returns merged records, that may still be incomplete. Completeness based on 'required' flags
         is tested outside.
 
@@ -180,7 +180,6 @@ class Table(CaptionedElement):
                     log.debug("Record inside i = {}, j = {}: {}".format(i, j, record.serialize()))
                     contextual_records.append(record)
             if i not in updated_records:
-            #if i not in updated_records and record_i not in contextual_records:
                 log.debug("Record outside i = {}: {}".format(i, record_i.serialize()))
                 contextual_records.append(record_i)
 
@@ -200,7 +199,7 @@ class Table(CaptionedElement):
     def _category_tables(self, table):
         """
         Yields the category table and row category tables for a given TableDataExtractor table.
-        :param table:
+        :param table: Input TableDataExtractor object
         :type table: TableDataExtractor.Table
         :return: list of category tables (python lists)
         """
@@ -222,8 +221,8 @@ class Table(CaptionedElement):
                  to the outer record field. Don't copy the records, but just use referencing. In that way many-level
                  nested models are supported automatically
 
-        :param records: All the individual model records that have been found beforehand
-        :return: updated records, where nested models are merged
+        :param records: All individual model records that have been found beforehand
+        :return: updated records, where nested models are merged into their parents
         """
 
         #: field based on which merging is done
@@ -260,16 +259,57 @@ class Table(CaptionedElement):
             updated.append(record_i)
         log.debug(u"Merged nested models: {}".format(merged_records))
 
-        # print(merged_records)
-        # print("Merged records:")
-        # for i, rec in enumerate(updated):
-        #     print(i, rec.serialize())
-        # print("\n===============================================================================================\n")
-
         return updated
+
+    def _delete_unmet_nested_models(self, record):
+        """
+        Deletes nested records from a record if the requirements of its submodel have not been met.
+        For example:
+            A (requires B) >
+            B (doesn't require C) >
+            C (requires D) >
+            D
+         If D is not present, C will be deleted from the model. This has to be done at this stage, after merging
+         of the nested records, because if, alternatively, only full models were used for merging, none of the models
+         would be merged, as they are all 'required_fulfilled = False' before merging.
+
+        :param record: Record to be processed
+        """
+
+        for field in record.fields:
+            if isinstance(record.fields[field], ModelType) and not record.fields[field].required:
+
+                    subrecord = record.__getattribute__(field)
+                    if subrecord is None:
+                        continue
+
+                    for subfield in subrecord.fields:
+                        if isinstance(subrecord.fields[subfield], ModelType):
+
+                            if subrecord.__getattribute__(subfield) is not None:
+                                if not subrecord.__getattribute__(subfield).required_fulfilled:
+                                    log.debug("Deletion, position 1, field: {}".format(field))
+                                    log.debug("Before deletion: {}".format(record.serialize()))
+                                    record.__delattr__(field)
+                                    log.debug("After deletion: {}".format(record.serialize()))
+                                elif subrecord.__getattribute__(subfield).required_fulfilled:
+                                    self._delete_unmet_nested_models(subrecord)
+
+                            elif subrecord.__getattribute__(subfield) is None and subrecord.fields[subfield].required:
+                                log.debug("Deletion, position 2, field: {}".format(field))
+                                log.debug("Before deletion: {}".format(record.serialize()))
+                                record.__delattr__(field)
+                                log.debug("After deletion: {}".format(record.serialize()))
+
+            elif isinstance(record.fields[field], ModelType) and record.fields[field].required:
+                subrecord = record.__getattribute__(field)
+                if subrecord is not None:
+                    self._delete_unmet_nested_models(subrecord)
 
     def _records_for_tde_table(self, table, caption_records=None):
         """
+        Returns the records for a particular TableDataExtractor Table object.
+
         :param table: Input TDE table for which we want to obtain the records
         :type table: TableDataExtractor.Table
         :param caption_records:
@@ -292,17 +332,10 @@ class Table(CaptionedElement):
         #: partial records for non-full models
         partial_table_records = ModelList()
 
-
-        #print("Collecting partial records.")
+        # 1. COLLECTING OF PARTIAL SINGLE-MODEL RECORDS
         for model in self._streamlined_models:
-            #print("model", model)
-
             for parser in model.parsers:
-                #print("parser", parser)
-
                 for category_table in self._category_tables(table):
-                    #print("category_table", category_table)
-
                     for record in self._parse_table(parser, category_table):
 
                         # add caption compound if necessary, and append to record
@@ -310,25 +343,16 @@ class Table(CaptionedElement):
                                 and not record.compound \
                                 and caption_compounds \
                                 and model.compound.contextual:
-                            record.compound = caption_compounds[0]  # the first compound from the caption is used by default
+                            # the first compound from the caption is used by default
+                            record.compound = caption_compounds[0]
 
-                        #print(record.serialize())
                         partial_table_records.append(record)
 
-        # the partial records are merged
+        # 2. MERGING OF PARTIAL SINGLE-MODEL TABLE RECORDS
         partial_table_records_merged = self._merge_partial_records(partial_table_records)
 
-        # print("\n")
-        # for record in partial_table_records_merged:
-        #     print(record.serialize())
-        # print("\n")
-
-        # a check is performed to see if all the 'required' elements of the merged table records are satisfied
+        # 3. CHECK IF ALL THE SINGLE-MODEL REQUIREMENTS (EXCEPT FOR NESTED SUBMODELS) ARE SATISFIED
         for model in self._streamlined_models:
-
-            # print("MODEL: {}".format(model))
-            # print(model.fields)
-
             for record in partial_table_records_merged:
                 requirements = True
 
@@ -352,44 +376,36 @@ class Table(CaptionedElement):
                         requirements = False
 
                 if requirements:
-                    #print(record.serialize())
                     single_model_records.append(record)
 
-                # TODO This should be impossible considering that 'ModelType' fields are not taken into consideration
-                # add the record if only the compound is missing
-                elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
-                    single_model_records.append(record)
-
-        print("\n\n")
-
-        # for rec in single_model_records:
-        #     print(rec.serialize(), "\n")
-
+        # 4. MERGE ALL SINGLE-MODEL RECORDS BASED ON THE HIERARCHY OF SUBMODELS
         merged_model_records = self._merge_nested_models(single_model_records)
 
-        # for rec in merged_model_records:
-        #     print(rec.serialize())
-
-        # TODO: Check if all the elements of the records have been satisfied
-
+        # 5. CHECK IF ALL THE ELEMENTS OF THE FINAL RECORDS HAVE BEEN SATISFIED
         for model in self.models:
             for record in merged_model_records:
-                requirements = True
-                unmet_requirements = []
 
                 # check if record is of the correct class
                 if record.__class__.__name__ != model.__name__:
-                    requirements = False
+                    continue
 
-                # check if all required fields are present
+                requirements = True
+                unmet_requirements = []
+
+                # manual check, only for the main (outermost) record, to catch the situation if only the
+                # 'compound' is missing
                 for field in model.fields:
-                    if model.fields[field].required and field in record.fields and not record.__getattribute__(field):
+                    if model.fields[field].required and not record.__getattribute__(field):
                         unmet_requirements.append(field)
                         requirements = False
 
-                # TODO If it is a field check deeper, recursively, for as long as the field is required
-                # TODO Check if this has already been done? Why don't we have records with the current run?
-                    
+                # using the model built-in check, this will check nested models properly
+                if not record.required_fulfilled:
+                    requirements = False
+
+                # delete nested models that are not required but have required submodels that are not found
+                # see the docstring of this function for further explanations
+                self._delete_unmet_nested_models(record)
 
                 # check if unknown fields from a different model are present
                 for field in record.fields:
@@ -404,13 +420,11 @@ class Table(CaptionedElement):
                 elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
                     table_records.append(record)
 
-
-
-        # Addition of the caption records
+        # 6. ADD RECORDS FOUND IN THE CAPTION
         caption_records = [c for c in caption_records if c.contextual_fulfilled]
         table_records += caption_records
 
-        # Merge Compound records with any shared name/label
+        # 7. merge Compound records with any shared name/label
         # TODO: Copy/pasted from document.py, probably should be moved out somewhere
         len_l = len(table_records)
         log.debug(table_records)
@@ -438,6 +452,3 @@ class Table(CaptionedElement):
             i += 1
 
         return table_records
-
-
-
