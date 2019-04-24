@@ -18,6 +18,7 @@ import copy
 
 from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
+from tabledataextractor import TrivialTable as TrivialTdeTable
 from tabledataextractor.exceptions import TDEError
 from ..doc.text import Cell
 from ..model.model import Compound
@@ -59,18 +60,27 @@ class Table(CaptionedElement):
         """
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         try:
-            #: TableDataExtractor `Table` object. Can pass any kwargs into TDE directly
+            #: TableDataExtractor `Table` object. Can pass any kwargs into TDE directly.
             self.tde_table = TdeTable(table_data, **kwargs)
-            self.tde_subtables = self.tde_table.subtables
-
-            # adjust the CDE heading from TDE results
-            self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
 
         except (TDEError, TypeError) as e:
-            log.error("TableDataExtractor error: {}".format(e))
-            self.tde_subtables = []
-            self.tde_table = None
-            self.heading = None
+            log.error("TableDataExtractor 'Table' error: {}".format(e))
+            log.info("Attempting TableDataExtractor 'TrivialTable' interpretation.")
+
+            try:
+                #: TableDataExtractor `TrivialTable` object. Can pass any kwargs into TDE directly.
+                self.tde_table = TrivialTdeTable(table_data, standardize_empty_data=True, **kwargs)
+            except (TDEError, TypeError) as e:
+                log.error("TableDataExtractor 'TrivialTable' error: {}".format(e))
+                self.tde_subtables = []
+                self.tde_table = None
+                self.heading = None
+
+        if self.tde_table is not None:
+            # get the subtables
+            self.tde_subtables = self.tde_table.subtables
+            # adjust the CDE Table heading from TDE results
+            self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
 
     def serialize(self):
         """
