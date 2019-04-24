@@ -93,7 +93,7 @@ class Document(BaseDocument):
         else:
             self.config = Config()
         if 'models' in kwargs.keys():
-            self._models = kwargs['models']
+            self.models = kwargs['models']
         else:
             self._models = []
 
@@ -500,7 +500,7 @@ class Document(BaseDocument):
         A list of all :class:`~chemdataextractor.doc.element.CaptionedElement` elements in this Document.
         """
         return [el for el in self.elements if isinstance(el, CaptionedElement)]
-    
+
     @property
     def metadata(self):
         """Return metadata information
