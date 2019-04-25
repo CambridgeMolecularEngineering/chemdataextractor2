@@ -98,6 +98,6 @@ class Angstrom(LengthUnit):
         return error / 10**(-10)
 
 
-units_dict = {R('m(eter(s)?)?', group=0): Meter, R('mile[s]?', group=0): Mile, R('Å', group=0): Angstrom}
+units_dict = {R('[Mm](eter(s)?)?(?!ile(s)?)', group=0): Meter, R('[Mm]ile[s]?', group=0): Mile, R('Å', group=0): Angstrom}
 Length.units_dict = units_dict
 Length.standard_units = Meter()

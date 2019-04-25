@@ -120,7 +120,10 @@ class BaseAutoParser(BaseParser):
             log.debug(raw_value)
             if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
                 requirements = False
-            value = self.extract_value(raw_value)
+            if raw_value != 'NoValue':
+                value = self.extract_value(raw_value)
+            else:
+                value = None
             error = self.extract_error(raw_value)
             property_entities.update({"raw_value": raw_value,
                                       "value": value,
@@ -133,7 +136,10 @@ class BaseAutoParser(BaseParser):
             if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
                 requirements = False
             raw_units = first(result.xpath('./raw_units/text()'))
-            value = self.extract_value(raw_value)
+            if raw_value != 'NoValue':
+                value = self.extract_value(raw_value)
+            else:
+                value = None
             error = self.extract_error(raw_value)
             units = None
             try:
@@ -260,11 +266,12 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
         entities = []
+        no_value_element = W('NoValue')('raw_value')
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
             specifier = self.model.specifier.parse_expression('specifier')
-            value_phrase = value_element_plain()
+            value_phrase = value_element_plain() | no_value_element
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -275,7 +282,7 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
             specifier = self.model.specifier.parse_expression('specifier') + Optional(W('/')) + Optional(
                 unit_element)
-            value_phrase = (value_element_plain() + Optional(unit_element))
+            value_phrase = ((value_element_plain() | no_value_element) + Optional(unit_element))
             entities.append(specifier)
             entities.append(value_phrase)
 

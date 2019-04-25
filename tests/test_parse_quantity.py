@@ -65,6 +65,21 @@ class TestUnitClass(unittest.TestCase):
         log.debug(extracted, expected)
         self.assertEqual(extracted, expected)
 
+    def test_unit_miles(self):
+        self.qp.model.dimensions = Length()
+        test_string = 'miles'
+        extracted = self.qp.extract_units(test_string, strict=True)
+        expected = Mile()
+        log.debug(extracted, expected)
+        self.assertEqual(extracted, expected)
+
+        self.qp.model.dimensions = Length()
+        test_string = 'meters'
+        extracted = self.qp.extract_units(test_string, strict=True)
+        expected = Meter()
+        log.debug(extracted, expected)
+        self.assertEqual(extracted, expected)
+
     def test_unit_multiplication(self):
         self.qp.model.dimensions = Temperature() * Length()**0.5 * Time()**(1.5)
         test_string = '(km/s)1/2Kh2'
