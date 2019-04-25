@@ -400,6 +400,7 @@ class Table(CaptionedElement):
                     continue
 
                 requirements = True
+                duplicate = False
                 unmet_requirements = []
 
                 # manual check, only for the main (outermost) record, to catch the situation if only the
@@ -422,12 +423,19 @@ class Table(CaptionedElement):
                     if field not in model.fields:
                         requirements = False
 
+                # check if record is subset of another record already found in table_records
+                for rec in table_records:
+                    if record.is_subset(rec):
+                        requirements = False
+                        duplicate = True
+
                 # finally, append to table records if the requirements have been met
                 if requirements:
                     table_records.append(record)
 
                 # also append to table records if all elements but the compound have been met
-                elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
+                elif not requirements and not duplicate \
+                        and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
                     table_records.append(record)
 
         # 6. ADD RECORDS FOUND IN THE CAPTION
