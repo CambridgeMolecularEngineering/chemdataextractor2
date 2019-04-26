@@ -383,6 +383,63 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         """Convert Model to JSON."""
         return json.dumps(self.serialize(primitive=True), *args, **kwargs)
 
+    def is_superset(self, other):
+        """
+        Whether this model instance is a 'superset' of the other model instance.
+
+        A model instance is a 'superset' of another if it satisfies the following conditions:
+
+        - The model instances are of the same type
+
+        - For each of the attributes of the model instances, either:
+
+            - This instance has more information, or
+
+            - Both instances have the same information
+
+        :param other: The other model instance to compare with this model instance
+        :type other: BaseModel
+        :return: Whether this model instance is a superset of the other model instance
+        :rtype: bool
+        """
+        if type(self) != type(other):
+            return False
+        for field_name, field in six.iteritems(self.fields):
+            # Method works recursively so it works with nested models
+            if hasattr(field, 'model_class'):
+                if self[field_name] is None:
+                    if other[field_name] is not None:
+                        return False
+                elif other[field_name] is None:
+                    pass
+                elif not self[field_name].is_superset(other[field_name]):
+                    return False
+            else:
+                if other[field_name] is not None and self[field_name] != other[field_name]:
+                    return False
+        return True
+
+    def is_subset(self, other):
+        """
+        Whether this model instance is a 'subset' of the other model instance.
+
+        A model instance is a 'subset' of another if it satisfies the following conditions:
+
+        - The model instances are of the same type
+
+        - For each of the attributes of the model instances, either:
+
+            - The other instance has more information, or
+
+            - Both instances have the same information
+
+        :param other: The other model instance to compare with this model instance
+        :type other: BaseModel
+        :return: Whether this model instance is a subset of the other model instance
+        :rtype: bool
+        """
+        return other.is_superset(self)
+
     def merge_contextual(self, other):
         """
         Merges any fields marked contextual with additional information from other provided that:

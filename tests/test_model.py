@@ -24,11 +24,13 @@ from lxml import etree
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
+
 #: Models for testing
 class NeelTemperature(TemperatureModel):
     specifier_expression = (I('Néel')+I('temperature'))
     specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, updatable=True)
     compound = ModelType(Compound, required=False, contextual=True)
+
 
 class TestModel(unittest.TestCase):
 
@@ -95,8 +97,91 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(results, {'NeelTemperature': {'raw_value': '300', 'raw_units': 'K', 'value': [300.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN'}})
 
+    def test_is_superset(self):
+        class A(BaseModel):
+            attribute_1 = StringType()
+            attribute_2 = StringType()
 
+        class B(BaseModel):
+            a = ModelType(A)
+            attribute_1 = StringType()
 
+        a_list = [
+            A(),
+            A(attribute_2='test'),
+            A(attribute_1='test'),
+            A(attribute_1='test', attribute_2='test'),
+        ]
+        for i in range(1, 4):
+            self.assertFalse(a_list[0].is_superset(a_list[i]))
+        for i in range(3):
+            self.assertTrue(a_list[-1].is_superset(a_list[i]))
+        self.assertFalse(a_list[1].is_superset(a_list[2]))
+        self.assertTrue(a_list[0].is_superset(a_list[0]))
+        self.assertFalse(a_list[1].is_superset(a_list[3]))
+        b_list = [
+            B(),
+            B(attribute_1='test'),
+            B(a=a_list[0]),
+            B(a=a_list[1]),
+            B(attribute_1='test', a=a_list[0]),
+            B(attribute_1='test', a=a_list[1]),
+            B(attribute_1='test', a=a_list[-1]),
+        ]
+        for i in range(1, len(b_list)):
+            self.assertFalse(b_list[0].is_superset(b_list[i]))
+        for i in range(len(b_list) - 1):
+            print(i)
+            self.assertTrue(b_list[-1].is_superset(b_list[i]))
+        self.assertTrue(b_list[-1].is_superset(b_list[-1]))
+        self.assertTrue(b_list[5].is_superset(b_list[4]))
+        self.assertFalse(b_list[4].is_superset(b_list[5]))
+        self.assertTrue(b_list[3].is_superset(b_list[2]))
+        self.assertFalse(b_list[2].is_superset(b_list[3]))
+        self.assertTrue(b_list[2].is_superset(b_list[0]))
+
+    def test_is_subset(self):
+        class A(BaseModel):
+            attribute_1 = StringType()
+            attribute_2 = StringType()
+
+        class B(BaseModel):
+            a = ModelType(A)
+            attribute_1 = StringType()
+
+        a_list = [
+            A(),
+            A(attribute_2='test'),
+            A(attribute_1='test'),
+            A(attribute_1='test', attribute_2='test'),
+        ]
+        for i in range(1, 4):
+            self.assertTrue(a_list[0].is_subset(a_list[i]))
+        for i in range(3):
+            self.assertFalse(a_list[-1].is_subset(a_list[i]))
+        self.assertFalse(a_list[1].is_subset(a_list[2]))
+        self.assertTrue(a_list[0].is_subset(a_list[0]))
+        self.assertTrue(a_list[1].is_subset(a_list[3]))
+        b_list = [
+            B(),
+            B(attribute_1='test'),
+            B(a=a_list[0]),
+            B(a=a_list[1]),
+            B(attribute_1='test', a=a_list[0]),
+            B(attribute_1='test', a=a_list[1]),
+            B(attribute_1='test', a=a_list[-1]),
+        ]
+        for i in range(1, len(b_list)):
+            self.assertTrue(b_list[0].is_subset(b_list[i]))
+        for i in range(len(b_list) - 1):
+            print(i)
+            self.assertFalse(b_list[-1].is_subset(b_list[i]))
+        self.assertTrue(b_list[-1].is_subset(b_list[-1]))
+        self.assertFalse(b_list[5].is_subset(b_list[4]))
+        self.assertTrue(b_list[4].is_subset(b_list[5]))
+        self.assertFalse(b_list[3].is_subset(b_list[2]))
+        self.assertTrue(b_list[2].is_subset(b_list[3]))
+        self.assertFalse(b_list[2].is_subset(b_list[0]))
 
 
 if __name__ == '__main__':
