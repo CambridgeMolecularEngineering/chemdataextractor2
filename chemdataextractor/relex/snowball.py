@@ -256,7 +256,8 @@ class Snowball(BaseSentenceParser):
         detected = []
 
         #: Uses the default autosentenceparser to retrieve candidates
-        sentence_parser = [p for p in self.model.parsers if isinstance(p, AutoSentenceParser)][0]
+        sentence_parser = AutoSentenceParser()
+        sentence_parser.model = self.model
         for result in sentence_parser.root.scan(tokens):
             if result:
                 for entity in self.retrieve_entities(self.model, result[0]):
@@ -271,7 +272,10 @@ class Snowball(BaseSentenceParser):
             toks = [tok[0] for tok in tokens]
             start_indices = [s for s in KnuthMorrisPratt(toks, text.split(' '))]
 
-            # Add specifier to dictionary  if it doesn't exist
+            if isinstance(tag, tuple):
+                tag = '__'.join(tag)
+
+            # Add to dictionary  if it doesn't exist
             if tag not in entities_dict.keys():
                 entities_dict[tag] = []
 
@@ -411,7 +415,7 @@ class Snowball(BaseSentenceParser):
         unique_names = set()
         for i in candidate_relations:
             for j in i.entities:
-                if j.tag == ('compound', 'names'):
+                if j.tag == 'compound__names':
                     unique_names.add(j.text)
 
         number_of_unique_name = len(unique_names)
@@ -469,6 +473,8 @@ class Snowball(BaseSentenceParser):
             best_candidate_cluster.add_phrase(best_candidate_phrase)
             self.save()
 
+            # print(best_candidatex_phrase)
+
             for relation in best_candidate_phrase.relations:
                 for model in self.interpret(relation):
                     yield model
@@ -515,6 +521,7 @@ class Snowball(BaseSentenceParser):
                                       "value": value,
                                       "error": error,
                                       "units": units})
+
         for field_name, field in six.iteritems(self.model.fields):
             if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
                 try:
@@ -537,6 +544,7 @@ class Snowball(BaseSentenceParser):
                 raise TypeError('Could not find element for ' + str(field_name))
             elif field_result is None:
                 return None
+
             field_data = {}
             for subfield_name, subfield in six.iteritems(field.model_class.fields):
                 data = self._get_data(subfield_name, subfield, field_result)
