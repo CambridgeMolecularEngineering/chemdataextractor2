@@ -38,7 +38,7 @@ class CurieTemperature(TemperatureModel):
 tokens = ['the', 'curie', 'temperature', 'of', 'BiFeO3', 'is', '1103', 'K', '.']
 entities = [
             Entity('curie temperature', 'specifier', (I('curie') + I('temperature')).add_action(join), 1, 3),
-            Entity('BiFeO3', ('compound', 'names'), names_only, 4, 5),
+            Entity('BiFeO3', 'compound__names', names_only, 4, 5),
             Entity('1103', 'raw_value', R(r'\d+(\.\d+)?'), 6, 7),
             Entity('K', 'raw_units', I('K'), 7, 8)]
 
@@ -77,7 +77,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(expected, test_cluster.dictionaries)
     
     def test_cluster_pattern(self):
-        expected = 'the (specifier) of (compound, names) is (raw_value) <Blank> (raw_units) .'
+        expected = 'the (specifier) of (compound__names) is (raw_value) <Blank> (raw_units) .'
         self.assertEqual(expected, test_cluster.pattern.to_string())
     
     def test_cluster_pattern_confidence(self):
