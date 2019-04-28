@@ -212,10 +212,13 @@ class Cluster:
                     else:
                         if pattern_entity not in entity_type_indexes[pattern_entity.tag]:
                             entity_type_indexes[pattern_entity.tag].append(pattern_entity)
-                    if isinstance(pattern_entity.tag, tuple):
-                        xpath_str = '/'.join([i for i in pattern_entity.tag])
+                    # print(pattern_entity.tag)
+                    if '__' in pattern_entity.tag:
+                        xpath_str = '/'.join([i for i in pattern_entity.tag.split('__')])
                     else:
                         xpath_str = pattern_entity.tag
+                    # print(xpath_str)
+
                     entity_matches = match.xpath('./' + xpath_str + '/text()')
 
                     if len(entity_matches) > 0:

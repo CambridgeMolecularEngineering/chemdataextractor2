@@ -1,0 +1,2 @@
+The (specifier) for (compound__names) is (raw_value) <Blank> (raw_units) <Blank> with confidence score 0.75
+
