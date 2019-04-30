@@ -12,6 +12,7 @@ import collections
 import copy
 import logging
 import re
+from copy import deepcopy
 
 from lxml.builder import E
 import six
@@ -321,6 +322,11 @@ class Regex(BaseParserElement):
             text = tokens[i][0] if self.group is None else result.group(self.group)
             return [E(self.name or safe_name(tokens[i][1]), text)], i + 1
         raise ParseException(tokens, i, 'Expected %s, got %s' % (self.pattern, token_text), self)
+
+    # Solves issues with deepcopying of records, jm2111
+    # only the pattern is copied and the object is created from scratch
+    def __deepcopy__(self, memodict={}):
+        return type(self)(deepcopy(self.pattern, memodict))
 
 
 class Start(BaseParserElement):
