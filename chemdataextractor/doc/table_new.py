@@ -202,7 +202,7 @@ class Table(CaptionedElement):
         if self.tde_subtables:
             for subtable in self.tde_subtables:
                 table_records.extend(self._records_for_tde_table(subtable, caption_records))
-        elif not self.tde_subtables:
+        elif not self.tde_subtables and self.tde_table is not None:
             table_records.extend(self._records_for_tde_table(self.tde_table, caption_records))
         return table_records
 
