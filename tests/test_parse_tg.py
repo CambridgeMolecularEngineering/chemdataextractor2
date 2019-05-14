@@ -32,7 +32,9 @@ class TestParseTg(unittest.TestCase):
         s = Sentence(input)
         log.debug(s)
         log.debug(s.tagged_tokens)
+        print(s.tagged_tokens)
         result = next(tg_phrase.scan(s.tagged_tokens))[0]
+        print(etree.tostring(result))
         log.debug(etree.tostring(result, pretty_print=True, encoding='unicode'))
         self.assertEqual(expected, etree.tostring(result, encoding='unicode'))
 

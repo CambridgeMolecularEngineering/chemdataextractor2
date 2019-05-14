@@ -26,7 +26,7 @@ prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tg') + Optional(rbrct) 
 delim = R('^[:;\.,]$')
 
 # TODO: Consider allowing degree symbol to be optional. The prefix should be restrictive enough to stop false positives.
-units = (W('°') + Optional(R('^[CFK]\.?$')) | W('K\.?'))('units').add_action(merge)
+units = (W('°') + Optional(R('^[CFK]\.?$')) | W('K\.?') | W('°C'))('units').add_action(merge)
 
 joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('value').add_action(merge)
 spaced_range = (R('^[\+\-–−]?\d+(\.\d+)?$') + Optional(units).hide() + (R('^[\-–−~∼˜]$') + R('^[\+\-–−]?\d+(\.\d+)?$') | R('^[\+\-–−]\d+(\.\d+)?$')))('value').add_action(merge)

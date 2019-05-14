@@ -485,7 +485,7 @@ class TestChemTokenizer(unittest.TestCase):
 
     def test_symbols(self):
         self.assertEqual(['2', '+', '2', '=', '4'], self.t.tokenize('2+2=4'))
-        self.assertEqual(['+', '4', '°', 'C'], self.t.tokenize('+4°C'))
+        self.assertEqual(['+', '4', '°C'], self.t.tokenize('+4°C'))
         self.assertEqual(['(', 'H2A', '<-->', 'HA-', '+', 'H+', 'and', 'HA-', '<-->', 'A', '=', '+', 'H+', ')'], self.t.tokenize('(H2A <--> HA- + H+ and HA- <--> A= + H+)'))
         self.assertEqual(['[2+2+2]'], self.t.tokenize('[2+2+2]'))
         self.assertEqual(['95.5', '+/-', '0.2', '%'], self.t.tokenize('95.5 +/- 0.2%'))
@@ -709,8 +709,8 @@ class TestChemTokenizer(unittest.TestCase):
         self.assertEqual(['A', 'volume', 'of', '24', 'cm3', 'was', 'drained', '.'], self.t.tokenize('A volume of 24cm3 was drained.'))
         self.assertEqual(['2', 'M', 'H2SO4', 'was', 'heated', '.'], self.t.tokenize('2M H2SO4 was heated.'))
         self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°', 'C'], self.t.tokenize('The spectrum was recorded at 10° C'))
-        self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°', 'C'], self.t.tokenize('The spectrum was recorded at 10°C'))
-        self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°', 'C'], self.t.tokenize('The spectrum was recorded at 10 °C'))
+        self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°C'], self.t.tokenize('The spectrum was recorded at 10°C'))
+        self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°C'], self.t.tokenize('The spectrum was recorded at 10 °C'))
         self.assertEqual(['Added', '3.5', 'g', 'and', 'stirred', 'for', '5.5', 's', '.'], self.t.tokenize('Added 3.5g and stirred for 5.5s.'))
         self.assertEqual(['and', '≈', '90', '°'], self.t.tokenize('and ≈90°'))
         self.assertEqual(['B3LYP', '/', '6-31g(d)'], self.t.tokenize('B3LYP/6-31g(d)'))

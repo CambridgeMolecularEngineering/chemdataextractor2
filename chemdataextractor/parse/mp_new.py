@@ -28,7 +28,7 @@ prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct) 
 delim = R('^[:;\.,]$')
 
 # TODO: Consider allowing degree symbol to be optional. The prefix should be restrictive enough to stop false positives.
-units = ((W('°') + Optional(R('^[CFK]\.?$'))) | W('K\.?'))('raw_units').add_action(merge)
+units = ((W('°') + Optional(R('^[CFK]\.?$'))) | W('K\.?') | W('°C'))('raw_units').add_action(merge)
 
 mp = (prefix + Optional(delim).hide() + value_element(units))('mp')
 
