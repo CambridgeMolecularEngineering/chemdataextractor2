@@ -433,7 +433,7 @@ class ChemWordTokenizer(WordTokenizer):
         # '±',  # \u00b1 Plus/Minus
     ]
     #: Split before these sequences if they end a token
-    SPLIT_END = [':', ',', '(TM)', '(R)', '(®)', '(™)', '(■)', '(◼)', '(●)', '(▲)', '(○)', '(◆)', '(▼)', '(⧫)', '(△)', '(◇)', '(▽)', '(⬚)', '(×)', '(□)', '(•)', '’']
+    SPLIT_END = [':', ',', '(TM)', '(R)', '(®)', '(™)', '(■)', '(◼)', '(●)', '(▲)', '(○)', '(◆)', '(▼)', '(⧫)', '(△)', '(◇)', '(▽)', '(⬚)', '(×)', '(□)', '(•)', '’', '°C']
     #: Split before these sequences if they end a token, unless preceded by a digit
     SPLIT_END_NO_DIGIT = ['(aq)', '(aq.)', '(s)', '(l)', '(g)']
     #: Don't split around slash when both preceded and followed by these characters
@@ -528,7 +528,8 @@ class ChemWordTokenizer(WordTokenizer):
         'turn', 'type', 'unesterified', 'untreated', 'vacancies', 'vacancy', 'variable', 'water', 'yeast', 'yield',
         'zwitterion'
     }
-
+    NO_SPLIT = {'°c'}
+    
     def _closing_bracket_index(self, text, bpair=('(', ')')):
         """Return the index of the closing bracket that matches the opening bracket at the start of the text."""
         level = 1
