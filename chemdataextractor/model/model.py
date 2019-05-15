@@ -219,7 +219,7 @@ class NeelTemperature(TemperatureModel):
 
 class CurieTemperature(TemperatureModel):
     # expression = (I('T') + I('C')).add_action(merge)
-    expression = I('TC')
+    expression = ((I('Curie') + R('^temperature(s)?$')) |  R('T[Cc]\d?')).add_action(join)
     specifier = StringType(parse_expression=expression, required=True, contextual=False, updatable=False)
     compound = ModelType(Compound, required=False, contextual=False)
 
