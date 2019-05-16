@@ -16,4 +16,5 @@ Examples
    examples/using_config_file.nblink
    examples/using_snowball.nblink
    examples/creating_units
+   examples/template_parsers.nblink
 
