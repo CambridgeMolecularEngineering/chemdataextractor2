@@ -49,7 +49,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     
     @property
     def prefix(self):
-        """Specifier prefix phrase e.g. "Tc equal to""""
+        """Specifier prefix phrase e.g. Tc equal to"""
         return (self.specifier_phrase
                   + OneOrMore(Not(self.cem_phrase | self.specifier_phrase | self.value_phrase) + Any().hide())
                   + Optional(I('values')).hide()
