@@ -27,28 +27,29 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     Finds Cem, Specifier, Value and Units from single sentences
 
     Other entities are merged contextually
-    
-    Returns:
-        [type] -- [description]
     """
 
 
     @property
     def specifier_phrase(self):
+        """The model specifier"""
         return self.model.specifier.parse_expression('specifier')
     
     @property
     def value_phrase(self):
+        """Value and units"""
         unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(
             match_dimensions_of(self.model))('raw_units'))
         return value_element(unit_element)
     
     @property
     def cem_phrase(self):
+        """CEM phrases"""
         return Group(cem | chemical_label | Group(chemical_name)('compound'))
     
     @property
     def prefix(self):
+        """Specifier prefix phrase e.g. "Tc equal to""""
         return (self.specifier_phrase
                   + OneOrMore(Not(self.cem_phrase | self.specifier_phrase | self.value_phrase) + Any().hide())
                   + Optional(I('values')).hide()
@@ -90,10 +91,12 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
 
     @property
     def specifier_and_value(self):
+        """Specifier and value + units"""
         return Group(self.prefix + self.value_phrase)
     
     @property
     def cem_before_specifier_and_value_phrase(self):
+        """Phrases ordered CEM, Specifier, Value, Unit"""
         return  (
             self.cem_phrase
             + OneOrMore(Not(self.cem_phrase | self.specifier_phrase | self.specifier_and_value) + Any().hide())
@@ -111,6 +114,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     
     @property
     def cem_after_specifier_and_value_phrase(self):
+        """Phrases ordered specifier, value, unit, CEM"""
         return (
             self.specifier_and_value
             + OneOrMore(Not(self.cem_phrase | self.specifier_phrase | self.value_phrase) + Any().hide())
@@ -118,6 +122,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     
     @property
     def value_specifier_cem_phrase(self):
+        """Phrases ordered value unit specifier cem"""
         return (self.value_phrase
             + Optional(delim | lbrct | rbrct)
             + Optional(I('which') | I('there')).hide()
@@ -138,6 +143,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     
     @property
     def root(self):
+        """Root Phrases"""
         root_phrase = Group(self.specifier_before_cem_and_value_phrase | self.cem_after_specifier_and_value_phrase | self.value_specifier_cem_phrase | self.cem_before_specifier_and_value_phrase | Group(self.specifier_and_value)('root_phrase'))
         return root_phrase
 
@@ -160,10 +166,12 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     """
     @property
     def specifier_phrase(self):
+        """Specifier Phrase"""
         return self.model.specifier.parse_expression('specifier')
 
     @property
     def prefix(self):
+        """Specifier and prefix"""
         return (self.specifier_phrase
                   + Optional(I('values')).hide()
                   + Optional(delim).hide()
@@ -204,24 +212,29 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
 
     @property
     def single_cem(self):
+        """Any cem"""
         return Group(cem | chemical_label | Group(chemical_name)('compound'))
     
     @property
     def unit(self):
+        """Unit element"""
         return Group(construct_unit_element(self.model.dimensions).with_condition(
             match_dimensions_of(self.model))('raw_units'))
     
     @property
     def value_with_optional_unit(self):
+        """Value possibly followed by a unit"""
         value = value_element_plain()
         return Group(value + Optional(self.unit))
     
     @property
     def value_phrase(self):
+        """Value with unit"""
         return value_element(self.unit)
     
     @property
     def list_of_values(self):
+        """List of values with either multiple units or one at the end"""
         # option 1: single unit at the end
         option_1 = Group(self.value_with_optional_unit
                          + Optional(OneOrMore(delim.hide() + self.value_with_optional_unit))
@@ -238,6 +251,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     
     @property
     def list_of_cems(self):
+        """List of cems e.g. cem1, cem2, cem3 and cem4"""
         return Group(self.single_cem
                 + Optional(lbrct + R('^\d+$') + rbrct).hide()
                 + ZeroOrMore(delim.hide() | self.single_cem | R('^\d+$'))
@@ -248,14 +262,17 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     
     @property
     def single_specifier_and_value_with_optional_unit(self):
+        """Specifier plus value and possible unit"""
         return Group(self.prefix + self.value_with_optional_unit)('property')
     
     @property
     def single_specifier_and_value(self):
+        """Specifier value and unit"""
         return Group(self.prefix + self.value_phrase)('property')
     
     @property
     def list_of_properties(self):
+        """List of specifiers and units"""
         return Group(Optional(lbrct).hide()
                              + self.single_specifier_and_value_with_optional_unit
                              + (I('and') | delim | (I('that') + I('exhibits'))).hide()
@@ -323,6 +340,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     
     @property
     def multi_entity_phrase_3(self):
+        """Combined phrases of type 3"""
         return Group(self.multi_entity_phrase_3a | self.multi_entity_phrase_3b | self.multi_entity_phrase_3c)
     
     @property
@@ -331,13 +349,13 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         e.g. TC of 640 K in BifEO3, LaFeO3 and MnO
 
         """
-
         return Group(self.single_specifier_and_value
                           + OneOrMore(Not(self.single_cem | self.specifier_phrase | self.value_phrase) + Any().hide())
                           + self.list_of_cems)('multi_entity_phrase_4')
     
     @property
     def multi_entity_phrase_4b(self):
+        """Cems first"""
         return Group(self.list_of_cems
                     + OneOrMore(Not(self.single_cem | self.specifier_phrase | self.value_phrase) + Any().hide())
                     + self.single_specifier_and_value)('multi_entity_phrase_4')
