@@ -238,6 +238,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         # option 1: single unit at the end
         option_1 = Group(self.value_with_optional_unit
                          + Optional(OneOrMore(delim.hide() + self.value_with_optional_unit))
+                         + Optional(delim).hide()
                          + (I('and') | I('or')).hide()
                          + Optional(delim).hide()
                          + self.value_phrase)('value_list')
