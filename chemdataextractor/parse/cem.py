@@ -358,6 +358,7 @@ class CompoundParser(BaseSentenceParser):
                 labels=cem_el.xpath('./labels/text()'),
                 roles=[standardize_role(r) for r in cem_el.xpath('./roles/text()')]
             )
+            c.record_method = self.__class__.__name__
             yield c
 
 

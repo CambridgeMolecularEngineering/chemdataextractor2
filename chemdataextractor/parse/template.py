@@ -372,15 +372,20 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     def interpret(self, result, start, end):
         if result.tag == 'multi_entity_phrase_1':
             for model in self.interpret_multi_entity_1(result, start, end):
+                # records the parser that was used to generate this record, can be used for evaluation
+                model.record_method = self.__class__.__name__
                 yield model
         elif result.tag == 'multi_entity_phrase_2':
             for model in self.interpret_multi_entity_2(result, start, end):
+                model.record_method = self.__class__.__name__
                 yield model
         elif result.tag == 'multi_entity_phrase_3':
             for model in self.interpret_multi_entity_3(result, start, end):
+                model.record_method = self.__class__.__name__
                 yield model
         elif result.tag == 'multi_entity_phrase_4':
             for model in self.interpret_multi_entity_4(result, start, end):
+                model.record_method = self.__class__.__name__
                 yield model
         else:
             yield None
@@ -437,6 +442,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             
             model_instance = self.model(**property_entities)
             if requirements:
+                model_instance.record_method = self.__class__.__name__
                 yield model_instance
     
     def interpret_multi_entity_2(self, result, start, end):
@@ -498,6 +504,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             
             model_instance = self.model(**property_entities)
             if requirements:
+                model_instance.record_method = self.__class__.__name__
                 yield model_instance
     
     def interpret_multi_entity_3(self, result, start, end):
@@ -565,6 +572,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             
             model_instance = self.model(**property_entities)
             if requirements:
+                model_instance.record_method = self.__class__.__name__
                 yield model_instance
 
     def interpret_multi_entity_4(self, result, start, end):
@@ -614,6 +622,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             
             model_instance = self.model(**property_entities)
             if requirements:
+                model_instance.record_method = self.__class__.__name__
                 yield model_instance
     
     
