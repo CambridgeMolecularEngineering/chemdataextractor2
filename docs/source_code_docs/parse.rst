@@ -80,6 +80,13 @@ Chemical property parsers. Parsers have been refactored in 1.5.0 which has intro
     :members:
     :undoc-members:
 
+.parse.template
+------------------------------------------------
+
+.. automodule:: chemdataextractor.parse.template
+    :members:
+    :undoc-members:
+
 .parse.tg
 ------------------------------------------------
 
