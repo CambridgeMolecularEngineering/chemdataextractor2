@@ -490,7 +490,6 @@ class Snowball(BaseSentenceParser):
         if not 'confidence' in self.model.fields.keys():
             setattr(self.model, 'confidence', FloatType())
 
-
         # Get the serialized relation data
         relation_data = relation.serialize()
 
@@ -534,6 +533,9 @@ class Snowball(BaseSentenceParser):
                     log.debug(e)
 
         model_instance = self.model(**relation_data)
+
+        # records the parser that was used to generate this record, can be used for evaluation
+        model_instance.record_method = self.__class__.__name__
 
         yield model_instance
     

@@ -166,6 +166,8 @@ class BaseAutoParser(BaseParser):
         model_instance = self.model(**property_entities)
 
         if requirements:
+            # records the parser that was used to generate this record, can be used for evaluation
+            model_instance.record_method = self.__class__.__name__
             yield model_instance
 
     def _get_data(self, field_name, field, result):
