@@ -16,6 +16,7 @@ API Documentation
    source_code_docs/biblio
    source_code_docs/cli
    source_code_docs/doc
+   source_code_docs/eval
    source_code_docs/model
    source_code_docs/nlp
    source_code_docs/parse
@@ -70,6 +71,13 @@ API Documentation
    doc.table
    doc.table_new
    doc.text
+
+---------------------------------------------------------
+
+.. autosummary::
+
+   eval
+   eval.evaluation
 
 ---------------------------------------------------------
 
