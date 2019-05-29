@@ -29,6 +29,10 @@ from itertools import product
 from ..parse.auto import BaseSentenceParser, BaseAutoParser
 import logging
 
+from os.path import basename
+from playsound import playsound
+import pkg_resources
+
 log = logging.getLogger(__name__)
 
 class Snowball(BaseSentenceParser):
@@ -193,8 +197,13 @@ class Snowball(BaseSentenceParser):
         """
         f = open(filename, 'rb')
         d = Document().from_file(f)
-        self.train_from_document(d)
 
+        # if 'train_from_document' found any candidates, print the file to a log so that
+        # files used for training are saved automatically
+        f_log = open('snowball_training_set.txt', 'a')
+        if self.train_from_document(d):
+            print(basename(filename), file=f_log)
+        f_log.close()
         f.close()
         return
     
@@ -204,15 +213,18 @@ class Snowball(BaseSentenceParser):
         Arguments:
             d {str} -- the document to parse
         """
+        candidate_found = False
         for p in d.paragraphs:
             for s in p.sentences:
                 sent_definitions = s.definitions
                 if sent_definitions:
                     self.model.update(sent_definitions)
-                self.train_from_sentence(s)
-        return
+                if self.train_from_sentence(s):
+                    # return 'True if there was a Snowball candidate in the document
+                    candidate_found = True
+        return candidate_found
 
-    def train_from_sentence(self ,s):
+    def train_from_sentence(self, s):
         """Train Snowball from a single sentence
         
         Arguments:
@@ -220,7 +232,9 @@ class Snowball(BaseSentenceParser):
         """
         candidate_dict = {}
         candidate_relationships = self.candidates(s.tagged_tokens)
+        candidate_found = False
         if len(candidate_relationships) > 0:
+            candidate_found = True
             print("\n\n")
             print(s)
             print('\n')
@@ -228,6 +242,8 @@ class Snowball(BaseSentenceParser):
                 candidate_dict[str(i)] = candidate
                 print("Candidate " + str(i) + ' ' + str(candidate) + '\n')
 
+            sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
+            playsound(sound_file)
             res = six.moves.input("...: ").replace(' ', '')
             if res:
                 chosen_candidate_idx = res.split(',')
@@ -239,7 +255,7 @@ class Snowball(BaseSentenceParser):
                         chosen_candidates.append(cc)
                 if chosen_candidates:
                     self.update(s.raw_tokens, chosen_candidates)
-        return
+        return candidate_found
     
     def candidates(self, tokens):
         """Find all candidate relationships of self.model within a sentence
@@ -288,8 +304,17 @@ class Snowball(BaseSentenceParser):
 
         # check all required entities are present
         required_fields = self.model.required_fields
+
+        # TODO This doesn't work, self.model.required fields is not working perfectly. However, problem is solved below.
         if not all(e in entities_dict.keys() for e in required_fields):
             return []
+
+        # jm2111, Fixed check for required fields
+        for field in self.model.fields:
+            if self.model.fields[field].required and all(field not in key for key in entities_dict.keys()):
+                # print("{}, required = {} , entities: {}".format(field,
+                #       self.model.fields[field].required, entities_dict.keys()))
+                return []
 
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
