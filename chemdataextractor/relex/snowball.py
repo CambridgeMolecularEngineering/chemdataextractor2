@@ -216,12 +216,16 @@ class Snowball(BaseSentenceParser):
         candidate_found = False
         for p in d.paragraphs:
             for s in p.sentences:
+                # skip sentence if it is too long
+                if s.end - s.start > 300:
+                    continue
                 sent_definitions = s.definitions
                 if sent_definitions:
                     self.model.update(sent_definitions)
                 if self.train_from_sentence(s):
                     # return 'True if there was a Snowball candidate in the document
                     candidate_found = True
+        self.model.reset_updatables()
         return candidate_found
 
     def train_from_sentence(self, s):
