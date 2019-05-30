@@ -27,6 +27,7 @@ from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
 from ..parse.definitions import specifier_definition
 from ..parse.cem import chemical_name
+from ..parse.quantity import construct_quantity_re
 from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
 
 from lxml import etree
@@ -217,8 +218,10 @@ class Text(collections.Sequence, BaseText):
     @memoized_property
     def sentences(self):
         """A list of :class:`Sentence` s that make up this text passage."""
+        return self.sentence_tokenizer.get_sentences(self)
+
+    def _sentences_from_spans(self, spans):
         sents = []
-        spans = self.sentence_tokenizer.span_tokenize(self.text)
         for span in spans:
             sent = Sentence(
                 text=self.text[span[0]:span[1]],
@@ -473,7 +476,9 @@ class Sentence(BaseText):
 
     @memoized_property
     def tokens(self):
-        spans = self.word_tokenizer.span_tokenize(self.text)
+        return self.word_tokenizer.get_word_tokens(self)
+
+    def _tokens_for_spans(self, spans):
         toks = [Token(
             text=self.text[span[0]:span[1]],
             start=span[0] + self.start,
@@ -699,6 +704,10 @@ class Sentence(BaseText):
         from the text.
         """
         return list(zip(self.raw_tokens, self.tags))
+
+    @property
+    def quantity_re(self):
+        return construct_quantity_re(*self.models)
 
     @property
     def records(self):
