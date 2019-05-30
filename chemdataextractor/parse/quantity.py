@@ -73,6 +73,39 @@ def value_element_plain():
     return value
 
 
+@memoize
+def construct_quantity_re(*models):
+    # Handle all the magnitudes
+    units_regex = '(('
+    for element in magnitudes_dict.keys():
+        units_regex += '(' + element.pattern + ')|'
+    units_regex = units_regex[:-1]
+    units_regex += ')?'
+    units_regex += '('
+    units_dict = {}
+    for model in models:
+        if hasattr(model, 'dimensions') and model.dimensions.units_dict is not None:
+            units_dict.update(model.dimensions.units_dict)
+    if len(units_dict) == 0:
+        return None
+    # Case where we have a token that's just brackets
+    units_regex += '(\()|(\))|\-|'
+    # Handle all the units
+    for element, unit in six.iteritems(units_dict):
+        if unit is not None:
+            units_regex += '(' + element.pattern + ')|'
+    units_regex += '(\/)'
+    # Case when we have powers, or one or more units
+    units_regex2 = units_regex + '|([\+\-–−]?\d+(\.\d+)?)'
+    units_regex2 += '))+$'
+    units_regex += '))+'
+    units_regex += (units_regex2[:-2] + '*')
+    units_regex += '$'
+    units_regex = '^(?P<split>[\+\-–−]?\d+([\.\-\−]?\d+)?)' + units_regex
+    print(units_regex)
+    return re.compile(units_regex)
+
+
 def extract_error(string):
     """
     Extract the error from a string
