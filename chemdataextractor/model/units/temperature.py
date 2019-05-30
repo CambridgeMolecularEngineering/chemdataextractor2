@@ -12,7 +12,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from .quantity_model import QuantityModel
+from .quantity_model import QuantityModel, StringType
 from .unit import Unit
 from .dimension import Dimension
 from ...parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
@@ -33,6 +33,7 @@ class TemperatureModel(QuantityModel):
     Model for temperatures.
     """
     dimensions = Temperature()
+    raw_units = StringType(required=True, contextual=True)
 
 
 class TemperatureUnit(Unit):
