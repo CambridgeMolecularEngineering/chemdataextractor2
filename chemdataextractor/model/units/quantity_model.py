@@ -45,7 +45,7 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
     Any parse_expressions set in the model should have an added action to ensure that the results are a single word. An example would be to call add_action(join) on each parse expression.
     """
     raw_value = StringType(required=True, contextual=True)
-    raw_units = StringType(contextual=True)
+    raw_units = StringType(required=True, contextual=True)
     value = ListType(FloatType(contextual=True), contextual=True, sorted=True)
     units = UnitType(contextual=True)
     error = FloatType(contextual=True)
