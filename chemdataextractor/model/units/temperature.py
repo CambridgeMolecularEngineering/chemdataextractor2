@@ -33,7 +33,6 @@ class TemperatureModel(QuantityModel):
     Model for temperatures.
     """
     dimensions = Temperature()
-    raw_units = StringType(required=True, contextual=True)
 
 
 class TemperatureUnit(Unit):
