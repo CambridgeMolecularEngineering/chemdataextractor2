@@ -207,6 +207,10 @@ class BaseAutoParser(BaseParser):
 
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
+    def __init__(self, lenient=False):
+        super(AutoSentenceParser, self).__init__()
+        self.lenient = lenient
+
     @property
     def root(self):
         if self._specifier is self.model.specifier:
@@ -229,7 +233,11 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
             unit_element = Group(
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
             specifier = self.model.specifier.parse_expression('specifier')
-            value_phrase = value_element(unit_element)
+            if self.lenient:
+                value_phrase = (value_element(unit_element) | value_element_plain())
+            else:
+                value_phrase = value_element(unit_element)
+
             entities.append(specifier)
             entities.append(value_phrase)
 
