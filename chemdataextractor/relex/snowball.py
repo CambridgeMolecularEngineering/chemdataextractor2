@@ -276,7 +276,7 @@ class Snowball(BaseSentenceParser):
         detected = []
 
         #: Uses the default autosentenceparser to retrieve candidates
-        sentence_parser = AutoSentenceParser()
+        sentence_parser = AutoSentenceParser(lenient=True)
         sentence_parser.model = self.model
         for result in sentence_parser.root.scan(tokens):
             if result:
