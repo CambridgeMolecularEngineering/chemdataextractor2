@@ -314,10 +314,18 @@ class WordTokenizer(BaseTokenizer):
         for contraction in self.CONTRACTIONS:
             if lowertext == contraction[0]:
                 return self._split_span(span, contraction[1])
+
+        if additional_regex:
+            for regex in additional_regex:
+                split_text = regex.search(text)
+                if split_text:
+                    return self._split_span(span, len(split_text.group('split') or split_text.group('_split1') or split_text.group('_split2')), 0)
+
         return [span]
 
-    def get_word_tokens(self, sentence):
-        additional_regex = self.get_additional_regex(sentence)
+    def get_word_tokens(self, sentence, additional_regex=None):
+        if not additional_regex:
+            additional_regex = self.get_additional_regex(sentence)
         return sentence._tokens_for_spans(self.span_tokenize(sentence.text, additional_regex))
 
     def get_additional_regex(self, sentence):
