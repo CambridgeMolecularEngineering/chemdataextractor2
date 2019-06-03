@@ -28,7 +28,7 @@ magnitudes_dict = {R('c(enti)?', group=0): -2.,
                   R('G(iga)?', group=0): 9.,
                   R('T(era)?', group=0): 12.,
                   R('m(illi)?', group=0): -3.,
-                  R('µ|micro', group=0): -6.,
+                  R('µ|(micro)|(mu)', group=0): -6.,
                   R('n(ano)?', group=0): -9.,
                   R('p(ico)?', group=0): -12.}
 
@@ -41,8 +41,8 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     :returns: An Element to look for values and units.
     :rtype: BaseParserElement
     """
-    number = R('^[\+\-–−]?\d+(\.\d+)?$')
-    joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('raw_value').add_action(merge)
+    number = R('^[\+\-–−]?\d+(([\.・,\d])+)?$')
+    joined_range = R('^[\+\-–−]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
     spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('raw_value').add_action(merge)
     to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('value').add_action(join)
@@ -61,8 +61,8 @@ def value_element_plain():
     :returns: An Element to look for values.
     :rtype: BaseParserElement
     """
-    number = R('^[\+\-–−]?\d+(\.\d+)?$')
-    joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('raw_value').add_action(merge)
+    number = R('^[\+\-–−]?\d+(([\.・,\d])+)?$')
+    joined_range = R('^[\+\-–−]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
     spaced_range = (number + R('^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
     to_range = (number + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
@@ -105,6 +105,12 @@ def extract_error(string):
     return error
 
 
+def _convert_from_european_format(string):
+    string = string.replace(".", "")
+    string = string.replace(",", ".")
+    return string
+
+
 def extract_value(string):
     """
     Takes a string and returns a list of floats representing the string given.
@@ -126,6 +132,18 @@ def extract_value(string):
     string = string.replace("–", "-")
     string = string.replace("−", "-")
     string = string.split("±")[0]
+    string = string.replace("・", ".")
+    string = string.replace("·", ".")
+    split_by_comma = string.split(",")
+    if len(split_by_comma) != 1:
+        if len(split_by_comma) == 2:
+            if "." not in split_by_comma[1] \
+               and len(split_by_comma[1]) != 3:
+                string = _convert_from_european_format(string)
+            else:
+                string = string.replace(",", "")
+        else:
+            string = string.replace(",", "")
     split_by_space = [r for r in re.split(' |(-)', string) if r]
     split_by_num = []
     for elem in split_by_space:
