@@ -28,7 +28,7 @@ from .cem import cem, chemical_label, lenient_chemical_label
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
 from ..utils import first
-from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain
+from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain, lbrct, rbrct
 from .base import BaseSentenceParser, BaseParser, BaseTableParser
 
 import xml.etree.ElementTree as etree
@@ -113,6 +113,7 @@ class BaseAutoParser(BaseParser):
         requirements = True
         property_entities = {}
         log.debug(etree.tostring(result))
+        # print(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
