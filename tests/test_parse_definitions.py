@@ -176,17 +176,17 @@ class TestParseDefinitions(unittest.TestCase):
 
     def test_curie_definition(self):
         s = 'the Curie Temperature, TC,'
-        expected = '<definition><phrase>Curie Temperature</phrase><specifier>TC</specifier></definition>'
+        expected = '<definition><phrase>Curie Temperature</phrase><COMMA>,</COMMA><specifier>TC</specifier></definition>'
         self.do_parse(specifier_definition, s, expected)
     
     def test_curie_definition_brackets(self):
         s = 'Curie temperature (TC)'
-        expected = '<definition><phrase>Curie temperature</phrase><specifier>TC</specifier></definition>'
+        expected = '<definition><phrase>Curie temperature</phrase><LRB>(</LRB><specifier>TC</specifier></definition>'
         self.do_parse(specifier_definition, s, expected)
     
     def test_uv_vis_definition(self):
         s = 'uv-vis absorption peak, λmax'
-        expected = '<definition><phrase>uv - vis absorption peak</phrase><specifier>λmax</specifier></definition>'
+        expected = '<definition><phrase>uv - vis absorption peak</phrase><COMMA>,</COMMA><specifier>λmax</specifier></definition>'
         self.do_parse(specifier_definition, s, expected)
 
 

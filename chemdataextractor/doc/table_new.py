@@ -168,7 +168,7 @@ class Table(CaptionedElement):
                     if not record_update:
                         record = copy.deepcopy(record_i)
                         for field in sym_diff:
-                            if not record_i.__getattribute__(field) and record_i.fields[field].contextual:
+                            if hasattr(record_i, field) and not  record_i.__getattribute__(field) and record_i.fields[field].contextual:
                                 record.__setitem__(field, record_j.__getattribute__(field))
                                 record_update = True
                                 updated_records.append(i)
@@ -178,7 +178,7 @@ class Table(CaptionedElement):
                     if not record_update:
                         record = copy.deepcopy(record_j)
                         for field in sym_diff:
-                            if not record_j.__getattribute__(field) and record_j.fields[field].contextual:
+                            if hasattr(record_j, field) and not record_j.__getattribute__(field) and record_j.fields[field].contextual:
                                 record.__setitem__(field, record_i.__getattribute__(field))
                                 record_update = True
                                 updated_records.append(i)
@@ -370,9 +370,7 @@ class Table(CaptionedElement):
                 # of 'ModelType', this will be checked later, after merging of nested models
                 unmet_requirements = []
                 for field in model.fields:
-                    if not isinstance(model.fields[field], ModelType) and \
-                            model.fields[field].required and \
-                            not record.__getattribute__(field):
+                    if not isinstance(model.fields[field], ModelType) and model.fields[field].required and hasattr(record, field) and not record.__getattribute__(field):
                         unmet_requirements.append(field)
                         requirements = False
 
