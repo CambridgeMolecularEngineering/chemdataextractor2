@@ -19,8 +19,13 @@ from chemdataextractor.parse.auto import AutoTableParser
 from chemdataextractor.model.units.length import LengthModel, Length
 from chemdataextractor.model.units.temperature import TemperatureModel
 from chemdataextractor.model.units.mass import Mass
+from chemdataextractor.model.units.substance_amount import AmountOfSubstance
 from chemdataextractor.parse.common import lbrct, rbrct
 
+class FormulaWeight(QuantityModel):
+    dimensions = Mass() / AmountOfSubstance()
+    specifier = StringType(parse_expression=(I('formula') + I('weight')).add_action(join), required=True)
+    compound = ModelType(Compound)
 
 class AppliedTemperature(TemperatureModel):
     specifier = StringType(parse_expression=(R('^[Tt](emperature)?')), required=True)
@@ -76,5 +81,6 @@ class CrystalSystem(CategoryModel):
     lattice_param_a = ModelType(CellLengthA, required=True, contextual=True)
     applied_temperature = ModelType(AppliedTemperature, required=True, contextual=True)
     cell_volume = ModelType(CellVolume, required=True, contextual=True)
+    formula_weight = ModelType(FormulaWeight, required=True, contextual=True)
     compound = ModelType(Compound)
     parsers = [QuantityModelTemplateParser(), AutoTableParser()]
