@@ -138,6 +138,16 @@ class TestAutoRules(unittest.TestCase):
         expected = [b'<raw_value>123,8</raw_value>']
         self.assertEqual(expected, results_list)
 
+    def test_value_element_brackets(self):
+        test_sentence = Sentence('The value was 123(8)')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>123(8)</raw_value>']
+        self.assertEqual(expected, results_list)
+
 
 class TestAutoSentenceParser(unittest.TestCase):
 
