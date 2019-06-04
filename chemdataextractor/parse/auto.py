@@ -128,8 +128,8 @@ class BaseAutoParser(BaseParser):
             return
         requirements = True
         property_entities = {}
-        print(self.model)
-        print(etree.tostring(result))
+        # print(self.model)
+        # print(etree.tostring(result))
         log.debug(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
@@ -164,6 +164,7 @@ class BaseAutoParser(BaseParser):
                 units = self.extract_units(raw_units, strict=True)
             except TypeError as e:
                 log.debug(e)
+            
             property_entities.update({"raw_value": raw_value,
                                       "raw_units": raw_units,
                                       "value": value,

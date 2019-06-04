@@ -8,7 +8,7 @@
 - Density
 - Formula Weight
 """
-from chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType
+from chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
 from chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
 from chemdataextractor.parse.actions import join
 from chemdataextractor.model.units.quantity_model import DimensionlessModel, QuantityModel
@@ -17,8 +17,14 @@ from chemdataextractor.model.model import Compound
 from chemdataextractor.parse.template import QuantityModelTemplateParser
 from chemdataextractor.parse.auto import AutoTableParser
 from chemdataextractor.model.units.length import LengthModel, Length
+from chemdataextractor.model.units.temperature import TemperatureModel
 from chemdataextractor.model.units.mass import Mass
 from chemdataextractor.parse.common import lbrct, rbrct
+
+
+class AppliedTemperature(TemperatureModel):
+    specifier = StringType(parse_expression=(R('^[Tt](emperature)?')), required=True)
+    compound = ModelType(Compound)
 
 class Density(QuantityModel):
     dimensions = Mass() / Length()**3
@@ -34,16 +40,28 @@ class SpaceGroup(CategoryModel):
     specifier = StringType(parse_expression=(I('space') + I('group')).add_action(join), required=True)
     category = StringType(parse_expression=space_groups, required=True, contextual=False, updatable=False)
     compound = ModelType(Compound)
-    parser = [AutoTableParser()]
 
-class LatticeA(LengthModel):
-    specifier = StringType(parse_expression=I('a'),  required=True)
+class CellLengthA(LengthModel):
+    specifier = StringType(parse_expression=R('^a'),  required=True)
     compound = ModelType(Compound)
-    parser = [QuantityModelTemplateParser(), AutoTableParser()]
+
+class CellLengthB(LengthModel):
+    specifier = StringType(parse_expression=R('b'),  required=True)
+    compound = ModelType(Compound)
+
+class CellLengthC(LengthModel):
+    specifier = StringType(parse_expression=R('^c'),  required=True)
+    compound = ModelType(Compound)
+
+class CellVolume(QuantityModel):
+    dimensions = Length()**3
+    specifier = StringType(parse_expression=(Optional(I('cell')) + R('^[Vv](olume)?')).add_action(join),  required=True)
+    compound = ModelType(Compound)
 
 class RFactor(DimensionlessModel):
     specifier = StringType(parse_expression=(R('^w?R([12]|(int))')), required=True)
     compound = ModelType(Compound)
+
 
 crystal_systems = (R('[Tt]riclinic') | R('[Mm]onoclinic') |  R('[Oo]rthorhombic') | R('[Tt]etragonal') | R('[Hh]exagonal') | R('[Tt]rigonal') | R('[Cc]ubic'))
 class CrystalSystem(CategoryModel):
@@ -53,5 +71,10 @@ class CrystalSystem(CategoryModel):
     z = ModelType(Z, required=True, contextual=True)
     density = ModelType(Density, required=True, contextual=True)
     r_factors = ModelType(RFactor, required=True, contextual=True)
+    lattice_param_c = ModelType(CellLengthC, required=True, contextual=True)
+    lattice_param_b = ModelType(CellLengthB, required=False, contextual=True)
+    lattice_param_a = ModelType(CellLengthA, required=True, contextual=True)
+    applied_temperature = ModelType(AppliedTemperature, required=True, contextual=True)
+    cell_volume = ModelType(CellVolume, required=True, contextual=True)
     compound = ModelType(Compound)
     parsers = [QuantityModelTemplateParser(), AutoTableParser()]
