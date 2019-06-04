@@ -47,7 +47,6 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
     bracket_range = R(number.pattern[:-1] + '\(\d+\)' + '$')('raw_value')
-    print(bracket_range.pattern)
     between_range = (I('between').hide() + number + I('and') + number).add_action(join)
     value_range = (Optional(R('^[\-–−]$')) + (bracket_range | plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
@@ -95,7 +94,6 @@ def extract_error(string):
     string = _clean_value_string(string)
     split_by_num_and_error = [r for r in re.split('(\d+\.?(?:\d+)?)|(±)|(\()', string) if r and r != " "]
     error = None
-    print(split_by_num_and_error)
     for index, value in enumerate(split_by_num_and_error):
         if value == '±':
             try:
@@ -124,7 +122,6 @@ def extract_value(string):
         and as a list of floats of length 2 if it was a range.
     :rtype: list(float)
     """
-    print(string)
     new_split_by_num = _find_value_strings(string)
     values = []
     for index, value in enumerate(new_split_by_num):
@@ -171,7 +168,6 @@ def _find_value_strings(string):
             flag += 1
         else:
             new_split_by_num.append(value)
-    print(new_split_by_num)
     return new_split_by_num
 
 
@@ -230,7 +226,6 @@ def _get_magnitude(string):
     :rtype: int
     """
     split_by_period = string.split(".")
-    print(split_by_period)
     if len(split_by_period) == 2:
         return -1 * len(split_by_period[-1])
     elif len(split_by_period) == 1:
