@@ -169,7 +169,7 @@ class TestParseDefinitions(unittest.TestCase):
                         'Ͻ',
                         'Ͼ',
                         'Ͽ']
-        expected = '<ct><definition><phrase>Curie temperature</phrase><specifier>TC1</specifier></definition></ct>'
+        expected = '<ct><definition><phrase>Curie temperature</phrase><COMMA>,</COMMA><specifier>TC1</specifier></definition></ct>'
         for symbol in symbol_list:
             expected = '<specifier>' + symbol + '</specifier>'
             self.do_parse(greek_symbols, symbol, expected)
