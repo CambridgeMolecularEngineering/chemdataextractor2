@@ -122,6 +122,8 @@ def extract_value(string):
         and as a list of floats of length 2 if it was a range.
     :rtype: list(float)
     """
+    if string is None:
+        return None
     new_split_by_num = _find_value_strings(string)
     values = []
     for index, value in enumerate(new_split_by_num):
@@ -130,7 +132,6 @@ def extract_value(string):
             values.append(float_val)
         except ValueError:
             pass
-
     return values
 
 
