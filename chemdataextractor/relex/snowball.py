@@ -550,6 +550,9 @@ class Snowball(BaseSentenceParser):
                                       "value": value,
                                       "error": error,
                                       "units": units})
+        elif hasattr(self.model, 'category') and self.model.category:
+            raw_value = relation_data['raw_value']
+            relation_data.update({"raw_value": raw_value})
 
         for field_name, field in six.iteritems(self.model.fields):
             if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
