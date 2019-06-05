@@ -68,6 +68,22 @@ def construct_unit_element(dimensions):
     units_regex += '$'
     return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex) | R(pattern=units_regex2))).add_action(merge)
 
+def construct_category_element(category_dict):
+    """
+    Construct an element for detecting categories.
+
+    :param Category category: The Category to look for.
+    :rtype: BaseParserElement or None
+    """
+    category_regex = '^'
+    if not category_dict:
+        return None
+    # Handle all the units
+    for element in category_dict:
+        category_regex += '(' + element.pattern + ')|'
+    category_regex = category_regex[:-1]
+    category_regex += '$'
+    return (R(pattern=category_regex))('raw_value').add_action(merge)
 
 def match_dimensions_of(model):
     """
@@ -112,6 +128,8 @@ class BaseAutoParser(BaseParser):
             return
         requirements = True
         property_entities = {}
+        # print(self.model)
+        # print(etree.tostring(result))
         log.debug(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
@@ -146,11 +164,13 @@ class BaseAutoParser(BaseParser):
                 units = self.extract_units(raw_units, strict=True)
             except TypeError as e:
                 log.debug(e)
+            
             property_entities.update({"raw_value": raw_value,
                                       "raw_units": raw_units,
                                       "value": value,
                                       "error": error,
                                       "units": units})
+        
         for field_name, field in six.iteritems(self.model.fields):
             if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
                 try:

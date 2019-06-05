@@ -15,7 +15,7 @@ from ..nlp.tokenize import ChemWordTokenizer, ChemSentenceTokenizer
 from .actions import merge, join, fix_whitespace, flatten
 from .base import BaseSentenceParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, End
-from .auto import construct_unit_element, match_dimensions_of, value_element, value_element_plain, BaseAutoParser
+from .auto import construct_unit_element, match_dimensions_of, value_element, value_element_plain, BaseAutoParser, construct_category_element
 import six
 log = logging.getLogger(__name__)
 
@@ -40,6 +40,9 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         """Value and units"""
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             return value_element_plain()
+        elif hasattr(self.model, 'category') and self.model.category:
+            return self.model.category.parse_expression('category')
+        
         unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(
             match_dimensions_of(self.model))('raw_units'))
         return value_element(unit_element)
@@ -228,6 +231,8 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         """Value possibly followed by a unit"""
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             return value_element_plain()
+        elif hasattr(self.model, 'category') and self.model.category:
+            return self.model.category.parse_expression('category')
         value = value_element_plain()
         return Group(value + Optional(self.unit))
     
@@ -236,6 +241,8 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         """Value with unit"""
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             return value_element_plain()
+        elif hasattr(self.model, 'category') and self.model.category:
+            return self.model.category.parse_expression('category')
         return value_element(self.unit)
     
     @property
