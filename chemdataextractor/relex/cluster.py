@@ -225,7 +225,7 @@ class Cluster:
                         entity_text = entity_matches[entity_type_indexes[pattern_entity.tag].index(pattern_entity)]
                     else:
                         entity_text[0]
-                    entity_tokens = entity_text.split(' ')
+                    entity_tokens = [s[0] for s in Sentence(entity_text).tagged_tokens]
                     start_idx, end_idx = subfinder([t[0] for t in tokens], entity_tokens)
                     found_entity = Entity(entity_text, pattern_entity.tag, pattern_entity.parse_expression, start_idx, end_idx)
                     found_entities.append(found_entity)

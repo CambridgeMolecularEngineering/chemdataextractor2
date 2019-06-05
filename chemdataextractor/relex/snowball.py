@@ -285,12 +285,13 @@ class Snowball(BaseSentenceParser):
                     
         if not detected:
             return []
-
         detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
+        toks = [tok[0] for tok in tokens]
         for text, tag, parse_expression in detected:
             text_length = len(text.split(' '))
-            toks = [tok[0] for tok in tokens]
-            start_indices = [s for s in KnuthMorrisPratt(toks, text.split(' '))]
+            pattern = [s[0] for s in Sentence(text).tagged_tokens]
+            text_length = len(pattern)
+            start_indices = [s for s in KnuthMorrisPratt(toks, pattern)]
 
             if isinstance(tag, tuple):
                 tag = '__'.join(tag)
@@ -300,7 +301,7 @@ class Snowball(BaseSentenceParser):
                 entities_dict[tag] = []
 
             entities = [Entity(text, tag, parse_expression, index, index + text_length) for index in start_indices]
-
+            
             # Add entities to dictionary if new
             for entity in entities:
                 if entity not in entities_dict[tag]:

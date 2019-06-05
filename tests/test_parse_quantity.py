@@ -57,6 +57,16 @@ class TestUnitClass(unittest.TestCase):
         extracted = self.qp.extract_value(test_string)
         self.assertEqual(extracted[0], 500.8)
 
+    def test_comma_value(self):
+        test_string = '600,000.8'
+        extracted = self.qp.extract_value(test_string)
+        self.assertEqual(extracted[0], 600000.8)
+
+    def test_european_value(self):
+        test_string = '500,8'
+        extracted = self.qp.extract_value(test_string)
+        self.assertEqual(extracted[0], 500.8)
+
     def test_unit_mm(self):
         self.qp.model.dimensions = Length()**2 / Time()
         test_string = 'mm2/s'

@@ -38,6 +38,8 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     @property
     def value_phrase(self):
         """Value and units"""
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
+            return value_element_plain()
         unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(
             match_dimensions_of(self.model))('raw_units'))
         return value_element(unit_element)
@@ -224,12 +226,16 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     @property
     def value_with_optional_unit(self):
         """Value possibly followed by a unit"""
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
+            return value_element_plain()
         value = value_element_plain()
         return Group(value + Optional(self.unit))
     
     @property
     def value_phrase(self):
         """Value with unit"""
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
+            return value_element_plain()
         return value_element(self.unit)
     
     @property
