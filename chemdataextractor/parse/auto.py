@@ -131,7 +131,6 @@ class BaseAutoParser(BaseParser):
         # print(self.model)
         # print(etree.tostring(result))
         log.debug(etree.tostring(result))
-        # print(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
