@@ -240,7 +240,7 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
             return self._root_phrase
 
         # is always found, our models currently rely on the compound
-        chem_name = (cem | chemical_label | lenient_chemical_label)
+        chem_name = (cem | Group(chemical_label)('compound') | Group(lenient_chemical_label)('compound'))
         entities = []
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
@@ -295,7 +295,7 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
             return self._root_phrase
 
         # is always found, our models currently rely on the compound
-        chem_name = (cem | chemical_label | lenient_chemical_label)
+        chem_name = (cem | Group(chemical_label)('compound') | Group(lenient_chemical_label)('compound'))
         entities = []
         no_value_element = W('NoValue')('raw_value')
 

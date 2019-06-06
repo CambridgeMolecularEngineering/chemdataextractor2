@@ -447,24 +447,40 @@ class Table(CaptionedElement):
         i = 0
         while i < (len_l - 1):
             for j in range(i + 1, len_l):
+
                 r = table_records[i]
                 other_r = table_records[j]
-                if isinstance(r, Compound) and isinstance(other_r, Compound):
-                    # Strip whitespace and lowercase to compare names
-                    rnames_std = {''.join(n.split()).lower() for n in r.names}
-                    onames_std = {''.join(n.split()).lower() for n in other_r.names}
+                r_compound, other_r_compound = None, None
 
-                    # Clashing labels, don't merge
-                    if len(set(r.labels) - set(other_r.labels)) > 0 and len(set(other_r.labels) - set(r.labels)) > 0:
-                        continue
+                if hasattr(r, 'compound'):
+                    r_compound = r.compound
+                elif isinstance(r, Compound):
+                    r_compound = r
 
-                    if any(n in rnames_std for n in onames_std) or any(l in r.labels for l in other_r.labels):
-                        table_records.pop(j)
-                        table_records.pop(i)
-                        table_records.append(r.merge(other_r))
-                        len_l -= 1
-                        i -= 1
-                        break
+                if hasattr(other_r, 'compound'):
+                    other_r_compound = other_r.compound
+                elif isinstance(other_r, Compound):
+                    other_r_compound = other_r
+                
+                if not r_compound or not other_r_compound:
+                    continue
+
+                # Strip whitespace and lowercase to compare names
+                rnames_std = {''.join(n.split()).lower() for n in r_compound.names}
+                onames_std = {''.join(n.split()).lower() for n in other_r_compound.names}
+
+                # Clashing labels, don't merge
+                if len(set(r_compound.labels) - set(other_r_compound.labels)) > 0 and len(set(other_r_compound.labels) - set(r_compound.labels)) > 0:
+                    continue
+
+                if any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels):
+                    table_records.pop(j)
+                    table_records.pop(i)
+                    new_c = r_compound.merge(other_r_compound)
+                    r.compound = new_c
+                    table_records.append(r)
+                    len_l -= 1
+                    i -= 1
+                    break
             i += 1
-
         return table_records

@@ -2,7 +2,7 @@
 
 - Crystal System : Hexagonal etc
 - Space Group
-- Cell parameters (a,b,c, alpha, )
+- Cell parameters (a,b,c)
 - Volume
 - R factors (Rwp, Rp)
 - Density
@@ -28,7 +28,7 @@ class FormulaWeight(QuantityModel):
     compound = ModelType(Compound)
 
 class AppliedTemperature(TemperatureModel):
-    specifier = StringType(parse_expression=(R('^[Tt](emperature)?')), required=True)
+    specifier = StringType(parse_expression=(R('^[Tt](emperature)?$')), required=True)
     compound = ModelType(Compound)
 
 class Density(QuantityModel):
@@ -37,30 +37,30 @@ class Density(QuantityModel):
     compound = ModelType(Compound)
 
 class Z(DimensionlessModel):
-    specifier = StringType(parse_expression=W('Z'), required=True)
+    specifier = StringType(parse_expression=W('^Z$'), required=True)
     compound = ModelType(Compound)
 
-space_groups = (R('^[PIFABCR]\d+') + Optional(T('SYM') | W('/')) + R('[a-zA-Z]')).add_action(join)
+space_groups = (R('^[PIFABCR](\d|\d̄)+$') + Optional((T('SYM') | W('/')) + R('[a-zA-Z]+'))).add_action(join)
 class SpaceGroup(CategoryModel):
     specifier = StringType(parse_expression=(I('space') + I('group')).add_action(join), required=True)
     category = StringType(parse_expression=space_groups, required=True, contextual=False, updatable=False)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, contextual=True)
 
 class CellLengthA(LengthModel):
-    specifier = StringType(parse_expression=R('^a'),  required=True)
+    specifier = StringType(parse_expression=R('^a$'),  required=True)
     compound = ModelType(Compound)
 
 class CellLengthB(LengthModel):
-    specifier = StringType(parse_expression=R('b'),  required=True)
+    specifier = StringType(parse_expression=R('b$'),  required=True)
     compound = ModelType(Compound)
 
 class CellLengthC(LengthModel):
-    specifier = StringType(parse_expression=R('^c'),  required=True)
+    specifier = StringType(parse_expression=R('^c$'),  required=True)
     compound = ModelType(Compound)
 
 class CellVolume(QuantityModel):
     dimensions = Length()**3
-    specifier = StringType(parse_expression=(Optional(I('cell')) + R('^[Vv](olume)?')).add_action(join),  required=True)
+    specifier = StringType(parse_expression=(Optional(I('cell')) + R('^[Vv](olume)?$')).add_action(join),  required=True)
     compound = ModelType(Compound)
 
 class RFactor(DimensionlessModel):
@@ -73,14 +73,14 @@ class CrystalSystem(CategoryModel):
     specifier = StringType(parse_expression=(I('Crystal') + I('system')).add_action(join), required=True)
     category = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
     space_group = ModelType(SpaceGroup, required=True, contextual=True)
-    z = ModelType(Z, required=True, contextual=True)
-    density = ModelType(Density, required=True, contextual=True)
-    r_factors = ModelType(RFactor, required=True, contextual=True)
-    lattice_param_c = ModelType(CellLengthC, required=True, contextual=True)
+    z = ModelType(Z, required=False, contextual=True)
+    density = ModelType(Density, required=False, contextual=True)
+    r_factors = ModelType(RFactor, required=False, contextual=True)
+    lattice_param_c = ModelType(CellLengthC, required=False, contextual=True)
     lattice_param_b = ModelType(CellLengthB, required=False, contextual=True)
-    lattice_param_a = ModelType(CellLengthA, required=True, contextual=True)
-    applied_temperature = ModelType(AppliedTemperature, required=True, contextual=True)
-    cell_volume = ModelType(CellVolume, required=True, contextual=True)
-    formula_weight = ModelType(FormulaWeight, required=True, contextual=True)
+    lattice_param_a = ModelType(CellLengthA, required=False, contextual=True)
+    applied_temperature = ModelType(AppliedTemperature, required=False, contextual=True)
+    cell_volume = ModelType(CellVolume, required=False, contextual=True)
+    formula_weight = ModelType(FormulaWeight, required=False, contextual=True)
     compound = ModelType(Compound)
-    parsers = [QuantityModelTemplateParser(), AutoTableParser()]
+    parsers = [AutoTableParser()]
