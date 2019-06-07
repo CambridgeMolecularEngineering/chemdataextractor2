@@ -235,10 +235,17 @@ class Document(BaseDocument):
             # 1. Find any defined entities in the element e.g. "Curie Temperature, Tc"
             # 2. Update the relevant models
             element_definitions = el.definitions
+            chemical_defs = el.chemical_definitions
+
             for model in el.models:
                 model.update(element_definitions)
+                if hasattr(model, 'compound'):
+                    model.compound.model_class.update(chemical_defs)
+            
 
             el_records = el.records
+            for record in el_records:
+                print(record.serialize())
             # Save the title compound
             if isinstance(el, Title):
                 if len(el_records) == 1 and isinstance(el_records[0], Compound) and el_records[0].is_id_only:

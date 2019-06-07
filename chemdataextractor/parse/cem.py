@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from abc import abstractproperty, abstractmethod
 import logging
 import re
 from lxml import etree
@@ -329,7 +330,7 @@ compound_heading_style6 = doped_chemical_label
 compound_heading_phrase = Group(compound_heading_style6 | compound_heading_style5 | compound_heading_style1 | compound_heading_style2 | compound_heading_style3 | compound_heading_style4 | chemical_label)('compound')
 
 names_only = Group((solvent_name | chemical_name
-              | likely_abbreviation | lenient_name
+              | likely_abbreviation
               | (Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and'))).add_action(join).add_action(fix_whitespace)))))('compound')
 
 labels_only = Group((doped_chemical_label | informal_chemical_label | numeric | R('^([A-Z]\d{1,3})$') | strict_chemical_label))('compound')
@@ -348,16 +349,35 @@ def standardize_role(role):
 class CompoundParser(BaseSentenceParser):
     """Chemical name possibly with an associated label."""
 
-    root = cem_phrase
+    @abstractproperty
+    def root(self):
+        label = self.model.labels.parse_expression
+        label_name_cem = (label + optdelim + chemical_name)('compound')
+
+        label_before_name = Optional(synthesis_of | to_give) + label_type + optdelim + label_name_cem + ZeroOrMore(optdelim + cc + optdelim + label_name_cem)
+        
+        name_with_optional_bracketed_label = (Optional(synthesis_of | to_give) + chemical_name + Optional(lbrct + Optional(labelled_as + optquote) + (label) + optquote + rbrct))('compound')
+
+        # Very lenient name and label match, with format like "name (Compound 3)"
+        lenient_name_with_bracketed_label = (Start() + Optional(synthesis_of) + lenient_name + lbrct + label_type.hide() + label + rbrct)('compound')
+
+        # Chemical name with a doped label after
+        name_with_doped_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
+
+        # Chemical name with an informal label after
+        name_with_informal_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
+        return Group(name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | label_before_name | name_with_optional_bracketed_label)('cem_phrase')
 
     def interpret(self, result, start, end):
         # TODO: Parse label_type into label model object
+        print(etree.tostring(result))
         for cem_el in result.xpath('./compound'):
             c = self.model(
                 names=cem_el.xpath('./names/text()'),
                 labels=cem_el.xpath('./labels/text()'),
                 roles=[standardize_role(r) for r in cem_el.xpath('./roles/text()')]
             )
+            print(c.serialize())
             yield c
 
 

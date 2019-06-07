@@ -45,7 +45,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     @property
     def cem_phrase(self):
         """CEM phrases"""
-        return Group(cem | chemical_label | Group(chemical_name)('compound'))
+        return self.model.compound.model_class.parsers[0].root
     
     @property
     def prefix(self):
