@@ -114,7 +114,6 @@ class BaseAutoParser(BaseParser):
         requirements = True
         property_entities = {}
         log.debug(etree.tostring(result))
-        print(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
@@ -215,9 +214,10 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
             return self._root_phrase
 
         # is always found, our models currently rely on the compound
+        chem_name = (cem | chemical_label | lenient_chemical_label)
         compound_model = self.model.compound.model_class
-        chem_name = (cem | chemical_label | lenient_chemical_label | compound_model.labels.parse_expression)
-        entities = []
+        labels = compound_model.labels.parse_expression('labels')
+        entities = [labels]
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
@@ -268,7 +268,9 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
 
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
-        entities = []
+        compound_model = self.model.compound.model_class
+        labels = compound_model.labels.parse_expression('labels')
+        entities = [labels]
         no_value_element = W('NoValue')('raw_value')
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
