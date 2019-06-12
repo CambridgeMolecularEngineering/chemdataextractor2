@@ -45,26 +45,26 @@ class TestQuantityModelTemplate(unittest.TestCase):
     def test_cem_before_specifier_and_value(self):
         s = Sentence(
             'BiFeO3 with a Curie temperature of approximately 1100 K')
-        expected = b'<root_phrase><compound><names>BiFeO3</names></compound><specifier>Curie temperature</specifier><raw_value>1100</raw_value><raw_units>K</raw_units></root_phrase>'
+        expected = b'<root_phrase><cem_phrase><compound><names>BiFeO3</names></compound></cem_phrase><specifier>Curie temperature</specifier><raw_value>1100</raw_value><raw_units>K</raw_units></root_phrase>'
         self.assertEqual(expected, self.parse(
             s, 'cem_before_specifier_and_value_phrase'))
 
     def test_specifier_before_cem_and_value(self):
         s = Sentence('The Curie temperature of La0.7Ca0.3MnO3 is 300 K')
-        expected = b'<root_phrase><specifier>Curie temperature</specifier><compound><names>La0.7Ca0.3MnO3</names></compound><raw_value>300</raw_value><raw_units>K</raw_units></root_phrase>'
+        expected = b'<root_phrase><specifier>Curie temperature</specifier><cem_phrase><compound><names>La0.7Ca0.3MnO3</names></compound></cem_phrase><raw_value>300</raw_value><raw_units>K</raw_units></root_phrase>'
         self.assertEqual(expected, self.parse(
             s, 'specifier_before_cem_and_value_phrase'))
 
     def test_cem_after_specifier_and_value(self):
         s = Sentence('Curie temperature of 1100 K in BiFeO3')
-        expected = b'<root_phrase><specifier>Curie temperature</specifier><raw_value>1100</raw_value><raw_units>K</raw_units><compound><names>BiFeO3</names></compound></root_phrase>'
+        expected = b'<root_phrase><specifier>Curie temperature</specifier><raw_value>1100</raw_value><raw_units>K</raw_units><cem_phrase><compound><names>BiFeO3</names></compound></cem_phrase></root_phrase>'
         self.assertEqual(expected, self.parse(
             s, 'cem_after_specifier_and_value_phrase'))
 
     def test_value_specifier_cem(self):
         s = Sentence(
             '1100 K, corresponding to the Curie temperature of BiFeO3')
-        expected = b'<root_phrase><raw_value>1100</raw_value><raw_units>K</raw_units><COMMA>,</COMMA><specifier>Curie temperature</specifier><compound><names>BiFeO3</names></compound></root_phrase>'
+        expected = b'<root_phrase><raw_value>1100</raw_value><raw_units>K</raw_units><COMMA>,</COMMA><specifier>Curie temperature</specifier><cem_phrase><compound><names>BiFeO3</names></compound></cem_phrase></root_phrase>'
         self.assertEqual(expected, self.parse(s, 'value_specifier_cem_phrase'))
 
 
