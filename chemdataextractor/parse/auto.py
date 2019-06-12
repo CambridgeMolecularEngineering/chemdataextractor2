@@ -83,6 +83,7 @@ def match_dimensions_of(model):
             extract_units(result[0].text, model.dimensions, strict=True)
             return True
         except TypeError as e:
+            log.debug(e)
             return False
     return check_match
 
@@ -210,11 +211,12 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
     @property
     def root(self):
-        if self._specifier is self.model.specifier:
+        if self._specifier is self.model.specifier.parse_expression:
             return self._root_phrase
 
         # is always found, our models currently rely on the compound
-        chem_name = (cem | chemical_label | lenient_chemical_label)
+        compound_model = self.model.compound.model_class
+        chem_name = (cem | chemical_label | lenient_chemical_label | compound_model.labels.parse_expression)
         entities = []
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
@@ -261,7 +263,7 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
     """ Additions for automated parsing of tables"""
     @property
     def root(self):
-        if self._specifier is self.model.specifier:
+        if self._specifier is self.model.specifier.parse_expression:
             return self._root_phrase
 
         # is always found, our models currently rely on the compound

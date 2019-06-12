@@ -78,7 +78,7 @@ doping_label_1 = (doping_value + R('^\<$') + doped_chemical_identifier +
                   R('^\<$') + doping_value)
 doping_label_2 = (
     doped_chemical_identifier
-    + W('=') 
+    + W('=')
     + OneOrMore(doping_range | doping_value | R('^[,:;\.]$') | I('or') | I('and')))
 
 doped_chemical_label = Group((doping_label_1 | doping_label_2)('labels')).add_action(join)
@@ -305,7 +305,6 @@ name_with_informal_label = (chemical_name + OneOrMore(delim | I('with') | I('for
 
 cem = (name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label)
 
-
 cem_phrase = Group(cem)('cem_phrase').add_action(fix_whitespace)
 
 r_equals = R('^[R]$') + W('=') + OneOrMore(Not(rbrct) + (bcm | icm | nn | nnp | nns | hyph | cd | ls))
@@ -337,6 +336,7 @@ labels_only = Group((doped_chemical_label | informal_chemical_label | numeric | 
 
 roles_only = Group((label_type | synthesis_of | to_give))('compound')
 
+
 def standardize_role(role):
     """Convert role text into standardized form."""
     role = role.lower()
@@ -348,14 +348,16 @@ def standardize_role(role):
 # TODO jm2111, Problems here! The parsers don't have a parse method anymore. Ruins parsing of captions.
 class CompoundParser(BaseSentenceParser):
     """Chemical name possibly with an associated label."""
+    _label = None
+    _root_phrase = None
 
-    @abstractproperty
+    @property
     def root(self):
-        label = self.model.labels.parse_expression
+        label = self.model.labels.parse_expression('labels')
         label_name_cem = (label + optdelim + chemical_name)('compound')
 
         label_before_name = Optional(synthesis_of | to_give) + label_type + optdelim + label_name_cem + ZeroOrMore(optdelim + cc + optdelim + label_name_cem)
-        
+
         name_with_optional_bracketed_label = (Optional(synthesis_of | to_give) + chemical_name + Optional(lbrct + Optional(labelled_as + optquote) + (label) + optquote + rbrct))('compound')
 
         # Very lenient name and label match, with format like "name (Compound 3)"
@@ -366,7 +368,7 @@ class CompoundParser(BaseSentenceParser):
 
         # Chemical name with an informal label after
         name_with_informal_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
-        return Group(name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | label_before_name | name_with_optional_bracketed_label)('cem_phrase')
+        return Group(lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label | name_with_informal_label | name_with_doped_label)('cem_phrase')
 
     def interpret(self, result, start, end):
         # TODO: Parse label_type into label model object
@@ -381,11 +383,19 @@ class CompoundParser(BaseSentenceParser):
             yield c
 
 
-
 class ChemicalLabelParser(BaseSentenceParser):
     """Chemical label occurrences with no associated name."""
+    _label = None
+    _root_phrase = None
 
-    root = chemical_label_phrase
+    @property
+    def root(self):
+        label = self.model.labels.parse_expression('labels')
+        if self._label is label:
+            return self._root_phrase
+        self._root_phrase = (chemical_label_phrase | Group(label)('chemical_label_phrase'))
+        self._label = label
+        return self._root_phrase
 
     def interpret(self, result, start, end):
         roles = [standardize_role(r) for r in result.xpath('./roles/text()')]

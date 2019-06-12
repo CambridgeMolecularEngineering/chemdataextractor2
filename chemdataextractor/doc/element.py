@@ -227,6 +227,10 @@ class CaptionedElement(BaseElement):
         return self.caption.definitions
 
     @property
+    def chemical_definitions(self):
+        return self.caption.chemical_definitions
+
+    @property
     def models(self):
         return self._models
 

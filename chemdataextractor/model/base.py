@@ -286,7 +286,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 cls.fields[key].reset()
 
     @classmethod
-    def update(cls, definitions):
+    def update(cls, definitions, strict=True):
         """Update this Element's updatable attributes with new information from definitions
 
         Arguments:
@@ -299,7 +299,10 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                     matches = [i for i in cls.fields[field].parse_expression.scan(definition['tokens'])]
                     # print(matches)
                     if any(matches):
-                        cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                        if strict:
+                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                        else:
+                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | I(str(definition['specifier']))
         return
 
     def keys(self):

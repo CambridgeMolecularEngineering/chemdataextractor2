@@ -20,7 +20,7 @@ from ..parse.mp_new import MpParser
 from ..parse.nmr import NmrParser
 from ..parse.tg import TgParser
 from ..parse.uvvis import UvvisParser
-from ..parse.elements import R, I, Optional, W, Group
+from ..parse.elements import R, I, Optional, W, Group, NoMatch
 from ..parse.actions import merge, join
 from ..model.units.quantity_model import QuantityModel, DimensionlessModel
 from ..parse.auto import AutoTableParser, AutoSentenceParser
@@ -31,10 +31,10 @@ log = logging.getLogger(__name__)
 
 class Compound(BaseModel):
     names = ListType(StringType(), parse_expression=names_only)
-    labels = ListType(StringType(), parse_expression=I('fdgtghr'))
-    # roles = ListType(StringType(), parse_expression=roles_only)
-    # parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
-    parsers = [CompoundParser()]
+    labels = ListType(StringType(), parse_expression=NoMatch())
+    roles = ListType(StringType(), parse_expression=roles_only)
+    parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
+    # parsers = [CompoundParser()]
 
     def merge(self, other):
         """Merge data from another Compound into this Compound."""
@@ -61,9 +61,9 @@ class Compound(BaseModel):
         if self.names or self.labels:
             return True
         return False
-    
+
     @classmethod
-    def update(cls, definitions):
+    def update(cls, definitions, strict=True):
         """Update the Compound labels parse expression
 
         Arguments:
@@ -72,13 +72,16 @@ class Compound(BaseModel):
         log.debug("Updating Compound")
         for definition in definitions:
             label = definition['label']
-            new_label_expression = Group(W(label)('labels'))
+            if strict:
+                new_label_expression = Group(W(label)('labels'))
+            else:
+                new_label_expression = Group(I(label)('labels'))
             if not cls.labels.parse_expression:
                 cls.labels.parse_expression = new_label_expression
             else:
                 cls.labels.parse_expression = cls.labels.parse_expression | new_label_expression
         return
-    
+
     def construct_label_expression(self, label):
         return W(label)('labels')
 
