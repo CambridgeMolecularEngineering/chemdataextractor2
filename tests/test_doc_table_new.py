@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Test the Table Document element and simple Table autoparsers.
+Test the Table Document element and simple Table autoparsers. 
 
 """
 
