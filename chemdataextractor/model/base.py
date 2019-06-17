@@ -290,7 +290,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 cls._updated = False
 
     @classmethod
-    def update(cls, definitions):
+    def update(cls, definitions, strict=True):
         """Update this Element's updatable attributes with new information from definitions
 
         Arguments:
@@ -304,7 +304,10 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                     # print(matches)
                     if any(matches):
                         cls._updated = True
-                        cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                        if strict:
+                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                        else:
+                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | I(str(definition['specifier']))
         return
 
     @property

@@ -498,7 +498,7 @@ class Table(CaptionedElement):
                         elif isinstance(other_r, Compound):
                             table_records.pop(j)
                             table_records.append(new_c)
-                            
+
                         break
             i += 1
         return table_records
