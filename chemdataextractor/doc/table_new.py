@@ -441,7 +441,6 @@ class Table(CaptionedElement):
         table_records += caption_records
 
         # 7. merge Compound records with any shared name/label
-        # TODO: Copy/pasted from document.py, probably should be moved out somewhere
         len_l = len(table_records)
         log.debug(table_records)
         i = 0
@@ -461,7 +460,7 @@ class Table(CaptionedElement):
                     other_r_compound = other_r.compound
                 elif isinstance(other_r, Compound):
                     other_r_compound = other_r
-                
+
                 if not r_compound or not other_r_compound:
                     continue
 
@@ -474,13 +473,33 @@ class Table(CaptionedElement):
                     continue
 
                 if any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels):
-                    table_records.pop(j)
-                    table_records.pop(i)
-                    new_c = r_compound.merge(other_r_compound)
-                    r.compound = new_c
-                    table_records.append(r)
-                    len_l -= 1
-                    i -= 1
-                    break
+                    # merging of 'Compound' records
+                    # this is only good if both records are `Compound`, otherwise we can't just remove the records
+                    if isinstance(r, Compound) and isinstance(other_r, Compound):
+                        table_records.pop(j)
+                        table_records.pop(i)
+                        table_records.append(r)
+                        len_l -= 1
+                        i -= 1
+                        break
+
+                    # merging of 'compound' if the record is not of 'Compound' type
+                    else:
+                        new_c = r_compound.merge(other_r_compound)
+
+                        if not isinstance(r, Compound):
+                            r.compound = new_c
+                        elif isinstance(r, Compound):
+                            table_records.pop(i)
+                            table_records.append(new_c)
+
+                        if not isinstance(other_r, Compound):
+                            other_r.compound = new_c
+                        elif isinstance(other_r, Compound):
+                            table_records.pop(j)
+                            table_records.append(new_c)
+                            
+                        break
             i += 1
         return table_records
+
