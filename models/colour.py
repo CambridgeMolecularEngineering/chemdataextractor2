@@ -53,7 +53,7 @@ colour_expression = (Optional(prefix) + colours + Optional(colours)).add_action(
 
 class Colour(CategoryModel):
     specifier = StringType(parse_expression=R('^[Cc]olo(u)?r$'), required=True)
-    name = StringType(parse_expression=colour_expression, required=True, contextual=False, updatable=False)
+    category = StringType(parse_expression=colour_expression, required=True, contextual=False, updatable=False)
     compound = ModelType(Compound)
     parsers = [AutoTableParser()]
 
