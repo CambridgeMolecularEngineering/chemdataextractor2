@@ -29,6 +29,7 @@ import webbrowser
 from playsound import playsound
 import pickle
 import pkg_resources
+from pprint import pprint
 
 from .. import Document
 
@@ -140,7 +141,8 @@ class Evaluate:
                 if not record.is_unidentified:
                     self.n_records += 1
 
-                    print("Record {}: \n    {}".format(self.n_records, record.serialize()))
+                    print("Record {}: \n".format(self.n_records))
+                    pprint(record.serialize())
                     print("    Method:  {}".format(record.record_method))
                     print("    Updated: {}".format(record.updated))
                     sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
