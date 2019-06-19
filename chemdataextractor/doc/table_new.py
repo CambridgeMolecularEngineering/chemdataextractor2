@@ -168,7 +168,7 @@ class Table(CaptionedElement):
                     if not record_update:
                         record = copy.deepcopy(record_i)
                         for field in sym_diff:
-                            if not record_i.__getattribute__(field) and record_i.fields[field].contextual:
+                            if hasattr(record_i, field) and not  record_i.__getattribute__(field) and record_i.fields[field].contextual:
                                 record.__setitem__(field, record_j.__getattribute__(field))
                                 record_update = True
                                 updated_records.append(i)
@@ -178,7 +178,7 @@ class Table(CaptionedElement):
                     if not record_update:
                         record = copy.deepcopy(record_j)
                         for field in sym_diff:
-                            if not record_j.__getattribute__(field) and record_j.fields[field].contextual:
+                            if hasattr(record_j, field) and not record_j.__getattribute__(field) and record_j.fields[field].contextual:
                                 record.__setitem__(field, record_i.__getattribute__(field))
                                 record_update = True
                                 updated_records.append(i)
@@ -358,8 +358,16 @@ class Table(CaptionedElement):
 
                         partial_table_records.append(record)
 
+        # print("AFTER 1")
+        # for r in partial_table_records:
+        #     print(r.serialize())
+
         # 2. MERGING OF PARTIAL SINGLE-MODEL TABLE RECORDS
         partial_table_records_merged = self._merge_partial_records(partial_table_records)
+
+        # print("AFTER 2")
+        # for r in partial_table_records_merged:
+        #     print(r.serialize())
 
         # 3. CHECK IF ALL THE SINGLE-MODEL REQUIREMENTS (EXCEPT FOR NESTED SUBMODELS) ARE SATISFIED
         for model in self._streamlined_models:
@@ -370,9 +378,7 @@ class Table(CaptionedElement):
                 # of 'ModelType', this will be checked later, after merging of nested models
                 unmet_requirements = []
                 for field in model.fields:
-                    if not isinstance(model.fields[field], ModelType) and \
-                            model.fields[field].required and \
-                            not record.__getattribute__(field):
+                    if not isinstance(model.fields[field], ModelType) and model.fields[field].required and hasattr(record, field) and not record.__getattribute__(field):
                         unmet_requirements.append(field)
                         requirements = False
 
@@ -388,8 +394,16 @@ class Table(CaptionedElement):
                 if requirements:
                     single_model_records.append(record)
 
+        # print("AFTER 3")
+        # for r in single_model_records:
+        #     print(r.serialize())
+
         # 4. MERGE ALL SINGLE-MODEL RECORDS BASED ON THE HIERARCHY OF SUBMODELS
         merged_model_records = self._merge_nested_models(single_model_records)
+
+        # print("AFTER 4")
+        # for r in merged_model_records:
+        #     print(r.serialize())
 
         # 5. CHECK IF ALL THE ELEMENTS OF THE FINAL RECORDS HAVE BEEN SATISFIED
         for model in self.models:
@@ -442,31 +456,76 @@ class Table(CaptionedElement):
         caption_records = [c for c in caption_records if c.contextual_fulfilled]
         table_records += caption_records
 
+        # print("AFTER 6")
+        # for r in table_records:
+        #     print(r.serialize())
+
+
         # 7. merge Compound records with any shared name/label
-        # TODO: Copy/pasted from document.py, probably should be moved out somewhere
         len_l = len(table_records)
         log.debug(table_records)
         i = 0
         while i < (len_l - 1):
             for j in range(i + 1, len_l):
+
                 r = table_records[i]
                 other_r = table_records[j]
-                if isinstance(r, Compound) and isinstance(other_r, Compound):
-                    # Strip whitespace and lowercase to compare names
-                    rnames_std = {''.join(n.split()).lower() for n in r.names}
-                    onames_std = {''.join(n.split()).lower() for n in other_r.names}
+                r_compound, other_r_compound = None, None
 
-                    # Clashing labels, don't merge
-                    if len(set(r.labels) - set(other_r.labels)) > 0 and len(set(other_r.labels) - set(r.labels)) > 0:
-                        continue
+                if hasattr(r, 'compound'):
+                    r_compound = r.compound
+                elif isinstance(r, Compound):
+                    r_compound = r
 
-                    if any(n in rnames_std for n in onames_std) or any(l in r.labels for l in other_r.labels):
+                if hasattr(other_r, 'compound'):
+                    other_r_compound = other_r.compound
+                elif isinstance(other_r, Compound):
+                    other_r_compound = other_r
+
+                if not r_compound or not other_r_compound:
+                    continue
+
+                # Strip whitespace and lowercase to compare names
+                rnames_std = {''.join(n.split()).lower() for n in r_compound.names}
+                onames_std = {''.join(n.split()).lower() for n in other_r_compound.names}
+
+                # Clashing labels, don't merge
+                if len(set(r_compound.labels) - set(other_r_compound.labels)) > 0 and len(set(other_r_compound.labels) - set(r_compound.labels)) > 0:
+                    continue
+
+                if any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels):
+                    # merging of 'Compound' records
+                    # this is only good if both records are `Compound`, otherwise we can't just remove the records
+                    if isinstance(r, Compound) and isinstance(other_r, Compound):
                         table_records.pop(j)
                         table_records.pop(i)
-                        table_records.append(r.merge(other_r))
+                        table_records.append(r)
                         len_l -= 1
                         i -= 1
                         break
+
+                    # merging of 'compound' if the record is not of 'Compound' type
+                    else:
+                        new_c = r_compound.merge(other_r_compound)
+
+                        if not isinstance(r, Compound):
+                            r.compound = new_c
+                        elif isinstance(r, Compound):
+                            table_records.pop(i)
+                            table_records.append(new_c)
+
+                        if not isinstance(other_r, Compound):
+                            other_r.compound = new_c
+                        elif isinstance(other_r, Compound):
+                            table_records.pop(j)
+                            table_records.append(new_c)
+
+                        break
             i += 1
 
+        # print("AFTER 7")
+        # for r in table_records:
+        #     print(r.serialize())
+
         return table_records
+

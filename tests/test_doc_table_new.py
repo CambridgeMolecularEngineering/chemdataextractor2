@@ -302,6 +302,7 @@ class TestTable(unittest.TestCase):
                     {'InteratomicDistance': {'raw_value': '2.7552', 'raw_units': 'Å', 'value': [2.7552], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Mg-Si', 'compound': {'Compound': {'names': ['Mg2Si']}}}},
                     {'InteratomicDistance': {'raw_value': '4.4992', 'raw_units': 'Å', 'value': [4.4992], 'units': 'Angstrom^(1.0)', 'specifier': 'bonddistances', 'species': 'Si-Si', 'compound': {'Compound': {'names': ['Mg2Si']}}}},
                     {'Compound': {'names': ['Mg2Si']}}]
+        #print(result)
         self.assertCountEqual(expected, result)
 
     def test_unidentified_records_1(self):

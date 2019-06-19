@@ -12,7 +12,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from .quantity_model import QuantityModel
+from .quantity_model import QuantityModel, StringType
 from .unit import Unit
 from .dimension import Dimension
 from ...parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
@@ -101,6 +101,7 @@ class Fahrenheit(TemperatureUnit):
 
 units_dict = {R('°?(((K|k)elvin(s)?)|K)\.?', group=0): Kelvin,
               R('(°C|((C|c)elsius))\.?', group=0): Celsius,
+              R('(\[deg\.] C\.)|([D|d]egrees? C(entigrade(s)?)?\.?)', group=0): Celsius,
               R('°?((F|f)ahrenheit|F)\.?', group=0): Fahrenheit,
               R('°|C', group=0): None}
 # The final element in units_dict is given to ensure that '°C' is parsed correctly,

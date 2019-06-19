@@ -45,15 +45,49 @@ class TestUnitClass(unittest.TestCase):
         self.assertAlmostEqual(extracted[1], 1600.2)
 
     def test_err_range(self):
-        test_string = '1600.4± 2.4'
+        test_string = '1600.4±2.4'
         extracted_value = self.qp.extract_value(test_string)
         extracted_error = self.qp.extract_error(test_string)
         expected_value, expected_error = 1600.4, 2.4
         self.assertAlmostEqual(extracted_value[0], expected_value)
         self.assertAlmostEqual(extracted_error, expected_error)
 
+    def test_err_brackets_1(self):
+        test_string = '1600.4(2)'
+        extracted_value = self.qp.extract_value(test_string)
+        extracted_error = self.qp.extract_error(test_string)
+        expected_value, expected_error = 1600.4, 0.2
+        self.assertAlmostEqual(extracted_value[0], expected_value)
+        self.assertAlmostEqual(extracted_error, expected_error)
+
+    def test_err_brackets_2(self):
+        test_string = '1600(2)'
+        extracted_value = self.qp.extract_value(test_string)
+        extracted_error = self.qp.extract_error(test_string)
+        expected_value, expected_error = 1600., 2.
+        self.assertAlmostEqual(extracted_value[0], expected_value)
+        self.assertAlmostEqual(extracted_error, expected_error)
+
+    def test_err_brackets_3(self):
+        test_string = '0.0002(2)'
+        extracted_value = self.qp.extract_value(test_string)
+        extracted_error = self.qp.extract_error(test_string)
+        expected_value, expected_error = 0.0002, 0.0002
+        self.assertAlmostEqual(extracted_value[0], expected_value)
+        self.assertAlmostEqual(extracted_error, expected_error)
+
     def test_single_value(self):
         test_string = '500.8'
+        extracted = self.qp.extract_value(test_string)
+        self.assertEqual(extracted[0], 500.8)
+
+    def test_comma_value(self):
+        test_string = '600,000.8'
+        extracted = self.qp.extract_value(test_string)
+        self.assertEqual(extracted[0], 600000.8)
+
+    def test_european_value(self):
+        test_string = '500,8'
         extracted = self.qp.extract_value(test_string)
         self.assertEqual(extracted[0], 500.8)
 

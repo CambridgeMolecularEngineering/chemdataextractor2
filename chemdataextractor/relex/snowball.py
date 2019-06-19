@@ -29,6 +29,10 @@ from itertools import product
 from ..parse.auto import BaseSentenceParser, BaseAutoParser
 import logging
 
+from os.path import basename
+from playsound import playsound
+import pkg_resources
+
 log = logging.getLogger(__name__)
 
 class Snowball(BaseSentenceParser):
@@ -193,8 +197,13 @@ class Snowball(BaseSentenceParser):
         """
         f = open(filename, 'rb')
         d = Document().from_file(f)
-        self.train_from_document(d)
 
+        # if 'train_from_document' found any candidates, print the file to a log so that
+        # files used for training are saved automatically
+        f_log = open('snowball_training_set.txt', 'a')
+        if self.train_from_document(d):
+            print(basename(filename), file=f_log)
+        f_log.close()
         f.close()
         return
     
@@ -204,15 +213,22 @@ class Snowball(BaseSentenceParser):
         Arguments:
             d {str} -- the document to parse
         """
+        candidate_found = False
         for p in d.paragraphs:
             for s in p.sentences:
+                # skip sentence if it is too long
+                if s.end - s.start > 300:
+                    continue
                 sent_definitions = s.definitions
                 if sent_definitions:
                     self.model.update(sent_definitions)
-                self.train_from_sentence(s)
-        return
+                if self.train_from_sentence(s):
+                    # return 'True if there was a Snowball candidate in the document
+                    candidate_found = True
+        self.model.reset_updatables()
+        return candidate_found
 
-    def train_from_sentence(self ,s):
+    def train_from_sentence(self, s):
         """Train Snowball from a single sentence
         
         Arguments:
@@ -220,7 +236,9 @@ class Snowball(BaseSentenceParser):
         """
         candidate_dict = {}
         candidate_relationships = self.candidates(s.tagged_tokens)
+        candidate_found = False
         if len(candidate_relationships) > 0:
+            candidate_found = True
             print("\n\n")
             print(s)
             print('\n')
@@ -228,6 +246,8 @@ class Snowball(BaseSentenceParser):
                 candidate_dict[str(i)] = candidate
                 print("Candidate " + str(i) + ' ' + str(candidate) + '\n')
 
+            sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
+            playsound(sound_file)
             res = six.moves.input("...: ").replace(' ', '')
             if res:
                 chosen_candidate_idx = res.split(',')
@@ -239,7 +259,7 @@ class Snowball(BaseSentenceParser):
                         chosen_candidates.append(cc)
                 if chosen_candidates:
                     self.update(s.raw_tokens, chosen_candidates)
-        return
+        return candidate_found
     
     def candidates(self, tokens):
         """Find all candidate relationships of self.model within a sentence
@@ -256,7 +276,7 @@ class Snowball(BaseSentenceParser):
         detected = []
 
         #: Uses the default autosentenceparser to retrieve candidates
-        sentence_parser = AutoSentenceParser()
+        sentence_parser = AutoSentenceParser(lenient=True)
         sentence_parser.model = self.model
         for result in sentence_parser.root.scan(tokens):
             if result:
@@ -265,12 +285,13 @@ class Snowball(BaseSentenceParser):
                     
         if not detected:
             return []
-
         detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
+        toks = [tok[0] for tok in tokens]
         for text, tag, parse_expression in detected:
             text_length = len(text.split(' '))
-            toks = [tok[0] for tok in tokens]
-            start_indices = [s for s in KnuthMorrisPratt(toks, text.split(' '))]
+            pattern = [s[0] for s in Sentence(text).tagged_tokens]
+            text_length = len(pattern)
+            start_indices = [s for s in KnuthMorrisPratt(toks, pattern)]
 
             if isinstance(tag, tuple):
                 tag = '__'.join(tag)
@@ -280,7 +301,7 @@ class Snowball(BaseSentenceParser):
                 entities_dict[tag] = []
 
             entities = [Entity(text, tag, parse_expression, index, index + text_length) for index in start_indices]
-
+            
             # Add entities to dictionary if new
             for entity in entities:
                 if entity not in entities_dict[tag]:
@@ -288,8 +309,17 @@ class Snowball(BaseSentenceParser):
 
         # check all required entities are present
         required_fields = self.model.required_fields
+
+        # TODO This doesn't work, self.model.required fields is not working perfectly. However, problem is solved below.
         if not all(e in entities_dict.keys() for e in required_fields):
             return []
+
+        # jm2111, Fixed check for required fields
+        for field in self.model.fields:
+            if self.model.fields[field].required and all(field not in key for key in entities_dict.keys()):
+                # print("{}, required = {} , entities: {}".format(field,
+                #       self.model.fields[field].required, entities_dict.keys()))
+                return []
 
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
@@ -490,7 +520,6 @@ class Snowball(BaseSentenceParser):
         if not 'confidence' in self.model.fields.keys():
             setattr(self.model, 'confidence', FloatType())
 
-
         # Get the serialized relation data
         relation_data = relation.serialize()
 
@@ -521,6 +550,9 @@ class Snowball(BaseSentenceParser):
                                       "value": value,
                                       "error": error,
                                       "units": units})
+        elif hasattr(self.model, 'category') and self.model.category:
+            raw_value = relation_data['raw_value']
+            relation_data.update({"raw_value": raw_value})
 
         for field_name, field in six.iteritems(self.model.fields):
             if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
@@ -534,6 +566,9 @@ class Snowball(BaseSentenceParser):
                     log.debug(e)
 
         model_instance = self.model(**relation_data)
+
+        # records the parser that was used to generate this record, can be used for evaluation
+        model_instance.record_method = self.__class__.__name__
 
         yield model_instance
     

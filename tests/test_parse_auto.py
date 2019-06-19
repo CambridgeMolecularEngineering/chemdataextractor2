@@ -29,6 +29,7 @@ from chemdataextractor.model.units.temperature import Temperature, TemperatureMo
 from chemdataextractor.model.units.mass import Mass, Gram
 from chemdataextractor.model.units.energy import Energy
 from chemdataextractor.parse.auto import construct_unit_element, match_dimensions_of, AutoSentenceParser
+from chemdataextractor.parse.quantity import value_element_plain
 from chemdataextractor.doc.text import Sentence
 from chemdataextractor.parse.elements import I
 from chemdataextractor.model import Compound, ModelType, StringType
@@ -105,6 +106,46 @@ class TestAutoRules(unittest.TestCase):
         for result in results:
             results_list.append(etree.tostring(result[0]))
         expected = [b'<raw_units>m2/s</raw_units>']
+        self.assertEqual(expected, results_list)
+
+    def test_value_element(self):
+        test_sentence = Sentence('The value was 123.8')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>123.8</raw_value>']
+        self.assertEqual(expected, results_list)
+
+    def test_value_element_comma(self):
+        test_sentence = Sentence('The value was 3,123.8')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>3,123.8</raw_value>']
+        self.assertEqual(expected, results_list)
+
+    def test_value_element_european(self):
+        test_sentence = Sentence('The value was 123,8')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>123,8</raw_value>']
+        self.assertEqual(expected, results_list)
+
+    def test_value_element_brackets(self):
+        test_sentence = Sentence('The value was 123(8)')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>123(8)</raw_value>']
         self.assertEqual(expected, results_list)
 
 

@@ -261,6 +261,12 @@ class Any(BaseParserElement):
         return [E(self.name or safe_name(tokens[i][1]), tokens[i][0])], i + 1
 
 
+class NoMatch(BaseParserElement):
+
+    def _parse_tokens(self, tokens, i, actions=True):
+        raise ParseException(tokens, i, 'NoMatch will not match any tokens', self)
+
+
 class Word(BaseParserElement):
     """Match token text exactly. Case-sensitive."""
 
@@ -443,7 +449,6 @@ class And(ParseExpression):
 #                 if exprresults is not None:
 #                     results.extend(exprresults)
 #         return ([E(self.name, *results)] if self.name else results), i
-
 
 
 class Or(ParseExpression):

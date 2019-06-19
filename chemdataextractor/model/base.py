@@ -203,6 +203,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     fields = {}
     parsers = []
     specifier = None
+    _updated = False
 
     def __init__(self, **raw_data):
         """"""
@@ -213,6 +214,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         for key, field in six.iteritems(self.fields):
             if key not in raw_data:
                 setattr(self, key, copy.copy(field.default))
+        self._record_method = None
+        self.was_updated = self._updated
 
     @property
     def is_unidentified(self):
@@ -284,9 +287,10 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         for key, field in six.iteritems(cls.fields):
             if cls.fields[key].updatable:
                 cls.fields[key].reset()
+                cls._updated = False
 
     @classmethod
-    def update(cls, definitions):
+    def update(cls, definitions, strict=True):
         """Update this Element's updatable attributes with new information from definitions
 
         Arguments:
@@ -299,8 +303,23 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                     matches = [i for i in cls.fields[field].parse_expression.scan(definition['tokens'])]
                     # print(matches)
                     if any(matches):
-                        cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                        cls._updated = True
+                        if strict:
+                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                        else:
+                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | I(str(definition['specifier']))
         return
+
+    @property
+    def updated(self):
+        """
+        True/False dependent on if a specifier within the model was updated.
+        """
+        for field_name, field in six.iteritems(self.fields):
+            if hasattr(field, 'model_class'):
+                if hasattr(self[field_name], 'updated') and self[field_name].was_updated:
+                    return True
+        return self.was_updated
 
     def keys(self):
         return list(iter(self))
@@ -533,6 +552,19 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         log.debug(field_name)
                         self[field_name] = copy.copy(other)
         return self
+
+    @property
+    def record_method(self):
+        """
+        Description (string) of which method was used to create this record.
+        """
+        return self._record_method
+
+    @record_method.setter
+    def record_method(self, text):
+        if not isinstance(text, str):
+            raise TypeError("Record method description is not string.")
+        self._record_method = text
 
 
 @python_2_unicode_compatible

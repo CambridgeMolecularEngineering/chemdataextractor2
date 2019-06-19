@@ -26,8 +26,8 @@ from ..text import CONTROL_RE
 from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
 from ..parse.definitions import specifier_definition
-from ..parse.cem import chemical_name
 from ..parse.quantity import construct_quantity_re
+from ..parse.cem import chemical_name, cem_phrase
 from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
 
 from lxml import etree
@@ -125,6 +125,12 @@ class BaseText(BaseElement):
     def definitions(self):
         """
         A list of all specifier definitions
+        """
+        return
+
+    @abstractproperty
+    def chemical_definitions(self):
+        """A list of all chemical label definitiond
         """
         return
 
@@ -311,6 +317,13 @@ class Text(collections.Sequence, BaseText):
         Return a list of tagged definitions for each sentence in this text passage
         """
         return [definition for sent in self.sentences for definition in sent.definitions]
+
+    @property
+    def chemical_definitions(self):
+        """
+        Return a list of tagged definitions for each sentence in this text passage
+        """
+        return [definition for sent in self.sentences for definition in sent.chemical_definitions]
 
     @property
     def tagged_tokens(self):
@@ -688,6 +701,28 @@ class Sentence(BaseText):
                        'end': end}
             defs.append(new_def)
         return defs
+
+    @memoized_property
+    def chemical_definitions(self):
+        """Return a list of chemical entitiy mentions and their associated label
+        """
+        cem_defs = []
+        tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
+        for result in cem_phrase.scan(tagged_tokens):
+            tree = result[0]
+            start = result[1]
+            end = result[2]
+            name = first(tree.xpath('./compound/names/text()'))
+            label = first(tree.xpath('./compound/labels/text()'))
+            if name and label:
+                cem_def = {
+                    'name': name,
+                    'label': label,
+                    'start': start,
+                    'end': end
+                }
+                cem_defs.append(cem_def)
+        return cem_defs
 
     @memoized_property
     def tags(self):

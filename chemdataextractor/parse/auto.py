@@ -28,7 +28,7 @@ from .cem import cem, chemical_label, lenient_chemical_label
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
 from ..utils import first
-from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain
+from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain, lbrct, rbrct
 from .base import BaseSentenceParser, BaseParser, BaseTableParser
 
 import xml.etree.ElementTree as etree
@@ -68,6 +68,22 @@ def construct_unit_element(dimensions):
     units_regex += '$'
     return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex) | R(pattern=units_regex2))).add_action(merge)
 
+def construct_category_element(category_dict):
+    """
+    Construct an element for detecting categories.
+
+    :param Category category: The Category to look for.
+    :rtype: BaseParserElement or None
+    """
+    category_regex = '^'
+    if not category_dict:
+        return None
+    # Handle all the units
+    for element in category_dict:
+        category_regex += '(' + element.pattern + ')|'
+    category_regex = category_regex[:-1]
+    category_regex += '$'
+    return (R(pattern=category_regex))('raw_value').add_action(merge)
 
 def match_dimensions_of(model):
     """
@@ -83,6 +99,7 @@ def match_dimensions_of(model):
             extract_units(result[0].text, model.dimensions, strict=True)
             return True
         except TypeError as e:
+            log.debug(e)
             return False
     return check_match
 
@@ -113,6 +130,7 @@ class BaseAutoParser(BaseParser):
         requirements = True
         property_entities = {}
         log.debug(etree.tostring(result))
+        # print(etree.tostring(result))
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
@@ -146,11 +164,13 @@ class BaseAutoParser(BaseParser):
                 units = self.extract_units(raw_units, strict=True)
             except TypeError as e:
                 log.debug(e)
+
             property_entities.update({"raw_value": raw_value,
                                       "raw_units": raw_units,
                                       "value": value,
                                       "error": error,
                                       "units": units})
+
         for field_name, field in six.iteritems(self.model.fields):
             if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
                 try:
@@ -166,6 +186,8 @@ class BaseAutoParser(BaseParser):
         model_instance = self.model(**property_entities)
 
         if requirements:
+            # records the parser that was used to generate this record, can be used for evaluation
+            model_instance.record_method = self.__class__.__name__
             yield model_instance
 
     def _get_data(self, field_name, field, result):
@@ -207,14 +229,20 @@ class BaseAutoParser(BaseParser):
 
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
+    def __init__(self, lenient=False):
+        super(AutoSentenceParser, self).__init__()
+        self.lenient = lenient
+
     @property
     def root(self):
-        if self._specifier is self.model.specifier:
+        if self._specifier is self.model.specifier.parse_expression:
             return self._root_phrase
 
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
-        entities = []
+        compound_model = self.model.compound.model_class
+        labels = compound_model.labels.parse_expression('labels')
+        entities = [labels]
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
@@ -229,7 +257,11 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
             unit_element = Group(
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
             specifier = self.model.specifier.parse_expression('specifier')
-            value_phrase = value_element(unit_element)
+            if self.lenient:
+                value_phrase = (value_element(unit_element) | value_element_plain())
+            else:
+                value_phrase = value_element(unit_element)
+
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -260,12 +292,14 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
     """ Additions for automated parsing of tables"""
     @property
     def root(self):
-        if self._specifier is self.model.specifier:
+        if self._specifier is self.model.specifier.parse_expression:
             return self._root_phrase
 
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
-        entities = []
+        compound_model = self.model.compound.model_class
+        labels = compound_model.labels.parse_expression('labels')
+        entities = [labels]
         no_value_element = W('NoValue')('raw_value')
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:

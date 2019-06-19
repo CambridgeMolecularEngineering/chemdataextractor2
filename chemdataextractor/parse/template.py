@@ -15,7 +15,7 @@ from ..nlp.tokenize import ChemWordTokenizer, ChemSentenceTokenizer
 from .actions import merge, join, fix_whitespace, flatten
 from .base import BaseSentenceParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, End
-from .auto import construct_unit_element, match_dimensions_of, value_element, value_element_plain, BaseAutoParser
+from .auto import construct_unit_element, match_dimensions_of, value_element, value_element_plain, BaseAutoParser, construct_category_element
 import six
 log = logging.getLogger(__name__)
 
@@ -38,6 +38,11 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     @property
     def value_phrase(self):
         """Value and units"""
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
+            return value_element_plain()
+        elif hasattr(self.model, 'category') and self.model.category:
+            return self.model.category.parse_expression('category')
+        
         unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(
             match_dimensions_of(self.model))('raw_units'))
         return value_element(unit_element)
@@ -45,7 +50,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     @property
     def cem_phrase(self):
         """CEM phrases"""
-        return Group(cem | chemical_label | Group(chemical_name)('compound'))
+        return self.model.compound.model_class.parsers[0].root
     
     @property
     def prefix(self):
@@ -224,12 +229,20 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     @property
     def value_with_optional_unit(self):
         """Value possibly followed by a unit"""
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
+            return value_element_plain()
+        elif hasattr(self.model, 'category') and self.model.category:
+            return self.model.category.parse_expression('category')
         value = value_element_plain()
         return Group(value + Optional(self.unit))
     
     @property
     def value_phrase(self):
         """Value with unit"""
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
+            return value_element_plain()
+        elif hasattr(self.model, 'category') and self.model.category:
+            return self.model.category.parse_expression('category')
         return value_element(self.unit)
     
     @property
@@ -372,15 +385,20 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     def interpret(self, result, start, end):
         if result.tag == 'multi_entity_phrase_1':
             for model in self.interpret_multi_entity_1(result, start, end):
+                # records the parser that was used to generate this record, can be used for evaluation
+                model.record_method = self.__class__.__name__
                 yield model
         elif result.tag == 'multi_entity_phrase_2':
             for model in self.interpret_multi_entity_2(result, start, end):
+                model.record_method = self.__class__.__name__
                 yield model
         elif result.tag == 'multi_entity_phrase_3':
             for model in self.interpret_multi_entity_3(result, start, end):
+                model.record_method = self.__class__.__name__
                 yield model
         elif result.tag == 'multi_entity_phrase_4':
             for model in self.interpret_multi_entity_4(result, start, end):
+                model.record_method = self.__class__.__name__
                 yield model
         else:
             yield None
@@ -437,6 +455,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             
             model_instance = self.model(**property_entities)
             if requirements:
+                model_instance.record_method = self.__class__.__name__
                 yield model_instance
     
     def interpret_multi_entity_2(self, result, start, end):
@@ -498,6 +517,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             
             model_instance = self.model(**property_entities)
             if requirements:
+                model_instance.record_method = self.__class__.__name__
                 yield model_instance
     
     def interpret_multi_entity_3(self, result, start, end):
@@ -565,6 +585,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             
             model_instance = self.model(**property_entities)
             if requirements:
+                model_instance.record_method = self.__class__.__name__
                 yield model_instance
 
     def interpret_multi_entity_4(self, result, start, end):
@@ -614,6 +635,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             
             model_instance = self.model(**property_entities)
             if requirements:
+                model_instance.record_method = self.__class__.__name__
                 yield model_instance
     
     
