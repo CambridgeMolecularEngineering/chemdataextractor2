@@ -793,7 +793,10 @@ class ChemWordTokenizer(WordTokenizer):
             for regex in additional_regex:
                 split_text = regex.search(text)
                 if split_text:
-                    return self._split_span(span, len(split_text.group('split') or split_text.group('_split1') or split_text.group('_split2')), 0)
+                    groups = split_text.groupdict()
+                    for group_name, group in six.iteritems(groups):
+                        if 'split' in group_name and group is not None:
+                            return self._split_span(span, len(group), 0)
 
         if nextspan:
             nexttext = s[nextspan[0]:nextspan[1]]
