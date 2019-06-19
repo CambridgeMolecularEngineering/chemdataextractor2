@@ -114,7 +114,7 @@ class Micron(LengthUnit):
 
 units_dict = {R('[Mm](eter(s)?)?(?!ile(s)?)', group=0): Meter,
               R('[Mm]ile[s]?', group=0): Mile,
-              R('Å', group=0): Angstrom,
+              R('[ÅÅ]', group=0): Angstrom,
               R('[M|m]icron', group=0): Micron}
 Length.units_dict = units_dict
 Length.standard_units = Meter()

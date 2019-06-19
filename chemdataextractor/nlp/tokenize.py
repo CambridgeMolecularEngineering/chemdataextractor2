@@ -35,6 +35,8 @@ class BaseTokenizer(six.with_metaclass(ABCMeta)):
         :param string s: The sentence string to tokenize.
         :rtype: iter(str)
         """
+        log.debug('BaseTokenizer.tokenize is deprecated as of May 2019')
+        print('BaseTokenizer.tokenize is deprecated as of May 2019')
         return [s[start:end] for start, end in self.span_tokenize(s)]
 
     @abstractmethod
@@ -46,22 +48,22 @@ class BaseTokenizer(six.with_metaclass(ABCMeta)):
         """
         return
 
-    def tokenize_sents(self, strings):
-        """Apply the ``tokenize`` method to each sentence in ``strings``.
+    # def tokenize_sents(self, strings):
+    #     """Apply the ``tokenize`` method to each sentence in ``strings``.
 
-        :param list(str) sentences: A list of sentence strings to tokenize.
-        :rtype: iter(iter(str))
-        """
-        return [self.tokenize(s) for s in strings]
+    #     :param list(str) sentences: A list of sentence strings to tokenize.
+    #     :rtype: iter(iter(str))
+    #     """
+    #     return [self.tokenize(s) for s in strings]
 
-    def span_tokenize_sents(self, strings):
-        """Apply the ``span_tokenize`` method to each sentence in ``strings``.
+    # def span_tokenize_sents(self, strings):
+    #     """Apply the ``span_tokenize`` method to each sentence in ``strings``.
 
-        :param list(str) sentences: A list of sentence strings to tokenize.
-        :rtype: iter(iter(tuple(int, int)))
-        """
-        for s in strings:
-            yield list(self.span_tokenize(s))
+    #     :param list(str) sentences: A list of sentence strings to tokenize.
+    #     :rtype: iter(iter(tuple(int, int)))
+    #     """
+    #     for s in strings:
+    #         yield list(self.span_tokenize(s))
 
 
 def regex_span_tokenize(s, regex):
@@ -84,6 +86,10 @@ class SentenceTokenizer(BaseTokenizer):
         self.model = model if model is not None else self.model
         self._tokenizer = None
         log.debug('%s: Initializing with %s' % (self.__class__.__name__, self.model))
+
+    def get_sentences(self, text):
+        spans = self.span_tokenize(text.text)
+        return text._sentences_from_spans(spans)
 
     def span_tokenize(self, s):
         """Return a list of integer offsets that identify sentences in the given text.
@@ -247,7 +253,7 @@ class WordTokenizer(BaseTokenizer):
         # log.debug([(span[0], offset), (offset, offset + length), (offset + length, span[1])])
         return [(span[0], offset), (offset, offset + length), (offset + length, span[1])]
 
-    def _subspan(self, s, span, nextspan):
+    def _subspan(self, s, span, nextspan, additional_regex):
         """Recursively subdivide spans based on a series of rules."""
         text = s[span[0]:span[1]]
         lowertext = text.lower()
@@ -294,7 +300,7 @@ class WordTokenizer(BaseTokenizer):
         for i, char in enumerate(text):
             if char == '-':
                 before = lowertext[:i]
-                after = lowertext[i+1:]
+                after = lowertext[i + 1:]
                 # By default we split on hyphens
                 split = True
                 if before in self.NO_SPLIT_PREFIX or after in self.NO_SPLIT_SUFFIX:
@@ -308,9 +314,24 @@ class WordTokenizer(BaseTokenizer):
         for contraction in self.CONTRACTIONS:
             if lowertext == contraction[0]:
                 return self._split_span(span, contraction[1])
+
+        if additional_regex:
+            for regex in additional_regex:
+                split_text = regex.search(text)
+                if split_text:
+                    return self._split_span(span, len(split_text.group('split') or split_text.group('_split1') or split_text.group('_split2')), 0)
+
         return [span]
 
-    def span_tokenize(self, s):
+    def get_word_tokens(self, sentence, additional_regex=None):
+        if not additional_regex:
+            additional_regex = self.get_additional_regex(sentence)
+        return sentence._tokens_for_spans(self.span_tokenize(sentence.text, additional_regex))
+
+    def get_additional_regex(self, sentence):
+        return None
+
+    def span_tokenize(self, s, additional_regex=None):
         """"""
         # First get spans by splitting on all whitespace
         # Includes: \u0020 \u00A0 \u1680 \u180E \u2000 \u2001 \u2002 \u2003 \u2004 \u2005 \u2006 \u2007 \u2008 \u2009 \u200A \u202F \u205F \u3000
@@ -318,8 +339,8 @@ class WordTokenizer(BaseTokenizer):
         i = 0
         # Recursively split spans according to rules
         while i < len(spans):
-            subspans = self._subspan(s, spans[i], spans[i + 1] if i + 1 < len(spans) else None)
-            spans[i:i+1] = [subspan for subspan in subspans if subspan[1] - subspan[0] > 0]
+            subspans = self._subspan(s, spans[i], spans[i + 1] if i + 1 < len(spans) else None, additional_regex)
+            spans[i:i + 1] = [subspan for subspan in subspans if subspan[1] - subspan[0] > 0]
             if len(subspans) == 1:
                 i += 1
         return spans
@@ -439,7 +460,7 @@ class ChemWordTokenizer(WordTokenizer):
     #: Don't split around slash when both preceded and followed by these characters
     NO_SPLIT_SLASH = ['+', '-', '−']
     #: Regular expression that matches a numeric quantity with units
-    QUANTITY_RE = re.compile(r'^((\d\d\d)g|([-−]?\d+\.\d+|10[-−]\d+)(g|s|m|N|V)([-−]?[1-4])?|(\d*[-−]?\d+\.?\d*)([pnµμm]A|[µμmk]g|[kM]J|m[lL]|[nµμm]?M|[nµμmc]m|kN|[mk]V|[mkMG]?W|[mnpμµ]s|Hz|[Mm][Oo][Ll](e|ar)?s?|k?Pa|ppm|min)([-−]?[1-4])?)$')
+    QUANTITY_RE = re.compile(r'^((?P<split>\d\d\d)g|(?P<_split1>[-−]?\d+\.\d+|10[-−]\d+)(g|s|m|N|V)([-−]?[1-4])?|(?P<_split2>\d*[-−]?\d+\.?\d*)([pnµμm]A|[µμmk]g|[kM]J|m[lL]|[nµμm]?M|[nµμmc]m|kN|[mk]V|[mkMG]?W|[mnpμµ]s|Hz|[Mm][Oo][Ll](e|ar)?s?|k?Pa|ppm|min)([-−]?[1-4])?)$')
     #: Don't split on hyphen if the prefix matches this regular expression
     NO_SPLIT_PREFIX_ENDING = re.compile('(^\(.*\)|^[\d,\'"“”„‟‘’‚‛`´′″‴‵‶‷⁗Α-Ωα-ω]+|ano|ato|azo|boc|bromo|cbz|chloro|eno|fluoro|fmoc|ido|ino|io|iodo|mercapto|nitro|ono|oso|oxalo|oxo|oxy|phospho|telluro|tms|yl|ylen|ylene|yliden|ylidene|ylidyn|ylidyne)$', re.U)
     #: Don't split on hyphen if prefix or suffix match this regular expression
@@ -529,7 +550,20 @@ class ChemWordTokenizer(WordTokenizer):
         'zwitterion'
     }
     NO_SPLIT = {'°c'}
-    
+
+    def get_additional_regex(self, sentence):
+        additional_regex = [self.QUANTITY_RE]
+        for model in sentence.models:
+            if not hasattr(model, 'dimensions'):
+                # print('additional regex added')
+                additional_regex.append(self.QUANTITY_RE)
+                break
+        quantity_re = sentence.quantity_re
+        if quantity_re:
+            additional_regex.append(quantity_re)
+            # print('quantity re added')
+        return additional_regex
+
     def _closing_bracket_index(self, text, bpair=('(', ')')):
         """Return the index of the closing bracket that matches the opening bracket at the start of the text."""
         level = 1
@@ -568,7 +602,10 @@ class ChemWordTokenizer(WordTokenizer):
         else:
             return False
 
-    def _subspan(self, s, span, nextspan):
+    def _subspan(self, s, span, nextspan, additional_regex):
+        if additional_regex is None:
+            additional_regex = [self.QUANTITY_RE]
+
         """Recursively subdivide spans based on a series of rules."""
         text = s[span[0]:span[1]]
         lowertext = text.lower()
@@ -739,9 +776,9 @@ class ChemWordTokenizer(WordTokenizer):
                 # S,S - dioxide
 
         # Split units off the end of a numeric value
-        quantity = self.QUANTITY_RE.search(text)
-        if quantity:
-            return self._split_span(span, len(quantity.group(6) or quantity.group(3) or quantity.group(2)), 0)
+        # quantity = self.QUANTITY_RE.search(text)
+        # if quantity:
+        #     return self._split_span(span, len(quantity.group(6) or quantity.group(3) or quantity.group(2)), 0)
 
         # Split pH off the start of a numeric value
         if text.startswith('pH') and self._is_number(text[2:]):
@@ -752,6 +789,12 @@ class ChemWordTokenizer(WordTokenizer):
             if lowertext == contraction[0]:
                 return self._split_span(span, contraction[1])
 
+        if additional_regex:
+            for regex in additional_regex:
+                split_text = regex.search(text)
+                if split_text:
+                    return self._split_span(span, len(split_text.group('split') or split_text.group('_split1') or split_text.group('_split2')), 0)
+
         if nextspan:
             nexttext = s[nextspan[0]:nextspan[1]]
             # Split NMR isotope whitespace errors (joined with previous sentence full stop)
@@ -759,7 +802,6 @@ class ChemWordTokenizer(WordTokenizer):
                 ind = text.rfind('.')
                 if ind > -1 and text[ind + 1:] in {'1H', '13C', '15N', '31P', '19F', '11B', '29Si', '170', '73Ge', '195Pt', '33S', '13C{1H}'}:
                     return self._split_span(span, ind, 1)
-
 
         return [span]
 
@@ -877,7 +919,7 @@ class FineWordTokenizer(WordTokenizer):
     #: Don't split around hyphens with these suffixes.
     NO_SPLIT_SUFFIX = {}
 
-    def _subspan(self, s, span, nextspan):
+    def _subspan(self, s, span, nextspan, additional_regex):
         """Recursively subdivide spans based on a series of rules."""
 
         # Split on boundaries between greek and non-greek
@@ -889,4 +931,4 @@ class FineWordTokenizer(WordTokenizer):
                     return [(span[0], span[0] + i + 1), (span[0] + i + 1, span[1])]
 
         # Perform all normal WordTokenizer splits
-        return super(FineWordTokenizer, self)._subspan(s,span, nextspan)
+        return super(FineWordTokenizer, self)._subspan(s, span, nextspan, additional_regex)
