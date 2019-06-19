@@ -91,7 +91,7 @@ def construct_quantity_re(*models):
     if len(units_dict) == 0:
         return None
     # Case where we have a token that's just brackets
-    units_regex += '(\()|(\))|\-|'
+    units_regex += '(\((?!\d))|(\))|\-|'
     # Handle all the units
     for element, unit in six.iteritems(units_dict):
         if unit is not None:
