@@ -40,7 +40,7 @@ class CategoryModel(six.with_metaclass(_CategoryModelMeta, BaseModel)):
     """
     category = StringType(required=True)
     specifier = StringType(required=True)
-    parsers = [AutoTableParser()]
+    parsers = [AutoSentenceParser(), AutoTableParser()]
 
     def __str__(self):
         string = 'Category'

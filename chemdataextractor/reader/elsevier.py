@@ -23,9 +23,8 @@ from lxml import etree
 import re
 
 # XML stripper that removes the tags around numbers in chemical formulas
-strip_els_xml = Cleaner(strip_xpath='.//ce:inf | .//ce:italic | .//ce:bold | .//ce:formula | .//mml:* | .//ce:sup', 
-                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:table//ce:sup | .//ce:cross-ref | .//ce:cross-refs')
-
+strip_els_xml = Cleaner(strip_xpath='.//ce:inf | .//ce:italic | .//ce:bold | .//ce:formula | .//mml:* | .//ce:sup | .//ce:table//ce:sup',
+                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:cross-ref | .//ce:cross-refs')
 
 def fix_elsevier_xml_whitespace(document):
     """ Fix tricky xml tags"""
