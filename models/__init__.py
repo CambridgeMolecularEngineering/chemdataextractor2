@@ -1,2 +1,2 @@
-from .structure import CrystalCell
+from .structure import CrystalCell, Z
 

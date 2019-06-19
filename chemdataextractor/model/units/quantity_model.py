@@ -51,7 +51,7 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
     error = FloatType(contextual=True)
     dimensions = None
     specifier = StringType()
-    parsers = [AutoSentenceParser(), AutoTableParser()]
+    parsers = [AutoTableParser()]
 
     # Operators are implemented so that composite quantities can be created easily
     # on the fly, such as the following code snippet:
@@ -267,4 +267,4 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
 class DimensionlessModel(QuantityModel):
     """ Special case to handle dimensionless quantities"""
     dimensions = Dimensionless()
-    raw_units = StringType(required=False, contextual=True)
+    raw_units = StringType(required=False, contextual=False)
