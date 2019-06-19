@@ -98,8 +98,7 @@ class Table(CaptionedElement):
     def definitions(self):
         return self.caption.definitions
 
-    @staticmethod
-    def _parse_table(parser, category_table):
+    def _parse_table(self, parser, category_table):
         """
         Parses a table. The model and the category table have to be provided.
 
@@ -110,7 +109,7 @@ class Table(CaptionedElement):
         for cell in category_table:
             if hasattr(parser, 'parse_cell'):
                 log.debug(parser)
-                cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' ' + ' '.join(cell[2]))
+                cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' ' + ' '.join(cell[2]), models=self.models)
                 results = parser.parse_cell(cde_cell)
                 for result in results:
                     # [print(res) for res in result]
@@ -358,16 +357,16 @@ class Table(CaptionedElement):
 
                         partial_table_records.append(record)
 
-        print("AFTER 1")
-        for r in partial_table_records:
-            print(r.serialize())
+        # print("AFTER 1")
+        # for r in partial_table_records:
+        #     print(r.serialize())
 
         # 2. MERGING OF PARTIAL SINGLE-MODEL TABLE RECORDS
         partial_table_records_merged = self._merge_partial_records(partial_table_records)
 
-        print("AFTER 2")
-        for r in partial_table_records_merged:
-            print(r.serialize())
+        # print("AFTER 2")
+        # for r in partial_table_records_merged:
+        #     print(r.serialize())
 
         # 3. CHECK IF ALL THE SINGLE-MODEL REQUIREMENTS (EXCEPT FOR NESTED SUBMODELS) ARE SATISFIED
         for model in self._streamlined_models:
@@ -394,16 +393,16 @@ class Table(CaptionedElement):
                 if requirements:
                     single_model_records.append(record)
 
-        print("AFTER 3")
-        for r in single_model_records:
-            print(r.serialize())
+        # print("AFTER 3")
+        # for r in single_model_records:
+        #     print(r.serialize())
 
         # 4. MERGE ALL SINGLE-MODEL RECORDS BASED ON THE HIERARCHY OF SUBMODELS
         merged_model_records = self._merge_nested_models(single_model_records)
 
-        print("AFTER 4")
-        for r in merged_model_records:
-            print(r.serialize())
+        # print("AFTER 4")
+        # for r in merged_model_records:
+        #     print(r.serialize())
 
         # 5. CHECK IF ALL THE ELEMENTS OF THE FINAL RECORDS HAVE BEEN SATISFIED
         for model in self.models:
@@ -456,9 +455,9 @@ class Table(CaptionedElement):
         caption_records = [c for c in caption_records if c.contextual_fulfilled]
         table_records += caption_records
 
-        print("AFTER 6")
-        for r in table_records:
-            print(r.serialize())
+        # print("AFTER 6")
+        # for r in table_records:
+        #     print(r.serialize())
 
 
         # 7. merge Compound records with any shared name/label
@@ -523,9 +522,9 @@ class Table(CaptionedElement):
                         break
             i += 1
 
-        print("AFTER 7")
-        for r in table_records:
-            print(r.serialize())
+        # print("AFTER 7")
+        # for r in table_records:
+        #     print(r.serialize())
 
         return table_records
 

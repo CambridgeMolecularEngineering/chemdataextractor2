@@ -742,7 +742,7 @@ class Sentence(BaseText):
 
     @property
     def quantity_re(self):
-        return construct_quantity_re(*self.models)
+        return construct_quantity_re(*self._streamlined_models)
 
     @property
     def records(self):

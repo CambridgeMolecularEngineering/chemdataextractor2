@@ -104,7 +104,7 @@ def construct_quantity_re(*models):
     units_regex += (units_regex2[:-2] + '*')
     units_regex = '^((?P<split>[\+\-–−]?\d+([\.\-\−]?\d+)?)|((?P<split2>.*)(\(|\/)))' + units_regex
     units_regex += '$'
-    print(units_regex)
+    # print(units_regex)
     return re.compile(units_regex)
 
 
