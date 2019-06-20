@@ -20,6 +20,7 @@ import types
 
 log = logging.getLogger(__name__)
 
+
 class ParseException(Exception):
     """Exception thrown by a ParserElement when it doesn't match input."""
 

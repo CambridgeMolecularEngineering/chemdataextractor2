@@ -55,5 +55,5 @@ class Colour(CategoryModel):
     specifier = StringType(parse_expression=R('^[Cc]olo(u)?r$'), required=True)
     category = StringType(parse_expression=colour_expression, required=True, contextual=False, updatable=False)
     parsers = [AutoTableParser()]
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
 

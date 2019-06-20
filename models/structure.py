@@ -29,98 +29,99 @@ from .colour import Colour
 class FormulaWeight(QuantityModel):
     dimensions = Mass() / AmountOfSubstance()
     specifier = StringType(parse_expression=((I('formula') | I('molecular')) + I('weight')).add_action(join), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class AppliedTemperature(TemperatureModel):
     specifier = StringType(parse_expression=((I('Temperature') | R('^T$')).add_action(join)), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class Density(QuantityModel):
     dimensions = Mass() / Length()**3
     specifier = StringType(parse_expression=(R('ρ[Cc]?(alc)?(d)?') | I('density') | R('D(x)?')).add_action(join), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class Z(DimensionlessModel):
     specifier = StringType(parse_expression=R('Z'), required=True, contextual=False)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
-space_groups = (R('^[PIFABCR]([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d̄|\d-|-\d)*$') + Optional((T('SYM') | W('/')) + R('[a-zA-Z]+'))).add_action(join)
+space_groups = ((R('^[PIFABCR]([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d̄|\d-|-\d)*$') + Optional(R('^([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d̄|\d-|-\d)*$')) +
+                 Optional((T('SYM') | W('/')) + R('[a-zA-Z]+'))) | (R('^\d{1,3}$'))).add_action(join)
 
 
 class SpaceGroup(CategoryModel):
     specifier = StringType(parse_expression=(I('space') + I('group')).add_action(join), required=True)
     category = StringType(parse_expression=space_groups, required=True, contextual=False, updatable=False)
-    compound = ModelType(Compound, contextual=True)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class CellLengthA(LengthModel):
     specifier = StringType(parse_expression=R('^a$'),  required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class CellLengthB(LengthModel):
     specifier = StringType(parse_expression=R('b$'),  required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class CellLengthC(LengthModel):
     specifier = StringType(parse_expression=R('^c$'),  required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class CellAngleAlpha(AngleModel):
     specifier = StringType(parse_expression=R('^[αα⍺𝛂𝛼𝜶𝝰𝞪]$'), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class CellAngleBeta(AngleModel):
     specifier = StringType(parse_expression=R('^[βᵝᵦꞵ𝛃𝛽𝜷𝝱𝞫]$'), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class CellAngleGamma(AngleModel):
     specifier = StringType(parse_expression=R('^[γᵞᵧƔɣˠɤℽ𝛄𝛾𝜸𝝲𝞬]$'), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class CellVolume(QuantityModel):
     dimensions = Length()**3
     specifier = StringType(parse_expression=(Optional(I('cell')) + (I('Volume') | W('V'))).add_action(join),  required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class RFactor(DimensionlessModel):
     specifier = StringType(parse_expression=(R('^w?R([12]|(int))$')), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class Wavelength(LengthModel):
     specifier = StringType(parse_expression=(R('^Wavelength') | R('[λⲗ𝛌𝜆𝝀𝝺𝞴]')).add_action(join), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class AbsorptionCoefficient(QuantityModel):
     dimensions = Length()**(-1)
     specifier = StringType(parse_expression=((R('[Aa]bsorption') + I('coefficient')) | R('[μµ𝛍𝜇𝝁𝝻𝞵]')).add_action(join), required=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
@@ -130,7 +131,7 @@ crystal_systems = (R('[Tt]riclinic') | R('[Mm]onoclinic') |  R('[Oo]rthorhombic'
 class CrystalCell(CategoryModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
     category = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
-    space_group = ModelType(SpaceGroup, required=True, contextual=True)
+    space_group = ModelType(SpaceGroup, required=False, contextual=True)
     z = ModelType(Z, required=False, contextual=True)
     density = ModelType(Density, required=False, contextual=True)
     r_factors = ModelType(RFactor, required=False, contextual=True)
@@ -146,7 +147,7 @@ class CrystalCell(CategoryModel):
     wavelength = ModelType(Wavelength, required=False, contextual=True)
     colour = ModelType(Colour, required=False, contextual=True)
     absorption_coefficient = ModelType(AbsorptionCoefficient, required=False, contextual=True)
-    compound = ModelType(Compound)
+    compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
