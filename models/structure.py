@@ -52,7 +52,7 @@ class Z(DimensionlessModel):
     parsers = [AutoTableParser()]
 
 
-space_groups = (R('^[PIFABCR](\d|\d̄)+$') + Optional((T('SYM') | W('/')) + R('[a-zA-Z]+'))).add_action(join)
+space_groups = (R('^[PIFABCR]([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d̄|\d-|-\d)*$') + Optional((T('SYM') | W('/')) + R('[a-zA-Z]+'))).add_action(join)
 
 
 class SpaceGroup(CategoryModel):
