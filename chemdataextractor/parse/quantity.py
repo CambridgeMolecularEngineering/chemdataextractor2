@@ -527,7 +527,10 @@ def _find_units(powers_cleaned, dimensions, strict):
             unassociated_elements.append(original_string)
         # To handle cases when the units given by parsing don't match with what's expected.
         try:
-            powers[power[0](magnitude=exp)] = power[2]
+            if power[0](magnitude=exp) in powers.keys():
+                powers[power[0](magnitude=exp)] += power[2]
+            else:
+                powers[power[0](magnitude=exp)] = power[2]
         except TypeError as e:
             log.debug(e)
             powers = {}
