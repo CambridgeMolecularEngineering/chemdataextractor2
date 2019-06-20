@@ -112,7 +112,7 @@ class Micron(LengthUnit):
         return error * 1000000.
 
 
-units_dict = {R('[Mm](eter(s)?)?(?!ile(s)?)', group=0): Meter,
+units_dict = {R('(m(eter(s)?)?(?!ile(s)?))|(Meter(s)?(?!ile(s)?))', group=0): Meter,
               R('[Mm]ile[s]?', group=0): Mile,
               R('Å', group=0): Angstrom,
               R('[M|m]icron', group=0): Micron}
