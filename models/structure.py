@@ -113,7 +113,7 @@ class RFactor(DimensionlessModel):
 
 
 class Wavelength(LengthModel):
-    specifier = StringType(parse_expression=(R('^Wavelength') | R('[λⲗ𝛌𝜆𝝀𝝺𝞴]')).add_action(join), required=True)
+    specifier = StringType(parse_expression=(R('^Wavelength') | R('^Radiation') | R('[λⲗ𝛌𝜆𝝀𝝺𝞴]')).add_action(join), required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
