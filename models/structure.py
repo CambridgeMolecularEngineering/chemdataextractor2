@@ -56,9 +56,9 @@ space_groups = ((R('^[PIFABCR]([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d
                  Optional((T('SYM') | W('/')) + R('[a-zA-Z]+'))) | (R('^\d{1,3}$'))).add_action(join)
 
 
-class SpaceGroup(CategoryModel):
+class SpaceGroup(BaseModel):
     specifier = StringType(parse_expression=(I('space') + I('group')).add_action(join), required=True)
-    category = StringType(parse_expression=space_groups, required=True, contextual=False, updatable=False)
+    symbol = StringType(parse_expression=space_groups, required=True, contextual=False, updatable=False)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
@@ -128,29 +128,47 @@ class AbsorptionCoefficient(QuantityModel):
 crystal_systems = (R('[Tt]riclinic') | R('[Mm]onoclinic') |  R('[Oo]rthorhombic') | R('[Tt]etragonal') | R('[Hh]exagonal') | R('[Tt]rigonal') | R('[Cc]ubic'))
 
 
-class CrystalCell(CategoryModel):
+class UnitCell(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
-    category = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
+    system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
+
     space_group = ModelType(SpaceGroup, required=False, contextual=True)
-    z = ModelType(Z, required=False, contextual=True)
-    density = ModelType(Density, required=False, contextual=True)
-    r_factors = ModelType(RFactor, required=False, contextual=True)
     lattice_param_c = ModelType(CellLengthC, required=False, contextual=True)
     lattice_param_b = ModelType(CellLengthB, required=False, contextual=True)
     lattice_param_a = ModelType(CellLengthA, required=False, contextual=True)
     lattice_param_alpha = ModelType(CellAngleAlpha, required=False, contextual=True)
     lattice_param_beta = ModelType(CellAngleBeta, required=False, contextual=True)
     lattice_param_gamma = ModelType(CellAngleGamma, required=False, contextual=True)
-    applied_temperature = ModelType(AppliedTemperature, required=False, contextual=True)
     cell_volume = ModelType(CellVolume, required=False, contextual=True)
-    formula_weight = ModelType(FormulaWeight, required=False, contextual=True)
-    wavelength = ModelType(Wavelength, required=False, contextual=True)
-    colour = ModelType(Colour, required=False, contextual=True)
-    absorption_coefficient = ModelType(AbsorptionCoefficient, required=False, contextual=True)
+
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
+class DiffractionParams(BaseModel):
+    specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
+
+    z = ModelType(Z, required=False, contextual=True)
+    r_factors = ModelType(RFactor, required=False, contextual=True)
+    applied_temperature = ModelType(AppliedTemperature, required=False, contextual=True)
+    wavelength = ModelType(Wavelength, required=False, contextual=True)
+    absorption_coefficient = ModelType(AbsorptionCoefficient, required=False, contextual=True)
+
+    compound = ModelType(Compound, required=True, contextual=True)
+    parsers = [AutoTableParser()]
 
 
+class Crystal(BaseModel):
+    specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
+    system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
+
+    formula_weight = ModelType(FormulaWeight, required=False, contextual=True)
+    density = ModelType(Density, required=False, contextual=True)
+    colour = ModelType(Colour, required=False, contextual=True)
+
+    cell_params = ModelType(UnitCell, required=False, contextual=True)
+    diffraction_params = ModelType(DiffractionParams, required=False, contextual=True)
+
+    compound = ModelType(Compound, required=True, contextual=True)
+    parsers = [AutoTableParser()]
 
