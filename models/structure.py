@@ -172,3 +172,4 @@ class Crystal(BaseModel):
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
+
