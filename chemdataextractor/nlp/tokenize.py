@@ -315,14 +315,9 @@ class WordTokenizer(BaseTokenizer):
             if lowertext == contraction[0]:
                 return self._split_span(span, contraction[1])
 
-        if additional_regex:
-            for regex in additional_regex:
-                split_text = regex.search(text)
-                if split_text:
-                    groups = split_text.groupdict()
-                    for group_name, group in six.iteritems(groups):
-                        if 'split' in group_name and group is not None:
-                            return self._split_span(span, len(group), 0)
+        additional_regex_handled = self.handle_additional_regex(s, span, nextspan, additional_regex)
+        if additional_regex_handled is not None:
+            return additional_regex_handled
 
         return [span]
 
@@ -332,6 +327,20 @@ class WordTokenizer(BaseTokenizer):
         return sentence._tokens_for_spans(self.span_tokenize(sentence.text, additional_regex))
 
     def get_additional_regex(self, sentence):
+        return None
+
+    def handle_additional_regex(self, s, span, nextspan, additional_regex):
+        text = s[span[0]:span[1]]
+        if additional_regex:
+            for regex in additional_regex:
+                split_text = regex.search(text)
+                if split_text:
+                    groups = split_text.groupdict()
+                    for group_name, group in six.iteritems(groups):
+                        if group is not None:
+                            group_length = len(group)
+                            if 'split' in group_name and group_length != 0:
+                                return self._split_span(span, group_length, 0)
         return None
 
     def span_tokenize(self, s, additional_regex=None):
@@ -556,11 +565,6 @@ class ChemWordTokenizer(WordTokenizer):
 
     def get_additional_regex(self, sentence):
         additional_regex = [self.QUANTITY_RE]
-        for model in sentence._streamlined_models:
-            if not hasattr(model, 'dimensions'):
-                # print('additional regex added')
-                additional_regex.append(self.QUANTITY_RE)
-                break
         quantity_re = sentence.quantity_re
         if quantity_re:
             additional_regex.append(quantity_re)
@@ -792,14 +796,9 @@ class ChemWordTokenizer(WordTokenizer):
             if lowertext == contraction[0]:
                 return self._split_span(span, contraction[1])
 
-        if additional_regex:
-            for regex in additional_regex:
-                split_text = regex.search(text)
-                if split_text:
-                    groups = split_text.groupdict()
-                    for group_name, group in six.iteritems(groups):
-                        if 'split' in group_name and group is not None:
-                            return self._split_span(span, len(group), 0)
+        additional_regex_handled = self.handle_additional_regex(s, span, nextspan, additional_regex)
+        if additional_regex_handled is not None:
+            return additional_regex_handled
 
         if nextspan:
             nexttext = s[nextspan[0]:nextspan[1]]
