@@ -315,6 +315,20 @@ class Table(CaptionedElement):
                 if subrecord is not None:
                     self._delete_unmet_nested_models(subrecord)
 
+    # TODO finish this function
+    def _fill_compound(self, records):
+        """
+        Compound in-table interdependency resolution.
+
+        Fills all records that have been/will be extracted without a'compound', with the compound of the first previous
+        model, if the compound was found before. Will only fill each model type once, to preserve order.
+
+        :param records: records to work on
+        :return: resolved reco
+        """
+
+        
+
     def _records_for_tde_table(self, table, caption_records=None):
         """
         Returns the records for a particular TableDataExtractor Table object.
@@ -346,16 +360,21 @@ class Table(CaptionedElement):
             for parser in model.parsers:
                 for category_table in self._category_tables(table):
                     for record in self._parse_table(parser, category_table):
-
-                        # add caption compound if necessary, and append to record
-                        if 'compound' in model.fields \
-                                and not record.compound \
-                                and caption_compounds \
-                                and model.compound.contextual:
-                            # the first compound from the caption is used by default
-                            record.compound = caption_compounds[0]
-
                         partial_table_records.append(record)
+
+        # 1a merging-in the 'compound' from a different model (compound in-table interdependency resolution)
+        self._fill_compound(partial_table_records)
+
+        # 1b merging-in the 'compound' from the caption
+        for model in self._streamlined_models:
+            for record in partial_table_records:
+                # add caption compound if necessary, and append to record
+                if 'compound' in model.fields \
+                        and not record.compound \
+                        and caption_compounds \
+                        and model.compound.contextual:
+                    # the first compound from the caption is used by default
+                    record.compound = caption_compounds[0]
 
         # print("AFTER 1")
         # for r in partial_table_records:

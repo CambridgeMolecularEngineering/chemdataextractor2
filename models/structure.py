@@ -128,6 +128,12 @@ class AbsorptionCoefficient(QuantityModel):
 crystal_systems = (R('[Tt]riclinic') | R('[Mm]onoclinic') |  R('[Oo]rthorhombic') | R('[Tt]etragonal') | R('[Hh]exagonal') | R('[Tt]rigonal') | R('[Cc]ubic'))
 
 
+class Formula(BaseModel):
+    specifier = StringType(parse_expression=((I('Formula') | I('Compound')).add_action(join)), required=True)
+    compound = ModelType(Compound, required=True, contextual=False)
+    parsers = [AutoTableParser()]
+
+
 class UnitCell(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
     system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
@@ -162,6 +168,7 @@ class Crystal(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
     system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
 
+    formula = ModelType(Formula, required=False, contextual=True)
     formula_weight = ModelType(FormulaWeight, required=False, contextual=True)
     density = ModelType(Density, required=False, contextual=True)
     colour = ModelType(Colour, required=False, contextual=True)
