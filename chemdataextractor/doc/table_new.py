@@ -315,7 +315,6 @@ class Table(CaptionedElement):
                 if subrecord is not None:
                     self._delete_unmet_nested_models(subrecord)
 
-    # TODO finish this function
     def _fill_compound(self, records):
         """
         Compound in-table interdependency resolution.
@@ -327,7 +326,25 @@ class Table(CaptionedElement):
         :return: resolved reco
         """
 
-        
+        temp_comp = None
+        filled_models = []
+
+        for i, record_i in enumerate(records):
+            if 'compound' in record_i.fields and record_i.compound:
+                print(filled_models)
+                print(record_i.serialize())
+                temp_comp = record_i.compound
+                filled_models = []
+            else:
+                continue
+
+            for j, record_j in enumerate(records):
+                if 'compound' in record_j.fields and not record_j.compound and \
+                        record_j.fields['compound'].contextual and \
+                        record_j.__class__.__name__ not in filled_models:
+                    print("     ", record_j.serialize())
+                    record_j.compound = temp_comp
+                    filled_models.append(record_j.__class__.__name__)
 
     def _records_for_tde_table(self, table, caption_records=None):
         """
@@ -362,10 +379,7 @@ class Table(CaptionedElement):
                     for record in self._parse_table(parser, category_table):
                         partial_table_records.append(record)
 
-        # 1a merging-in the 'compound' from a different model (compound in-table interdependency resolution)
-        self._fill_compound(partial_table_records)
-
-        # 1b merging-in the 'compound' from the caption
+        # merging-in the 'compound' from the caption
         for model in self._streamlined_models:
             for record in partial_table_records:
                 # add caption compound if necessary, and append to record
@@ -376,9 +390,9 @@ class Table(CaptionedElement):
                     # the first compound from the caption is used by default
                     record.compound = caption_compounds[0]
 
-        # print("AFTER 1")
-        # for r in partial_table_records:
-        #     print(r.serialize())
+        print("AFTER 1")
+        for r in partial_table_records:
+            print(r.serialize())
 
         # 2. MERGING OF PARTIAL SINGLE-MODEL TABLE RECORDS
         partial_table_records_merged = self._merge_partial_records(partial_table_records)
@@ -415,6 +429,9 @@ class Table(CaptionedElement):
         # print("AFTER 3")
         # for r in single_model_records:
         #     print(r.serialize())
+
+        # 3b merging-in the 'compound' from a different model (compound in-table interdependency resolution)
+        self._fill_compound(single_model_records)
 
         # 4. MERGE ALL SINGLE-MODEL RECORDS BASED ON THE HIERARCHY OF SUBMODELS
         merged_model_records = self._merge_nested_models(single_model_records)

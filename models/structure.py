@@ -41,7 +41,7 @@ class AppliedTemperature(TemperatureModel):
 
 class Density(QuantityModel):
     dimensions = Mass() / Length()**3
-    specifier = StringType(parse_expression=(R('ρ[Cc]?(alc)?(d)?') | I('density') | R('D(x)?')).add_action(join), required=True)
+    specifier = StringType(parse_expression=(R('[ρD][Cc]?(alc)?(d)?') | I('density') | R('D(x)?')).add_action(join), required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
