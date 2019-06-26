@@ -94,14 +94,14 @@ class CellAngleBeta(AngleModel):
 
 
 class CellAngleGamma(AngleModel):
-    specifier = StringType(parse_expression=R('^[γᵞᵧƔɣˠɤℽ𝛄𝛾𝜸𝝲𝞬]$'), required=True)
+    specifier = StringType(parse_expression=R('^[γᵞᵧƔɣˠɤℽ𝛄𝛾𝜸𝝲𝞬ν]$'), required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class CellVolume(QuantityModel):
     dimensions = Length()**3
-    specifier = StringType(parse_expression=(Optional(I('cell')) + (I('Volume') | W('V'))).add_action(join),  required=True)
+    specifier = StringType(parse_expression=(Optional(I('cell')) + (I('Volume') | W('V') | W('U'))).add_action(join),  required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
