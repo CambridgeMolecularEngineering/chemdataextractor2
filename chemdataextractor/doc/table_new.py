@@ -325,14 +325,16 @@ class Table(CaptionedElement):
         :param records: records to work on
         :return: resolved reco
         """
+        # TODO Build-in merging based on ro/col categories
+        # TODO Check/fix unittests
 
         temp_comp = None
         filled_models = []
 
         for i, record_i in enumerate(records):
             if 'compound' in record_i.fields and record_i.compound:
-                print(filled_models)
-                print(record_i.serialize())
+                # print(filled_models)
+                # print(record_i.serialize())
                 temp_comp = record_i.compound
                 filled_models = []
             else:
@@ -342,7 +344,7 @@ class Table(CaptionedElement):
                 if 'compound' in record_j.fields and not record_j.compound and \
                         record_j.fields['compound'].contextual and \
                         record_j.__class__.__name__ not in filled_models:
-                    print("     ", record_j.serialize())
+                    # print("     ", record_j.serialize())
                     record_j.compound = temp_comp
                     filled_models.append(record_j.__class__.__name__)
 
@@ -377,6 +379,7 @@ class Table(CaptionedElement):
             for parser in model.parsers:
                 for category_table in self._category_tables(table):
                     for record in self._parse_table(parser, category_table):
+                        # print(record.serialize())
                         partial_table_records.append(record)
 
         # merging-in the 'compound' from the caption
@@ -390,9 +393,9 @@ class Table(CaptionedElement):
                     # the first compound from the caption is used by default
                     record.compound = caption_compounds[0]
 
-        print("AFTER 1")
-        for r in partial_table_records:
-            print(r.serialize())
+        # print("AFTER 1")
+        # for r in partial_table_records:
+        #     print(r.serialize())
 
         # 2. MERGING OF PARTIAL SINGLE-MODEL TABLE RECORDS
         partial_table_records_merged = self._merge_partial_records(partial_table_records)
