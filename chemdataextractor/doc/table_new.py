@@ -433,8 +433,9 @@ class Table(CaptionedElement):
         # for r in single_model_records:
         #     print(r.serialize())
 
+        # TODO Fix this
         # 3b merging-in the 'compound' from a different model (compound in-table interdependency resolution)
-        self._fill_compound(single_model_records)
+        # self._fill_compound(single_model_records)
 
         # 4. MERGE ALL SINGLE-MODEL RECORDS BASED ON THE HIERARCHY OF SUBMODELS
         merged_model_records = self._merge_nested_models(single_model_records)

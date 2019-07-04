@@ -152,11 +152,11 @@ class Evaluate:
                         webbrowser.open(doc.metadata.html_url)
                         doc_opened = True
 
-                    input_cw = input("    Correct (0)   OR   Wrong and duplicate (1)   OR   Wrong (2)?")
+                    input_cw = input("    Correct (0)   OR   Correct and duplicate (1)   OR   Wrong (2)   OR   SKIP (3)?")
                     try:
                         input_cw = int(input_cw)
                     except ValueError:
-                        input_cw = input("    Correct (0)   OR   Wrong and duplicate (1)   OR   Wrong (2)?")
+                        input_cw = input("    Correct (0)   OR   Correct and duplicate (1)   OR   Wrong (2)   OR   SKIP (3)?")
                         input_cw = int(input_cw)
                     print("         {}".format(input_cw))
 
@@ -242,6 +242,9 @@ class Evaluate:
                             self.w_other.append(input_w_other)
                             print("             {}".format(input_w_other))
 
+                    if input_cw == 3:
+                        continue
+
                 if self.limits_reached:
                     break
 
@@ -276,7 +279,7 @@ class Evaluate:
         print("", file=destination)
         print("Number of papers tested: {}".format(self.n_paper+1), file=destination)
         print("Unidentified records: {}".format(self.n_unidentified), file=destination)
-        print("Total records (correct+wrong): {}".format(self.n_records), file=destination)
+        print("Total records (correct+wrong+skipped): {}".format(self.n_records), file=destination)
         print("", file=destination)
         print("Correct records: {}".format(self.nc), file=destination)
         print("    Correct AutoSentence: {}".format(self.nc_autosentence), file=destination)
