@@ -29,6 +29,7 @@ import webbrowser
 from playsound import playsound
 import pickle
 import pkg_resources
+import os
 from pprint import pprint
 
 from .. import Document
@@ -54,10 +55,12 @@ sys.stdout = Logger()
 def documents(folder):
     """Yields CDE documents for a given folder"""
     for i, filename in enumerate(os.listdir(folder)):
-        fb = open(folder + "\\" + filename, 'rb')
-        doc = Document.from_file(fb)
-        fb.close()
-        yield doc
+        if filename[0] != '.':
+            file_path = os.path.join(folder, filename)
+            fb = open(file_path, 'rb')
+            doc = Document.from_file(fb)
+            fb.close()
+            yield doc
 
 
 def records(doc, model):
@@ -72,7 +75,8 @@ def records(doc, model):
 
 class Evaluate:
     """Main class for evaluation of a particular model on a given corpus of literature"""
-    def __init__(self, model, folder=r'./', n_papers_limit=200, n_records_limit=200):
+    def __init__(self, model, folder=r'./', n_papers_limit=200, n_records_limit=200, play_sound=True):
+        self.play_sound = play_sound
         self.folder = folder
         self.model = model
         self.n_papers_limit = n_papers_limit
@@ -145,8 +149,9 @@ class Evaluate:
                     pprint(record.serialize())
                     print("    Method:  {}".format(record.record_method))
                     print("    Updated: {}".format(record.updated))
-                    sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
-                    playsound(sound_file)
+                    if self.play_sound:
+                        sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
+                        playsound(sound_file)
 
                     if not doc_opened:
                         webbrowser.open(doc.metadata.html_url)
@@ -255,8 +260,9 @@ class Evaluate:
             f.flush()
 
             if self.limits_reached:
-                sound_end_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound_end.mp3')
-                playsound(sound_end_file)
+                if self.play_sound:
+                    sound_end_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound_end.mp3')
+                    playsound(sound_end_file)
                 break
             print("")
         f.close()
