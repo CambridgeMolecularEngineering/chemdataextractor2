@@ -9,20 +9,20 @@
 - Formula Weight
 """
 
-from chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
-from chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
-from chemdataextractor.parse.actions import join
-from chemdataextractor.model.units.quantity_model import DimensionlessModel, QuantityModel
-from chemdataextractor.model.categories import CategoryModel
-from chemdataextractor.model.model import Compound
-from chemdataextractor.parse.template import QuantityModelTemplateParser
-from chemdataextractor.parse.auto import AutoTableParser
-from chemdataextractor.model.units.length import LengthModel, Length
-from chemdataextractor.model.units.temperature import TemperatureModel
-from chemdataextractor.model.units.mass import Mass
-from chemdataextractor.model.units.substance_amount import AmountOfSubstance
-from chemdataextractor.model.units.angle import AngleModel
-from chemdataextractor.parse.common import lbrct, rbrct
+from ..chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
+from ..chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
+from ..chemdataextractor.parse.actions import join
+from ..chemdataextractor.model.units.quantity_model import DimensionlessModel, QuantityModel
+from ..chemdataextractor.model.categories import CategoryModel
+from ..chemdataextractor.model.model import Compound
+from ..chemdataextractor.parse.template import QuantityModelTemplateParser
+from ..chemdataextractor.parse.auto import AutoTableParser
+from ..chemdataextractor.model.units.length import LengthModel, Length
+from ..chemdataextractor.model.units.temperature import TemperatureModel
+from ..chemdataextractor.model.units.mass import Mass
+from ..chemdataextractor.model.units.substance_amount import AmountOfSubstance
+from ..chemdataextractor.model.units.angle import AngleModel
+from ..chemdataextractor.parse.common import lbrct, rbrct
 from .colour import Colour
 
 
