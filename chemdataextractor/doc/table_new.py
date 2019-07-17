@@ -115,6 +115,9 @@ class Table(CaptionedElement):
                     # [print(res) for res in result]
                     if result.serialize() != {}:
                         # yield {parser.model.__name__: result.serialize()}
+                        # adding of the row/column header categories to the record for potential merging later
+                        result.table_row_categories = ' '.join(cell[1])
+                        result.table_col_categories = ' '.join(cell[2])
                         yield result
 
     def _merge_partial_records(self, partial_table_records):
@@ -319,14 +322,14 @@ class Table(CaptionedElement):
         """
         Compound in-table interdependency resolution.
 
-        Fills all records that have been/will be extracted without a'compound', with the compound of the first previous
-        model, if the compound was found before. Will only fill each model type once, to preserve order.
+        Fills all records that have been/will be extracted without a 'compound', with the compound of the first previous
+        model, if the compound was found before, and if the records share either the row or the column
+        category. The latter requirement ensures that there will be no wrong merging if a compound was not identified
+        correctly (skipped).
 
         :param records: records to work on
-        :return: resolved reco
+        :return: resolved records
         """
-        # TODO Build-in merging based on ro/col categories
-        # TODO Check/fix unittests
 
         temp_comp = None
         filled_models = []
@@ -343,8 +346,11 @@ class Table(CaptionedElement):
             for j, record_j in enumerate(records):
                 if 'compound' in record_j.fields and not record_j.compound and \
                         record_j.fields['compound'].contextual and \
-                        record_j.__class__.__name__ not in filled_models:
+                        record_j.__class__.__name__ not in filled_models and \
+                        (record_i.table_row_categories == record_j.table_row_categories or record_i.table_col_categories == record_j.table_col_categories):
                     # print("     ", record_j.serialize())
+                    # print(record_j.table_col_categories, record_j.table_row_categories)
+                    # print(record_i.table_col_categories, record_i.table_row_categories)
                     record_j.compound = temp_comp
                     filled_models.append(record_j.__class__.__name__)
 
@@ -433,9 +439,8 @@ class Table(CaptionedElement):
         # for r in single_model_records:
         #     print(r.serialize())
 
-        # TODO Fix this
         # 3b merging-in the 'compound' from a different model (compound in-table interdependency resolution)
-        # self._fill_compound(single_model_records)
+        self._fill_compound(single_model_records)
 
         # 4. MERGE ALL SINGLE-MODEL RECORDS BASED ON THE HIERARCHY OF SUBMODELS
         merged_model_records = self._merge_nested_models(single_model_records)
