@@ -50,6 +50,10 @@ class BaseType(six.with_metaclass(ABCMeta)):
             self.updatable = False
         if updatable:
             self._default_parse_expression = copy.copy(parse_expression)
+        # when a record is created from the table, this will be filled with the row/col header cateogry strings
+        # which helps merging based on same row/column category
+        self.table_row_categories = None
+        self.table_col_categories = None
 
     def reset(self):
         """

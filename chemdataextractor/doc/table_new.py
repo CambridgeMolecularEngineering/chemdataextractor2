@@ -115,6 +115,9 @@ class Table(CaptionedElement):
                     # [print(res) for res in result]
                     if result.serialize() != {}:
                         # yield {parser.model.__name__: result.serialize()}
+                        # adding of the row/column header categories to the record for potential merging later
+                        result.table_row_categories = ' '.join(cell[1])
+                        result.table_col_categories = ' '.join(cell[2])
                         yield result
 
     def _merge_partial_records(self, partial_table_records):
@@ -319,11 +322,13 @@ class Table(CaptionedElement):
         """
         Compound in-table interdependency resolution.
 
-        Fills all records that have been/will be extracted without a'compound', with the compound of the first previous
-        model, if the compound was found before. Will only fill each model type once, to preserve order.
+        Fills all records that have been/will be extracted without a 'compound', with the compound of the first previous
+        model, if the compound was found before, and if the records share either the row or the column
+        category. The latter requirement ensures that there will be no wrong merging if a compound was not identified
+        correctly (skipped).
 
         :param records: records to work on
-        :return: resolved reco
+        :return: resolved records
         """
 
         temp_comp = None
@@ -331,8 +336,8 @@ class Table(CaptionedElement):
 
         for i, record_i in enumerate(records):
             if 'compound' in record_i.fields and record_i.compound:
-                print(filled_models)
-                print(record_i.serialize())
+                # print(filled_models)
+                # print(record_i.serialize())
                 temp_comp = record_i.compound
                 filled_models = []
             else:
@@ -341,8 +346,11 @@ class Table(CaptionedElement):
             for j, record_j in enumerate(records):
                 if 'compound' in record_j.fields and not record_j.compound and \
                         record_j.fields['compound'].contextual and \
-                        record_j.__class__.__name__ not in filled_models:
-                    print("     ", record_j.serialize())
+                        record_j.__class__.__name__ not in filled_models and \
+                        (record_i.table_row_categories == record_j.table_row_categories or record_i.table_col_categories == record_j.table_col_categories):
+                    # print("     ", record_j.serialize())
+                    # print(record_j.table_col_categories, record_j.table_row_categories)
+                    # print(record_i.table_col_categories, record_i.table_row_categories)
                     record_j.compound = temp_comp
                     filled_models.append(record_j.__class__.__name__)
 
@@ -377,6 +385,7 @@ class Table(CaptionedElement):
             for parser in model.parsers:
                 for category_table in self._category_tables(table):
                     for record in self._parse_table(parser, category_table):
+                        # print(record.serialize())
                         partial_table_records.append(record)
 
         # merging-in the 'compound' from the caption
@@ -390,9 +399,9 @@ class Table(CaptionedElement):
                     # the first compound from the caption is used by default
                     record.compound = caption_compounds[0]
 
-        print("AFTER 1")
-        for r in partial_table_records:
-            print(r.serialize())
+        # print("AFTER 1")
+        # for r in partial_table_records:
+        #     print(r.serialize())
 
         # 2. MERGING OF PARTIAL SINGLE-MODEL TABLE RECORDS
         partial_table_records_merged = self._merge_partial_records(partial_table_records)
