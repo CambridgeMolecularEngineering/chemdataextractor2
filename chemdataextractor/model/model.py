@@ -70,6 +70,7 @@ class Compound(BaseModel):
             definitions {list} -- list of definitions found in this element
         """
         log.debug("Updating Compound")
+        print(definitions)
         for definition in definitions:
             label = definition['label']
             if strict:

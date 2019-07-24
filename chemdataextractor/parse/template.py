@@ -34,7 +34,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     def specifier_phrase(self):
         """The model specifier"""
         return self.model.specifier.parse_expression('specifier')
-    
+
     @property
     def value_phrase(self):
         """Value and units"""
@@ -42,16 +42,16 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             return value_element_plain()
         elif hasattr(self.model, 'category') and self.model.category:
             return self.model.category.parse_expression('category')
-        
+
         unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(
             match_dimensions_of(self.model))('raw_units'))
         return value_element(unit_element)
-    
+
     @property
     def cem_phrase(self):
         """CEM phrases"""
         return self.model.compound.model_class.parsers[0].root
-    
+
     @property
     def prefix(self):
         """Specifier prefix phrase e.g. Tc equal to"""
@@ -98,7 +98,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     def specifier_and_value(self):
         """Specifier and value + units"""
         return Group(self.prefix + self.value_phrase)
-    
+
     @property
     def cem_before_specifier_and_value_phrase(self):
         """Phrases ordered CEM, Specifier, Value, Unit"""
@@ -106,17 +106,17 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             self.cem_phrase
             + OneOrMore(Not(self.cem_phrase | self.specifier_phrase | self.specifier_and_value) + Any().hide())
             + self.specifier_and_value)('root_phrase')
-    
+
     @property
     def specifier_before_cem_and_value_phrase(self):
         return (
-            self.specifier_phrase 
+            self.specifier_phrase
             + OneOrMore(Not(self.cem_phrase | self.specifier_phrase | self.value_phrase) + Any().hide())
             + self.cem_phrase
             + OneOrMore(Not(self.cem_phrase | self.specifier_phrase | self.value_phrase) + Any().hide())
             + Optional(self.prefix)
             + self.value_phrase)('root_phrase')
-    
+
     @property
     def cem_after_specifier_and_value_phrase(self):
         """Phrases ordered specifier, value, unit, CEM"""
@@ -124,7 +124,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             self.specifier_and_value
             + OneOrMore(Not(self.cem_phrase | self.specifier_phrase | self.value_phrase) + Any().hide())
             + self.cem_phrase)('root_phrase')
-    
+
     @property
     def value_specifier_cem_phrase(self):
         """Phrases ordered value unit specifier cem"""
@@ -145,7 +145,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             + Not(self.value_phrase)
             + Optional(I('of') | I('in')).hide()
             + self.cem_phrase)('root_phrase')
-    
+
     @property
     def root(self):
         """Root Phrases"""
@@ -158,7 +158,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         MULTIPLE ENTITY PHRASES
 
         1) Single compound, multiple specifiers, multiple phase transitions e.g. BiFeO3 has TC = 1093 K and TN = 640 K
-        2) single compound, single specifier, multiple transitions e.g. BiFeO3 shows magnetic transitions at 1093 and 640 K 
+        2) single compound, single specifier, multiple transitions e.g. BiFeO3 shows magnetic transitions at 1093 and 640 K
 
         3) multiple compounds, single specifier, multiple transitions e.g. TC in BiFeO3 and LaFeO3 of 640 and 750 K
         4) multiple compounds, single specifier, single transition e.g. TC of 640 K in BifEO3, LaFeO3 and MnO
@@ -219,13 +219,13 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     def single_cem(self):
         """Any cem"""
         return Group(cem | chemical_label | Group(chemical_name)('compound'))
-    
+
     @property
     def unit(self):
         """Unit element"""
         return Group(construct_unit_element(self.model.dimensions).with_condition(
             match_dimensions_of(self.model))('raw_units'))
-    
+
     @property
     def value_with_optional_unit(self):
         """Value possibly followed by a unit"""
@@ -235,7 +235,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             return self.model.category.parse_expression('category')
         value = value_element_plain()
         return Group(value + Optional(self.unit))
-    
+
     @property
     def value_phrase(self):
         """Value with unit"""
@@ -244,7 +244,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         elif hasattr(self.model, 'category') and self.model.category:
             return self.model.category.parse_expression('category')
         return value_element(self.unit)
-    
+
     @property
     def list_of_values(self):
         """List of values with either multiple units or one at the end"""
@@ -262,7 +262,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                     + (I('and') | I('or') | delim).hide()
                     + self.value_phrase)('value_list')
         return (option_1 | option_2)
-    
+
     @property
     def list_of_cems(self):
         """List of cems e.g. cem1, cem2, cem3 and cem4"""
@@ -273,17 +273,17 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 + self.single_cem
                 + Optional(lbrct + R('^\d+$') + rbrct).hide()
                 + Optional(I('compounds') | I('samples')))('cem_list')
-    
+
     @property
     def single_specifier_and_value_with_optional_unit(self):
         """Specifier plus value and possible unit"""
         return Group(self.prefix + self.value_with_optional_unit)('property')
-    
+
     @property
     def single_specifier_and_value(self):
         """Specifier value and unit"""
         return Group(self.prefix + self.value_phrase)('property')
-    
+
     @property
     def list_of_properties(self):
         """List of specifiers and units"""
@@ -292,7 +292,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                              + (I('and') | delim | (I('that') + I('exhibits'))).hide()
                              + self.single_specifier_and_value
                              + Optional(rbrct).hide())('property_list')
-    
+
     @property
     def multi_entity_phrase_1(self):
         """Single compound, multiple specifiers, values
@@ -304,7 +304,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
 
     @property
     def multi_entity_phrase_2(self):
-        """single compound, single specifier, multiple transitions 
+        """single compound, single specifier, multiple transitions
         e.g. BiFeO3 shows magnetic transitions at 1093 and 640 K
         """
         return Group(self.single_cem
@@ -314,7 +314,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                          + self.list_of_values
                          + Optional(delim).hide()
                          + Optional(I('respectively')))('multi_entity_phrase_2')
-    
+
     @property
     def multi_entity_phrase_3a(self):
         """multiple compounds, single specifier, multiple transitions cems first
@@ -327,7 +327,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                     + self.prefix
                     + self.list_of_values
                     + Optional(delim.hide() + I('respectively').hide()))('multi_entity_phrase_3')
-    
+
     @property
     def multi_entity_phrase_3b(self):
         """multiple compounds, single specifier, multiple transitions cems last
@@ -338,7 +338,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                           + Optional(I('in') | I('for'))
                           + self.list_of_cems
                           + Optional(delim + I('respectively')))('multi_entity_phrase_3')
-    
+
     @property
     def multi_entity_phrase_3c(self):
         """multiple compounds, single specifier, multiple transitions cems last
@@ -351,37 +351,37 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                           + self.value_phrase
                           + Optional(I('in') | I('for')).hide()
                           + self.single_cem)('multi_entity_phrase_3')
-    
+
     @property
     def multi_entity_phrase_3(self):
         """Combined phrases of type 3"""
         return Group(self.multi_entity_phrase_3a | self.multi_entity_phrase_3b | self.multi_entity_phrase_3c)
-    
+
     @property
     def multi_entity_phrase_4a(self):
-        """multiple compounds, single specifier, single transition 
+        """multiple compounds, single specifier, single transition
         e.g. TC of 640 K in BifEO3, LaFeO3 and MnO
 
         """
         return Group(self.single_specifier_and_value
                           + OneOrMore(Not(self.single_cem | self.specifier_phrase | self.value_phrase) + Any().hide())
                           + self.list_of_cems)('multi_entity_phrase_4')
-    
+
     @property
     def multi_entity_phrase_4b(self):
         """Cems first"""
         return Group(self.list_of_cems
                     + OneOrMore(Not(self.single_cem | self.specifier_phrase | self.value_phrase) + Any().hide())
                     + self.single_specifier_and_value)('multi_entity_phrase_4')
-    
+
     @property
     def multi_entity_phrase_4(self):
         return Group(self.multi_entity_phrase_4a | self.multi_entity_phrase_4b)
- 
+
     @property
     def root(self):
         return (self.multi_entity_phrase_1 | self.multi_entity_phrase_2 | self.multi_entity_phrase_3 | self.multi_entity_phrase_4)
-    
+
     def interpret(self, result, start, end):
         if result.tag == 'multi_entity_phrase_1':
             for model in self.interpret_multi_entity_1(result, start, end):
@@ -402,7 +402,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 yield model
         else:
             yield None
-    
+
     def interpret_multi_entity_1(self, result, start, end):
         """Interpret phrases that have a single CEM and multiple values with multiple specifiers
         """
@@ -413,11 +413,11 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
 
         if cem_el is None:
             yield None
-        
+
         property_list = first(result.xpath('./property_list'))
         if property_list is None:
             yield None
-        
+
         c = self.model.compound.model_class()
         # add names and labels
         c.names = cem_el.xpath('./names/text()')
@@ -434,7 +434,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 raw_units = last_unit
             else:
                 last_unit = raw_units
-            
+
             value = self.extract_value(raw_value)
             error = self.extract_error(raw_value)
             units = None
@@ -452,14 +452,14 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 'value': value,
                 'units': units,
                 'compound': c}
-            
+
             model_instance = self.model(**property_entities)
             if requirements:
                 model_instance.record_method = self.__class__.__name__
                 yield model_instance
-    
+
     def interpret_multi_entity_2(self, result, start, end):
-        """single compound, single specifier, multiple transitions e.g. BiFeO3 shows magnetic transitions at 1093 and 640 K 
+        """single compound, single specifier, multiple transitions e.g. BiFeO3 shows magnetic transitions at 1093 and 640 K
         """
         if result is None:
             return
@@ -472,10 +472,10 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             yield None
 
         value_list = first(result.xpath('./value_list'))
-        
+
         if value_list is None:
             yield None
-        
+
         c = self.model.compound.model_class()
         # add names and labels
         c.names = cem_el.xpath('./names/text()')
@@ -514,29 +514,29 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 'value': value,
                 'units': units,
                 'compound': c}
-            
+
             model_instance = self.model(**property_entities)
             if requirements:
                 model_instance.record_method = self.__class__.__name__
                 yield model_instance
-    
+
     def interpret_multi_entity_3(self, result, start, end):
         """interpret multiple compounds, single specifier, multiple transitions"""
         if result is None:
             return
-        
+
         cem_list = first(result.xpath('./cem_list'))
 
         if cem_list is None:
             yield None
 
         specifier = first(result.xpath('./specifier/text()'))
-        
+
         if specifier is None:
             yield None
 
         value_list = first(result.xpath('./value_list'))
-        
+
         if value_list is None:
             yield None
 
@@ -545,7 +545,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
 
         last_unit = None
         for i, v in enumerate(raw_values_list[::-1]):  # Reverse order to make sure we get a unit
-            
+
             raw_value = first(v.xpath('./text()'))
             requirements = True
             try:
@@ -582,7 +582,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 'value': value,
                 'units': units,
                 'compound': c}
-            
+
             model_instance = self.model(**property_entities)
             if requirements:
                 model_instance.record_method = self.__class__.__name__
@@ -593,7 +593,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         if result is None:
             return
         requirements = True
-        
+
         cem_list = first(result.xpath('./cem_list'))
 
         if cem_list is None:
@@ -602,10 +602,10 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         specifier = first(result.xpath('./property/specifier/text()'))
         raw_value = first(result.xpath('./property/raw_value/text()'))
         raw_units = first(result.xpath('./property/raw_units/text()'))
-        
+
         if specifier is None:
             yield None
-        
+
         value = self.extract_value(raw_value)
         error = self.extract_error(raw_value)
         units = None
@@ -632,12 +632,12 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 'value': value,
                 'units': units,
                 'compound': c}
-            
+
             model_instance = self.model(**property_entities)
             if requirements:
                 model_instance.record_method = self.__class__.__name__
                 yield model_instance
-    
-    
-    
+
+
+
 

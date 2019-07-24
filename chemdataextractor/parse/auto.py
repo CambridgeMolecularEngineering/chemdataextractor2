@@ -55,7 +55,7 @@ def construct_unit_element(dimensions):
     units_regex += ')?'
     units_regex += '('
     # Case where we have a token that's just brackets
-    units_regex += '(\()|(\))|\-|'
+    units_regex += '((\(|\[))|((\)|\]))|\-|'
     # Handle all the units
     for element in dimensions.units_dict:
         units_regex += '(' + element.pattern + ')|'
@@ -67,6 +67,7 @@ def construct_unit_element(dimensions):
     units_regex += (units_regex2[1:-2] + '*')
     units_regex += '$'
     return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex) | R(pattern=units_regex2))).add_action(merge)
+
 
 def construct_category_element(category_dict):
     """
@@ -84,6 +85,7 @@ def construct_category_element(category_dict):
     category_regex = category_regex[:-1]
     category_regex += '$'
     return (R(pattern=category_regex))('raw_value').add_action(merge)
+
 
 def match_dimensions_of(model):
     """

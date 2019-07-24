@@ -12,6 +12,7 @@ from abc import abstractproperty, abstractmethod
 import collections
 import logging
 import re
+from pprint import pprint
 
 import six
 
@@ -704,22 +705,30 @@ class Sentence(BaseText):
 
     @memoized_property
     def chemical_definitions(self):
-        """Return a list of chemical entitiy mentions and their associated label
+        """Return a list of chemical entity mentions and their associated label
         """
         cem_defs = []
-        tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
-        for result in cem_phrase.scan(tagged_tokens):
-            tree = result[0]
-            start = result[1]
-            end = result[2]
-            name = first(tree.xpath('./compound/names/text()'))
-            label = first(tree.xpath('./compound/labels/text()'))
-            if name and label:
+        # tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
+        # for result in cem_phrase.scan(tagged_tokens):
+        #     tree = result[0]
+        #     start = result[1]
+        #     end = result[2]
+        #     name = first(tree.xpath('./compound/names/text()'))
+        #     label = first(tree.xpath('./compound/labels/text()'))
+        #     if name and label:
+        #         cem_def = {
+        #             'name': name,
+        #             'label': label,
+        #             'start': start,
+        #             'end': end
+        #         }
+        #         cem_defs.append(cem_def)
+        # return cem_defs
+        for record in self.records:
+            if isinstance(record, Compound) and record.labels:
+                pprint(record.serialize())
                 cem_def = {
-                    'name': name,
-                    'label': label,
-                    'start': start,
-                    'end': end
+                    'label': record.labels[0]
                 }
                 cem_defs.append(cem_def)
         return cem_defs
