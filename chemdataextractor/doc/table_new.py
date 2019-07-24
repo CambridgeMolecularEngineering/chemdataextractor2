@@ -23,6 +23,7 @@ from tabledataextractor.exceptions import TDEError
 from ..doc.text import Cell
 from ..model.model import Compound
 from ..model.base import ModelList, ModelType
+from pprint import pprint
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -98,21 +99,19 @@ class Table(CaptionedElement):
     def definitions(self):
         return self.caption.definitions
 
-    def _parse_table(self, parser, category_table):
+    def _parse_table(self, parser, cde_table):
         """
         Parses a table. The model and the category table have to be provided.
 
         :param parser: parser to use for parsing of one row of the category table
-        :param category_table: list, output of TableDataExtractor
+        :param cde_table: list of Cell objects
         :return: Yields one result at a time
         """
-        for cell in category_table:
-            if hasattr(parser, 'parse_cell'):
+        if hasattr(parser, 'parse_cell'):
+            for cde_cell in cde_table:
                 log.debug(parser)
-                cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' ' + ' '.join(cell[2]), models=self.models)
                 results = parser.parse_cell(cde_cell)
                 for result in results:
-                    # [print(res) for res in result]
                     if result.serialize() != {}:
                         # yield {parser.model.__name__: result.serialize()}
                         yield result
@@ -136,7 +135,7 @@ class Table(CaptionedElement):
         updated_records = []
 
         for i, record_i in enumerate(partial_table_records):
-            for j in range(i+1, len(partial_table_records)):
+            for j in range(i + 1, len(partial_table_records)):
                 record_j = partial_table_records[j]
 
                 fields_i = set([])
@@ -167,7 +166,7 @@ class Table(CaptionedElement):
                     if not record_update:
                         record = copy.deepcopy(record_i)
                         for field in sym_diff:
-                            if hasattr(record_i, field) and not  record_i.__getattribute__(field) and record_i.fields[field].contextual:
+                            if hasattr(record_i, field) and not record_i.__getattribute__(field) and record_i.fields[field].contextual:
                                 record.__setitem__(field, record_j.__getattribute__(field))
                                 record_update = True
                                 updated_records.append(i)
@@ -331,8 +330,8 @@ class Table(CaptionedElement):
 
         for i, record_i in enumerate(records):
             if 'compound' in record_i.fields and record_i.compound:
-                print(filled_models)
-                print(record_i.serialize())
+                # print(filled_models)
+                # print(record_i.serialize())
                 temp_comp = record_i.compound
                 filled_models = []
             else:
@@ -342,7 +341,7 @@ class Table(CaptionedElement):
                 if 'compound' in record_j.fields and not record_j.compound and \
                         record_j.fields['compound'].contextual and \
                         record_j.__class__.__name__ not in filled_models:
-                    print("     ", record_j.serialize())
+                    # print("     ", record_j.serialize())
                     record_j.compound = temp_comp
                     filled_models.append(record_j.__class__.__name__)
 
@@ -372,12 +371,24 @@ class Table(CaptionedElement):
         #: partial records for non-full models
         partial_table_records = ModelList()
 
+        cde_tables = []
+        for category_table in self._category_tables(table):
+            cde_table = []
+            for cell in category_table:
+                cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' ' + ' '.join(cell[2]), models=self.models)
+                cde_table.append(cde_cell)
+            cde_tables.append(cde_table)
+
         # 1. COLLECTING OF PARTIAL SINGLE-MODEL RECORDS
         for model in self._streamlined_models:
             for parser in model.parsers:
-                for category_table in self._category_tables(table):
-                    for record in self._parse_table(parser, category_table):
+                for cde_table in cde_tables:
+                    for record in self._parse_table(parser, cde_table):
                         partial_table_records.append(record)
+
+        # pprint(partial_table_records.serialize())
+
+        # print(partial_table_records.serialize())
 
         # merging-in the 'compound' from the caption
         for model in self._streamlined_models:
@@ -390,9 +401,9 @@ class Table(CaptionedElement):
                     # the first compound from the caption is used by default
                     record.compound = caption_compounds[0]
 
-        print("AFTER 1")
-        for r in partial_table_records:
-            print(r.serialize())
+        # print("AFTER 1")
+        # for r in partial_table_records:
+        #     print(r.serialize())
 
         # 2. MERGING OF PARTIAL SINGLE-MODEL TABLE RECORDS
         partial_table_records_merged = self._merge_partial_records(partial_table_records)
