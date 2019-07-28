@@ -149,7 +149,7 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
                     self.error = converted_error
                 self.value = converted_values
                 self.units = unit
-            except ZeroDivisionError as e:
+            except ZeroDivisionError:
                 raise ValueError('Model not converted due to zero division error')
         else:
             raise AttributeError('Current units not set')
@@ -257,6 +257,43 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
         if min_converted_value <= max_other_value or max_converted_value >= min_other_value:
             return True
         return False
+
+    def is_superset(self, other):
+        if type(self) != type(other):
+            return False
+        for field_name, field in six.iteritems(self.fields):
+            # Method works recursively so it works with nested models
+            if hasattr(field, 'model_class'):
+                if self[field_name] is None:
+                    if other[field_name] is not None:
+                        return False
+                elif other[field_name] is None:
+                    pass
+                elif not self[field_name].is_superset(other[field_name]):
+                    return False
+            else:
+                if (field_name == 'raw_value' and other[field_name] == 'NoValue'
+                    and self[field_name] is not None):
+                    pass
+                elif other[field_name] is not None and self[field_name] != other[field_name]:
+                    return False
+        return True
+
+    def _compatible(self, other):
+        match = False
+        if type(other) == type(self):
+            # Check if the other seems to be describing the same thing as self.
+            match = True
+            for field_name, field in six.iteritems(self.fields):
+                if (field_name == 'raw_value' and other[field_name] == 'NoValue'
+                    and self[field_name] is not None):
+                    pass
+                elif (self[field_name] is not None
+                  and other[field_name] is not None
+                  and self[field_name] != other[field_name]):
+                    match = False
+                    break
+        return match
 
     def __str__(self):
         string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.units.__str__()
