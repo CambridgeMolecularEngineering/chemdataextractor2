@@ -708,30 +708,29 @@ class Sentence(BaseText):
         """Return a list of chemical entity mentions and their associated label
         """
         cem_defs = []
-        # tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
-        # for result in cem_phrase.scan(tagged_tokens):
-        #     tree = result[0]
-        #     start = result[1]
-        #     end = result[2]
-        #     name = first(tree.xpath('./compound/names/text()'))
-        #     label = first(tree.xpath('./compound/labels/text()'))
-        #     if name and label:
-        #         cem_def = {
-        #             'name': name,
-        #             'label': label,
-        #             'start': start,
-        #             'end': end
-        #         }
-        #         cem_defs.append(cem_def)
-        # return cem_defs
-        for record in self.records:
-            if isinstance(record, Compound) and record.labels:
-                pprint(record.serialize())
+        tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
+        for result in cem_phrase.scan(tagged_tokens):
+            tree = result[0]
+            start = result[1]
+            end = result[2]
+            name = first(tree.xpath('./compound/names/text()'))
+            label = first(tree.xpath('./compound/labels/text()'))
+            if name and label:
                 cem_def = {
-                    'label': record.labels[0]
+                    'name': name,
+                    'label': label,
+                    'start': start,
+                    'end': end
                 }
                 cem_defs.append(cem_def)
         return cem_defs
+        # for record in self.records:
+        #     if isinstance(record, Compound) and record.labels:
+        #         cem_def = {
+        #             'label': record.labels[0]
+        #         }
+        #         cem_defs.append(cem_def)
+        # return cem_defs
 
     @memoized_property
     def tags(self):
@@ -827,6 +826,21 @@ class Cell(Sentence):
     # word_tokenizer = FineWordTokenizer()
     # pos_tagger = NoneTagger()
     # ner_tagger = NoneTagger()
+
+    def __init__(self, *args, **kwargs):
+        super(Cell, self).__init__(*args, **kwargs)
+        self.data = None
+        self.row_categories = None
+        self.col_categories = None
+
+    @classmethod
+    def from_tdecell(cls, tde_cell, **kwargs):
+        text = tde_cell[0] + ' ' + ' '.join(tde_cell[1]) + ' ' + ' '.join(tde_cell[2])
+        cell = cls(text, **kwargs)
+        cell.data = tde_cell[0]
+        cell.row_categories = tde_cell[1]
+        cell.col_categories = tde_cell[2]
+        return cell
 
     @memoized_property
     def abbreviation_definitions(self):
