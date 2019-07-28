@@ -128,10 +128,10 @@ class AbsorptionCoefficient(QuantityModel):
 crystal_systems = (R('[Tt]riclinic') | R('[Mm]onoclinic') |  R('[Oo]rthorhombic') | R('[Tt]etragonal') | R('[Hh]exagonal') | R('[Tt]rigonal') | R('[Cc]ubic'))
 
 
-class Formula(BaseModel):
-    specifier = StringType(parse_expression=((I('Formula') | I('Compound')).add_action(join)), required=True)
-    compound = ModelType(Compound, required=True, contextual=False)
-    parsers = [AutoTableParser()]
+# class Formula(BaseModel):
+#     specifier = StringType(parse_expression=((I('Formula') | I('Compound')).add_action(join)), required=True)
+#     compound = ModelType(Compound, required=True, contextual=False)
+#     parsers = [AutoTableParser()]
 
 
 class UnitCell(BaseModel):
@@ -147,7 +147,7 @@ class UnitCell(BaseModel):
     lattice_param_gamma = ModelType(CellAngleGamma, required=False, contextual=True)
     cell_volume = ModelType(CellVolume, required=False, contextual=True)
 
-    compound = ModelType(Compound, required=True, contextual=True)
+    compound = ModelType(Compound, required=True, contextual=True, binding=True)
     parsers = [AutoTableParser()]
 
 
@@ -160,7 +160,7 @@ class DiffractionParams(BaseModel):
     wavelength = ModelType(Wavelength, required=False, contextual=True)
     absorption_coefficient = ModelType(AbsorptionCoefficient, required=False, contextual=True)
 
-    compound = ModelType(Compound, required=True, contextual=True)
+    compound = ModelType(Compound, required=True, contextual=True, binding=True)
     parsers = [AutoTableParser()]
 
 
@@ -168,7 +168,7 @@ class Crystal(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
     system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
 
-    formula = ModelType(Formula, required=False, contextual=True)
+    # formula = ModelType(Formula, required=False, contextual=True)
     formula_weight = ModelType(FormulaWeight, required=False, contextual=True)
     density = ModelType(Density, required=False, contextual=True)
     colour = ModelType(Colour, required=False, contextual=True)
@@ -176,7 +176,7 @@ class Crystal(BaseModel):
     cell_params = ModelType(UnitCell, required=False, contextual=True)
     diffraction_params = ModelType(DiffractionParams, required=False, contextual=True)
 
-    compound = ModelType(Compound, required=True, contextual=True)
+    compound = ModelType(Compound, required=True, contextual=True, binding=True)
     parsers = [AutoTableParser()]
 
 
