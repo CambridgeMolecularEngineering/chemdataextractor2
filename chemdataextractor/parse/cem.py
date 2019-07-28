@@ -19,7 +19,7 @@ from .actions import join, fix_whitespace
 from .common import roman_numeral, cc, nnp, hyph, nns, nn, cd, ls, optdelim, bcm, icm, rbrct, lbrct, sym, jj, hyphen, quote, \
     dt, delim
 from .base import BaseSentenceParser, BaseTableParser
-from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any
+from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any, SkipTo
 from lxml import etree
 
 log = logging.getLogger(__name__)
@@ -421,3 +421,51 @@ class CompoundHeadingParser(BaseSentenceParser):
                 labels=labels,
                 roles=roles
             )
+
+
+class CompoundTableParser(BaseTableParser):
+    entities = (cem | chemical_label | lenient_chemical_label) | ((I('Formula') | I('Compound')).add_action(join))('specifier')
+    root = OneOrMore(entities + Optional(SkipTo(entities)))('root_phrase')
+
+    @property
+    def root(self):
+        # is always found, our models currently rely on the compound
+        chem_name = (cem | chemical_label | lenient_chemical_label)
+        compound_model = self.model
+        labels = compound_model.labels.parse_expression('labels')
+        entities = [labels]
+
+        specifier = (I('Formula') | I('Compound')).add_action(join)('specifier')
+        entities.append(specifier)
+
+        # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
+        for field in self.model.fields:
+            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'specifier']:
+                if self.model.__getattribute__(self.model, field).parse_expression is not None:
+                    entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
+
+        # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
+        entities.append(chem_name)
+
+        # logic for finding all the elements in any order
+
+        combined_entities = entities[0]
+        for entity in entities[1:]:
+            combined_entities = (combined_entities | entity)
+        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
+        self._root_phrase = root_phrase
+        self._specifier = self.model.specifier
+        return root_phrase
+
+    def interpret(self, result, start, end):
+        # TODO: Parse label_type into label model object
+        if result.xpath('./specifier/text()') and \
+        (result.xpath('./names/names/text()') or result.xpath('./labels/text()')):
+            c = self.model(
+                names=result.xpath('./names/names/text()'),
+                labels=result.xpath('./labels/text()'),
+                roles=[standardize_role(r) for r in result.xpath('./roles/text()')]
+            )
+            if c is not None:
+                c.record_method = self.__class__.__name__
+                yield c
