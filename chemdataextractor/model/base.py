@@ -19,7 +19,7 @@ from pprint import pprint
 import six
 
 from ..utils import python_2_unicode_compatible
-from ..parse.elements import Any, W
+from ..parse.elements import Any, W, I
 
 log = logging.getLogger(__name__)
 
@@ -181,7 +181,6 @@ class ModelMeta(ABCMeta):
             p.model = cls
             parsers.append(p)
         cls.parsers = parsers
-        cls._associated_model_field_names = {}
         return cls
 
     def __setattr__(cls, key, value):
@@ -381,6 +380,12 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
     @property
     def noncontextual_required_fulfilled(self):
+        """
+        Whether all the non-contextual required fields have been extracted.
+
+        :return: True if all fields have been found, False if not.
+        :rtype: bool
+        """
         return self._required_fulfilled(strict=False)
 
     def _required_fulfilled(self, strict):
@@ -587,8 +592,50 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                     break
         return match
 
+    @classmethod
+    def flatten(cls):
+        """
+        A set of all models that are associated with this model.
+        For example, if we have a model like the following with multiple submodels:
+
+        .. code-block:: python
+
+            class A(BaseModel):
+                pass
+
+            class B(BaseModel):
+                a = ModelType(A)
+
+            class C(BaseModel):
+                b = ModelType(B)
+
+        then `C.flatten()` would give the result::
+
+            set(C, B, A)
+
+        :return: The set of all models associated with this model.
+        :rtype: set(BaseModel)
+        """
+        model_set = {cls}
+        for field_name, field in six.iteritems(cls.fields):
+            if hasattr(field, 'model_class'):
+                model_set.update(field.model_class.flatten())
+        log.debug(model_set)
+        return model_set
+
     @property
     def binding_properties(self):
+        """
+        A dictionary of all binding properties in this model, and their values.
+
+        .. note::
+
+            This function only returns those properties that are immediately binding for this
+            model, and not for any submodels.
+
+        :returns: A dictionary with the names of all binding fields as the keys and their values as the values.
+        :rtype: {str: Any}
+        """
         binding_properties = {}
         for field_name, field in six.iteritems(self.fields):
             if field.binding and self[field_name] is not None:
@@ -596,6 +643,16 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         return binding_properties
 
     def _binding_compatible(self, other, binding_properties=None):
+        """
+        Whether two models are compatible in terms of their binding properties.
+        For example, if this model had a compound associated with it and the field was binding,
+        a model that is associated with another compound will not be merged in.
+
+        :param BaseModel other: The other model that will be checked for compatibility with the binding properties in this model
+        :param {str: Any} binding_properties: Any binding properties from a model that contains this model
+        :returns: Whether the two models are compatible in terms of their binding properties.
+        :rtype: bool
+        """
         if binding_properties is None:
             binding_properties = self.binding_properties
         if not binding_properties:
@@ -631,34 +688,6 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         if not isinstance(text, str):
             raise TypeError("Record method description is not string.")
         self._record_method = text
-
-    def associated_model(self, model_type):
-        field_path = type(self).associated_field_name(model_type)
-        if field_path is not None:
-            model = self
-            for field_name in field_path:
-                model = model[field_name]
-                if model is None:
-                    return None
-            return model
-        return None
-
-    @classmethod
-    def associated_field_name(cls, model_type):
-        if model_type in cls._associated_model_field_names.keys():
-            return cls._associated_model_field_names[model_type]
-        for field_name, field in six.iteritems(cls.fields):
-            if hasattr(field, 'model_class') and model_type == field.model_class:
-                cls._associated_model_field_names[model_type] = [field_name]
-                return [field_name]
-            elif hasattr(field, 'model_class'):
-                sub_associated_names = field.model_class.associated_field_name(model_type)
-                if sub_associated_names is not None:
-                    field_path = [field_name]
-                    field_path.extend(sub_associated_names)
-                    cls._associated_model_field_names[model_type] = field_path
-                    return field_path
-        return None
 
 
 @python_2_unicode_compatible
@@ -703,7 +732,14 @@ class ModelList(MutableSequence):
         """Convert ModelList to JSON."""
         return json.dumps(self.serialize(), *args, **kwargs)
 
-    def _remove_subsets(self, strict=False):
+    def remove_subsets(self, strict=False):
+        """
+        Remove any subsets contained within the ModelList.
+
+        :param bool strict: Default True. Whether only strict subsets are removed. When this is
+        False, duplicates are removed too.
+        """
+        # A dictionary with the type of each element as the key, and the element itself as the value
         typed_list = {}
         for element in self.models:
             if type(element) in typed_list.keys():
@@ -715,17 +751,21 @@ class ModelList(MutableSequence):
             i = 0
             length = len(elements)
             to_remove = []
+            # Iterate through the list of elements and if any subsets are found, add the
+            # indices to a list of values to remove
             while i < length:
                 j = 0
                 while j < length:
                     if i != j and elements[i].is_subset(elements[j]) and j not in to_remove:
                         if strict and elements[i] == elements[j]:
+                            # Do not remove the element if it is not a strict subset depending on the value of strict
                             pass
                         else:
                             to_remove.append(i)
                     j += 1
                 i += 1
 
+            # Append any values that are not in the list of objects to remove
             i = 0
             while i < length:
                 if i not in to_remove:
