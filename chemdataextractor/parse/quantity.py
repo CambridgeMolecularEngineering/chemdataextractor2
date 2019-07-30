@@ -91,7 +91,7 @@ def construct_quantity_re(*models):
     if len(units_dict) == 0:
         return None
     # Case where we have a token that's just brackets
-    units_regex += '(\((?!\d))|(\))|\-|'
+    units_regex += '(\((?!\d))|(\)|\])|\-|'
     # Handle all the units
     for element, unit in six.iteritems(units_dict):
         if unit is not None:
@@ -102,9 +102,8 @@ def construct_quantity_re(*models):
     units_regex2 += '))+$'
     units_regex += '))+'
     units_regex += (units_regex2[:-2] + '*')
-    units_regex = '^((?P<split>[\+\-–−]?\d+([\.\-\−]?\d+)?)|((?P<split2>.*)(\(|\/)))' + units_regex
+    units_regex = '^((?P<split>[\+\-–−]?\d+([\.\-\−]?\d+)?)|((?P<split2>.*)(\(|\/|\[)))' + units_regex
     units_regex += '$'
-    # print(units_regex)
     return re.compile(units_regex)
 
 
@@ -312,6 +311,8 @@ def extract_units(string, dimensions, strict=False):
     string = string.replace("–", "-")
     string = string.replace("−", "-")
     string = string.replace(' ', '')
+    if string[0] == '[' and string[-1] == ']':
+        string = string[1:-1]
     # Split string at numbers, /s, and brackets, so we have the units tokenized into the right units for later processing stages.
     split_string = _split(string)
     # Find the units by matching strings, e.g. K for Kelvin, m for Meter
