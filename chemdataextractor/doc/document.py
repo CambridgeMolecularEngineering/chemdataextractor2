@@ -409,9 +409,12 @@ class Document(BaseDocument):
         # clean up records
         cleaned_records = ModelList()
         for record in records:
+            record._clean()
             if record.required_fulfilled and record not in cleaned_records:
                 if (self.models and type(record) in self.models) or not self.models:
                     cleaned_records.append(record)
+
+        cleaned_records.remove_subsets()
 
         # Reset updatables
         for el in self.elements:
