@@ -110,13 +110,13 @@ class Table(CaptionedElement):
         """
         if hasattr(parser, 'parse_cell'):
             for cde_cell in cde_table:
+                # print(cde_cell.tagged_tokens)
                 log.debug(parser)
                 results = parser.parse_cell(cde_cell)
                 for result in results:
                     if result.serialize() != {}:
                         # yield {parser.model.__name__: result.serialize()}
                         # adding of the row/column header categories to the record for potential merging later
-                        print(cde_cell.row_categories)
                         result.table_row_categories = ' '.join(cde_cell.row_categories)
                         result.table_col_categories = ' '.join(cde_cell.col_categories)
                         yield result
@@ -138,8 +138,8 @@ class Table(CaptionedElement):
         The function works via the following steps:
 
         - Step 1: The records are parsed from each cell using the parsers for each model
-        - Step 2: Any strict subsets are removed from this list
-        - Step 3: Consolidate records with matching rows or columns
+        - Step 2: Consolidate records with matching rows or columns
+        - Step 3: Any strict subsets are removed from this list
         - Step 4: Consolidate records globally throughout the table
         - Step 5: Remove any subsets
         - Step 6: Merge in any records from the caption
@@ -171,28 +171,21 @@ class Table(CaptionedElement):
                         table_records.append(record)
 
         # Step 2
-        table_records._remove_subsets(strict=True)
-        pprint(table_records.serialize())
+        self._consolidate_by_row_col(table_records)
 
         # Step 3
-        self._consolidate_by_row_col(table_records)
+        table_records.remove_subsets(strict=True)
 
         # Step 4
         self._consolidate(table_records)
 
         # Step 5
-        table_records._remove_subsets()
+        table_records.remove_subsets()
 
         # Step 6
         caption_records = [c for c in caption_records if c.contextual_fulfilled]
         table_records = self._merge(table_records, caption_records)
-        pprint(table_records.serialize())
-
-        # This behaviour is not what is expected from the rest of CDE but is
-        # required to keep compatibility with older versions of this function
-        # table_records = self._remove_unfulfilled(table_records)
-        print('\n\n\nFINAL')
-        pprint(table_records.serialize())
+        # pprint(table_records.serialize())
 
         return table_records
 
@@ -298,7 +291,7 @@ class Table(CaptionedElement):
             record_set.update(records_of_type)
 
         final_records = ModelList(*list(record_set))
-        final_records._remove_subsets()
+        final_records.remove_subsets()
         return final_records
 
     def _merge(self, records_1, records_2):
