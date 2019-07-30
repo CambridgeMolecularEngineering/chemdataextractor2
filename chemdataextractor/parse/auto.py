@@ -127,6 +127,7 @@ class BaseAutoParser(BaseParser):
     _root_phrase = None
 
     def interpret(self, result, start, end):
+        # print(etree.tostring(result))
         if result is None:
             return
         requirements = True
