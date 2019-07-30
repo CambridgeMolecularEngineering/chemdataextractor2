@@ -835,11 +835,15 @@ class Cell(Sentence):
 
     @classmethod
     def from_tdecell(cls, tde_cell, **kwargs):
-        text = tde_cell[0] + ' ' + ' '.join(tde_cell[1]) + ' ' + ' '.join(tde_cell[2])
+        # Have the spacing between the cells contain characters that will never be found
+        # so that the system doesn't become confused because it found some number in the heading
+        # that it confuses as a power for a unit.
+        text = tde_cell[0] + ' sdfkljlk ' + ' '.join(tde_cell[1]) + ' sdfkljlk ' + ' '.join(tde_cell[2])
         cell = cls(text, **kwargs)
         cell.data = tde_cell[0]
         cell.row_categories = tde_cell[1]
         cell.col_categories = tde_cell[2]
+        # print(cell._streamlined_models, construct_quantity_re(*cell._streamlined_models))
         return cell
 
     @memoized_property
