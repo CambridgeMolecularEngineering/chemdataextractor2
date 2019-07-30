@@ -538,6 +538,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                        and other.get(field_name, None) is not None):
                         self[field_name] = other[field_name]
                         did_merge = True
+        if did_merge:
+            self._consolidate_binding()
         return did_merge
 
     def merge_all(self, other):
@@ -577,6 +579,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                       and other.get(field_name, None) is not None):
                         did_merge = True
                         self[field_name] = other[field_name]
+        if did_merge:
+            self._consolidate_binding()
         return did_merge
 
     def _compatible(self, other):
@@ -676,6 +680,18 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         return False
         return True
 
+    def _consolidate_binding(self, binding_properties=None):
+        if binding_properties is None:
+            binding_properties = self.binding_properties
+        if binding_properties == {}:
+            return
+        for field_name, field in six.iteritems(self.fields):
+            if field_name in binding_properties.keys():
+                self[field_name] = binding_properties[field_name]
+            elif hasattr(field, 'model_class') and self[field_name] is not None:
+                self[field_name]._consolidate_binding(binding_properties)
+
+
     @property
     def record_method(self):
         """
@@ -688,6 +704,13 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         if not isinstance(text, str):
             raise TypeError("Record method description is not string.")
         self._record_method = text
+
+    def _clean(self):
+        for field_name, field in six.iteritems(self.fields):
+            if hasattr(field, 'model_class') and self[field_name] is not None:
+                self[field_name]._clean()
+                if not self[field_name].required_fulfilled:
+                    self[field_name] = field.default
 
 
 @python_2_unicode_compatible
