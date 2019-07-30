@@ -46,7 +46,7 @@ class TestExtract(unittest.TestCase):
             {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride',
                                     '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}}
         ]
-        self.assertEqual(expected, d.records.serialize())
+        self.assertCountEqual(expected, d.records.serialize())
 
     def test_parse_control_character(self):
         """Test control character in text is handled correctly."""
@@ -81,7 +81,7 @@ class TestExtract(unittest.TestCase):
             {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride',
                                     '4-amino-2-(3-thienyl)phenol hydrochloride'], 'roles': ['product']}}
         ]
-        self.assertEqual(expected, d.records.serialize())
+        self.assertCountEqual(expected, d.records.serialize())
 
 
 

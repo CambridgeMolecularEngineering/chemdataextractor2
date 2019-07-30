@@ -4,9 +4,10 @@ Test the Table Document element and complex Table autoparsers.
 
 """
 
-from chemdataextractor.doc import Caption
+from chemdataextractor.doc import Caption, Document
 from chemdataextractor.doc.table_new import Table
 from chemdataextractor.model import TemperatureModel, StringType, Compound, ModelType, DimensionlessModel
+from chemdataextractor.parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser, CompoundTableParser
 from chemdataextractor.model.units.energy import EnergyModel
 from chemdataextractor.parse import W, R
 from chemdataextractor.parse.auto import AutoTableParser
@@ -21,12 +22,12 @@ log = logging.getLogger(__name__)
 # 1.MODEL CLASSES USED FOR TESTING OF THE TABLE
 class AbsentModel(TemperatureModel):
     specifier = StringType(parse_expression=W('Nothing'), required=True, contextual=False, updatable=False)
-    compound = ModelType(Compound, required=True, contextual=True, updatable=False)
+    compound = ModelType(Compound, required=True, contextual=True, updatable=False, binding=True)
     parser = [AutoTableParser()]
 
 
 class Enthalpy(EnergyModel):
-    compound = ModelType(Compound, required=False)
+    compound = ModelType(Compound, required=False, binding=True)
     specifier = StringType(parse_expression=R('^Enthalpy$'), required=True, contextual=False, updatable=True)
     absent = ModelType(AbsentModel, required=True, contextual=True, updatable=False)
     parsers = [AutoTableParser()]
@@ -34,16 +35,24 @@ class Enthalpy(EnergyModel):
 
 class Reference(DimensionlessModel):
     specifier = StringType(parse_expression=R('Ref'), required=True, contextual=False, updatable=False)
-    compound = ModelType(Compound, required=True, contextual=True, updatable=False)
+    compound = ModelType(Compound, required=True, contextual=True, updatable=False, binding=True)
     enthalpy = ModelType(Enthalpy, required=True, contextual=True, updatable=False)
     parsers = [AutoTableParser()]
 
 
 class CurieTemperature(TemperatureModel):
     specifier = StringType(parse_expression=R(r'^\[?T(C|c)(urie)?[1-2]?\]?$'), required=True, contextual=False, updatable=True)
-    compound = ModelType(Compound, required=True, contextual=True, updatable=False)
+    compound = ModelType(Compound, required=True, contextual=True, updatable=False, binding=True)
     reference = ModelType(Reference, required=True, contextual=True, updatable=False)
     parsers = [AutoTableParser()]
+
+
+def _get_serialised_records(records, models=None):
+    serialized_list = []
+    for record in records:
+        if models is None or type(record) in models:
+            serialized_list.append(record.serialize())
+    return serialized_list
 
 
 # 2. TESTS
@@ -57,21 +66,30 @@ class TestNestedTable(unittest.TestCase):
     maxDiff = None
 
     def do_table(self, expected):
+        Compound.parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
         table = Table(caption=Caption(""),
                       table_data="tests/data/tables/table_example_3.csv",
                       models=[CurieTemperature])
-        result = []
-        for record in table.records:
-            result.append(record.serialize())
+        result = _get_serialised_records(table.records, models=[CurieTemperature])
         self.assertCountEqual(expected, result)
+        Compound.parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser(), CompoundTableParser()]
+        Enthalpy.absent.required = True
+        Enthalpy.absent.contextual = True
+        Reference.enthalpy.required = True
+        Reference.enthalpy.contextual = True
+        CurieTemperature.reference.required = True
+        CurieTemperature.reference.contextual = True
 
     def test_required_submodels_1(self):
         """
         Tests a combination of `required` parameters for submodels.
         """
         Enthalpy.absent.required = True
+        Enthalpy.absent.contextual = False
         Reference.enthalpy.required = True
+        Reference.enthalpy.contextual = False
         CurieTemperature.reference.required = True
+        CurieTemperature.reference.contextual = False
         expected = []
         self.do_table(expected)
 
@@ -102,6 +120,7 @@ class TestNestedTable(unittest.TestCase):
         Tests a combination of `required` parameters for submodels.
         """
         Enthalpy.absent.required = True
+        Enthalpy.absent.contextual = False
         Reference.enthalpy.required = False
         CurieTemperature.reference.required = True
         expected = [
@@ -144,7 +163,9 @@ class TestNestedTable(unittest.TestCase):
         Tests a combination of `required` parameters for submodels.
         """
         Enthalpy.absent.required = True
+        Enthalpy.absent.contextual = False
         Reference.enthalpy.required = True
+        Reference.enthalpy.contextual = False
         CurieTemperature.reference.required = False
         expected = [
             {'CurieTemperature': {'raw_value': '293', 'raw_units': '(K)', 'value': [293.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TC', 'compound': {'Compound': {'names': ['MnO2']}}}},
@@ -185,6 +206,7 @@ class TestNestedTable(unittest.TestCase):
         Tests a combination of `required` parameters for submodels.
         """
         Enthalpy.absent.required = True
+        Enthalpy.absent.contextual = False
         Reference.enthalpy.required = False
         CurieTemperature.reference.required = False
         expected = [
