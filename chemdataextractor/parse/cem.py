@@ -24,6 +24,7 @@ from lxml import etree
 
 log = logging.getLogger(__name__)
 
+joining_characters = R('^\@|\/$')
 
 alphanumeric = R('^(d-)?(\d{1,2}[A-Za-z]{1,2}[′″‴‶‷⁗]?)(-d)?$')
 
@@ -266,9 +267,12 @@ other_solvent = (
 solvent_name_options = (nmr_solvent | solvent_formula | other_solvent)
 solvent_name = (Optional(include_prefix) + solvent_name_options)('names').add_action(join).add_action(fix_whitespace)
 chemical_name_blacklist = (I('mmc'))
-chemical_name_options = Not(chemical_name_blacklist) + (
+proper_chemical_name_options = Not(chemical_name_blacklist) + (
     cm | element_name | element_symbol | registry_number | amino_acid | amino_acid_name | formula
 )
+
+chemical_name_options = proper_chemical_name_options + ZeroOrMore(joining_characters + proper_chemical_name_options)
+
 chemical_name = (Optional(include_prefix) + chemical_name_options)('names').add_action(join).add_action(fix_whitespace)
 
 # Label phrase structures
