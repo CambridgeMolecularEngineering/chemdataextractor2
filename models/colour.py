@@ -2,12 +2,12 @@
 Colour model
 """
 
-from ..chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
-from ..chemdataextractor.model.categories import CategoryModel
-from ..chemdataextractor.model.model import Compound
-from ..chemdataextractor.parse.actions import join
-from ..chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
-from ..chemdataextractor.parse.auto import AutoTableParser
+from chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
+from chemdataextractor.model.categories import CategoryModel
+from chemdataextractor.model.model import Compound
+from chemdataextractor.parse.actions import join
+from chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
+from chemdataextractor.parse.auto import AutoTableParser
 
 colours = (
     R('^[Bb]lack(-)?(ish)?$') |

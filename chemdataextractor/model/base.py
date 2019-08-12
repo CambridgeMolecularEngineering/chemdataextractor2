@@ -407,7 +407,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         log.debug('Required unfulfilled')
                         return False
             elif field.required and self[field_name] == field.default:
-                print(self.serialize(), field_name, "did not exist")
+                # print(self.serialize(), field_name, "did not exist")
                 if not strict and field.contextual:
                     pass
                 else:

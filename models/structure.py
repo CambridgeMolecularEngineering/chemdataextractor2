@@ -9,20 +9,20 @@
 - Formula Weight
 """
 
-from ..chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
-from ..chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
-from ..chemdataextractor.parse.actions import join
-from ..chemdataextractor.model.units.quantity_model import DimensionlessModel, QuantityModel
-from ..chemdataextractor.model.categories import CategoryModel
-from ..chemdataextractor.model.model import Compound
-from ..chemdataextractor.parse.template import QuantityModelTemplateParser
-from ..chemdataextractor.parse.auto import AutoTableParser
-from ..chemdataextractor.model.units.length import LengthModel, Length
-from ..chemdataextractor.model.units.temperature import TemperatureModel
-from ..chemdataextractor.model.units.mass import Mass
-from ..chemdataextractor.model.units.substance_amount import AmountOfSubstance
-from ..chemdataextractor.model.units.angle import AngleModel
-from ..chemdataextractor.parse.common import lbrct, rbrct
+from chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
+from chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
+from chemdataextractor.parse.actions import join
+from chemdataextractor.model.units.quantity_model import DimensionlessModel, QuantityModel
+from chemdataextractor.model.categories import CategoryModel
+from chemdataextractor.model.model import Compound
+from chemdataextractor.parse.template import QuantityModelTemplateParser
+from chemdataextractor.parse.auto import AutoTableParser
+from chemdataextractor.model.units.length import LengthModel, Length
+from chemdataextractor.model.units.temperature import TemperatureModel
+from chemdataextractor.model.units.mass import Mass
+from chemdataextractor.model.units.substance_amount import AmountOfSubstance
+from chemdataextractor.model.units.angle import AngleModel
+from chemdataextractor.parse.common import lbrct, rbrct
 from .colour import Colour
 
 
@@ -118,6 +118,12 @@ class Wavelength(LengthModel):
     parsers = [AutoTableParser()]
 
 
+class F(DimensionlessModel):
+    specifier = StringType(parse_expression=R('^F\(?000\)?$'), required=True)
+    compound = ModelType(Compound, required=True, contextual=True)
+    parsers = [AutoTableParser()]
+
+
 class AbsorptionCoefficient(QuantityModel):
     dimensions = Length()**(-1)
     specifier = StringType(parse_expression=((R('[Aa]bsorption') + I('coefficient')) | R('[μµ𝛍𝜇𝝁𝝻𝞵]')).add_action(join), required=True)
@@ -155,7 +161,8 @@ class DiffractionParams(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
 
     z = ModelType(Z, required=False, contextual=True)
-    r_factors = ModelType(RFactor, required=False, contextual=True)
+    # r_factors = ModelType(RFactor, required=False, contextual=True)
+    structure_factor = ModelType(F, required=False, contextual=True)
     applied_temperature = ModelType(AppliedTemperature, required=False, contextual=True)
     wavelength = ModelType(Wavelength, required=False, contextual=True)
     absorption_coefficient = ModelType(AbsorptionCoefficient, required=False, contextual=True)

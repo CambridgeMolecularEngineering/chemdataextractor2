@@ -1,9 +1,9 @@
-from ..chemdataextractor.model.units import TemperatureModel
-from ..chemdataextractor.model.model import Compound, ModelType, StringType
-from ..chemdataextractor.parse.elements import R, W, Not, Optional
-from ..chemdataextractor.parse.actions import join
-from ..chemdataextractor.parse.template import QuantityModelTemplateParser, MultiQuantityModelTemplateParser
-from ..chemdataextractor.parse.auto import AutoSentenceParser, AutoTableParser
+from chemdataextractor.model.units import TemperatureModel
+from chemdataextractor.model.model import Compound, ModelType, StringType
+from chemdataextractor.parse.elements import R, W, Not, Optional
+from chemdataextractor.parse.actions import join
+from chemdataextractor.parse.template import QuantityModelTemplateParser, MultiQuantityModelTemplateParser
+from chemdataextractor.parse.auto import AutoSentenceParser, AutoTableParser
 
 
 class GlassTransitionTemperature(TemperatureModel):
