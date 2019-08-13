@@ -20,6 +20,7 @@ import six
 
 from ..utils import python_2_unicode_compatible
 from ..parse.elements import Any, W, I
+from ..parse.auto import AutoSentenceParser, AutoTableParser
 
 log = logging.getLogger(__name__)
 
@@ -208,7 +209,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     """"""
 
     fields = {}
-    parsers = []
+    parsers = [AutoSentenceParser(), AutoTableParser()]
     specifier = None
     _updated = False
 

@@ -18,7 +18,7 @@ from .dimension import Dimensionless
 from ...parse.elements import Any
 from ...parse.auto import AutoSentenceParser, AutoTableParser, construct_unit_element, match_dimensions_of
 from ...parse.quantity import magnitudes_dict, value_element_plain
-
+from ...parse.template import QuantityModelTemplateParser, MultiQuantityModelTemplateParser
 
 class _QuantityModelMeta(ModelMeta):
     """"""
@@ -51,7 +51,7 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
     error = FloatType(contextual=True)
     dimensions = None
     specifier = StringType()
-    parsers = [AutoSentenceParser(), AutoTableParser()]
+    parsers = [MultiQuantityModelTemplateParser(), QuantityModelTemplateParser(), AutoTableParser()]
 
     # Operators are implemented so that composite quantities can be created easily
     # on the fly, such as the following code snippet:

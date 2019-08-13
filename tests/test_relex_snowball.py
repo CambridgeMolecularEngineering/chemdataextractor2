@@ -34,6 +34,7 @@ class CurieTemperature(TemperatureModel):
     specifier_expression = (W('Curie') + I('temperature')).add_action(join)
     specifier = StringType(parse_expression=specifier_expression, required=True, updatable=True)
     compound = ModelType(Compound, required=True)
+    parsers = [AutoSentenceParser()]
 
 sb = Snowball(CurieTemperature, tc=0.5, tsim=0.5)
 

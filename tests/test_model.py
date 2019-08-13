@@ -19,6 +19,7 @@ from chemdataextractor.model.units.temperature import TemperatureModel
 from chemdataextractor.parse.elements import I, W
 from chemdataextractor.model.base import StringType, ModelType
 from chemdataextractor.doc.text import Sentence
+from chemdataextractor.parse.auto import AutoSentenceParser
 from chemdataextractor.doc import Document
 from lxml import etree
 logging.basicConfig(level=logging.DEBUG)
@@ -30,7 +31,7 @@ class NeelTemperature(TemperatureModel):
     specifier_expression = (I('Néel')+I('temperature'))
     specifier = StringType(parse_expression=specifier_expression, required=True, contextual=False, updatable=True)
     compound = ModelType(Compound, required=False, contextual=True)
-
+    parsers = [AutoSentenceParser()]
 
 class TestModel(unittest.TestCase):
 
