@@ -1,28 +1,16 @@
-"""Crystal Structure parameters models
+"""Crystal Model"""
 
-- Crystal System : Hexagonal etc
-- Space Group
-- Cell parameters (a,b,c)
-- Volume
-- R factors (Rwp, Rp)
-- Density
-- Formula Weight
-"""
-
-from chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
-from chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
+from chemdataextractor.model.base import BaseModel, StringType, ModelType
+from chemdataextractor.parse.elements import I, R, W, T, Optional
 from chemdataextractor.parse.actions import join
 from chemdataextractor.model.units.quantity_model import DimensionlessModel, QuantityModel
-from chemdataextractor.model.categories import CategoryModel
 from chemdataextractor.model.model import Compound
-from chemdataextractor.parse.template import QuantityModelTemplateParser
-from chemdataextractor.parse.auto import AutoTableParser
 from chemdataextractor.model.units.length import LengthModel, Length
 from chemdataextractor.model.units.temperature import TemperatureModel
 from chemdataextractor.model.units.mass import Mass
 from chemdataextractor.model.units.substance_amount import AmountOfSubstance
 from chemdataextractor.model.units.angle import AngleModel
-from chemdataextractor.parse.common import lbrct, rbrct
+from chemdataextractor.parse.auto import AutoTableParser
 from .colour import Colour
 
 
@@ -52,7 +40,8 @@ class Z(DimensionlessModel):
     parsers = [AutoTableParser()]
 
 
-space_groups = ((R('^[PIFABCR]([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d̄|\d-|-\d)*$') + Optional(R('^([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d̄|\d-|-\d)*$')) +
+space_groups = ((R('^[PIFABCR]([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d̄|\d-|-\d)*$') +
+                 Optional(R('^([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d̄|\d-|-\d)*$')) +
                  Optional((T('SYM') | W('/')) + R('[a-zA-Z]+'))) | (R('^\d{1,3}$'))).add_action(join)
 
 
@@ -106,12 +95,6 @@ class CellVolume(QuantityModel):
     parsers = [AutoTableParser()]
 
 
-class RFactor(DimensionlessModel):
-    specifier = StringType(parse_expression=(R('^w?R([12]|(int))$')), required=True)
-    compound = ModelType(Compound, required=True, contextual=True)
-    parsers = [AutoTableParser()]
-
-
 class Wavelength(LengthModel):
     specifier = StringType(parse_expression=(R('^Wavelength') | R('^Radiation') | R('[λⲗ𝛌𝜆𝝀𝝺𝞴]')).add_action(join), required=True)
     compound = ModelType(Compound, required=True, contextual=True)
@@ -131,13 +114,13 @@ class AbsorptionCoefficient(QuantityModel):
     parsers = [AutoTableParser()]
 
 
-crystal_systems = (R('[Tt]riclinic') | R('[Mm]onoclinic') |  R('[Oo]rthorhombic') | R('[Tt]etragonal') | R('[Hh]exagonal') | R('[Tt]rigonal') | R('[Cc]ubic'))
-
-
-# class Formula(BaseModel):
-#     specifier = StringType(parse_expression=((I('Formula') | I('Compound')).add_action(join)), required=True)
-#     compound = ModelType(Compound, required=True, contextual=False)
-#     parsers = [AutoTableParser()]
+crystal_systems = (R('[Tt]riclinic') |
+                   R('[Mm]onoclinic') |
+                   R('[Oo]rthorhombic') |
+                   R('[Tt]etragonal') |
+                   R('[Hh]exagonal') |
+                   R('[Tt]rigonal') |
+                   R('[Cc]ubic'))
 
 
 class UnitCell(BaseModel):
@@ -161,7 +144,6 @@ class DiffractionParams(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
 
     z = ModelType(Z, required=False, contextual=True)
-    # r_factors = ModelType(RFactor, required=False, contextual=True)
     structure_factor = ModelType(F, required=False, contextual=True)
     applied_temperature = ModelType(AppliedTemperature, required=False, contextual=True)
     wavelength = ModelType(Wavelength, required=False, contextual=True)
@@ -175,7 +157,6 @@ class Crystal(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
     system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
 
-    # formula = ModelType(Formula, required=False, contextual=True)
     formula_weight = ModelType(FormulaWeight, required=False, contextual=True)
     density = ModelType(Density, required=False, contextual=True)
     colour = ModelType(Colour, required=False, contextual=True)
@@ -185,5 +166,6 @@ class Crystal(BaseModel):
 
     compound = ModelType(Compound, required=True, contextual=True, binding=True)
     parsers = [AutoTableParser()]
+
 
 

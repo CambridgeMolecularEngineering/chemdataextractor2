@@ -47,6 +47,7 @@ class SpeedModel(QuantityModel):
     dimensions = Length() / Time()
     specifier = StringType(parse_expression=I('speed'))
     compound = ModelType(Compound)
+    parsers = [AutoSentenceParser()]
 
 
 class SpecificHeat(Dimension):
