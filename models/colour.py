@@ -3,7 +3,6 @@ Colour model
 """
 
 from chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
-from chemdataextractor.model.categories import CategoryModel
 from chemdataextractor.model.model import Compound
 from chemdataextractor.parse.actions import join
 from chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
@@ -51,9 +50,8 @@ prefix = (
 colour_expression = (Optional(prefix) + colours + Optional(colours)).add_action(join)
 
 
-class Colour(CategoryModel):
+class Colour(BaseModel):
     specifier = StringType(parse_expression=R('^[Cc]olo(u)?r$'), required=True)
-    category = StringType(parse_expression=colour_expression, required=True, contextual=False, updatable=False)
-    parsers = [AutoTableParser()]
+    name = StringType(parse_expression=colour_expression, required=True, contextual=False, updatable=False)
     compound = ModelType(Compound, required=True, contextual=True)
-
+    parsers = [AutoTableParser()]

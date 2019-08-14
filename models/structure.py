@@ -16,7 +16,13 @@ from .colour import Colour
 
 class FormulaWeight(QuantityModel):
     dimensions = Mass() / AmountOfSubstance()
-    specifier = StringType(parse_expression=((I('formula') | I('molecular')) + I('weight')).add_action(join), required=True)
+    specifier = StringType(parse_expression=(((I('Formula') | I('molecular')) + (I('weight') | I('mass'))) | (R('^Mr?$')) | (W('Mass'))).add_action(join), required=True)
+    compound = ModelType(Compound, required=True, contextual=True)
+    parsers = [AutoTableParser()]
+
+
+class FormulaWeightNoDim(DimensionlessModel):
+    specifier = StringType(parse_expression=(((I('Formula') | I('molecular')) + (I('weight') | I('mass'))) | (R('^Mr?$')) | (W('Mass'))).add_action(join), required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
@@ -35,7 +41,7 @@ class Density(QuantityModel):
 
 
 class Z(DimensionlessModel):
-    specifier = StringType(parse_expression=R('Z'), required=True, contextual=False)
+    specifier = StringType(parse_expression=R('^Z$'), required=True, contextual=False)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
@@ -158,6 +164,7 @@ class Crystal(BaseModel):
     system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
 
     formula_weight = ModelType(FormulaWeight, required=False, contextual=True)
+    formula_weight_no_dim = ModelType(FormulaWeightNoDim, required=False, contextual=True)
     density = ModelType(Density, required=False, contextual=True)
     colour = ModelType(Colour, required=False, contextual=True)
 
