@@ -126,7 +126,8 @@ crystal_systems = (R('[Tt]riclinic') |
                    R('[Tt]etragonal') |
                    R('[Hh]exagonal') |
                    R('[Tt]rigonal') |
-                   R('[Cc]ubic'))
+                   R('[Cc]ubic') |
+                   R('[Rr]hombohedral'))
 
 
 class UnitCell(BaseModel):

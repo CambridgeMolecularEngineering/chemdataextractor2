@@ -70,7 +70,7 @@ def records(doc, model):
     if recs:
         for record in recs:
             if isinstance(record, model):
-                    yield record
+                yield record
 
 
 class Evaluate:
@@ -84,7 +84,7 @@ class Evaluate:
         self.n_papers = len(os.listdir(folder))
 
         # number of paper that was last evaluated
-        self.n_paper = 0
+        self.n_paper = -1
 
         # number of records found in the corpus
         self.n_unidentified = 0
@@ -128,7 +128,7 @@ class Evaluate:
         for n_paper, doc in enumerate(documents(self.folder)):
 
             # if loaded from pickle, eval will start where left of
-            if n_paper <= self.n_paper and self.n_paper != 0:
+            if n_paper <= self.n_paper and self.n_paper >= 0:
                 continue
 
             print("Paper {}/{}".format(n_paper, self.n_papers))

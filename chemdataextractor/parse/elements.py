@@ -63,9 +63,9 @@ class BaseParserElement(object):
 
     def __init__(self):
         self.name = None
-        """str or None: name for BaseParserElement. This is used to set the name of the Element when a result is found"""
+        #: str or None: name for BaseParserElement. This is used to set the name of the Element when a result is found
         self.actions = []
-        """list(chemdataextractor.parse.actions): list of actions that will be applied to the results after parsing. Actions are functions with arguments of (tokens, start, result)"""
+        #: list(chemdataextractor.parse.actions): list of actions that will be applied to the results after parsing. Actions are functions with arguments of (tokens, start, result)
         self.streamlined = False
         self.condition = None
 
