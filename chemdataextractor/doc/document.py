@@ -418,7 +418,7 @@ class Document(BaseDocument):
 
         # Reset updatables
         for el in self.elements:
-            for model in el.models:
+            for model in el._streamlined_models:
                 model.reset_updatables()
 
         # Append contextual records if they've filled required fields
