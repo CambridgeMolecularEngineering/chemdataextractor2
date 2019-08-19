@@ -52,8 +52,8 @@ class BaseType(six.with_metaclass(ABCMeta)):
             print('No parse_expression supplied but updatable set as True for ', type(self))
             print('updatable refers to whether parse_expression can be changed by the document as parsing occurs. Setting updatable to False.')
             self.updatable = False
-        if updatable:
-            self._default_parse_expression = copy.copy(parse_expression)
+        self.parse_expression = copy.copy(parse_expression)
+        self._default_parse_expression = parse_expression
         # when a record is created from the table, this will be filled with the row/col header cateogry strings
         # which helps merging based on same row/column category
         self.table_row_categories = None
