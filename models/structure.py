@@ -16,13 +16,13 @@ from .colour import Colour
 
 class FormulaWeight(QuantityModel):
     dimensions = Mass() / AmountOfSubstance()
-    specifier = StringType(parse_expression=(((I('Formula') | I('molecular')) + (I('weight') | I('mass'))) | (R('^Mr?$')) | (W('Mass'))).add_action(join), required=True)
+    specifier = StringType(parse_expression=(((I('Formula') | I('molecular')) + (I('weight') | I('mass'))) | (R('^Mr?$')) | (W('Mass')) | (I('FW')) | (I('MW'))).add_action(join), required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
 
 class FormulaWeightNoDim(DimensionlessModel):
-    specifier = StringType(parse_expression=(((I('Formula') | I('molecular')) + (I('weight') | I('mass'))) | (R('^Mr?$')) | (W('Mass'))).add_action(join), required=True)
+    specifier = StringType(parse_expression=(((I('Formula') | I('molecular')) + (I('weight') | I('mass'))) | (R('^Mr?$')) | (W('Mass')) | (I('FW')) | (I('MW'))).add_action(join), required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
@@ -41,7 +41,7 @@ class Density(QuantityModel):
 
 
 class Z(DimensionlessModel):
-    specifier = StringType(parse_expression=R('^Z$'), required=True, contextual=False)
+    specifier = StringType(parse_expression=R('^Z$'), required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
@@ -53,7 +53,7 @@ space_groups = ((R('^[PIFABCR]([mcanbed]+)?(\d|\d̄|\d-|-\d)*([mcanbed]+)?(\d|\d
 
 class SpaceGroup(BaseModel):
     specifier = StringType(parse_expression=(I('space') + I('group')).add_action(join), required=True)
-    symbol = StringType(parse_expression=space_groups, required=True, contextual=False, updatable=False)
+    symbol = StringType(parse_expression=space_groups, required=True)
     compound = ModelType(Compound, required=True, contextual=True)
     parsers = [AutoTableParser()]
 
@@ -132,16 +132,16 @@ crystal_systems = (R('[Tt]riclinic') |
 
 class UnitCell(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
-    system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
+    system = StringType(parse_expression=crystal_systems, required=True)
 
-    space_group = ModelType(SpaceGroup, required=False, contextual=True)
-    lattice_param_c = ModelType(CellLengthC, required=False, contextual=True)
-    lattice_param_b = ModelType(CellLengthB, required=False, contextual=True)
-    lattice_param_a = ModelType(CellLengthA, required=False, contextual=True)
-    lattice_param_alpha = ModelType(CellAngleAlpha, required=False, contextual=True)
-    lattice_param_beta = ModelType(CellAngleBeta, required=False, contextual=True)
-    lattice_param_gamma = ModelType(CellAngleGamma, required=False, contextual=True)
-    cell_volume = ModelType(CellVolume, required=False, contextual=True)
+    space_group = ModelType(SpaceGroup, contextual=True)
+    lattice_param_c = ModelType(CellLengthC, contextual=True)
+    lattice_param_b = ModelType(CellLengthB, contextual=True)
+    lattice_param_a = ModelType(CellLengthA, contextual=True)
+    lattice_param_alpha = ModelType(CellAngleAlpha, contextual=True)
+    lattice_param_beta = ModelType(CellAngleBeta, contextual=True)
+    lattice_param_gamma = ModelType(CellAngleGamma, contextual=True)
+    cell_volume = ModelType(CellVolume, contextual=True)
 
     compound = ModelType(Compound, required=True, contextual=True, binding=True)
     parsers = [AutoTableParser()]
@@ -150,11 +150,11 @@ class UnitCell(BaseModel):
 class DiffractionParams(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
 
-    z = ModelType(Z, required=False, contextual=True)
-    structure_factor = ModelType(F, required=False, contextual=True)
-    applied_temperature = ModelType(AppliedTemperature, required=False, contextual=True)
-    wavelength = ModelType(Wavelength, required=False, contextual=True)
-    absorption_coefficient = ModelType(AbsorptionCoefficient, required=False, contextual=True)
+    z = ModelType(Z, contextual=True)
+    structure_factor = ModelType(F, contextual=True)
+    applied_temperature = ModelType(AppliedTemperature, contextual=True)
+    wavelength = ModelType(Wavelength, contextual=True)
+    absorption_coefficient = ModelType(AbsorptionCoefficient, contextual=True)
 
     compound = ModelType(Compound, required=True, contextual=True, binding=True)
     parsers = [AutoTableParser()]
@@ -162,15 +162,15 @@ class DiffractionParams(BaseModel):
 
 class Crystal(BaseModel):
     specifier = StringType(parse_expression=((I('Crystal') + I('system')) | (I('Symmetry'))).add_action(join), required=True)
-    system = StringType(parse_expression=crystal_systems, required=True, contextual=False, updatable=False)
+    system = StringType(parse_expression=crystal_systems, required=True)
 
-    formula_weight = ModelType(FormulaWeight, required=False, contextual=True)
-    formula_weight_no_dim = ModelType(FormulaWeightNoDim, required=False, contextual=True)
-    density = ModelType(Density, required=False, contextual=True)
-    colour = ModelType(Colour, required=False, contextual=True)
+    formula_weight = ModelType(FormulaWeight, contextual=True)
+    formula_weight_no_dim = ModelType(FormulaWeightNoDim, contextual=True)
+    density = ModelType(Density, contextual=True)
+    colour = ModelType(Colour, contextual=True)
 
-    cell_params = ModelType(UnitCell, required=False, contextual=True)
-    diffraction_params = ModelType(DiffractionParams, required=False, contextual=True)
+    cell_params = ModelType(UnitCell, contextual=True)
+    diffraction_params = ModelType(DiffractionParams, contextual=True)
 
     compound = ModelType(Compound, required=True, contextual=True, binding=True)
     parsers = [AutoTableParser()]
