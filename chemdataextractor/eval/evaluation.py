@@ -54,7 +54,7 @@ sys.stdout = Logger()
 
 def documents(folder):
     """Yields CDE documents for a given folder"""
-    for i, filename in enumerate(os.listdir(folder)):
+    for i, filename in sorted(enumerate(os.listdir(folder))):
         if filename[0] != '.':
             file_path = os.path.join(folder, filename)
             fb = open(file_path, 'rb')
@@ -75,8 +75,10 @@ def records(doc, model):
 
 class Evaluate:
     """Main class for evaluation of a particular model on a given corpus of literature"""
-    def __init__(self, model, folder=r'./', n_papers_limit=200, n_records_limit=200, play_sound=True):
+    def __init__(self, model, folder=r'./', n_papers_limit=200, n_records_limit=200, play_sound=True, show_website=True, _automated=False):
+        self._automated = _automated
         self.play_sound = play_sound
+        self.show_website = show_website
         self.folder = folder
         self.model = model
         self.n_papers_limit = n_papers_limit
@@ -153,17 +155,19 @@ class Evaluate:
                         sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
                         playsound(sound_file)
 
-                    if not doc_opened:
+                    if not doc_opened and self.show_website:
                         webbrowser.open(doc.metadata.html_url)
                         doc_opened = True
-
-                    input_cw = input("    Correct (0)   OR   Correct and duplicate (1)   OR   Wrong (2)   OR   SKIP (3)?")
-                    try:
-                        input_cw = int(input_cw)
-                    except ValueError:
+                    if self._automated:
+                        input_cw = 0
+                    else:
                         input_cw = input("    Correct (0)   OR   Correct and duplicate (1)   OR   Wrong (2)   OR   SKIP (3)?")
-                        input_cw = int(input_cw)
-                    print("         {}".format(input_cw))
+                        try:
+                            input_cw = int(input_cw)
+                        except ValueError:
+                            input_cw = input("    Correct (0)   OR   Correct and duplicate (1)   OR   Wrong (2)   OR   SKIP (3)?")
+                            input_cw = int(input_cw)
+                            print("         {}".format(input_cw))
 
                     if input_cw == 0:
                         self.nc += 1
