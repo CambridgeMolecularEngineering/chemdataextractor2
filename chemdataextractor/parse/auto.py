@@ -238,9 +238,6 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
     @property
     def root(self):
-        if self._specifier is self.model.specifier.parse_expression:
-            return self._root_phrase
-
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
         compound_model = self.model.compound.model_class
@@ -286,8 +283,6 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
         # logic for finding all the elements in any order
         combined_entities = create_entities_list(entities)
         root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
-        self._root_phrase = root_phrase
-        self._specifier = self.model.specifier
         return root_phrase
 
 
@@ -295,9 +290,6 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
     """ Additions for automated parsing of tables"""
     @property
     def root(self):
-        if self._specifier is self.model.specifier.parse_expression:
-            return self._root_phrase
-
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
         compound_model = self.model.compound.model_class
@@ -341,6 +333,4 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
         # logic for finding all the elements in any order
         combined_entities = create_entities_list(entities)
         root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
-        self._root_phrase = root_phrase
-        self._specifier = self.model.specifier
         return root_phrase
