@@ -486,7 +486,10 @@ def _find_powers(units_list):
         # Look for strings involving numbers.
         found_power = re.search('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?', element)
         if found_power is not None:
-            power = power * float(sum(Fraction(s) for s in found_power.group(0).split()))
+            try:
+                power = power * float(sum(Fraction(s) for s in found_power.group(0).split()))
+            except ZeroDivisionError:
+                return None
             element = re.split(found_power.group(0), element)[0]
         powers.append((units_list[i][0], element, power, units_list[i][2]))
         # Reset base_power at the start of a bracket, as that's handled by _remove_brackets
