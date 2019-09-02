@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Units and models for charge.
+Units and models for electric potential
 
-Batuhan Yildirim (by256@cam.ac.uk)
+Juraj Mavračić <jm2111@cam.ac.uk>
 
 """
 
@@ -14,8 +14,8 @@ from __future__ import unicode_literals
 from .quantity_model import QuantityModel
 from .unit import Unit
 from .dimension import Dimension
-from.current import ElectricalCurrent
-from .time import Time
+from .charge import Charge
+from .energy import Energy
 from ...parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 from ...parse.actions import merge, join
 import logging
@@ -23,23 +23,21 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Charge(Dimension):
-
-    constituent_dimensions = ElectricalCurrent() * Time()
-
-
-class ChargeModel(QuantityModel):
-
-    dimensions = Charge()
+class ElectricPotential(Dimension):
+    constituent_dimensions = Energy() / Charge()
 
 
-class ChargeUnit(Unit):
+class ElectricPotentialModel(QuantityModel):
+    dimensions = ElectricPotential()
+
+
+class ElectricPotentialUnit(Unit):
 
     def __init__(self, magnitude=0.0, powers=None):
-        super(ChargeUnit, self).__init__(Charge(), magnitude, powers)
+        super(ElectricPotentialUnit, self).__init__(ElectricPotential(), magnitude, powers)
 
 
-class Coulomb(ChargeUnit):
+class Volt(ElectricPotentialUnit):
 
     def convert_value_to_standard(self, value):
         return value
@@ -54,6 +52,6 @@ class Coulomb(ChargeUnit):
         return error
 
 
-units_dict = {R('(C|c)(oulomb(s)?)?', group=0): Coulomb}
-Charge.units_dict.update(units_dict)
-Charge.standard_units = Coulomb()
+units_dict = {R('(V|v)(olt(s)?)?', group=0): Volt}
+ElectricPotential.units_dict.update(units_dict)
+ElectricPotential.standard_units = Volt()

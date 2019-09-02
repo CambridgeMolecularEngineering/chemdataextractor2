@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Units and models for charge.
+Units and models for a ratio (percentage).
 
-Batuhan Yildirim (by256@cam.ac.uk)
+.. codeauthor:: Juraj Mavračić <jm2111@cam.ac.uk>
 
 """
 
@@ -11,35 +11,34 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging
+
 from .quantity_model import QuantityModel
 from .unit import Unit
 from .dimension import Dimension
-from.current import ElectricalCurrent
-from .time import Time
 from ...parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 from ...parse.actions import merge, join
-import logging
 
 log = logging.getLogger(__name__)
 
 
-class Charge(Dimension):
-
-    constituent_dimensions = ElectricalCurrent() * Time()
-
-
-class ChargeModel(QuantityModel):
-
-    dimensions = Charge()
+class Ratio(Dimension):
+    pass
 
 
-class ChargeUnit(Unit):
+class RatioModel(QuantityModel):
+    dimensions = Ratio()
 
+
+class RatioUnit(Unit):
     def __init__(self, magnitude=0.0, powers=None):
-        super(ChargeUnit, self).__init__(Charge(), magnitude, powers)
+        super(RatioUnit, self).__init__(Ratio(), magnitude, powers)
 
 
-class Coulomb(ChargeUnit):
+class Percent(RatioUnit):
+    """
+    Class for percents.
+    """
 
     def convert_value_to_standard(self, value):
         return value
@@ -54,6 +53,7 @@ class Coulomb(ChargeUnit):
         return error
 
 
-units_dict = {R('(C|c)(oulomb(s)?)?', group=0): Coulomb}
-Charge.units_dict.update(units_dict)
-Charge.standard_units = Coulomb()
+units_dict = {R('%', group=0): Percent}
+Ratio.units_dict = units_dict
+Ratio.standard_units = Percent()
+
