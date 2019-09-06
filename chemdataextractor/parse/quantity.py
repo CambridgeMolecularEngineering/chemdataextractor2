@@ -32,16 +32,28 @@ magnitudes_dict = {R('c(enti)?', group=0): -2.,
                   R('n(ano)?', group=0): -9.,
                   R('p(ico)?', group=0): -12.}
 
+# A regex pattern to match a number which can potentially have a decimal point and numbers after it, e.g. 123.4
 _number_pattern = re.compile('(\d+\.?(?:\d+)?)')
+# A regex pattern to match a number which can potentially have a decimal point and also a minus sign, e.g. -123.4
 _negative_number_pattern = re.compile('(-?\d+\.?(?:\d+)?)')
+# A regex pattern to match simple numbers (i.e. those without a decimal point), e.g. 123
 _simple_number_pattern = re.compile('(\d+(?!\d+))')
+# A regex pattern to match a number with an error attached to it, e.g. 123.4±5
 _error_pattern = re.compile('(\d+\.?(?:\d+)?)|(±)')
+# A regex pattern to match a potentially negative number (potentially with numbers below the decimal point) in a fraction, e.g. -123.4/5
 _fraction_or_decimal_pattern = re.compile('-?\d\d*(\.\d\d*)?(/?-?\d\d*(\.\d\d*)?)?')
+# A regex pattern to match a forward slash (/) that is not followed by a digit. Used to disambiguate between units to the power of fractions and
+# units divided by other units.
 _unit_fraction_pattern = re.compile('(/[^\d])')
+# A regex pattern to match either opening or closing brackets
 _brackets_pattern = re.compile('(\()|(\))')
+# A regex pattern to match forward slashes
 _slash_pattern = re.compile('/')
+# A regex pattern to match a closing bracket
 _end_bracket_pattern = re.compile('\)\w*')
+# A regex pattern to match an opening bracket
 _open_bracket_pattern = re.compile('/\(')
+# A regex pattern to match a unit being divided by another
 _division_pattern = re.compile('[/]\D*')
 
 
