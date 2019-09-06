@@ -14,11 +14,13 @@ from abc import ABCMeta
 from collections import MutableSequence
 import json
 import logging
+from pprint import pprint
 
 import six
 
 from ..utils import python_2_unicode_compatible
-from ..parse.elements import Any, W
+from ..parse.elements import Any, W, I
+from ..parse.auto import AutoSentenceParser, AutoTableParser
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class BaseType(six.with_metaclass(ABCMeta)):
     # This is assigned by ModelMeta to match the attribute on the Model
     name = None
 
-    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None, updatable=False):
+    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None, updatable=False, binding=False):
         """
 
         :param default: (Optional) The default value for this field if none is set.
@@ -37,6 +39,7 @@ class BaseType(six.with_metaclass(ABCMeta)):
         :param bool contextual: (Optional) Whether this value is contextual. Default False.
         :param BaseParserElement parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement. Default None.
         :param bool updatable: (Optional) Whether the parse_expression can be changed by the document as parsing occurs. Default False
+        :param bool binding: (Optional) If this option is set to True, any submodels that have an attribute with the same name must have the same value for this attribute
         """
         self.default = copy.deepcopy(default)
         self.null = null
@@ -44,12 +47,17 @@ class BaseType(six.with_metaclass(ABCMeta)):
         self.contextual = contextual
         self.parse_expression = parse_expression
         self.updatable = updatable
+        self.binding = binding
         if self.parse_expression is None and self.updatable:
             print('No parse_expression supplied but updatable set as True for ', type(self))
             print('updatable refers to whether parse_expression can be changed by the document as parsing occurs. Setting updatable to False.')
             self.updatable = False
-        if updatable:
-            self._default_parse_expression = copy.copy(parse_expression)
+        self.parse_expression = copy.copy(parse_expression)
+        self._default_parse_expression = parse_expression
+        # when a record is created from the table, this will be filled with the row/col header cateogry strings
+        # which helps merging based on same row/column category
+        self.table_row_categories = None
+        self.table_col_categories = None
 
     def reset(self):
         """
@@ -201,8 +209,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     """"""
 
     fields = {}
-    parsers = []
+    parsers = [AutoSentenceParser(), AutoTableParser()]
     specifier = None
+    _updated = False
 
     def __init__(self, **raw_data):
         """"""
@@ -213,6 +222,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         for key, field in six.iteritems(self.fields):
             if key not in raw_data:
                 setattr(self, key, copy.copy(field.default))
+        self._record_method = None
+        self.was_updated = self._updated
 
     @property
     def is_unidentified(self):
@@ -284,9 +295,10 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         for key, field in six.iteritems(cls.fields):
             if cls.fields[key].updatable:
                 cls.fields[key].reset()
+                cls._updated = False
 
     @classmethod
-    def update(cls, definitions):
+    def update(cls, definitions, strict=True):
         """Update this Element's updatable attributes with new information from definitions
 
         Arguments:
@@ -299,8 +311,23 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                     matches = [i for i in cls.fields[field].parse_expression.scan(definition['tokens'])]
                     # print(matches)
                     if any(matches):
-                        cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                        cls._updated = True
+                        if strict:
+                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                        else:
+                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | I(str(definition['specifier']))
         return
+
+    @property
+    def updated(self):
+        """
+        True/False dependent on if a specifier within the model was updated.
+        """
+        for field_name, field in six.iteritems(self.fields):
+            if hasattr(field, 'model_class'):
+                if hasattr(self[field_name], 'updated') and self[field_name].was_updated:
+                    return True
+        return self.was_updated
 
     def keys(self):
         return list(iter(self))
@@ -350,17 +377,42 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         :return: True if all fields have been found, False if not.
         :rtype: bool
         """
+        return self._required_fulfilled(strict=True)
+
+    @property
+    def noncontextual_required_fulfilled(self):
+        """
+        Whether all the non-contextual required fields have been extracted.
+
+        :return: True if all fields have been found, False if not.
+        :rtype: bool
+        """
+        return self._required_fulfilled(strict=False)
+
+    def _required_fulfilled(self, strict):
         for field_name, field in six.iteritems(self.fields):
             if hasattr(field, 'model_class'):
                 if self[field_name] == field.default \
                    and field.required:
-                    return False
+
+                    if not strict and field.contextual:
+                        pass
+                    else:
+                        return False
                 if field.required and hasattr(self[field_name], 'required_fulfilled') and \
                    not self[field_name].required_fulfilled:
-                    log.debug('Required unfulfilled')
-                    return False
+
+                    if not strict and field.contextual:
+                        pass
+                    else:
+                        log.debug('Required unfulfilled')
+                        return False
             elif field.required and self[field_name] == field.default:
-                return False
+                # print(self.serialize(), field_name, "did not exist")
+                if not strict and field.contextual:
+                    pass
+                else:
+                    return False
         return True
 
     def serialize(self, primitive=False):
@@ -382,6 +434,63 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     def to_json(self, *args, **kwargs):
         """Convert Model to JSON."""
         return json.dumps(self.serialize(primitive=True), *args, **kwargs)
+
+    def is_superset(self, other):
+        """
+        Whether this model instance is a 'superset' of the other model instance.
+
+        A model instance is a 'superset' of another if it satisfies the following conditions:
+
+        - The model instances are of the same type
+
+        - For each of the attributes of the model instances, either:
+
+            - This instance has more information, or
+
+            - Both instances have the same information
+
+        :param other: The other model instance to compare with this model instance
+        :type other: BaseModel
+        :return: Whether this model instance is a superset of the other model instance
+        :rtype: bool
+        """
+        if type(self) != type(other):
+            return False
+        for field_name, field in six.iteritems(self.fields):
+            # Method works recursively so it works with nested models
+            if hasattr(field, 'model_class'):
+                if self[field_name] is None:
+                    if other[field_name] is not None:
+                        return False
+                elif other[field_name] is None:
+                    pass
+                elif not self[field_name].is_superset(other[field_name]):
+                    return False
+            else:
+                if other[field_name] is not None and self[field_name] != other[field_name]:
+                    return False
+        return True
+
+    def is_subset(self, other):
+        """
+        Whether this model instance is a 'subset' of the other model instance.
+
+        A model instance is a 'subset' of another if it satisfies the following conditions:
+
+        - The model instances are of the same type
+
+        - For each of the attributes of the model instances, either:
+
+            - The other instance has more information, or
+
+            - Both instances have the same information
+
+        :param other: The other model instance to compare with this model instance
+        :type other: BaseModel
+        :return: Whether this model instance is a subset of the other model instance
+        :rtype: bool
+        """
+        return other.is_superset(self)
 
     def merge_contextual(self, other):
         """
@@ -406,33 +515,33 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
         log.debug(self.serialize())
         log.debug(other.serialize())
+        did_merge = False
         if self.contextual_fulfilled:
             return self
-        if type(other) == type(self):
-            # Check if the other seems to be describing the same thing as self.
-            match = True
-            for field_name, field in six.iteritems(self.fields):
-                if (self[field_name] is not None
-                   and other[field_name] is not None
-                   and self[field_name] != other[field_name]):
-                    match = False
-                    break
-            if match:
+        if self._binding_compatible(other):
+            if type(self) != type(other):
+                for field_name, field in six.iteritems(self.fields):
+                    if hasattr(field, 'model_class') and isinstance(other, field.model_class):
+                        # print('model class case activated')
+                        log.debug('model class case')
+                        if self[field_name] is not None and not self[field_name].contextual_fulfilled:
+                            if self[field_name].merge_contextual(other):
+                                did_merge = True
+                        elif (field.contextual and self[field_name] is None
+                              and other is not None):
+                            log.debug(field_name)
+                            self[field_name] = copy.copy(other)
+                            did_merge = True
+            elif self._compatible(other):
                 for field_name, field in six.iteritems(self.fields):
                     if (field.contextual
                        and self[field_name] is None
                        and other.get(field_name, None) is not None):
                         self[field_name] = other[field_name]
-        else:
-            for field_name, field in six.iteritems(self.fields):
-                if hasattr(field, 'model_class') and isinstance(other, field.model_class):
-                    log.debug('model class case')
-                    if self[field_name] is not None and not self[field_name].contextual_fulfilled:
-                        self[field_name] = self[field_name].merge_contextual(other)
-                    elif field.contextual and self[field_name] is None:
-                        log.debug(field_name)
-                        self[field_name] = copy.copy(other)
-        return self
+                        did_merge = True
+        if did_merge:
+            self._consolidate_binding()
+        return did_merge
 
     def merge_all(self, other):
         """
@@ -451,6 +560,32 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
         log.debug(self.serialize())
         log.debug(other.serialize())
+        did_merge = False
+        if self._binding_compatible(other):
+            if type(self) != type(other):
+                for field_name, field in six.iteritems(self.fields):
+                    if hasattr(field, 'model_class') and isinstance(other, field.model_class):
+                        log.debug('model class case')
+                        if self[field_name] is not None:
+                            if self[field_name].merge_all(other):
+                                did_merge = True
+                        elif (self[field_name] is None
+                              and other is not None):
+                            log.debug(field_name)
+                            self[field_name] = copy.copy(other)
+                            did_merge = True
+            elif self._compatible(other):
+                for field_name, field in six.iteritems(self.fields):
+                    if (self[field_name] is None
+                      and other.get(field_name, None) is not None):
+                        did_merge = True
+                        self[field_name] = other[field_name]
+        if did_merge:
+            self._consolidate_binding()
+        return did_merge
+
+    def _compatible(self, other):
+        match = False
         if type(other) == type(self):
             # Check if the other seems to be describing the same thing as self.
             match = True
@@ -460,22 +595,123 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                   and self[field_name] != other[field_name]):
                     match = False
                     break
-            if match:
-                for field_name, field in six.iteritems(self.fields):
-                    if (self[field_name] is None
-                      and other.get(field_name, None) is not None):
-                        self[field_name] = other[field_name]
+        return match
+
+    @classmethod
+    def flatten(cls):
+        """
+        A set of all models that are associated with this model.
+        For example, if we have a model like the following with multiple submodels:
+
+        .. code-block:: python
+
+            class A(BaseModel):
+                pass
+
+            class B(BaseModel):
+                a = ModelType(A)
+
+            class C(BaseModel):
+                b = ModelType(B)
+
+        then `C.flatten()` would give the result::
+
+            set(C, B, A)
+
+        :return: The set of all models associated with this model.
+        :rtype: set(BaseModel)
+        """
+        model_set = {cls}
+        for field_name, field in six.iteritems(cls.fields):
+            if hasattr(field, 'model_class'):
+                model_set.update(field.model_class.flatten())
+        log.debug(model_set)
+        return model_set
+
+    @property
+    def binding_properties(self):
+        """
+        A dictionary of all binding properties in this model, and their values.
+
+        .. note::
+
+            This function only returns those properties that are immediately binding for this
+            model, and not for any submodels.
+
+        :returns: A dictionary with the names of all binding fields as the keys and their values as the values.
+        :rtype: {str: Any}
+        """
+        binding_properties = {}
+        for field_name, field in six.iteritems(self.fields):
+            if field.binding and self[field_name] is not None:
+                binding_properties[field_name] = self[field_name]
+        return binding_properties
+
+    def _binding_compatible(self, other, binding_properties=None):
+        """
+        Whether two models are compatible in terms of their binding properties.
+        For example, if this model had a compound associated with it and the field was binding,
+        a model that is associated with another compound will not be merged in.
+
+        :param BaseModel other: The other model that will be checked for compatibility with the binding properties in this model
+        :param {str: Any} binding_properties: Any binding properties from a model that contains this model
+        :returns: Whether the two models are compatible in terms of their binding properties.
+        :rtype: bool
+        """
+        if binding_properties is None:
+            binding_properties = self.binding_properties
+        if not binding_properties:
+            return True
+
+        if type(other) == type(self):
+            for field_name, field in six.iteritems(binding_properties):
+                if other[field_name] != binding_properties[field_name]:
+                    return False
+        elif other is None:
+            pass
         else:
-            for field_name, field in six.iteritems(self.fields):
-                if hasattr(field, 'model_class') and isinstance(other, field.model_class):
-                    log.debug('model class case')
-                    if self[field_name] is not None:
-                        self[field_name] = self[field_name].merge_all(
-                            other)
-                    elif self[field_name] is None:
-                        log.debug(field_name)
-                        self[field_name] = copy.copy(other)
-        return self
+            for field_name, field in six.iteritems(other.fields):
+                if field_name in binding_properties.keys():
+                    if other[field_name] is not None:
+                        if not (binding_properties[field_name].is_superset(other[field_name]) or
+                                binding_properties[field_name].is_subset(other[field_name])):
+                            return False
+                elif hasattr(field, 'model_class'):
+                    if not self._binding_compatible(other[field_name]):
+                        return False
+        return True
+
+    def _consolidate_binding(self, binding_properties=None):
+        if binding_properties is None:
+            binding_properties = self.binding_properties
+        if binding_properties == {}:
+            return
+        for field_name, field in six.iteritems(self.fields):
+            if field_name in binding_properties.keys():
+                self[field_name] = binding_properties[field_name]
+            elif hasattr(field, 'model_class') and self[field_name] is not None:
+                self[field_name]._consolidate_binding(binding_properties)
+
+
+    @property
+    def record_method(self):
+        """
+        Description (string) of which method was used to create this record.
+        """
+        return self._record_method
+
+    @record_method.setter
+    def record_method(self, text):
+        if not isinstance(text, str):
+            raise TypeError("Record method description is not string.")
+        self._record_method = text
+
+    def _clean(self):
+        for field_name, field in six.iteritems(self.fields):
+            if hasattr(field, 'model_class') and self[field_name] is not None:
+                self[field_name]._clean()
+                if not self[field_name].required_fulfilled:
+                    self[field_name] = field.default
 
 
 @python_2_unicode_compatible
@@ -520,3 +756,43 @@ class ModelList(MutableSequence):
         """Convert ModelList to JSON."""
         return json.dumps(self.serialize(), *args, **kwargs)
 
+    def remove_subsets(self, strict=False):
+        """
+        Remove any subsets contained within the ModelList.
+
+        :param bool strict: Default True. Whether only strict subsets are removed. When this is
+        False, duplicates are removed too.
+        """
+        # A dictionary with the type of each element as the key, and the element itself as the value
+        typed_list = {}
+        for element in self.models:
+            if type(element) in typed_list.keys():
+                typed_list[type(element)].append(element)
+            else:
+                typed_list[type(element)] = [element]
+        new_models = []
+        for _, elements in six.iteritems(typed_list):
+            i = 0
+            length = len(elements)
+            to_remove = []
+            # Iterate through the list of elements and if any subsets are found, add the
+            # indices to a list of values to remove
+            while i < length:
+                j = 0
+                while j < length:
+                    if i != j and elements[i].is_subset(elements[j]) and j not in to_remove:
+                        if strict and elements[i] == elements[j]:
+                            # Do not remove the element if it is not a strict subset depending on the value of strict
+                            pass
+                        else:
+                            to_remove.append(i)
+                    j += 1
+                i += 1
+
+            # Append any values that are not in the list of objects to remove
+            i = 0
+            while i < length:
+                if i not in to_remove:
+                    new_models.append(elements[i])
+                i += 1
+        self.models = new_models

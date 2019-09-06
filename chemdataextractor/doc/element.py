@@ -113,21 +113,13 @@ class BaseElement(six.with_metaclass(ABCMeta)):
             models = set()
             log.debug(self.models)
             for model in self.models:
-                models.update(self._flatten_model(model))
+                models.update(model.flatten())
             self._streamlined_models_list = sorted(list(models),
                                                    key=operator.attrgetter('__name__'))
         for model in self._streamlined_models_list:
             for parser in model.parsers:
                 parser.model = model
         return self._streamlined_models_list
-
-    def _flatten_model(self, model):
-        model_set = {model}
-        for field_name, field in six.iteritems(model.fields):
-            if hasattr(field, 'model_class'):
-                model_set.update(self._flatten_model(field.model_class))
-        log.debug(model_set)
-        return model_set
 
     def to_json(self, *args, **kwargs):
         """Convert element to JSON string. The content of the JSON will be equivalent
@@ -225,6 +217,10 @@ class CaptionedElement(BaseElement):
         """
 
         return self.caption.definitions
+
+    @property
+    def chemical_definitions(self):
+        return self.caption.chemical_definitions
 
     @property
     def models(self):

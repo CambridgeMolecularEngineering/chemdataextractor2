@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from abc import abstractproperty, abstractmethod
 import logging
 import re
 from lxml import etree
@@ -18,11 +19,12 @@ from .actions import join, fix_whitespace
 from .common import roman_numeral, cc, nnp, hyph, nns, nn, cd, ls, optdelim, bcm, icm, rbrct, lbrct, sym, jj, hyphen, quote, \
     dt, delim
 from .base import BaseSentenceParser, BaseTableParser
-from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any
+from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any, SkipTo
 from lxml import etree
 
 log = logging.getLogger(__name__)
 
+joining_characters = R('^\@|\/$')
 
 alphanumeric = R('^(d-)?(\d{1,2}[A-Za-z]{1,2}[′″‴‶‷⁗]?)(-d)?$')
 
@@ -50,7 +52,7 @@ synthesis_of = ((I('synthesis') | I('preparation') | I('production') | I('data')
 
 to_give = (I('to') + (I('give') | I('yield') | I('afford')) | I('afforded') | I('affording') | I('yielded'))('roles').add_action(join)
 
-label_blacklist = R('^(31P|[12]H|[23]D|15N|14C|[4567890]\d+)$')
+label_blacklist = R('^(wR.*|R\d|31P|[12]H|[23]D|15N|14C|[4567890]\d+|2A)$')
 
 prefixed_label = R('^(cis|trans)-((d-)?(\d{1,2}[A-Za-z]{0,2}[′″‴‶‷⁗]?)(-d)?|[LS]\d\d?)$')
 
@@ -77,7 +79,7 @@ doping_label_1 = (doping_value + R('^\<$') + doped_chemical_identifier +
                   R('^\<$') + doping_value)
 doping_label_2 = (
     doped_chemical_identifier
-    + W('=') 
+    + W('=')
     + OneOrMore(doping_range | doping_value | R('^[,:;\.]$') | I('or') | I('and')))
 
 doped_chemical_label = Group((doping_label_1 | doping_label_2)('labels')).add_action(join)
@@ -134,7 +136,7 @@ amino_acid_name = (
 #: Chemical formula patterns, updated to include Inorganic compound formulae
 formula = (
     R('^C\(?\d{1,3}\)?(([HNOP]|Cl)\(?\d\d?\)?)+(\(?\d?[\+\-]\d?\)?)?$') |
-    R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[r][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr\d]|R[abefghnu]|S[bcegimnr(\d\.?)]|T[abehil\d]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') |
+    R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[rn][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr\d]|R[abefghnu]|S[bcegimnr(\d\.?)]|T[abehil\d]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') |
     R('^((\(?\d{2,3}\)?)?(Fe|Ti|Mg|Ru|Cd|Se)\(?(\d\d?|[IV]+)?\)?((O|Hg)\(?\d?\d?\)?)?)+(\(?\d?[\+\-]\d?\)?)?$') |
     R('(NaOH|CaCl\d?\d?|EtOH|EtAc|MeOH|CF\d|C\d?\d?H\d\d?)+$') |
     R('(NO\d|BH4|Ca\(2\+\)|Ti\(0\)2|\(CH3\)2CHOH|\(CH3\)2CO|\(CH3\)2NCOH|C2H5CN|CH2ClCH2Cl|CH3C6H5|CH3CN|CH3CO2H|CH3COCH3|CH3COOH|CH3NHCOH|CH3Ph|CH3SOCH3|Cl2CH2|ClCH2CH2Cl)') |
@@ -264,10 +266,13 @@ other_solvent = (
 
 solvent_name_options = (nmr_solvent | solvent_formula | other_solvent)
 solvent_name = (Optional(include_prefix) + solvent_name_options)('names').add_action(join).add_action(fix_whitespace)
-
-chemical_name_options = (
+chemical_name_blacklist = (I('mmc'))
+proper_chemical_name_options = Not(chemical_name_blacklist) + (
     cm | element_name | element_symbol | registry_number | amino_acid | amino_acid_name | formula
 )
+
+chemical_name_options = proper_chemical_name_options + ZeroOrMore(joining_characters + proper_chemical_name_options)
+
 chemical_name = (Optional(include_prefix) + chemical_name_options)('names').add_action(join).add_action(fix_whitespace)
 
 # Label phrase structures
@@ -304,7 +309,6 @@ name_with_informal_label = (chemical_name + OneOrMore(delim | I('with') | I('for
 
 cem = (name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label)
 
-
 cem_phrase = Group(cem)('cem_phrase').add_action(fix_whitespace)
 
 r_equals = R('^[R]$') + W('=') + OneOrMore(Not(rbrct) + (bcm | icm | nn | nnp | nns | hyph | cd | ls))
@@ -329,12 +333,13 @@ compound_heading_style6 = doped_chemical_label
 compound_heading_phrase = Group(compound_heading_style6 | compound_heading_style5 | compound_heading_style1 | compound_heading_style2 | compound_heading_style3 | compound_heading_style4 | chemical_label)('compound')
 
 names_only = Group((solvent_name | chemical_name
-              | likely_abbreviation | lenient_name
+              | likely_abbreviation
               | (Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and'))).add_action(join).add_action(fix_whitespace)))))('compound')
 
 labels_only = Group((doped_chemical_label | informal_chemical_label | numeric | R('^([A-Z]\d{1,3})$') | strict_chemical_label))('compound')
 
 roles_only = Group((label_type | synthesis_of | to_give))('compound')
+
 
 def standardize_role(role):
     """Convert role text into standardized form."""
@@ -347,8 +352,27 @@ def standardize_role(role):
 # TODO jm2111, Problems here! The parsers don't have a parse method anymore. Ruins parsing of captions.
 class CompoundParser(BaseSentenceParser):
     """Chemical name possibly with an associated label."""
+    _label = None
+    _root_phrase = None
 
-    root = cem_phrase
+    @property
+    def root(self):
+        label = self.model.labels.parse_expression('labels')
+        label_name_cem = (label + optdelim + chemical_name)('compound')
+
+        label_before_name = Optional(synthesis_of | to_give) + label_type + optdelim + label_name_cem + ZeroOrMore(optdelim + cc + optdelim + label_name_cem)
+
+        name_with_optional_bracketed_label = (Optional(synthesis_of | to_give) + chemical_name + Optional(lbrct + Optional(labelled_as + optquote) + (label) + optquote + rbrct))('compound')
+
+        # Very lenient name and label match, with format like "name (Compound 3)"
+        lenient_name_with_bracketed_label = (Start() + Optional(synthesis_of) + lenient_name + lbrct + label_type.hide() + label + rbrct)('compound')
+
+        # Chemical name with a doped label after
+        name_with_doped_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
+
+        # Chemical name with an informal label after
+        name_with_informal_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
+        return Group(lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label | name_with_informal_label | name_with_doped_label)('cem_phrase')
 
     def interpret(self, result, start, end):
         # TODO: Parse label_type into label model object
@@ -358,14 +382,23 @@ class CompoundParser(BaseSentenceParser):
                 labels=cem_el.xpath('./labels/text()'),
                 roles=[standardize_role(r) for r in cem_el.xpath('./roles/text()')]
             )
+            c.record_method = self.__class__.__name__
             yield c
-
 
 
 class ChemicalLabelParser(BaseSentenceParser):
     """Chemical label occurrences with no associated name."""
+    _label = None
+    _root_phrase = None
 
-    root = chemical_label_phrase
+    @property
+    def root(self):
+        label = self.model.labels.parse_expression('labels')
+        if self._label is label:
+            return self._root_phrase
+        self._root_phrase = (chemical_label_phrase | Group(label)('chemical_label_phrase'))
+        self._label = label
+        return self._root_phrase
 
     def interpret(self, result, start, end):
         roles = [standardize_role(r) for r in result.xpath('./roles/text()')]
@@ -392,3 +425,51 @@ class CompoundHeadingParser(BaseSentenceParser):
                 labels=labels,
                 roles=roles
             )
+
+
+class CompoundTableParser(BaseTableParser):
+    entities = (cem | chemical_label | lenient_chemical_label) | ((I('Formula') | I('Compound')).add_action(join))('specifier')
+    root = OneOrMore(entities + Optional(SkipTo(entities)))('root_phrase')
+
+    @property
+    def root(self):
+        # is always found, our models currently rely on the compound
+        chem_name = (cem | chemical_label | lenient_chemical_label)
+        compound_model = self.model
+        labels = compound_model.labels.parse_expression('labels')
+        entities = [labels]
+
+        specifier = (I('Formula') | I('Compound')).add_action(join)('specifier')
+        entities.append(specifier)
+
+        # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
+        for field in self.model.fields:
+            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'specifier']:
+                if self.model.__getattribute__(self.model, field).parse_expression is not None:
+                    entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
+
+        # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
+        entities.append(chem_name)
+
+        # logic for finding all the elements in any order
+
+        combined_entities = entities[0]
+        for entity in entities[1:]:
+            combined_entities = (combined_entities | entity)
+        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
+        self._root_phrase = root_phrase
+        self._specifier = self.model.specifier
+        return root_phrase
+
+    def interpret(self, result, start, end):
+        # TODO: Parse label_type into label model object
+        if result.xpath('./specifier/text()') and \
+        (result.xpath('./names/names/text()') or result.xpath('./labels/text()')):
+            c = self.model(
+                names=result.xpath('./names/names/text()'),
+                labels=result.xpath('./labels/text()'),
+                roles=[standardize_role(r) for r in result.xpath('./roles/text()')]
+            )
+            if c is not None:
+                c.record_method = self.__class__.__name__
+                yield c

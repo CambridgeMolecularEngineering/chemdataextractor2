@@ -24,12 +24,11 @@ import logging
 import six
 import copy
 
-from .common import lbrct, rbrct
 from .cem import cem, chemical_label, lenient_chemical_label
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
 from ..utils import first
-from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain
+from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain, lbrct, rbrct
 from .base import BaseSentenceParser, BaseParser, BaseTableParser
 
 import xml.etree.ElementTree as etree
@@ -48,21 +47,44 @@ def construct_unit_element(dimensions):
     """
     if not dimensions or not dimensions.units_dict:
         return None
+    # Handle all the magnitudes
     units_regex = '^(('
     for element in magnitudes_dict.keys():
         units_regex += '(' + element.pattern + ')|'
     units_regex = units_regex[:-1]
     units_regex += ')?'
     units_regex += '('
+    # Case where we have a token that's just brackets
+    units_regex += '((\(|\[))|((\)|\]))|\-|'
+    # Handle all the units
     for element in dimensions.units_dict:
         units_regex += '(' + element.pattern + ')|'
     units_regex += '(\/)'
+    # Case when we have powers, or one or more units
     units_regex2 = units_regex + '|([\+\-–−]?\d+(\.\d+)?)'
     units_regex2 += '))+$'
     units_regex += '))+'
     units_regex += (units_regex2[1:-2] + '*')
     units_regex += '$'
     return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex) | R(pattern=units_regex2))).add_action(merge)
+
+
+def construct_category_element(category_dict):
+    """
+    Construct an element for detecting categories.
+
+    :param Category category: The Category to look for.
+    :rtype: BaseParserElement or None
+    """
+    category_regex = '^'
+    if not category_dict:
+        return None
+    # Handle all the units
+    for element in category_dict:
+        category_regex += '(' + element.pattern + ')|'
+    category_regex = category_regex[:-1]
+    category_regex += '$'
+    return (R(pattern=category_regex))('raw_value').add_action(merge)
 
 
 def match_dimensions_of(model):
@@ -79,6 +101,7 @@ def match_dimensions_of(model):
             extract_units(result[0].text, model.dimensions, strict=True)
             return True
         except TypeError as e:
+            log.debug(e)
             return False
     return check_match
 
@@ -108,6 +131,7 @@ class BaseAutoParser(BaseParser):
         self._condition_property = None
 
     def interpret(self, result, start, end):
+        # print(etree.tostring(result))
         if result is None:
             return
         requirements = True
@@ -119,7 +143,10 @@ class BaseAutoParser(BaseParser):
             log.debug(raw_value)
             if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
                 requirements = False
-            value = self.extract_value(raw_value)
+            if raw_value != 'NoValue':
+                value = self.extract_value(raw_value)
+            else:
+                value = None
             error = self.extract_error(raw_value)
             property_entities.update({"raw_value": raw_value,
                                       "value": value,
@@ -132,18 +159,23 @@ class BaseAutoParser(BaseParser):
             if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
                 requirements = False
             raw_units = first(result.xpath('./raw_units/text()'))
-            value = self.extract_value(raw_value)
+            if raw_value != 'NoValue':
+                value = self.extract_value(raw_value)
+            else:
+                value = None
             error = self.extract_error(raw_value)
             units = None
             try:
                 units = self.extract_units(raw_units, strict=True)
             except TypeError as e:
                 log.debug(e)
+
             property_entities.update({"raw_value": raw_value,
                                       "raw_units": raw_units,
                                       "value": value,
                                       "error": error,
                                       "units": units})
+
         for field_name, field in six.iteritems(self.model.fields):
             if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
                 try:
@@ -159,6 +191,8 @@ class BaseAutoParser(BaseParser):
         model_instance = self.model(**property_entities)
 
         if requirements:
+            # records the parser that was used to generate this record, can be used for evaluation
+            model_instance.record_method = self.__class__.__name__
             yield model_instance
 
     def _get_data(self, field_name, field, result):
@@ -200,6 +234,10 @@ class BaseAutoParser(BaseParser):
 
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
+    def __init__(self, lenient=False):
+        super(AutoSentenceParser, self).__init__()
+        self.lenient = lenient
+
     @property
     def condition_phrase(self):
         # Generalised case of condition_phrase. We go through the fields of the model and
@@ -221,12 +259,11 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
     @property
     def root(self):
-        if self._specifier is self.model.specifier:
-            return self._root_phrase
-
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
-        entities = []
+        compound_model = self.model.compound.model_class
+        labels = compound_model.labels.parse_expression('labels')
+        entities = [labels]
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
@@ -241,7 +278,11 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
             unit_element = Group(
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
             specifier = self.model.specifier.parse_expression('specifier')
-            value_phrase = value_element(unit_element)
+            if self.lenient:
+                value_phrase = (value_element(unit_element) | value_element_plain())
+            else:
+                value_phrase = value_element(unit_element)
+
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -263,8 +304,6 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
         # logic for finding all the elements in any order
         combined_entities = create_entities_list(entities)
         root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
-        self._root_phrase = root_phrase
-        self._specifier = self.model.specifier
         return root_phrase
 
 
@@ -272,17 +311,17 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
     """ Additions for automated parsing of tables"""
     @property
     def root(self):
-        if self._specifier is self.model.specifier:
-            return self._root_phrase
-
         # is always found, our models currently rely on the compound
         chem_name = (cem | chemical_label | lenient_chemical_label)
-        entities = []
+        compound_model = self.model.compound.model_class
+        labels = compound_model.labels.parse_expression('labels')
+        entities = [labels]
+        no_value_element = W('NoValue')('raw_value')
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
             specifier = self.model.specifier.parse_expression('specifier')
-            value_phrase = value_element_plain()
+            value_phrase = value_element_plain() | no_value_element
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -291,9 +330,9 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
             # print(self.model, self.model.dimensions)
             unit_element = Group(
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
-            specifier = self.model.specifier.parse_expression('specifier') + Optional(lbrct) + Optional(W('/')) + Optional(
-                unit_element) + Optional(rbrct)
-            value_phrase = (value_element_plain() + Optional(unit_element))
+            specifier = self.model.specifier.parse_expression('specifier') + Optional(W('/')) + Optional(
+                unit_element)
+            value_phrase = ((value_element_plain() | no_value_element) + Optional(unit_element))
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -315,6 +354,4 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
         # logic for finding all the elements in any order
         combined_entities = create_entities_list(entities)
         root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
-        self._root_phrase = root_phrase
-        self._specifier = self.model.specifier
         return root_phrase

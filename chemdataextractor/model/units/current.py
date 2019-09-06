@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.units.temperatures.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Units and models for electrical current.
 
 Batuhan Yildirim (by256@cam.ac.uk)

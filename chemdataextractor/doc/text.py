@@ -12,6 +12,7 @@ from abc import abstractproperty
 import collections
 import logging
 import re
+from pprint import pprint
 
 import six
 
@@ -26,7 +27,8 @@ from ..text import CONTROL_RE
 from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
 from ..parse.definitions import specifier_definition
-from ..parse.cem import chemical_name
+from ..parse.cem import chemical_name, cem_phrase
+from ..parse.quantity import construct_quantity_re
 from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
 
 log = logging.getLogger(__name__)
@@ -124,6 +126,12 @@ class BaseText(BaseElement):
         """
         return
 
+    @abstractproperty
+    def chemical_definitions(self):
+        """A list of all chemical label definitiond
+        """
+        return
+
     def serialize(self):
         """
         Convert self to a dictionary. The key 'type' will contain
@@ -214,8 +222,10 @@ class Text(collections.Sequence, BaseText):
     @memoized_property
     def sentences(self):
         """A list of :class:`Sentence` s that make up this text passage."""
+        return self.sentence_tokenizer.get_sentences(self)
+
+    def _sentences_from_spans(self, spans):
         sents = []
-        spans = self.sentence_tokenizer.span_tokenize(self.text)
         for span in spans:
             sent = Sentence(
                 text=self.text[span[0]:span[1]],
@@ -305,6 +315,13 @@ class Text(collections.Sequence, BaseText):
         Return a list of tagged definitions for each sentence in this text passage
         """
         return [definition for sent in self.sentences for definition in sent.definitions]
+
+    @property
+    def chemical_definitions(self):
+        """
+        Return a list of tagged definitions for each sentence in this text passage
+        """
+        return [definition for sent in self.sentences for definition in sent.chemical_definitions]
 
     @property
     def tagged_tokens(self):
@@ -470,7 +487,9 @@ class Sentence(BaseText):
 
     @memoized_property
     def tokens(self):
-        spans = self.word_tokenizer.span_tokenize(self.text)
+        return self.word_tokenizer.get_word_tokens(self)
+
+    def _tokens_for_spans(self, spans):
         toks = [Token(
             text=self.text[span[0]:span[1]],
             start=span[0] + self.start,
@@ -682,6 +701,35 @@ class Sentence(BaseText):
         return defs
 
     @memoized_property
+    def chemical_definitions(self):
+        """Return a list of chemical entity mentions and their associated label
+        """
+        cem_defs = []
+        tagged_tokens = [(CONTROL_RE.sub('', token), tag) for token, tag in self.tagged_tokens]
+        for result in cem_phrase.scan(tagged_tokens):
+            tree = result[0]
+            start = result[1]
+            end = result[2]
+            name = first(tree.xpath('./compound/names/text()'))
+            label = first(tree.xpath('./compound/labels/text()'))
+            if name and label:
+                cem_def = {
+                    'name': name,
+                    'label': label,
+                    'start': start,
+                    'end': end
+                }
+                cem_defs.append(cem_def)
+        return cem_defs
+        # for record in self.records:
+        #     if isinstance(record, Compound) and record.labels:
+        #         cem_def = {
+        #             'label': record.labels[0]
+        #         }
+        #         cem_defs.append(cem_def)
+        # return cem_defs
+
+    @memoized_property
     def tags(self):
         tags = self.pos_tags
         for i, tag in enumerate(self.ner_tags):
@@ -697,7 +745,11 @@ class Sentence(BaseText):
         """
         return list(zip(self.raw_tokens, self.tags))
 
-    @memoized_property
+    @property
+    def quantity_re(self):
+        return construct_quantity_re(*self._streamlined_models)
+
+    @property
     def records(self):
         """All records found in the object, as a list of :class:`~chemdataextractor.model.base.BaseModel`."""
         records = ModelList()
@@ -772,7 +824,26 @@ class Cell(Sentence):
     # pos_tagger = NoneTagger()
     # ner_tagger = NoneTagger()
 
-    @property
+    def __init__(self, *args, **kwargs):
+        super(Cell, self).__init__(*args, **kwargs)
+        self.data = None
+        self.row_categories = None
+        self.col_categories = None
+
+    @classmethod
+    def from_tdecell(cls, tde_cell, **kwargs):
+        # Have the spacing between the cells contain characters that will never be found
+        # so that the system doesn't become confused because it found some number in the heading
+        # that it confuses as a power for a unit.
+        text = tde_cell[0] + ' sdfkljlk ' + ' '.join(tde_cell[1]) + ' sdfkljlk ' + ' '.join(tde_cell[2])
+        cell = cls(text, **kwargs)
+        cell.data = tde_cell[0]
+        cell.row_categories = tde_cell[1]
+        cell.col_categories = tde_cell[2]
+        # print(cell._streamlined_models, construct_quantity_re(*cell._streamlined_models))
+        return cell
+
+    @memoized_property
     def abbreviation_definitions(self):
         """Empty list. Abbreviation detection is disabled within table cells."""
         return []

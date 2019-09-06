@@ -68,8 +68,8 @@ class TestElsXMLReader(unittest.TestCase):
         fname = 'j.jnoncrysol.2018.02.024.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'elsevier', fname), 'rb')
         d = Document.from_file(f, readers=[ElsevierXmlReader()])
-        table_1 = d.tables[0].category_table
-        expected = [['1500', ['Tm (K)'], ['MD simulations with ReaxFF potential []']], ['1750', ['Tm (K)'], ['MC simulations with ARK parameters []']], ['1775', ['Tm (K)'], ['MD simulations with SW potential []']], ['2.36\u202f×\u202f10', ['γC (K/s)'], ['MD simulations with ReaxFF potential []']], ['4.25\u202f×\u202f10', ['γC (K/s)'], ['MC simulations with ARK parameters []']], ['4.95\u202f×\u202f10', ['γC (K/s)'], ['MD simulations with SW potential []']]]
+        table_1 = d.tables[0].tde_table.category_table
+        expected = [['1500', ['Tm (K)'], ['MD simulations with ReaxFF potential []']], ['1750', ['Tm (K)'], ['MC simulations with ARK parameters []']], ['1775', ['Tm (K)'], ['MD simulations with SW potential []']], ['2.36\u202f×\u202f1011', ['γC (K/s)'], ['MD simulations with ReaxFF potential []']], ['4.25\u202f×\u202f1011', ['γC (K/s)'], ['MC simulations with ARK parameters []']], ['4.95\u202f×\u202f1011', ['γC (K/s)'], ['MD simulations with SW potential []']]]
         self.assertEqual(table_1, expected)
 
 

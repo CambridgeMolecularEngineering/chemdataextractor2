@@ -52,9 +52,10 @@ class Entity(object):
     
     def serialize(self):
         output = current = {}
-        if isinstance(self.tag, tuple):
-            for i, t in enumerate(self.tag):
-                if i == len(self.tag)-1:
+        if '__' in self.tag:
+            tag = [i for i in self.tag.split('__')]
+            for i, t in enumerate(tag):
+                if i == len(tag)-1:
                     current[t] = self.text
                 else:
                     current[t] = {}

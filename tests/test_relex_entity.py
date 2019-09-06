@@ -50,7 +50,7 @@ class TestEntity(unittest.TestCase):
     def test_entity_serialize_2(self):
         """Test that nested Entity objects are correctly serialized
         """
-        entity = Entity('test_entity', ('test_tag', 'test_sub_tag'), I('test'), 0, 10)
+        entity = Entity('test_entity', 'test_tag__test_sub_tag', I('test'), 0, 10)
         expected = {'test_tag': {'test_sub_tag': 'test_entity'}}
         self.assertEqual(entity.serialize(), expected)
     

@@ -93,7 +93,7 @@ class Document(BaseDocument):
         else:
             self.config = Config()
         if 'models' in kwargs.keys():
-            self._models = kwargs['models']
+            self.models = kwargs['models']
         else:
             self._models = []
 
@@ -235,8 +235,13 @@ class Document(BaseDocument):
             # 1. Find any defined entities in the element e.g. "Curie Temperature, Tc"
             # 2. Update the relevant models
             element_definitions = el.definitions
-            for model in el.models:
-                model.update(element_definitions)
+            chemical_defs = el.chemical_definitions
+
+            for model in el._streamlined_models:
+                if hasattr(model, 'is_id_only'):
+                    model.update(chemical_defs)
+                else:
+                    model.update(element_definitions)
 
             el_records = el.records
             # Save the title compound
@@ -404,13 +409,16 @@ class Document(BaseDocument):
         # clean up records
         cleaned_records = ModelList()
         for record in records:
+            record._clean()
             if record.required_fulfilled and record not in cleaned_records:
                 if (self.models and type(record) in self.models) or not self.models:
                     cleaned_records.append(record)
 
+        cleaned_records.remove_subsets()
+
         # Reset updatables
         for el in self.elements:
-            for model in el.models:
+            for model in el._streamlined_models:
                 model.reset_updatables()
 
         # Append contextual records if they've filled required fields
@@ -500,7 +508,7 @@ class Document(BaseDocument):
         A list of all :class:`~chemdataextractor.doc.element.CaptionedElement` elements in this Document.
         """
         return [el for el in self.elements if isinstance(el, CaptionedElement)]
-    
+
     @property
     def metadata(self):
         """Return metadata information

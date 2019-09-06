@@ -14,9 +14,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import unittest
+import re
 
-from chemdataextractor.doc.text import Text
+from chemdataextractor.doc.text import Text, Sentence
 from chemdataextractor.nlp.tokenize import WordTokenizer, ChemWordTokenizer, FineWordTokenizer
+from chemdataextractor.parse import R
+from chemdataextractor.model import QuantityModel
+from chemdataextractor.model.units import Dimension, Unit
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -172,6 +176,12 @@ class TestWordTokenizer(unittest.TestCase):
             [sent.raw_tokens for sent in t.sentences]
         )
 
+    def test_additional_regex(self):
+        sent = Sentence('See if we cansplit this')
+        additional_regex = re.compile('(?P<split>can)split')
+        tokens = self.t.get_word_tokens(sent, additional_regex=[additional_regex])
+        self.assertEqual(['See', 'if', 'we', 'can', 'split', 'this'], [token.text for token in tokens])
+
 
 class TestChemTokenizer(unittest.TestCase):
     """Test the chemistry-aware word tokenizer."""
@@ -180,6 +190,40 @@ class TestChemTokenizer(unittest.TestCase):
 
     def setUp(self):
         self.t = ChemWordTokenizer()
+
+    def test_tokenise_model(self):
+
+        class Pressure(Dimension):
+            pass
+
+        class PressureModel(QuantityModel):
+            dimensions = Pressure()
+
+        class PressureUnit(Unit):
+            def __init__(self, magnitude=0.0, powers=None):
+                super(PressureUnit, self).__init__(Pressure(), magnitude, powers)
+
+        class Pascal(PressureUnit):
+            def convert_value_to_standard(self, value):
+                return value
+
+            def convert_value_from_standard(self, value):
+                return value
+
+            def convert_error_to_standard(self, error):
+                return error
+
+            def convert_error_from_standard(self, error):
+                return error
+
+        units_dict = {R('Pa', group=0): Pascal}
+        Pressure.units_dict = units_dict
+        Pressure.standard_units = Pascal()
+
+        sent = Sentence('The pressure was measured to be 12MPa', models=[PressureModel])
+        tokens = self.t.get_word_tokens(sent)
+        self.assertEqual(['The', 'pressure', 'was', 'measured', 'to', 'be', '12', 'MPa'],
+                         [token.text for token in tokens])
 
     def test_final_full_stop(self):
         """Test the word tokenizer splits off final full stop only."""
@@ -485,7 +529,7 @@ class TestChemTokenizer(unittest.TestCase):
 
     def test_symbols(self):
         self.assertEqual(['2', '+', '2', '=', '4'], self.t.tokenize('2+2=4'))
-        self.assertEqual(['+', '4', '°', 'C'], self.t.tokenize('+4°C'))
+        self.assertEqual(['+', '4', '°C'], self.t.tokenize('+4°C'))
         self.assertEqual(['(', 'H2A', '<-->', 'HA-', '+', 'H+', 'and', 'HA-', '<-->', 'A', '=', '+', 'H+', ')'], self.t.tokenize('(H2A <--> HA- + H+ and HA- <--> A= + H+)'))
         self.assertEqual(['[2+2+2]'], self.t.tokenize('[2+2+2]'))
         self.assertEqual(['95.5', '+/-', '0.2', '%'], self.t.tokenize('95.5 +/- 0.2%'))
@@ -709,8 +753,8 @@ class TestChemTokenizer(unittest.TestCase):
         self.assertEqual(['A', 'volume', 'of', '24', 'cm3', 'was', 'drained', '.'], self.t.tokenize('A volume of 24cm3 was drained.'))
         self.assertEqual(['2', 'M', 'H2SO4', 'was', 'heated', '.'], self.t.tokenize('2M H2SO4 was heated.'))
         self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°', 'C'], self.t.tokenize('The spectrum was recorded at 10° C'))
-        self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°', 'C'], self.t.tokenize('The spectrum was recorded at 10°C'))
-        self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°', 'C'], self.t.tokenize('The spectrum was recorded at 10 °C'))
+        self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°C'], self.t.tokenize('The spectrum was recorded at 10°C'))
+        self.assertEqual(['The', 'spectrum', 'was', 'recorded', 'at', '10', '°C'], self.t.tokenize('The spectrum was recorded at 10 °C'))
         self.assertEqual(['Added', '3.5', 'g', 'and', 'stirred', 'for', '5.5', 's', '.'], self.t.tokenize('Added 3.5g and stirred for 5.5s.'))
         self.assertEqual(['and', '≈', '90', '°'], self.t.tokenize('and ≈90°'))
         self.assertEqual(['B3LYP', '/', '6-31g(d)'], self.t.tokenize('B3LYP/6-31g(d)'))

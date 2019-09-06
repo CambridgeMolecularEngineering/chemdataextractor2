@@ -15,13 +15,16 @@ from __future__ import unicode_literals
 
 import logging
 import copy
+import six
 
 from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
+from tabledataextractor import TrivialTable as TrivialTdeTable
 from tabledataextractor.exceptions import TDEError
 from ..doc.text import Cell
 from ..model.model import Compound
-from ..model.base import ModelList
+from ..model.base import ModelList, ModelType
+from pprint import pprint
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -59,20 +62,27 @@ class Table(CaptionedElement):
         """
         super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
         try:
-            self.tde_table = TdeTable(table_data, **kwargs)  # can pass any kwargs into TDE directly
-            self.category_table = self.tde_table.category_table
-            self._subtables = [self.category_table]
-            if self.tde_table.subtables:
-                self._subtables = []
-                for subtable in self.tde_table.subtables:
-                    self._subtables.append(subtable.category_table)
-            self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
+            #: TableDataExtractor `Table` object. Can pass any kwargs into TDE directly.
+            self.tde_table = TdeTable(table_data, **kwargs)
+
         except (TDEError, TypeError) as e:
-            log.error("TableDataExtractor error: {}".format(e))
-            self.category_table = []
-            self._subtables = []
-            self.tde_table = None
-            self.heading = None
+            log.error("TableDataExtractor 'Table' error: {}".format(e))
+            log.info("Attempting TableDataExtractor 'TrivialTable' interpretation.")
+
+            try:
+                #: TableDataExtractor `TrivialTable` object. Can pass any kwargs into TDE directly.
+                self.tde_table = TrivialTdeTable(table_data, standardize_empty_data=True, **kwargs)
+            except (TDEError, TypeError) as e:
+                log.error("TableDataExtractor 'TrivialTable' error: {}".format(e))
+                self.tde_subtables = []
+                self.tde_table = None
+                self.heading = None
+
+        if self.tde_table is not None:
+            # get the subtables
+            self.tde_subtables = self.tde_table.subtables
+            # adjust the CDE Table heading from TDE results
+            self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
 
     def serialize(self):
         """
@@ -90,199 +100,229 @@ class Table(CaptionedElement):
     def definitions(self):
         return self.caption.definitions
 
-    @staticmethod
-    def _parse_table(parser, category_table):
+    def _parse_table(self, parser, cde_table):
         """
         Parses a table. The model and the category table have to be provided.
 
         :param parser: parser to use for parsing of one row of the category table
-        :param category_table: list, output of TableDataExtractor
+        :param cde_table: list of Cell objects
         :return: Yields one result at a time
         """
-        for cell in category_table:
-            if hasattr(parser, 'parse_cell'):
+        if hasattr(parser, 'parse_cell'):
+            for cde_cell in cde_table:
+                # print(cde_cell.tagged_tokens)
                 log.debug(parser)
-                cde_cell = Cell(cell[0] + ' ' + ' '.join(cell[1]) + ' ' + ' '.join(cell[2]))
                 results = parser.parse_cell(cde_cell)
                 for result in results:
-                    # [print(res) for res in result]
                     if result.serialize() != {}:
                         # yield {parser.model.__name__: result.serialize()}
+                        # adding of the row/column header categories to the record for potential merging later
+                        result.table_row_categories = ' '.join(cde_cell.row_categories)
+                        result.table_col_categories = ' '.join(cde_cell.col_categories)
                         yield result
-
-    def _merge_partial_records(self, partial_table_records):
-        """
-        Merges partial records found in different rows of the table, based on the 'contextual' flags.
-        A 'shared_element' can be defined below based on which the merging will be performed.
-        The function returns merged records, that may still be incomplete. Completeness based on 'required' flags
-        is tested outside.
-
-        Returns a list of not serialized records.
-        """
-        if not partial_table_records or len(partial_table_records) <= 1:
-            return partial_table_records
-
-        #: field based on which merging is done
-        shared_element = 'compound'
-
-        contextual_records = ModelList()
-        updated_records = []
-
-        for i, record_i in enumerate(partial_table_records):
-            for j in range(i+1, len(partial_table_records)):
-                record_j = partial_table_records[j]
-
-                fields_i = set([])
-                for field in record_i.fields:
-                    if record_i.__getattribute__(field):
-                        fields_i.add(field)
-
-                fields_j = set([])
-                for field in record_j.fields:
-                    if record_j.__getattribute__(field):
-                        fields_j.add(field)
-
-                # using a symmetric difference will ensure that we have correct output if we have shared elements
-                # shared elements will not be found in sym_diff
-                sym_diff = fields_i.symmetric_difference(fields_j)
-                # we need the intersection to check if it includes the shared element
-                intersection = fields_i.intersection(fields_j)
-
-                record = None
-                record_update = False
-                if sym_diff \
-                        and shared_element in intersection and len(intersection) == 1 \
-                        and record_i.__getattribute__(list(intersection)[0]) == \
-                        record_j.__getattribute__(list(intersection)[0]):
-
-                    # update record_i until we have the full record
-                    # this is for the case that the contextual elements are in record_j
-                    if not record_update:
-                        record = copy.deepcopy(record_i)
-                        for field in sym_diff:
-                            if not record_i.__getattribute__(field) and record_i.fields[field].contextual:
-                                record.__setitem__(field, record_j.__getattribute__(field))
-                                record_update = True
-                                updated_records.append(i)
-                                updated_records.append(j)
-                    # update record_j until we have the full record
-                    # this is for the case that the contextual elements are in record_i
-                    if not record_update:
-                        record = copy.deepcopy(record_j)
-                        for field in sym_diff:
-                            if not record_j.__getattribute__(field) and record_j.fields[field].contextual:
-                                record.__setitem__(field, record_i.__getattribute__(field))
-                                record_update = True
-                                updated_records.append(i)
-                                updated_records.append(j)
-
-                if record_update:
-                    log.debug("Record i = {}: {}".format(i, record_i.serialize()))
-                    log.debug("Record j = {}: {}".format(j, record_j.serialize()))
-                    log.debug("Record inside i = {}, j = {}: {}".format(i, j, record.serialize()))
-                    contextual_records.append(record)
-            if i not in updated_records and record_i not in contextual_records:
-                log.debug("Record outside i = {}: {}".format(i, record_i.serialize()))
-                contextual_records.append(record_i)
-
-        return contextual_records
 
     @property
     def records(self):
         table_records = []
         caption_records = self.caption.records
-        for subtable in self._subtables:
-            table_records.extend(self._records_for_subtable(subtable, caption_records))
+        if self.tde_subtables:
+            for subtable in self.tde_subtables:
+                table_records.extend(self._records_for_tde_table(subtable, caption_records))
+        elif not self.tde_subtables and self.tde_table is not None:
+            table_records.extend(self._records_for_tde_table(self.tde_table, caption_records))
         return table_records
 
-    def _records_for_subtable(self, subtable, caption_records=None):
-        # get the compounds from the caption
+    def _records_for_tde_table(self, table, caption_records=None):
+        """
+        Get the records for the given TDE Table
+        The function works via the following steps:
+
+        - Step 1: The records are parsed from each cell using the parsers for each model
+        - Step 2: Consolidate records with matching rows or columns
+        - Step 3: Any strict subsets are removed from this list
+        - Step 4: Consolidate records globally throughout the table
+        - Step 5: Remove any subsets
+        - Step 6: Merge in any records from the caption
+
+        :param table: Input TableDataExtractor object
+        :type table: TableDataExtractor.Table
+        :param ModelList caption_records: Any records found in the caption for this table
+        :return: A list of records found in this table
+        :rtype: ModelList of BaseModels
+        """
         if not caption_records:
             caption_records = ModelList()
-        log.debug(caption_records.serialize())
-        caption_compounds = []
-        for record in caption_records:
-            if isinstance(record, Compound):
-                caption_compounds += [record]
 
-        # obtain table records
+        # Create a representation of the table that is more amenable to parsing
+        cde_tables = []
+        for category_table in self._category_tables(table):
+            cde_table = []
+            for cell in category_table:
+                cde_cell = Cell.from_tdecell(cell, models=self.models)
+                cde_table.append(cde_cell)
+            cde_tables.append(cde_table)
+
+        # Step 1
         table_records = ModelList()
-
         for model in self._streamlined_models:
-            # different parsers can yield different partial table records, but each model is independent
-            partial_table_records = []
             for parser in model.parsers:
-
-                # the partial records are obtained from the autoparser
-                for record in self._parse_table(parser, subtable):
-
-                    # add caption compound if necessary, and append to record
-                    if 'compound' in model.fields \
-                            and not record.compound \
-                            and caption_compounds \
-                            and model.compound.contextual:
-                        record.compound = caption_compounds[0]  # the first compound from the caption is used by default
-
-                    partial_table_records.append(record)
-
-                # the partial records are merged
-                partial_table_records_merged = self._merge_partial_records(partial_table_records)
-
-                # a check is performed to see if all the 'required' elements of the merged table records are satisfied
-                for record in partial_table_records_merged:
-                    requirements = True
-
-                    # check if all required elements are present
-                    unmet_requirements = []
-                    for field in model.fields:
-                        if model.fields[field].required \
-                                and not record.__getattribute__(field):
-                            unmet_requirements.append(field)
-                            requirements = False
-                    # check if unknown elements from a different model are present
-                    for field in record.fields:
-                        if field not in model.fields:
-                            requirements = False
-
-                    if requirements:
+                for cde_table in cde_tables:
+                    for record in self._parse_table(parser, cde_table):
                         table_records.append(record)
 
-                    # add the record if only the compound is missing
-                    elif not requirements and len(unmet_requirements) == 1 and unmet_requirements[0] == 'compound':
-                        table_records.append(record)
+        # Step 2
+        self._consolidate_by_row_col(table_records)
 
-        # Addition of the caption records
+        # Step 3
+        table_records.remove_subsets(strict=True)
+
+        # Step 4
+        self._consolidate(table_records)
+
+        # Step 5
+        table_records.remove_subsets()
+
+        # Step 6
         caption_records = [c for c in caption_records if c.contextual_fulfilled]
-        table_records += caption_records
-
-        # Merge Compound records with any shared name/label
-        # TODO: Copy/pasted from document.py, probably should be moved out somewhere
-        len_l = len(table_records)
-        log.debug(table_records)
-        i = 0
-        while i < (len_l - 1):
-            for j in range(i + 1, len_l):
-                r = table_records[i]
-                other_r = table_records[j]
-                if isinstance(r, Compound) and isinstance(other_r, Compound):
-                    # Strip whitespace and lowercase to compare names
-                    rnames_std = {''.join(n.split()).lower() for n in r.names}
-                    onames_std = {''.join(n.split()).lower() for n in other_r.names}
-
-                    # Clashing labels, don't merge
-                    if len(set(r.labels) - set(other_r.labels)) > 0 and len(set(other_r.labels) - set(r.labels)) > 0:
-                        continue
-
-                    if any(n in rnames_std for n in onames_std) or any(l in r.labels for l in other_r.labels):
-                        table_records.pop(j)
-                        table_records.pop(i)
-                        table_records.append(r.merge(other_r))
-                        len_l -= 1
-                        i -= 1
-                        break
-            i += 1
+        table_records = self._merge(table_records, caption_records)
+        # pprint(table_records.serialize())
 
         return table_records
 
+    def _category_tables(self, table):
+        """
+        Yields the category table and row category tables for a given TableDataExtractor table.
+        :param table: Input TableDataExtractor object
+        :type table: TableDataExtractor.Table
+        :return: list of category tables (python lists)
+        """
+        yield table.category_table
+        while table.row_categories is not None:
+            yield table.row_categories.category_table
+            table = table.row_categories
 
+    def _consolidate_by_row_col(self, records):
+        """
+        Merge records depending on the row and column that they were found in.
+        The given list of records is mutated by this function.
 
+        :param ModelList(BaseModel) records: The records to be consolidated
+        """
+        # Create a dictionaries where the keys are the column and row headers.
+        col_first = {}
+        row_first = {}
+        for record in records:
+            col_key = ' '.join(record.table_col_categories)
+            row_key = ' '.join(record.table_row_categories)
+            if col_key in col_first.keys():
+                col_first[col_key].append(record)
+            else:
+                col_first[col_key] = ModelList(record)
+            if row_key in row_first.keys():
+                row_first[row_key].append(record)
+            else:
+                row_first[row_key] = ModelList(record)
+
+        # Consolidate for each row/column
+        for _, records in six.iteritems(row_first):
+            self._consolidate(records)
+        for _, records in six.iteritems(col_first):
+            self._consolidate(records)
+
+    def _consolidate(self, records, contextual=False):
+        """
+        Function to consolidate a given list of records. The records are split into
+        a number of segments, where each segment contains only records of a certain 'parent' type
+        and any record not of that type that could be merged into it based on type information (child records).
+
+        All child records are first merged into the parent records, then the parent records are merged with each other.
+
+        :param ModelList(BaseModel) records: The list of models that is to be consolidated.
+        :param bool contextual: Whether to only merge in contextual fields or to merge in all fields.
+        """
+        function_name = 'merge_all'
+        if contextual:
+            function_name = 'merge_contextual'
+        segmented_records = {}
+        # A dictionary with a Model class as the key, and
+        # [A list of all records contained in `records` of that type,
+        #  a list of all instances of the submodels contained in `records`]
+
+        all_models = {}
+        # A dictionary with a Model class as a key and a list of all submodels of that
+        # model as the value.
+
+        # Populate the all_models dictionary and initialise the segmented_records dictionary
+        for model in self._streamlined_models:
+            flattened_model = list(model.flatten())
+            all_models[model] = flattened_model
+            segmented_records[model] = [ModelList(), ModelList()]
+
+        # Create the segmented_records dictionary
+        for record in records:
+            if not hasattr(record, '_merged_in'):
+                record._merged_in = []
+            for root_model, submodels in six.iteritems(all_models):
+                if isinstance(record, root_model):
+                    segmented_records[root_model][0].append(record)
+                elif type(record) in submodels:
+                    segmented_records[root_model][1].append(record)
+
+        # Do all the actual merging
+        record_set = set()
+        for model_type, segment in six.iteritems(segmented_records):
+            # Merge all records of the parent type with all records of the child type
+            for record_of_type in segment[0]:
+                for record_of_subtype in segment[1]:
+                    if model_type not in record_of_subtype._merged_in:
+                        if getattr(record_of_type, function_name)(record_of_subtype):
+                            record_of_subtype._merged_in.append(model_type)
+
+            # Merge all records of the parent type with other records of the parent type
+            i = 0
+            records_of_type = segment[0]
+            while i < len(records_of_type):
+                j = 0
+                while j < len(records_of_type):
+                    if i != j and not records_of_type[i].is_subset(records_of_type[j]):
+                        getattr(records_of_type[i], function_name)(records_of_type[j])
+                    j += 1
+                i += 1
+            record_set.update(records_of_type)
+
+        final_records = ModelList(*list(record_set))
+        final_records.remove_subsets()
+        return final_records
+
+    def _merge(self, records_1, records_2):
+        """
+        Merge in records from records_2 into records_1.
+
+        .. note::
+
+            This function both mutates and returns records_1
+
+        :param ModelList(BaseModel) records_1: The records into which records_2 will be merged.
+        :param ModelList(BaseModel) records_2: The records that will be merged into records_1.
+        :return: The merged list
+        :rtype: ModelList(BaseModel)
+        """
+        for record in records_1:
+            for other_record in records_2:
+                record.merge_contextual(other_record)
+        records_1.extend(records_2)
+        return records_1
+
+    def _remove_unfulfilled(self, records):
+        """
+        Remove any records where any non-contextual required fields is not fulfilled.
+
+        :param ModelList(BaseModel) records: The list of records from where records with unfulfilled non-contextual, required fields will be removed.
+        :return: The cleaned list of records.
+        :rtype: ModelList(BaseModel)
+        """
+        new_records = ModelList()
+        for record in records:
+            if record.noncontextual_required_fulfilled:
+                new_records.append(record)
+        return new_records

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.units.charge.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Units and models for charge.
 
 Batuhan Yildirim (by256@cam.ac.uk)

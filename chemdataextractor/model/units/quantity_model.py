@@ -18,7 +18,7 @@ from .dimension import Dimensionless
 from ...parse.elements import Any
 from ...parse.auto import AutoSentenceParser, AutoTableParser, construct_unit_element, match_dimensions_of
 from ...parse.quantity import magnitudes_dict, value_element_plain
-
+from ...parse.template import QuantityModelTemplateParser, MultiQuantityModelTemplateParser
 
 class _QuantityModelMeta(ModelMeta):
     """"""
@@ -45,13 +45,13 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
     Any parse_expressions set in the model should have an added action to ensure that the results are a single word. An example would be to call add_action(join) on each parse expression.
     """
     raw_value = StringType(required=True, contextual=True)
-    raw_units = StringType(contextual=True)
+    raw_units = StringType(required=True, contextual=True)
     value = ListType(FloatType(contextual=True), contextual=True, sorted=True)
     units = UnitType(contextual=True)
     error = FloatType(contextual=True)
     dimensions = None
     specifier = StringType()
-    parsers = [AutoSentenceParser(), AutoTableParser()]
+    parsers = [MultiQuantityModelTemplateParser(), QuantityModelTemplateParser(), AutoTableParser()]
 
     # Operators are implemented so that composite quantities can be created easily
     # on the fly, such as the following code snippet:
@@ -142,13 +142,17 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
         :rtype: QuantityModel
         """
         if self.units:
-            converted_values = self.convert_value(self.units, unit)
-            self.value = converted_values
-            self.units = unit
-            if self.error:
-                converted_error = self.convert_error(self.units, unit)
-                self.error = converted_error
-
+            try:
+                converted_values = self.convert_value(self.units, unit)
+                if self.error:
+                    converted_error = self.convert_error(self.units, unit)
+                    self.error = converted_error
+                self.value = converted_values
+                self.units = unit
+            except ZeroDivisionError:
+                raise ValueError('Model not converted due to zero division error')
+        else:
+            raise AttributeError('Current units not set')
         return self
 
     def convert_to_standard(self):
@@ -254,6 +258,43 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
             return True
         return False
 
+    def is_superset(self, other):
+        if type(self) != type(other):
+            return False
+        for field_name, field in six.iteritems(self.fields):
+            # Method works recursively so it works with nested models
+            if hasattr(field, 'model_class'):
+                if self[field_name] is None:
+                    if other[field_name] is not None:
+                        return False
+                elif other[field_name] is None:
+                    pass
+                elif not self[field_name].is_superset(other[field_name]):
+                    return False
+            else:
+                if (field_name == 'raw_value' and other[field_name] == 'NoValue'
+                    and self[field_name] is not None):
+                    pass
+                elif other[field_name] is not None and self[field_name] != other[field_name]:
+                    return False
+        return True
+
+    def _compatible(self, other):
+        match = False
+        if type(other) == type(self):
+            # Check if the other seems to be describing the same thing as self.
+            match = True
+            for field_name, field in six.iteritems(self.fields):
+                if (field_name == 'raw_value' and other[field_name] == 'NoValue'
+                    and self[field_name] is not None):
+                    pass
+                elif (self[field_name] is not None
+                  and other[field_name] is not None
+                  and self[field_name] != other[field_name]):
+                    match = False
+                    break
+        return match
+
     def __str__(self):
         string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.units.__str__()
         string += ' and a value of ' + str(self.value)
@@ -263,3 +304,4 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
 class DimensionlessModel(QuantityModel):
     """ Special case to handle dimensionless quantities"""
     dimensions = Dimensionless()
+    raw_units = StringType(required=False, contextual=False)

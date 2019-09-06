@@ -28,7 +28,7 @@ magnitudes_dict = {R('c(enti)?', group=0): -2.,
                   R('G(iga)?', group=0): 9.,
                   R('T(era)?', group=0): 12.,
                   R('m(illi)?', group=0): -3.,
-                  R('µ|micro', group=0): -6.,
+                  R('µ|(micro)|(mu)', group=0): -6.,
                   R('n(ano)?', group=0): -9.,
                   R('p(ico)?', group=0): -12.}
 
@@ -65,13 +65,14 @@ def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T(
     :returns: An Element to look for values and units.
     :rtype: BaseParserElement
     """
-    number = R('^[\+\-–−]?\d+(\.\d+)?$')
-    joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('raw_value').add_action(merge)
+    number = R('^[\+\-–−]?\d+(([\.・,\d])+)?$')
+    joined_range = R('^[\+\-–−]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
     spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('raw_value').add_action(merge)
     to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
-    plusminus_range = (number + R('±') + number)('value').add_action(join)
+    plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
+    bracket_range = R(number.pattern[:-1] + '\(\d+\)' + '$')('raw_value')
     between_range = (I('between').hide() + number + I('and') + number).add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
+    value_range = (Optional(R('^[\-–−]$')) + (bracket_range | plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     return value + units
@@ -85,16 +86,49 @@ def value_element_plain():
     :returns: An Element to look for values.
     :rtype: BaseParserElement
     """
-    number = R('^[\+\-–−]?\d+(\.\d+)?$')
-    joined_range = R('^[\+\-–−]?\d+(\.\d+)?[\-–−~∼˜]\d+(\.\d+)?$')('raw_value').add_action(merge)
+    number = R('^[\+\-–−]?\d+(([\.・,\d])+)?$')
+    joined_range = R('^[\+\-–−]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
     spaced_range = (number + R('^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
     to_range = (number + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
+    bracket_range = R(number.pattern[:-1] + '\(\d+\)' + '$')('raw_value')
     between_range = (I('between').hide() + number + I('and') + number).add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range | bracket_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     return value
+
+
+@memoize
+def construct_quantity_re(*models):
+    # Handle all the magnitudes
+    units_regex = '(('
+    for element in magnitudes_dict.keys():
+        units_regex += '(' + element.pattern + ')|'
+    units_regex = units_regex[:-1]
+    units_regex += ')?'
+    units_regex += '('
+    units_dict = {}
+    for model in models:
+        if hasattr(model, 'dimensions') and model.dimensions.units_dict is not None:
+            units_dict.update(model.dimensions.units_dict)
+    if len(units_dict) == 0:
+        return None
+    # Case where we have a token that's just brackets
+    units_regex += '(\((?!\d))|(\)|\])|\-|'
+    # Handle all the units
+    for element, unit in six.iteritems(units_dict):
+        if unit is not None:
+            units_regex += '(' + element.pattern + ')|'
+    units_regex += '(\/)'
+    # Case when we have powers, or one or more units
+    units_regex2 = units_regex + '|([\+\-–−]?\d+(\.\d+)?)'
+    units_regex2 += '))+$'
+    units_regex += '))+'
+    units_regex += (units_regex2[:-2] + '*')
+    units_regex = '^((?P<split>[\+\-–−]?\d+([\.\-\−]?\d+)?)|((?P<split2>.*)(\(|\/|\[)))' + units_regex
+    units_regex += '$'
+    return re.compile(units_regex)
 
 
 def extract_error(string):
@@ -113,19 +147,19 @@ def extract_error(string):
     """
     if string is None:
         return None
-    string = string.replace("-", "-")
-    string = string.replace("–", "-")
-    string = string.replace("−", "-")
-    string = string.replace(" ", "")
-    split_by_num_and_error = [r for r in re.split(_error_pattern, string) if r]
+    string = _clean_value_string(string)
+    split_by_num_and_error = [r for r in re.split('(\d+\.?(?:\d+)?)|(±)|(\()', string) if r and r != " "]
     error = None
     for index, value in enumerate(split_by_num_and_error):
         if value == '±':
             try:
                 error = float(split_by_num_and_error[index + 1])
+                break
             except ValueError:
                 pass
-
+        elif value == '(':
+            error = _extract_brackets_error(string)
+            break
     return error
 
 
@@ -146,10 +180,30 @@ def extract_value(string):
     """
     if string is None:
         return None
-    string = string.replace("-", "-")
-    string = string.replace("–", "-")
-    string = string.replace("−", "-")
+    new_split_by_num = _find_value_strings(string)
+    values = []
+    for index, value in enumerate(new_split_by_num):
+        try:
+            float_val = float(value)
+            values.append(float_val)
+        except ValueError:
+            pass
+    return values
+
+
+def _find_value_strings(string):
+    """
+    Finds the string(s) containing the value from the string given.
+
+    :param str string: A representation of the values as a string
+    :returns: The strings pertaining to the value as a list
+    :rtype: list(str)
+    """
+    if string is None:
+        return None
+    string = _clean_value_string(string)
     string = string.split("±")[0]
+    string = string.split("(")[0]
     split_by_space = [r for r in re.split(' |(-)', string) if r]
     split_by_num = []
     for elem in split_by_space:
@@ -171,15 +225,85 @@ def extract_value(string):
             flag += 1
         else:
             new_split_by_num.append(value)
-    values = []
-    for index, value in enumerate(new_split_by_num):
-        try:
-            float_val = float(value)
-            values.append(float_val)
-        except ValueError:
-            pass
+    return new_split_by_num
 
-    return values
+
+def _clean_value_string(string):
+    """
+    Function to clean and standardise a string containing a value. Also converts from
+    European formats (commas instead of full stops)
+
+    :param str string: A representation of the values as a string
+    :returns: A cleaned version of the string
+    :rtype: str
+    """
+    string = string.replace("-", "-")
+    string = string.replace("–", "-")
+    string = string.replace("−", "-")
+    string = string.replace("・", ".")
+    string = string.replace("·", ".")
+    split_by_comma = string.split(",")
+    if len(split_by_comma) != 1:
+        if len(split_by_comma) == 2:
+            if "." not in split_by_comma[1] \
+               and len(split_by_comma[1]) != 3:
+                string = _convert_from_european_format(string)
+            else:
+                string = string.replace(",", "")
+        else:
+            string = string.replace(",", "")
+    return string
+
+
+def _extract_brackets_error(string):
+    """
+    Extract errors from a string when it is expressed in the form of 123(4).
+
+    :param str string: A representation of the value and error as a string
+    :returns: The error
+    :rtype: float
+    """
+    split_by_brackets = [r for r in re.split('(\))|(\()', string) if r]
+    val_string = _find_value_strings(string)[0]
+    magnitude = _get_magnitude(val_string)
+    magnitude = magnitude if magnitude < 0 else 0
+    if len(split_by_brackets) == 4:
+        error_unadjusted = float(split_by_brackets[2])
+        return error_unadjusted * 10. ** magnitude
+    else:
+        raise ValueError(string + " does not contain the right number of brackets")
+
+
+def _get_magnitude(string):
+    """
+    Get the magnitude of the smallest significant value in the string
+
+    :param str string: A representation of the value as a string
+    :returns: The magnitude of the value in the string. e.g. for 102, the magnitude is 0, and for 102.03 it is -2
+    :rtype: int
+    """
+    split_by_period = string.split(".")
+    if len(split_by_period) == 2:
+        return -1 * len(split_by_period[-1])
+    elif len(split_by_period) == 1:
+        return len(string) - len(string.rstrip('0'))
+    else:
+        raise ValueError(string + " does not contain a value")
+
+
+def _convert_from_european_format(string):
+    """
+    Conver the string given in the European format (commas as decimal points,
+    full stops as the equivalent of commas), e.g. 1,200.5 would be written as
+    1.200,5 in the European format.
+
+    :param str string: A representation of the value as a string
+    :returns: The string converted to standard format
+    :rtype: str
+    """
+    string = string.replace(".", "")
+    string = string.replace(",", ".")
+    return string
 
 
 @memoize
@@ -211,6 +335,8 @@ def extract_units(string, dimensions, strict=False):
     string = string.replace("–", "-")
     string = string.replace("−", "-")
     string = string.replace(' ', '')
+    if string[0] == '[' and string[-1] == ']':
+        string = string[1:-1]
     # Split string at numbers, /s, and brackets, so we have the units tokenized into the right units for later processing stages.
     split_string = _split(string)
     # Find the units by matching strings, e.g. K for Kelvin, m for Meter
@@ -384,7 +510,10 @@ def _find_powers(units_list):
         # Look for strings involving numbers.
         found_power = re.search(_fraction_or_decimal_pattern, element)
         if found_power is not None:
-            power = power * float(sum(Fraction(s) for s in found_power.group(0).split()))
+            try:
+                power = power * float(sum(Fraction(s) for s in found_power.group(0).split()))
+            except ZeroDivisionError:
+                return None
             element = re.split(found_power.group(0), element)[0]
         powers.append((units_list[i][0], element, power, units_list[i][2]))
         # Reset base_power at the start of a bracket, as that's handled by _remove_brackets
@@ -438,8 +567,9 @@ def _find_units(powers_cleaned, dimensions, strict):
     :returns: The units found from the list given.
     :rtype: chemdataextractor.quantities.Unit
     """
-    num_elements_associated = 0
+    unassociated_elements = []
     total_elements = len(powers_cleaned)
+    unassociated_elements = []
     powers = {}
     for power in powers_cleaned:
         original_string = power[1]
@@ -454,11 +584,14 @@ def _find_units(powers_cleaned, dimensions, strict):
                 for result in magnitude.scan([[original_string, 'a']]):
                     exp = magnitudes_dict[magnitude]
                     original_string = original_string.replace(result[0].text, '', 1)
-        if original_string == '':
-            num_elements_associated += 1
+        if original_string not in ['', '-']:
+            unassociated_elements.append(original_string)
         # To handle cases when the units given by parsing don't match with what's expected.
         try:
-            powers[power[0](magnitude=exp)] = power[2]
+            if power[0](magnitude=exp) in powers.keys():
+                powers[power[0](magnitude=exp)] += power[2]
+            else:
+                powers[power[0](magnitude=exp)] = power[2]
         except TypeError as e:
             log.debug(e)
             powers = {}
@@ -470,12 +603,12 @@ def _find_units(powers_cleaned, dimensions, strict):
         else:
             end_unit = end_unit * (unit ** power)
     if strict:
-        if end_unit is not None and end_unit.dimensions == dimensions and num_elements_associated == total_elements:
+        if end_unit is not None and end_unit.dimensions == dimensions and len(unassociated_elements) == 0:
             return end_unit
         else:
             if end_unit is None:
                 raise TypeError('Could not find ' + str(dimensions) + ' in given string')
-            if num_elements_associated != total_elements:
+            if len(unassociated_elements) != 0:
                 raise TypeError('String input had extraneous elements')
             raise TypeError('Parsed with Dimensions ' + str(end_unit.dimensions) + ', expected' + str(dimensions))
     else:

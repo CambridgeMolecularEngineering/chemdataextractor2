@@ -27,7 +27,9 @@ from chemdataextractor.model.units.time import Second, Minute, Hour, Time, TimeM
 from chemdataextractor.model.units.length import Meter, Mile, Length, LengthModel
 from chemdataextractor.model.units.temperature import Temperature, TemperatureModel, Kelvin, Celsius, Fahrenheit
 from chemdataextractor.model.units.mass import Mass, Gram
+from chemdataextractor.model.units.energy import Energy
 from chemdataextractor.parse.auto import construct_unit_element, match_dimensions_of, AutoSentenceParser
+from chemdataextractor.parse.quantity import value_element_plain
 from chemdataextractor.doc.text import Sentence
 from chemdataextractor.parse.elements import I
 from chemdataextractor.model import Compound, ModelType, StringType
@@ -45,6 +47,15 @@ class SpeedModel(QuantityModel):
     dimensions = Length() / Time()
     specifier = StringType(parse_expression=I('speed'))
     compound = ModelType(Compound)
+    parsers = [AutoSentenceParser()]
+
+
+class SpecificHeat(Dimension):
+    constituent_dimensions = Energy() / (Mass() * Temperature())
+
+
+class SpecificHeatModel(QuantityModel):
+    dimensions = SpecificHeat()
 
 
 class AreaPerTime(Dimension):
@@ -67,6 +78,27 @@ class TestAutoRules(unittest.TestCase):
         expected = [b'<raw_units>m/s</raw_units>']
         self.assertEqual(expected, results_list)
 
+    def test_unit_element_2(self):
+        test_sentence = Sentence('The specific heat was 16 J/(kgK) which was')
+        units_expression = construct_unit_element(SpecificHeat()).with_condition(match_dimensions_of(SpecificHeatModel()))('raw_units')
+        results = units_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_units>J/(kgK)</raw_units>']
+        self.assertEqual(expected, results_list)
+
+    def test_unit_element_3(self):
+        test_sentence = Sentence('The specific heat was 16 J/kg-K which was')
+        print(test_sentence.tagged_tokens)
+        units_expression = construct_unit_element(SpecificHeat()).with_condition(match_dimensions_of(SpecificHeatModel()))('raw_units')
+        results = units_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_units>J/kg-K</raw_units>']
+        self.assertEqual(expected, results_list)
+
     def test_unit_element_nospace(self):
         test_sentence = Sentence('Area was increasing at 31 m2/s and')
         units_expression = construct_unit_element(AreaPerTime()).with_condition(match_dimensions_of(AreaPerTimeModel))('raw_units')
@@ -76,6 +108,47 @@ class TestAutoRules(unittest.TestCase):
             results_list.append(etree.tostring(result[0]))
         expected = [b'<raw_units>m2/s</raw_units>']
         self.assertEqual(expected, results_list)
+
+    def test_value_element(self):
+        test_sentence = Sentence('The value was 123.8')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>123.8</raw_value>']
+        self.assertEqual(expected, results_list)
+
+    def test_value_element_comma(self):
+        test_sentence = Sentence('The value was 3,123.8')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>3,123.8</raw_value>']
+        self.assertEqual(expected, results_list)
+
+    def test_value_element_european(self):
+        test_sentence = Sentence('The value was 123,8')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>123,8</raw_value>']
+        self.assertEqual(expected, results_list)
+
+    def test_value_element_brackets(self):
+        test_sentence = Sentence('The value was 123(8)')
+        value_expression = value_element_plain()
+        results = value_expression.scan(test_sentence.tagged_tokens)
+        results_list = []
+        for result in results:
+            results_list.append(etree.tostring(result[0]))
+        expected = [b'<raw_value>123(8)</raw_value>']
+        self.assertEqual(expected, results_list)
+
 
 class TestAutoSentenceParser(unittest.TestCase):
 

@@ -12,12 +12,14 @@ import collections
 import copy
 import logging
 import re
+from copy import deepcopy
 
 from lxml.builder import E
 import six
 import types
 
 log = logging.getLogger(__name__)
+
 
 class ParseException(Exception):
     """Exception thrown by a ParserElement when it doesn't match input."""
@@ -61,9 +63,9 @@ class BaseParserElement(object):
 
     def __init__(self):
         self.name = None
-        """str or None: name for BaseParserElement. This is used to set the name of the Element when a result is found"""
+        #: str or None: name for BaseParserElement. This is used to set the name of the Element when a result is found
         self.actions = []
-        """list(chemdataextractor.parse.actions): list of actions that will be applied to the results after parsing. Actions are functions with arguments of (tokens, start, result)"""
+        #: list(chemdataextractor.parse.actions): list of actions that will be applied to the results after parsing. Actions are functions with arguments of (tokens, start, result)
         self.streamlined = False
         self.condition = None
 
@@ -259,6 +261,12 @@ class Any(BaseParserElement):
         return [E(self.name or safe_name(tokens[i][1]), tokens[i][0])], i + 1
 
 
+class NoMatch(BaseParserElement):
+
+    def _parse_tokens(self, tokens, i, actions=True):
+        raise ParseException(tokens, i, 'NoMatch will not match any tokens', self)
+
+
 class Word(BaseParserElement):
     """Match token text exactly. Case-sensitive."""
 
@@ -321,6 +329,11 @@ class Regex(BaseParserElement):
             text = token_text if self.group is None else result.group(self.group)
             return [E(self.name or safe_name(tokens[i][1]), text)], i + 1
         raise ParseException(tokens, i, 'Expected %s, got %s' % (self.pattern, token_text), self)
+
+    # Solves issues with deepcopying of records, jm2111
+    # only the pattern is copied and the object is created from scratch
+    def __deepcopy__(self, memodict={}):
+        return type(self)(deepcopy(self.pattern, memodict))
 
 
 class Start(BaseParserElement):
@@ -439,7 +452,6 @@ class And(ParseExpression):
 #                 if exprresults is not None:
 #                     results.extend(exprresults)
 #         return ([E(self.name, *results)] if self.name else results), i
-
 
 
 class Or(ParseExpression):

@@ -26,6 +26,6 @@ log.addHandler(logging.NullHandler())
 #     log = logging.getLogger(__name__)
 #     log.setLevel(logging.DEBUG)
 # to change the effective level of the module logger
-logging.basicConfig(format='%(levelname)-10s in %(filename)-20s--> %(message)s', level=logging.INFO, filename='log.txt', filemode='w')
+logging.basicConfig(format=u'%(levelname)-10s in %(filename)-20s--> %(message)s', level=logging.INFO, filename='log.txt', filemode='w')
 
 from .doc.document import Document

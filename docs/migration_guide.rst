@@ -496,7 +496,7 @@ Alternatively, if you want to use the parser you wrote yourself instead of the a
 
     Also key to making autoparsers work correctly is to always include :python:`add_action(join)` to the end of any parse expressions to ensure that multi-word parse expressions can be picked up correctly by the autoparser.
 
-Preview: Nested Models
+Fully Nested Models
 -----------------------
 
 v1.5.0 brings the capability to nest models within other models. A simple example of this is that many models, such as the :python:`BoilingPoint` model we defined earlier, contains a model for compound. However, this also works with user-defined properties, and each of these models only needs to parse its surface-level properties, with everything else being merged in later. This nesting can in theory go multiple levels.
@@ -554,7 +554,7 @@ The above code will print::
                                         'units': '(10^-2.0) * Meter^(1.0)',
                                         'specifier': 'measured with'}}}}}}]
 
-While this is obviously a toy example, we believe this is a powerful paradigm that represents the long-term future of ChemDataExtractor. It's still a preview as some parts of ChemDataExtractor may not work on it yet, but as shown above, it's already quite advanced in what it can do.
+.. tip:: Complex hierarchies of nested models are now possible, taking the appropriate ``required`` flags into account for each nested model. For table data, models will automatically be extracted and merged appropriately, regardless of the ``contextual`` flags, as long as all the submodels share a common ``compound`` element.
 
 
 
