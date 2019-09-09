@@ -1,5 +1,9 @@
 # Change Log
 
+## [v2.0](https://github.com/mcs07/ChemDataExtractor/releases/tag/v2.0) (2019-09-xx)
+[Full Changelog](https://github.com/mcs07/ChemDataExtractor/compare/...)
+
+
 ## [v1.3.0](https://github.com/mcs07/ChemDataExtractor/releases/tag/v1.3.0) (2017-02-03)
 [Full Changelog](https://github.com/mcs07/ChemDataExtractor/compare/v1.2.3...v1.3.0)
 
