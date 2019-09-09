@@ -69,7 +69,7 @@ API Documentation
    doc.figure
    doc.meta
    doc.table
-   doc.table_new
+   doc.table
    doc.text
 
 ---------------------------------------------------------

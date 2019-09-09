@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Classes for representing models.
+Classes for representing chemical models.
 
 """
 

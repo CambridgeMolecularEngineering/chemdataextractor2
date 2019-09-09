@@ -26,11 +26,11 @@ Overall Structure
 
 At a high level, in previous versions of ChemDataExtractor, the :class:`~chemdataextractor.doc.document.Document` class and each of its subelements (e.g. :class:`~chemdataextractor.doc.text.Paragraph`, :class:`~chemdataextractor.doc.table.Table` or :class:`~chemdataextractor.doc.text.Sentence`) had a list of parsers. These parsers each had an associated model which they were parsing for. When these parsers found a sentence (or table cell) that matched to the parse phrase root, it would create a :class:`~chemdataextractor.doc.text.Compound` and the property would be associated to this instance of a compound.
 
-The new structure changes this hierarchy significantly. The :class:`~chemdataextractor.doc.document.Document` class and its subelements now own the models that they should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :class:`~chemdataextractor.doc.text.Sentence` or :class:`~chemdataextractor.doc.table_new.Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the models.
+The new structure changes this hierarchy significantly. The :class:`~chemdataextractor.doc.document.Document` class and its subelements now own the models that they should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :class:`~chemdataextractor.doc.text.Sentence` or :class:`~chemdataextractor.doc.table.Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the models.
 
 This new structure has several advantages:
 
-- You no longer have to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table_new.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, you just pass in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
+- You no longer have to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, you just pass in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
 
 - The new structure is far safer, that is, it is impossible to use a parser meant for tables on a sentence and a parser meant for sentences on tables.
 
@@ -128,7 +128,7 @@ TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances i
 Previously, rule-based parsers had to be written specifically for tables, for every new property. These would usually be very limited, due to the complexity of tables found in the literature.
 
 TableDataExtractor reads all tables and outputs their data in a highly standardised format whilst also retaining information about all the row or column headings and subheadings that the data point belongs to. The output of TableDataExtractor is a *category table*, where each row corresponds to a single data-cell of the original table, along with its corresponding header structure.
-The standardized structure of the category table enables fully automated parsing with ChemDataExtractor. Within ChemDataExtractor all of the functionality of TableDataExtractor can be accessed via an instance of the :class:`~chemdataextractor.doc.table_new.Table` object, ``table``, as ``table.tde_table``.
+The standardized structure of the category table enables fully automated parsing with ChemDataExtractor. Within ChemDataExtractor all of the functionality of TableDataExtractor can be accessed via an instance of the :class:`~chemdataextractor.doc.table.Table` object, ``table``, as ``table.tde_table``.
 
 In most cases it should not be necessary to interact directly with TableDataExtractor. However, it is recommended to test it on an individual corpus of literature, before a production run.
 Visual inspection is the best option to do so::
@@ -456,7 +456,7 @@ To define this model is great, but we also need to upgrade the parser to make su
             except TypeError as e:
                 log.debug(e)
 
-These parsers can also be made faster by setting the optional :attr:`~chemdataextractor.parse.base.BaseParser.condition_phrase` attribute. The parse element contained in this attribute is run before the root phrase is run, which can result in substantial performance improvements if the root phrase is large and complicated. However, in the case of :python:`BpParser` above, the root phrase itself is so simple that setting this attribute could make the parser slightly slower. You should consider setting the :attr:`~chemdataextractor.parse.base.BaseParser.condition_phrase` for real, more complicated parsers if you are finding the parser to be running too slowly.
+These parsers can also be made faster by setting the optional :attr:`~chemdataextractor.parse.base.BaseParser.trigger_phrase` attribute. The parse element contained in this attribute is run before the root phrase is run, which can result in substantial performance improvements if the root phrase is large and complicated. However, in the case of :python:`BpParser` above, the root phrase itself is so simple that setting this attribute could make the parser slightly slower. You should consider setting the :attr:`~chemdataextractor.parse.base.BaseParser.trigger_phrase` for real, more complicated parsers if you are finding the parser to be running too slowly.
 
 Using Automatic Parsers
 ----------------------------

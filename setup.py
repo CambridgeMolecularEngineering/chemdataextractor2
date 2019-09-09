@@ -13,10 +13,10 @@ else:
 setup(
     name='ChemDataExtractor',
     version='1.4.0-beta',
-    author='Matt Swain',
-    author_email='m.swain@me.com',
+    author='Matt Swain, Callum Court, Edward Beard, Juraj Mavracic, Taketomo Isazawa',
+    author_email='m.swain@me.com, cc889@cam.ac.uk, ejb207@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk',
     license='MIT',
-    url='https://github.com/mcs07/ChemDataExtractor',
+    url='https://github.com/CambridgeMolecularEngineering/ChemDataExtractor',
     packages=find_packages(),
     description='A toolkit for extracting chemical information from the scientific literature.',
     long_description=long_description,

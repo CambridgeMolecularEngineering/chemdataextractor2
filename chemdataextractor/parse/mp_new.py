@@ -47,7 +47,7 @@ class MpParser(BaseSentenceParser):
     MpParser rewritten to extract values and errors.
     """
     root = mp_phrase
-    condition_phrase = prefix
+    trigger_phrase = prefix
 
     def interpret(self, result, start, end):
         log.debug(etree.tostring(result))

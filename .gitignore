@@ -44,5 +44,4 @@ main.py
 geckodriver.log
 .pytest_cache/
 .DS_Store
-
 log.txt

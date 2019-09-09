@@ -20,8 +20,7 @@ import six
 from ..utils import python_2_unicode_compatible
 from .text import Paragraph, Citation, Footnote, Heading, Title, Caption
 from .element import CaptionedElement
-# from .table import Table
-from .table_new import Table
+from .table import Table
 from .figure import Figure
 from .meta import MetaData
 from ..errors import ReaderError
@@ -209,7 +208,7 @@ class Document(BaseDocument):
         """
         A list of all the elements in this document. All elements subclass from :class:`~chemdataextractor.doc.element.BaseElement`,
         and represent things such as paragraphs or tables, and can be found in :mod:`chemdataextractor.doc.figure`,
-        :mod:`chemdataextractor.doc.table_new`, and :mod:`chemdataextractor.doc.text`.
+        :mod:`chemdataextractor.doc.table`, and :mod:`chemdataextractor.doc.text`.
         """
         return self._elements
 

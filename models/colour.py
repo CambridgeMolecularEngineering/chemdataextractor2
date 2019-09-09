@@ -2,11 +2,13 @@
 Colour model
 """
 
-from chemdataextractor.parse.elements import I, R, W, T, Optional, OneOrMore, ZeroOrMore, Any
+from chemdataextractor.model.base import (BaseModel, FloatType, ListType,
+                                          ModelType, StringType)
 from chemdataextractor.model.model import Compound
 from chemdataextractor.parse.actions import join
-from chemdataextractor.model.base import BaseModel, StringType, ModelType, ListType, FloatType
 from chemdataextractor.parse.auto import AutoTableParser
+from chemdataextractor.parse.elements import (Any, I, OneOrMore, Optional, R,
+                                              T, W, ZeroOrMore)
 
 colours = (
     R('^[Bb]lack(-)?(ish)?$') |
@@ -48,7 +50,6 @@ prefix = (
 )
 
 colour_expression = (Optional(prefix) + colours + Optional(colours)).add_action(join)
-
 
 class Colour(BaseModel):
     specifier = StringType(parse_expression=R('^[Cc]olo(u)?r$'), required=True)

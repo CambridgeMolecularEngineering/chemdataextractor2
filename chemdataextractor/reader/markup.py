@@ -21,8 +21,7 @@ from ..errors import ReaderError
 from ..doc.document import Document
 from ..doc.text import Title, Heading, Paragraph, Caption, Citation, Footnote, Text, Sentence, Cell
 from ..doc.meta import MetaData
-# from ..doc.table import Table, Cell
-from ..doc.table_new import Table
+from ..doc.table import Table
 from ..doc.figure import Figure
 from ..scrape import INLINE_ELEMENTS
 from ..scrape.clean import clean

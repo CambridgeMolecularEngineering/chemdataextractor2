@@ -55,13 +55,13 @@ def construct_unit_element(dimensions):
     units_regex += ')?'
     units_regex += '('
     # Case where we have a token that's just brackets
-    units_regex += '((\(|\[))|((\)|\]))|\-|'
+    units_regex += r'((\(|\[))|((\)|\]))|\-|'
     # Handle all the units
     for element in dimensions.units_dict:
         units_regex += '(' + element.pattern + ')|'
-    units_regex += '(\/)'
+    units_regex += r'(\/)'
     # Case when we have powers, or one or more units
-    units_regex2 = units_regex + '|([\+\-–−]?\d+(\.\d+)?)'
+    units_regex2 = units_regex + r'|([\+\-–−]?\d+(\.\d+)?)'
     units_regex2 += '))+$'
     units_regex += '))+'
     units_regex += (units_regex2[1:-2] + '*')
@@ -128,7 +128,7 @@ class BaseAutoParser(BaseParser):
 
     def __init__(self):
         super(BaseAutoParser, self).__init__()
-        self._condition_property = None
+        self._trigger_property = None
 
     def interpret(self, result, start, end):
         # print(etree.tostring(result))
@@ -239,22 +239,22 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
         self.lenient = lenient
 
     @property
-    def condition_phrase(self):
-        # Generalised case of condition_phrase. We go through the fields of the model and
+    def trigger_phrase(self):
+        # Generalised case of trigger_phrase. We go through the fields of the model and
         # try to find one that is both required and not contextual, and remember the name
-        # of that field so that the condition_phrase will be that parse expression next time it's called
-        # If none of these are found, condition_property is set to False, and None is returned.
-        if self._condition_property is False:
+        # of that field so that the trigger_phrase will be that parse expression next time it's called
+        # If none of these are found, trigger_property is set to False, and None is returned.
+        if self._trigger_property is False:
             return None
-        elif self._condition_property is not None:
-            return self.model.fields[self._condition_property].parse_expression
+        elif self._trigger_property is not None:
+            return self.model.fields[self._trigger_property].parse_expression
         else:
             for field_name, field in six.iteritems(self.model.fields):
                 if field.required and not field.contextual:
-                    self._condition_property = field_name
-                    return self.model.fields[self._condition_property].parse_expression
-            if self._condition_property is None:
-                self._condition_property = False
+                    self._trigger_property = field_name
+                    return self.model.fields[self._trigger_property].parse_expression
+            if self._trigger_property is None:
+                self._trigger_property = False
                 return None
 
     @property

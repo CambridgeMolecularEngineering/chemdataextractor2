@@ -14,7 +14,7 @@ from ..doc.text import Footnote, Caption
 from ..scrape.pub.rsc import replace_rsc_img_chars
 from ..scrape.clean import clean, Cleaner
 from .markup import HtmlReader
-from ..doc.table_new import Table
+from ..doc.table import Table
 from lxml import etree
 
 

@@ -1,16 +1,18 @@
-"""Crystal Model"""
+"""Crystal Structure Model"""
 
-from chemdataextractor.model.base import BaseModel, StringType, ModelType
-from chemdataextractor.parse.elements import I, R, W, T, Optional
-from chemdataextractor.parse.actions import join
-from chemdataextractor.model.units.quantity_model import DimensionlessModel, QuantityModel
+from chemdataextractor.model.base import BaseModel, ModelType, StringType
 from chemdataextractor.model.model import Compound
-from chemdataextractor.model.units.length import LengthModel, Length
-from chemdataextractor.model.units.temperature import TemperatureModel
-from chemdataextractor.model.units.mass import Mass
-from chemdataextractor.model.units.substance_amount import AmountOfSubstance
 from chemdataextractor.model.units.angle import AngleModel
+from chemdataextractor.model.units.length import Length, LengthModel
+from chemdataextractor.model.units.mass import Mass
+from chemdataextractor.model.units.quantity_model import (DimensionlessModel,
+                                                          QuantityModel)
+from chemdataextractor.model.units.substance_amount import AmountOfSubstance
+from chemdataextractor.model.units.temperature import TemperatureModel
+from chemdataextractor.parse.actions import join
 from chemdataextractor.parse.auto import AutoTableParser
+from chemdataextractor.parse.elements import I, Optional, R, T, W
+
 from .colour import Colour
 
 
@@ -174,6 +176,3 @@ class Crystal(BaseModel):
 
     compound = ModelType(Compound, required=True, contextual=True, binding=True)
     parsers = [AutoTableParser()]
-
-
-
