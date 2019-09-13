@@ -2,7 +2,6 @@
 .eval
 ======================
 
-Evaluation package.
 
 .. automodule:: chemdataextractor.eval
     :members:

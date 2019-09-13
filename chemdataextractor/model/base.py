@@ -483,8 +483,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
         or
 
-        - other is a model type that is part of this model and that field is currently
-        set to be the default value or the field can be merged with the other.
+        - other is a model type that is part of this model and that field is currently set to be the default value or the field can be merged with the other.
 
         .. note::
 
@@ -743,8 +742,7 @@ class ModelList(MutableSequence):
         """
         Remove any subsets contained within the ModelList.
 
-        :param bool strict: Default True. Whether only strict subsets are removed. When this is
-        False, duplicates are removed too.
+        :param bool strict: Default True. Whether only strict subsets are removed. When this is False, duplicates are removed too.
         """
         # A dictionary with the type of each element as the key, and the element itself as the value
         typed_list = {}

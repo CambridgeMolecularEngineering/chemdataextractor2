@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Table document elements v2.0
+Table document elements
 
 .. codeauthor: Juraj Mavračić <jm2111@cam.ac.uk>
 

@@ -4,7 +4,7 @@
    :language: python
 
 ******************************************
-v1.5.0 Migration Guide
+v2.0 Migration Guide
 ******************************************
 
 Overview
@@ -204,7 +204,7 @@ On the other hand, if you only wish to extract data from tables, the automated t
 Migrating Existing Code
 =================================
 
-This section is aimed at migrating existing code to run in ChemDataExtractor 1.5.0 without adding any new functionality. For information on how to take advantage of the new features please also refer to `Upgrading Existing Code`_.
+This section is aimed at migrating existing code to run in ChemDataExtractor 2.0 without adding any new functionality. For information on how to take advantage of the new features please also refer to `Upgrading Existing Code`_.
 
 Migrating Models
 -----------------
@@ -287,7 +287,7 @@ Note also that the parser now inherits from :class:`~chemdataextractor.parse.bas
 Extracting Properties
 -----------------------
 
-To extract a certain model, prior to 1.5.0, one had to set the parsers or the document. Instead of this, you now pass in the model that you want to extract from the document, so instead of this::
+To extract a certain model, prior to 2.0, one had to set the parsers or the document. Instead of this, you now pass in the model that you want to extract from the document, so instead of this::
 
     document.parsers = [BpParser()]
 
@@ -301,12 +301,12 @@ Note that you should now pass in the class for the model you are parsing instead
 Upgrading Existing Code
 =============================
 
-The above small alterations are enough to get your code up and running, but to make the most of what ChemDataExtractor 1.5.0, you can upgrade your existing codebase to extract richer properties more easily.
+The above small alterations are enough to get your code up and running, but to make the most of what ChemDataExtractor 2.0, you can upgrade your existing codebase to extract richer properties more easily.
 
 Upgrading Models
 ------------------
 
-A key new feature of version 1.5.0 are the new :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` classes. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
+A key new feature of version 2.0 are the new :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` classes. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
 
 For example, the :python:`BoilingPoint` class we wrote earlier can be further transformed::
 
@@ -461,7 +461,7 @@ These parsers can also be made faster by setting the optional :attr:`~chemdataex
 Using Automatic Parsers
 ----------------------------
 
-This is actually the easiest part of upgrading to take advantage of 1.5.0's features; you only need to add a basic specifier and not set your own parsers, then ChemDataExtractor will handle it all for you. ::
+This is actually the easiest part of upgrading to take advantage of 2.0's features; you only need to add a basic specifier and not set your own parsers, then ChemDataExtractor will handle it all for you. ::
 
     from chemdataextractor.model import TemperatureModel, StringType, ModelType
     from chemdataextractor.model import Compound
@@ -499,7 +499,7 @@ Alternatively, if you want to use the parser you wrote yourself instead of the a
 Fully Nested Models
 -----------------------
 
-v1.5.0 brings the capability to nest models within other models. A simple example of this is that many models, such as the :python:`BoilingPoint` model we defined earlier, contains a model for compound. However, this also works with user-defined properties, and each of these models only needs to parse its surface-level properties, with everything else being merged in later. This nesting can in theory go multiple levels.
+v2.0 brings the capability to nest models within other models. A simple example of this is that many models, such as the :python:`BoilingPoint` model we defined earlier, contains a model for compound. However, this also works with user-defined properties, and each of these models only needs to parse its surface-level properties, with everything else being merged in later. This nesting can in theory go multiple levels.
 
 As a toy example, say we wanted to associate some additional properties to the boiling point, like the specific heat capacity of the material, and we're in turn interested in the dimensions of the apparatus used to measure the specific heat capacity::
 

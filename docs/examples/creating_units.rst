@@ -9,7 +9,7 @@ Creating new units and dimensions
 Overview
 =================================
 
-Units and dimensions are a new addition to ChemDataExtractor 1.5.0, and form a fundamental component in making sure that a large number of new features, such as automatic parsing, works. Many units are included in ChemDataExtractor, making it easy to create models out of the box, but there may be cases when you need to create your own units, and this document should get you started with that.
+Units and dimensions are a new addition to ChemDataExtractor 2.0, and form a fundamental component in making sure that a large number of new features, such as automatic parsing, works. Many units are included in ChemDataExtractor, making it easy to create models out of the box, but there may be cases when you need to create your own units, and this document should get you started with that.
 
 Dimensions
 ===============================
