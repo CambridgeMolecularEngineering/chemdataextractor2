@@ -36,9 +36,3 @@ Useful tools for processing text
     :members:
     :undoc-members:
 
-.text.unwrap
-------------------------------------------------
-
-.. automodule:: chemdataextractor.text.unwrap
-    :members:
-    :undoc-members:

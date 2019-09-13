@@ -69,7 +69,6 @@ API Documentation
    doc.figure
    doc.meta
    doc.table
-   doc.table
    doc.text
 
 ---------------------------------------------------------
@@ -184,7 +183,6 @@ API Documentation
    text.latex
    text.normalize
    text.processors
-   text.unwrap
 
 
 

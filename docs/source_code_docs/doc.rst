@@ -44,13 +44,6 @@ Logic for reading/creating documents. That is, splitting documents down into its
     :members:
     :undoc-members:
 
-.doc.table
-------------------------------------------------
-
-.. automodule:: chemdataextractor.doc.table
-    :members:
-    :undoc-members:
-
 .doc.text
 ------------------------------------------------
 
