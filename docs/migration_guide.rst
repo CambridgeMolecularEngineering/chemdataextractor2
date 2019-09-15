@@ -469,7 +469,7 @@ This is actually the easiest part of upgrading to take advantage of 2.0's featur
     from chemdataextractor.parse import I
 
     class BoilingPoint(TemperatureModel):
-        specifier = StringType(parse_expression=I('Boiling') + I('Point'), required=True)
+        specifier = StringType(parse_expression=(I('Boiling') + I('Point')).add_action(join), required=True)
         compound = ModelType(Compound)
 
 Alternatively, if you want to use the parser you wrote yourself instead of the automatic sentence parser, you can do the following::
