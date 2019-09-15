@@ -8,10 +8,19 @@ The ChemDataExtractor Toolkit
 =================================
 
 The ChemDataExtractor toolkit is an advanced natural language processing pipeline for extracting chemical property
-information from the scientific literature. A full description of the theory behind the toolkit can be found in the
-original paper:
+information from the scientific literature. The theory behind the toolkit can be found in the following papers:
+
+Original paper outlining the CDE workflow:
 
 *Swain, M. C., & Cole, J. M. "ChemDataExtractor: A Toolkit for Automated Extraction of Chemical Information from the Scientific Literature", J. Chem. Inf. Model. 2016, 56 (10), pp 1894--1904 10.1021/acs.jcim.6b00207*.
+
+Paper describing the Snowball algorithm:
+
+*Court, C. J., & Cole, J. M. (2018). Auto-generated materials database of Curie and Néel temperatures via semi-supervised relationship extraction. Scientific data, 5, 180111. 10.1038/sdata.2018.111*
+
+Paper describing the enhancements made in CDE 2.0 and TableDataExtractor:
+
+*TO BE ADDED*
 
 and the associated website https://chemdataextractor.org.
 
@@ -73,7 +82,7 @@ You can also get the latest release by cloning the git source code repository fr
 
 In order to function, ChemDataExtractor requires a variety of data files, such as machine learning models, dictionaries, and word clusters. Get these by running::
 
-    $ cde data download`
+    $ cde data download
 
 This will download all the necessary data files to the data directory. Run::
 
@@ -401,25 +410,24 @@ Consider this simple document as an example::
 Get the records for each element using the records property::
 
     >>> doc[0].records.serialize()
-    [{'labels': ['3'], 'names': ['5,10,15,20-Tetra(4-carboxyphenyl)porphyrin']}]
+    [{'Compound': {'names': ['5,10,15,20-Tetra(4-carboxyphenyl)porphyrin'], 'labels': ['3']}}]
     >>> doc[1].records.serialize()
-    [{'melting_points': [{'units': '°C', 'value': '90'}]}]
+    [{'MeltingPoint': {'raw_value': '90', 'raw_units': '°C', 'value': [90.0], 'units': 'Celsius^(1.0)'}}]
     >>> doc[2].records.serialize()
-    [{'names': ['Tetrahydrofuran', 'THF']}, {'melting_points': [{'solvent': 'Tetrahydrofuran'}]}]
+    [{'Compound': {'names': ['THF', 'Tetrahydrofuran']}}, {'Compound': {'names': ['THF', 'Tetrahydrofuran']}}]
 
 Due to the data interdependencies between the different document elements,
 each isn't so useful individually. Instead, it's normally much more useful to get the combined records for the entire document::
 
     >>> doc.records.serialize()
-    [{'names': ['Tetrahydrofuran', 'THF']},
-     {'labels': ['3'],
-      'names': ['5,10,15,20-Tetra(4-carboxyphenyl)porphyrin']
-      'melting_points': [{
-        'solvent': 'Tetrahydrofuran',
-        'units': '°C',
-        'value': '90'
-      }],
-    }]
+    [{'Compound': {'names': ['5,10,15,20-Tetra(4-carboxyphenyl)porphyrin'], 'labels': ['3']}},
+     {'Compound': {'names': ['THF', 'Tetrahydrofuran']}},
+     {'MeltingPoint': {'raw_value': '90',
+                       'raw_units': '°C',
+                       'value': [90.0],
+                       'units': 'Celsius^(1.0)',
+                       'compound': {'Compound': {'names': ['5,10,15,20-Tetra(4-carboxyphenyl)porphyrin'],
+                                                 'labels': ['3']}}}}]
 
 ChemDataExtractor has merged the information from all the elements into two unique chemical records.
 
@@ -660,7 +668,8 @@ Here we take you through a simple example of how to create a new parser.
 First, we need all the relevant imports::
 
     from chemdataextractor import Document
-    from chemdataextractor.model import Compound
+    from chemdataextractor.model import BaseModel, Compound
+    from chemdataextractor.model.units import TemperatureModel
     from chemdataextractor.doc import Paragraph, Heading
 
 
@@ -674,57 +683,96 @@ Let's create a simple example document with a single heading followed by a singl
 By default, ChemDataExtractor wont extract the ``boiling_point`` property. This can be shown by examining the output records::
 
     >>> d.records.serialize()
-    [{'labels': ['3a'], 'names': ['2,4,6-trinitrotoluene'], 'roles': ['product']}]
+    [{'Compound': {'names': ['2,4,6-trinitrotoluene'], 'labels': ['3a'], 'roles': ['product']}}]
 
 So we want to create a *boiling_point* property parser.
 
 .. rubric:: Step 1: Defining a new property model
 
 In ``chemdataextractor.model.py`` you will see all the current property models defined in ChemDataExtractor.
-You will also see the ``Compound`` class which contains all properties available for a single compound.
 Each property inherits from ``BaseModel`` and can contain fields that can have different types
 (``StringType``: a string, ``ModelType``: Another property model, ``ListType``: A list of another type e.g. ``ListType(StringType())`` is a list of strings).
 
 So in ``model.py`` we need to create a ``BoilingPoint`` class and give it some useful fields.
-In the most simple case, a boiling point has a unit and a value, both of which are string-type arguments::
+As a boiling point is a temperature, we can subclass the ``TemperatureModel`` class which automatically
+gives value and unit fields. Now all we need to add is a compound. ::
 
-    class BoilingPoint(BaseModel):  # Must inherit from BaseModel
-    """ A boiling point property"""
-        value = StringType()
-        units = StringType()
+    class BoilingPoint(TemperatureModel):
+        """ A boiling point property"""
+        compound = ModelType(Compound)
 
-If you look around at other properties, you will see that they can have contextual fields (by setting the ``contextual`` parameter to ``True`` inside the field type).
-Setting this parameter means that global contextual information from other elements of the document will be merged into these records.
-For example, if your property measurement was performed at a certain temperature, this information could have been given elsewhere in the document
-(maybe the experimental method section).
-By telling the model that this information is contextual, the temperature of the measurement will be merged with all relevant records.
+Such models automatically have :class:`~chemdataextractor.parse.template.QuantityModelTemplateParser`, :class:`~chemdataextractor.parse.template.MultiQuantityModelTemplateParser` set as the sentence parsers and :class:`~chemdataextractor.parse.auto.AutoTableParser` as the table parser. These
+parsers use the provided information to extract the model defined by the user. In the above case, the user hasn't yet provided any indication
+of what the property is called, so this will pick up all mentions of temperatures found in the document will be extracted. To make sure that we only
+find boiling points, we can alter the model as follows::
 
-Next, we need to add our new property to the ``Compound`` class::
+    class BoilingPoint(TemperatureModel):
+        """ A boiling point property"""
+        specifier = StringType(parse_expression=(I('Boiling') + I('Point')).add_action(join), required=True)
+        compound = ModelType(Compound)
 
-    class Compound(BaseModel):
-        names = ListType(StringType())
-        labels = ListType(StringType())
-        roles = ListType(StringType())
-        nmr_spectra = ListType(ModelType(NmrSpectrum))
-        ir_spectra = ListType(ModelType(IrSpectrum))
-        uvvis_spectra = ListType(ModelType(UvvisSpectrum))
-        melting_points = ListType(ModelType(MeltingPoint))
-        glass_transitions = ListType(ModelType(GlassTransition))
-        quantum_yields = ListType(ModelType(QuantumYield))
-        fluorescence_lifetimes = ListType(ModelType(FluorescenceLifetime))
-        electrochemical_potentials = ListType(ModelType(ElectrochemicalPotential))
+We now have a specifier, which specifies a phrase that must be found in a sentence for the model to be extracted.
+The parse expression for the specifier is written in the ``parse_expression`` field, in this case showing that
+we need to find the word boiling followed by the word point, and the case does not matter. More detail on these
+parse elements is provided :ref:`below <parserwriting>`.
 
-        # My new properties
-        boiling_points = ListType(ModelType(BoilingPoint))
+.. note::
 
-Note, we make the boiling points have ``ListType`` because a single compound could have multiple boiling points given in the document.
+    If the parse expression is more than one word long, please add the action :func:`~chemdataextractor.parse.actions.join`
+    to the parse expression so that the whole specifier is picked up by the automatically generated parsers correctly.
 
+Also note the ``required`` parameter being set to be ``True``. The required parameter defines whether a field is required
+for a model instance to be valid. For example, in the above case, any records without a specifier will be discarded
+by CDE.
+
+Another parameter which one could set is the ``contextual``, which is ``False`` by default. This parameter defines whether
+information from other elements of the document will be merged into this field. For example, if we wanted to capture the
+altitude at which the melting point was captured, we could set up the following::
+
+    class Altitude(LengthModel):
+        specifier = StringType(parse_expression=I('Altitude'), required=True)
+        pass
+
+    class BoilingPoint(TemperatureModel):
+        """ A boiling point property"""
+        specifier = StringType(parse_expression=(I('Boiling') + I('Point')).add_action(join), required=True)
+        compound = ModelType(Compound)
+        pressure = ModelType(Pressure, contextual=True)
+
+By doing this, the altitude, which may be found in a different sentence or even a different paragraph, can be added
+a boiling point record automatically using CDE's interdependency resolution facilities.
+
+If the nested property (e.g. the altitude the above example) is associated with a compound as well, it may be worth
+adding an associated compound to altitude and making the compound field a binding one::
+
+    class Altitude(LengthModel):
+        specifier = StringType(parse_expression=I('Altitude'), required=True)
+        compound = ModelType(Compound)
+
+    class BoilingPoint(TemperatureModel):
+        """ A boiling point property"""
+        specifier = StringType(parse_expression=(I('Boiling') + I('Point')).add_action(join), required=True)
+        compound = ModelType(Compound, binding=True)
+        pressure = ModelType(Pressure, contextual=True)
+
+The ``binding`` parameter is set to ``False`` by default, but by setting it to ``True``, we can make sure that any fields
+with the same name in nested fields are consistent. For example, in the above case, it would ensure that the altitude
+is associated with the same compound as the boiling point.
+
+These three properties, ``contextual``, ``required``, and ``binding``, ensure that CDE's interdependency resolution facilities
+work as well as possible and are especially important with more complicated models such as those shown above.
+
+.. _parserwriting:
 .. rubric:: Step 2: Writing a Parser
 
+Whilst ChemDataExtractor provides certain automatically generated parsers for properties
+(for more information on these automatically generated parsers, see :ref:`examples`), one
+can also write their own parser for higher precision.
+
 Now we need to create the logic that actually extracts boiling points from the text.
-Currently, ChemDataExtractor uses nested rules (*grammars*) to extract chemical properties.
+ChemDataExtractor uses nested rules (*grammars*) to extract chemical properties.
 These parsers are defined in the ``chemdataextractor.parse`` package.
-For example, have a look at the melting point parser in ``chemdataextractor.parse.mp.py``.
+For example, have a look at the melting point parser in ``chemdataextractor.parse.mp_new.py``.
 This contains a number of statements that are used to define the melting point relationship.
 
 It seems very complicated at first, but let's break the first statement down into its constituent parts::
@@ -775,8 +823,8 @@ Some very simple logic for extracting boiling points might be::
 
 
     prefix = (R(u'^b\.?p\.?$', re.I) | I(u'boiling') + I(u'point')).hide()
-    units = (W(u'°') + Optional(R(u'^[CFK]\.?$')))(u'units').add_action(merge)
-    value = R(u'^\d+(\.\d+)?$')(u'value')
+    units = (W(u'°') + Optional(R(u'^[CFK]\.?$')))(u'raw_units').add_action(merge)
+    value = R(u'^\d+(\.\d+)?$')(u'raw_value')
     bp = (prefix + value + units)(u'bp')
 
 
@@ -793,19 +841,21 @@ If we were to reproduce the XML it would look like:
 Now we have to create the logic for parsing this structure.
 In the same file, we create the parser class, that inherits from ``BaseParser``::
 
-    class BpParser(BaseParser):
+    class BpParser(BaseSentenceParser):
         root = bp
 
         def interpret(self, result, start, end):
-            compound = Compound(
-                boiling_points=[
-                    BoilingPoint(
-                        value=first(result.xpath('./value/text()')),
-                        units=first(result.xpath('./units/text()'))
-                    )
-                ]
-            )
-            yield compound
+            try:
+                raw_value = first(result.xpath('./value/text()'))
+                raw_units = first(result.xpath('./units/text()'))
+                boiling_point = self.model(raw_value=raw_value,
+                            raw_units=raw_units,
+                            value=self.extract_value(raw_value),
+                            error=self.extract_error(raw_value),
+                            units=self.extract_units(raw_units, strict=True))
+                yield boiling_point
+            except TypeError as e:
+                log.debug(e)
 
 All parser classes must define:
 
@@ -816,11 +866,20 @@ The *interpret* function then creates a new compound (with the model we defined 
 Here, the result parameter is the result of the parsing process. If a tree with root bp is found, we access the value and unit elements
 using `XPath expressions <https://www.w3schools.com/xml/xpath_syntax.asp>`_.
 
-Finally, we need to tell ChemDataExtractor to parse the paragraphs with our new parser.
-In ``ChemDataextractor.doc.text`` find the ``Paragraph`` class and add the ``BpParser()`` class to the list of parsers::
+.. note::
 
-    class Paragraph(Text):
-        parsers = [..., BpParser()]
+    CDE also provides an automatic interpret function if you subclass from :class:`~chemdataextractor.parse.auto.BaseAutoParser`.
+    This interpret function relies upon all the names of the tags in the parse expressions being the same as the names of
+    the fields in the model.
+
+Finally, we need to tell ChemDataExtractor to parse the ``BoilingPoint`` model with the newly written parser.
+This can be done by setting the parsers associated with the ``BoilingPoint`` model::
+
+    BoilingPoint.parsers = [BpParser()]
+
+alternatively, we could have this parser in addition to the default parsers::
+
+    BoilingPoint.parsers.append(BpParser())
 
 .. rubric:: Step 3: Testing the Parser
 
@@ -832,10 +891,9 @@ Now we can simply re-run the document through ChemDataExtractor::
     >>>     )
 
     >>> d.records.serialize()
-    [{'boiling_points': [{'units': '°C', 'value': '240'}],
-      'labels': ['3a'],
-      'names': ['2,4,6-trinitrotoluene'],
-      'roles': ['product']}]
+    [{'BoilingPoint': {'raw_value': '240',
+                       'raw_units': '°C',
+                        'compound': {'Compound': {'names': ['2,4,6-trinitrotoluene'], 'labels': ['3a'], 'roles': ['product']}}}}]
 
 Of course, real world examples are much more complex than this, and a large amount of trial and error is needed to create good parsers.
 It should also be noted that in this example, the chemical label ('3a') is found using interdependency resolution between the heading and associated paragraph.
@@ -846,10 +904,12 @@ Rules for chemical entity recognition can be found in ``chemdataextractor.parse.
 .. rubric:: Table Parsers
 
 ChemDataExtractor parses tables in a similar way. In ``chemdataextractor.parse.table.py`` you will find the logic for finding chemical relationships from tables.
-As an exercise try to write a table parser for the boiling point relationship we just created.
-You will need to define a way to find boiling points in table headers, then a parser for the cells.
-Available table parsers can be found in ``chemdataextractor.doc.table.py``.
+These parsers can be written very similarly to a sentence parser, but require the parser to be subclassed from :class:`~chemdataextractor.parse.base.BaseTableParser`
+instead of :class:`~chemdataextractor.parse.base.BaseSentenceParser`.
 
+However, due to the relatively uniform nature of tables and TableDataExtractor's powerful table normalisation facilities,
+the automatically generated parser for tables tend to perform very well, with precisions of over 90% for tables often being achievable
+by choosing the right parse expressions and setting the ``required``, ``contextual`` and ``binding`` properties appropriately.
 
 ChemDataExtractor REST API
 ------------------------------------

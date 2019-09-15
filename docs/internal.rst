@@ -9,7 +9,7 @@ Info for New Group Members
 Contributing Your Code
 =================================
 
-The current stable release (version 1.3.0) can be found at https://github.com/CambridgeMolecularEngineering/chemdataextractor.git.
+The current stable release (version 2.0.0) can be found at https://github.com/CambridgeMolecularEngineering/chemdataextractor.git.
 
 As you are joining the Molecular Engineering Group to work with ChemDataExtractor,
 you will almost certainly need to make a number of changes to the source code for your particular use case.
