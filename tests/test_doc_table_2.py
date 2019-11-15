@@ -5,7 +5,7 @@ Test the Table Document element and complex Table autoparsers.
 """
 
 from chemdataextractor.doc import Caption, Document
-from chemdataextractor.doc.table_new import Table
+from chemdataextractor.doc.table import Table
 from chemdataextractor.model import TemperatureModel, StringType, Compound, ModelType, DimensionlessModel
 from chemdataextractor.parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser, CompoundTableParser
 from chemdataextractor.model.units.energy import EnergyModel

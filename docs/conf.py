@@ -24,9 +24,9 @@ copyright = '2018, University of Cambridge, Molecular Engineering Group'
 author = 'University of Cambridge, Molecular Engineering Group'
 
 # The short X.Y version
-version = ''
+version = '2.0'
 # The full version, including alpha/beta/rc tags
-release = 'v1.5.0'
+release = 'v2.0.0'
 
 
 # -- General configuration ---------------------------------------------------

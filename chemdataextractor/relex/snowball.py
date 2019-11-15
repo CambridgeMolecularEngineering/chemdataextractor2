@@ -69,7 +69,8 @@ class Snowball(BaseSentenceParser):
                  suffix_length=1,
                  learning_rate=0.5,
                  max_candidate_combinations=400,
-                 save_dir='chemdataextractor/relex/data/'):
+                 save_dir='chemdataextractor/relex/data/',
+                 play_sound=False):
 
         self.model = model
         self.relations = []
@@ -80,6 +81,7 @@ class Snowball(BaseSentenceParser):
         self.max_candidate_combinations = max_candidate_combinations
         self.save_dir = save_dir
         self.save_file_name = model.__name__
+        self.play_sound = play_sound
 
 
         # params
@@ -123,7 +125,7 @@ class Snowball(BaseSentenceParser):
 
         f = open(path, 'rb')
         return pickle.load(f)
-    
+
     def save(self):
         """ Write all snowball settings to file for loading later"""
         save_dir = self.save_dir
@@ -161,13 +163,13 @@ class Snowball(BaseSentenceParser):
                         wf.write(six.text_type(relation) + " Confidence:  " + six.text_type(relation.confidence) + '\n')
 
         return
-    
+
     def set_learning_rate(self, alpha):
         self.learning_rate =  alpha
         for cluster in self.clusters:
             cluster.learning_rate = alpha
         return
-    
+
     def train(self, corpus, skip=0):
         """train the snowball algorithm on a specified corpus
 
@@ -188,7 +190,7 @@ class Snowball(BaseSentenceParser):
                 elif isinstance(s, Document):
                     self.train_from_document(s)
         return
-    
+
     def train_from_file(self, filename):
         """Train Snowball from the elements of a file
 
@@ -206,7 +208,7 @@ class Snowball(BaseSentenceParser):
         f_log.close()
         f.close()
         return
-    
+
     def train_from_document(self, d):
         """Train Snowball from a Document object
 
@@ -230,7 +232,7 @@ class Snowball(BaseSentenceParser):
 
     def train_from_sentence(self, s):
         """Train Snowball from a single sentence
-        
+
         Arguments:
             s {[type]} -- [description]
         """
@@ -246,8 +248,9 @@ class Snowball(BaseSentenceParser):
                 candidate_dict[str(i)] = candidate
                 print("Candidate " + str(i) + ' ' + str(candidate) + '\n')
 
-            sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
-            playsound(sound_file)
+            if self.play_sound:
+                sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
+                playsound(sound_file)
             res = six.moves.input("...: ").replace(' ', '')
             if res:
                 chosen_candidate_idx = res.split(',')
@@ -260,7 +263,7 @@ class Snowball(BaseSentenceParser):
                 if chosen_candidates:
                     self.update(s.raw_tokens, chosen_candidates)
         return candidate_found
-    
+
     def candidates(self, tokens):
         """Find all candidate relationships of self.model within a sentence
 
@@ -282,7 +285,7 @@ class Snowball(BaseSentenceParser):
             if result:
                 for entity in self.retrieve_entities(self.model, result[0]):
                     detected.append(entity)
-                    
+
         if not detected:
             return []
         detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
@@ -301,7 +304,7 @@ class Snowball(BaseSentenceParser):
                 entities_dict[tag] = []
 
             entities = [Entity(text, tag, parse_expression, index, index + text_length) for index in start_indices]
-            
+
             # Add entities to dictionary if new
             for entity in entities:
                 if entity not in entities_dict[tag]:
@@ -341,7 +344,7 @@ class Snowball(BaseSentenceParser):
 
     def retrieve_entities(self, model, result):
         """Recursively retrieve the entities from a parse result for a given model
-        
+
         Arguments:
             result {lxml.etree.element} -- The parse result
         """
@@ -424,7 +427,7 @@ class Snowball(BaseSentenceParser):
             new_cluster = Cluster(str(self.cluster_counter), learning_rate=self.learning_rate)
             new_cluster.add_phrase(phrase)
             self.clusters.append(new_cluster)
-            
+
         return
 
     #: Override from BaseSentenceParser
@@ -453,7 +456,7 @@ class Snowball(BaseSentenceParser):
         if product <= self.max_candidate_combinations:
             all_combs = [i for r in range(1, number_of_unique_name + 1) for i in combinations(candidate_relations, r)]
 
-        
+
         # Create a candidate phrase for each possible combination
         all_candidate_phrases = []
         for combination in all_combs:
@@ -482,7 +485,7 @@ class Snowball(BaseSentenceParser):
                 # print("Match score %f" % match_score)
                 if match_score >= self.minimum_cluster_similarity_score:
                     confidence_term *= (1.0 - (match_score * cluster.pattern.confidence))
-                
+
                 if match_score > best_match_score:
                     best_match_cluster = cluster
                     best_match_score = match_score
@@ -509,10 +512,10 @@ class Snowball(BaseSentenceParser):
                 for model in self.interpret(relation):
                     yield model
 
-    
+
     def interpret(self, relation):
         """Convert a detected relation to a ModelType Record
-        
+
         Arguments:
             relation {[type]} -- [description]
         """
@@ -571,7 +574,7 @@ class Snowball(BaseSentenceParser):
         model_instance.record_method = self.__class__.__name__
 
         yield model_instance
-    
+
     def _get_data(self, field_name, field, relation_data):
         if hasattr(field, 'model_class'):
             field_result = relation_data[field_name]

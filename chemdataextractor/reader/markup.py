@@ -21,8 +21,7 @@ from ..errors import ReaderError
 from ..doc.document import Document
 from ..doc.text import Title, Heading, Paragraph, Caption, Citation, Footnote, Text, Sentence, Cell
 from ..doc.meta import MetaData
-# from ..doc.table import Table, Cell
-from ..doc.table_new import Table
+from ..doc.table import Table
 from ..doc.figure import Figure
 from ..scrape import INLINE_ELEMENTS
 from ..scrape.clean import clean
@@ -124,7 +123,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
                 final_elements.append(element)
         return final_elements
 
-    def _parse_text(self, el, refs=None, specials=None,  element_cls=Paragraph):
+    def _parse_text(self, el, refs=None, specials=None, element_cls=Paragraph):
         """Like _parse_element but ensure a single element."""
         if specials is None:
             specials = {}
@@ -211,7 +210,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
         table = Table(caption, table_data=data)
 
         return [table]
-    
+
     def _parse_metadata(self, el, refs, specials):
         title = self._css(self.metadata_title_css, el)
         authors = self._css(self.metadata_author_css,el)

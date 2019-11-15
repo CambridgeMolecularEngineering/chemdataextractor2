@@ -161,16 +161,6 @@ class NmrSpectrum(BaseModel):
     compound = ModelType(Compound)
     parsers = [NmrParser()]
 
-# class MeltingPoint(BaseModel):
-#     """A melting point measurement."""
-#     value = StringType()
-#     units = StringType(contextual=True)
-#     solvent = StringType(contextual=True)
-#     concentration = StringType(contextual=True)
-#     concentration_units = StringType(contextual=True)
-#     apparatus = StringType(contextual=True)
-
-
 class MeltingPoint(TemperatureModel):
     solvent = StringType(contextual=True)
     concentration = StringType(contextual=True)
@@ -230,9 +220,6 @@ class ElectrochemicalPotential(BaseModel):
     temperature = StringType(contextual=True)
     temperature_units = StringType(contextual=True)
     apparatus = ModelType(Apparatus, contextual=True)
-
-
-# TEST MODELS
 
 class NeelTemperature(TemperatureModel):
     # expression = (I('T')+I('N')).add_action(merge)

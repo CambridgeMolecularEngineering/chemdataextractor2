@@ -17,6 +17,20 @@ log = logging.getLogger(__name__)
 class BaseParser(object):
     """"""
     model = None
+    trigger_phrase = None
+    """
+    Optional :class:`~chemdataextractor.parse.elements.BaseParserElement` instance.
+    All sentences are run through this before the full root phrase is applied to the
+    sentence. If nothing is found for this phrase, the sentence will not go through
+    the full root phrase. This is done for performance reasons, and if not set,
+    ChemDataExtractor will perform as it did in previous versions. If this phrase is
+    set to an appropriate value, it can help ChemDataExtractor perform at up to 2x
+    its previous speed.
+
+    To ensure that this works as intended, the :class:`~chemdataextractor.parse.elements.BaseParserElement`
+    should be a simple parse rule (substantially simpler than the :class:`~chemdataextractor.parse.base.BaseParser.root`)
+    that takes little time to process.
+    """
 
     @abstractproperty
     def root(self):
@@ -104,9 +118,12 @@ class BaseSentenceParser(BaseParser):
         :returns: All the models found in the sentence.
         :rtype: Iterator[:class:`chemdataextractor.model.base.BaseModel`]
         """
-        for result in self.root.scan(tokens):
-            for model in self.interpret(*result):
-                yield model
+        if self.trigger_phrase is not None:
+            trigger_phrase_results = [result for result in self.trigger_phrase.scan(tokens)]
+        if self.trigger_phrase is None or trigger_phrase_results:
+            for result in self.root.scan(tokens):
+                for model in self.interpret(*result):
+                    yield model
 
 
 class BaseTableParser(BaseParser):
@@ -118,11 +135,11 @@ class BaseTableParser(BaseParser):
     def parse_cell(self, cell):
         """
         Parse a cell. This function is primarily called by the
-        :attr:`~chemdataextractor.doc.table_new.Table.records` property of
-        :class:`~chemdataextractor.doc.table_new.Table`.
+        :attr:`~chemdataextractor.doc.table.Table.records` property of
+        :class:`~chemdataextractor.doc.table.Table`.
 
         :param list[(token,tag)] tokens: List of tokens for parsing. When this method
-            is called by :attr:`chemdataextractor.doc.text.table_new.Table`,
+            is called by :attr:`chemdataextractor.doc.text.table.Table`,
             the tokens passed in are in the same form as
             :attr:`chemdataextractor.doc.text.Sentence.tagged_tokens`, after the
             category table has been flattened into a sentence.

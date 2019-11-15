@@ -142,20 +142,19 @@ class BaseParserElement(object):
         :returns: A tuple where the first element is a list of elements found (can be None if no results were found), and the last index investigated.
         :rtype: tuple(list(Element) or None, int)
         """
-        start = i
         try:
-            result, i = self._parse_tokens(tokens, i, actions)
+            result, found_index = self._parse_tokens(tokens, i, actions)
         except IndexError:
             raise ParseException(tokens, i, 'IndexError', self)
         if actions:
             for action in self.actions:
-                action_result = action(tokens, start, result)
+                action_result = action(tokens, i, result)
                 if action_result is not None:
                     result = action_result
         if self.condition is not None:
             if not self.condition(result):
-                raise ParseException(tokens, i, 'Did not satisfy condition', self)
-        return result, i
+                raise ParseException(tokens, found_index, 'Did not satisfy condition', self)
+        return result, found_index
 
     def try_parse(self, tokens, i):
         return self.parse(tokens, i, actions=False)[1]
@@ -291,9 +290,10 @@ class Tag(BaseParserElement):
 
     def _parse_tokens(self, tokens, i, actions=True):
         token = tokens[i]
-        if token[1] == self.match:
-            return [E(self.name or safe_name(token[1]), token[0])], i + 1
-        raise ParseException(tokens, i, 'Expected %s, got %s' % (self.match, token[1]), self)
+        tag = token[1]
+        if tag == self.match:
+            return [E(self.name or safe_name(tag), token[0])], i + 1
+        raise ParseException(tokens, i, 'Expected %s, got %s' % (self.match, tag), self)
 
 
 class IWord(Word):
@@ -326,7 +326,7 @@ class Regex(BaseParserElement):
         token_text = tokens[i][0]
         result = self.regex.search(token_text)
         if result:
-            text = tokens[i][0] if self.group is None else result.group(self.group)
+            text = token_text if self.group is None else result.group(self.group)
             return [E(self.name or safe_name(tokens[i][1]), text)], i + 1
         raise ParseException(tokens, i, 'Expected %s, got %s' % (self.pattern, token_text), self)
 
@@ -392,17 +392,19 @@ class ParseExpression(BaseParserElement):
         return ret
 
     def streamline(self):
-        super(ParseExpression, self).streamline()
-        for e in self.exprs:
-            e.streamline()
-        # collapse nested exprs from e.g. And(And(And(a, b), c), d) to And(a,b,c,d)
-        if len(self.exprs) == 2:
-            other = self.exprs[0]
-            if isinstance(other, self.__class__) and not other.actions and other.name is None:
-                self.exprs = other.exprs[:] + [self.exprs[1]]
-            other = self.exprs[-1]
-            if isinstance(other, self.__class__) and not other.actions and other.name is None:
-                self.exprs = self.exprs[:-1] + other.exprs[:]
+        if not self.streamlined:
+            super(ParseExpression, self).streamline()
+            for e in self.exprs:
+                if not e.streamlined:
+                    e.streamline()
+            # collapse nested exprs from e.g. And(And(And(a, b), c), d) to And(a,b,c,d)
+            if len(self.exprs) == 2:
+                other = self.exprs[0]
+                if isinstance(other, self.__class__) and not other.actions and other.name is None:
+                    self.exprs = other.exprs[:] + [self.exprs[1]]
+                other = self.exprs[-1]
+                if isinstance(other, self.__class__) and not other.actions and other.name is None:
+                    self.exprs = self.exprs[:-1] + other.exprs[:]
         return self
 
 
@@ -548,9 +550,11 @@ class ParseElementEnhance(BaseParserElement):
             raise ParseException('', i, 'Error', self)
 
     def streamline(self):
-        super(ParseElementEnhance, self).streamline()
-        if self.expr is not None:
-            self.expr.streamline()
+        if not self.streamlined:
+            super(ParseElementEnhance, self).streamline()
+            if self.expr is not None:
+                if not self.expr.streamlined:
+                    self.expr.streamline()
         return self
 
 
@@ -612,7 +616,6 @@ class OneOrMore(ParseElementEnhance):
     """Repetition of one or more of the given expression."""
 
     def _parse_tokens(self, tokens, i, actions=True):
-        #print(tokens)
         # must be at least one
         results, i = self.expr.parse(tokens, i, actions)
         try:

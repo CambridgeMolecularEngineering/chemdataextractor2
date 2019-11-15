@@ -134,18 +134,6 @@ class ListType(BaseType):
         self.default = default if default is not None else []
         self.sorted = sorted
 
-    # def __get__(self, instance, owner):
-    #     """Descriptor for retrieving a value from a field in a Model."""
-    #     # Check if Model class is being called, rather than Model instance
-    #     if instance is None:
-    #         return self
-    #     # Get value from Model instance if available
-    #     value = instance._values.get(self.name)
-    #     # If value is None or empty string then return the default value, if set
-    #     if value in [None, '', []]:
-    #         return self.default if self.default is not None else []
-    #     return value
-
     def __set__(self, instance, value):
         """Descriptor for assigning a value to a ListField in a Model."""
         # Run process for the nested field type for each value in list
@@ -341,11 +329,6 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     def get(self, key, default=None):
         return getattr(self, key, default)
 
-    # def validate(self):
-    #     """"""
-    #     for field_name in self:
-    #         self.fields[field_name].validate()
-
     @property
     def contextual_fulfilled(self):
         """
@@ -500,8 +483,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
         or
 
-        - other is a model type that is part of this model and that field is currently
-        set to be the default value or the field can be merged with the other.
+        - other is a model type that is part of this model and that field is currently set to be the default value or the field can be merged with the other.
 
         .. note::
 
@@ -760,8 +742,7 @@ class ModelList(MutableSequence):
         """
         Remove any subsets contained within the ModelList.
 
-        :param bool strict: Default True. Whether only strict subsets are removed. When this is
-        False, duplicates are removed too.
+        :param bool strict: Default True. Whether only strict subsets are removed. When this is False, duplicates are removed too.
         """
         # A dictionary with the type of each element as the key, and the element itself as the value
         typed_list = {}

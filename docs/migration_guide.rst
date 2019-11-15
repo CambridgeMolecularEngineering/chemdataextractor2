@@ -4,7 +4,7 @@
    :language: python
 
 ******************************************
-v1.5.0 Migration Guide
+v2.0 Migration Guide
 ******************************************
 
 Overview
@@ -26,11 +26,11 @@ Overall Structure
 
 At a high level, in previous versions of ChemDataExtractor, the :class:`~chemdataextractor.doc.document.Document` class and each of its subelements (e.g. :class:`~chemdataextractor.doc.text.Paragraph`, :class:`~chemdataextractor.doc.table.Table` or :class:`~chemdataextractor.doc.text.Sentence`) had a list of parsers. These parsers each had an associated model which they were parsing for. When these parsers found a sentence (or table cell) that matched to the parse phrase root, it would create a :class:`~chemdataextractor.doc.text.Compound` and the property would be associated to this instance of a compound.
 
-The new structure changes this hierarchy significantly. The :class:`~chemdataextractor.doc.document.Document` class and its subelements now own the models that they should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :class:`~chemdataextractor.doc.text.Sentence` or :class:`~chemdataextractor.doc.table_new.Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the models.
+The new structure changes this hierarchy significantly. The :class:`~chemdataextractor.doc.document.Document` class and its subelements now own the models that they should look for. Each model contains a list of parsers that can be used for parsing different types of elements (e.g. :class:`~chemdataextractor.doc.text.Sentence` or :class:`~chemdataextractor.doc.table.Table`) to extract the model. At the appropriate timings, the elements will call the appropriate parsers in the models.
 
 This new structure has several advantages:
 
-- You no longer have to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table_new.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, you just pass in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
+- You no longer have to search for the appropriate classes for parsing. You don't need to find :class:`~chemdataextractor.parse.mp_new.MpParser` and :class:`~chemdataextractor.parse.table.MpTableParser` and assign them as parsers to :class:`~chemdataextractor.doc.text.Sentence` s and :class:`~chemdataextractor.doc.table.Table` s respectively to extract a :class:`~chemdataextractor.model.model.MeltingPoint`. With the new structure, you just pass in a list, :python:`[MeltingPoint, Compound]`, to document, and the appropriate parsers are automatically used.
 
 - The new structure is far safer, that is, it is impossible to use a parser meant for tables on a sentence and a parser meant for sentences on tables.
 
@@ -128,7 +128,7 @@ TableDataExtractor is a new toolkit for ChemDataExtractor that vastly enhances i
 Previously, rule-based parsers had to be written specifically for tables, for every new property. These would usually be very limited, due to the complexity of tables found in the literature.
 
 TableDataExtractor reads all tables and outputs their data in a highly standardised format whilst also retaining information about all the row or column headings and subheadings that the data point belongs to. The output of TableDataExtractor is a *category table*, where each row corresponds to a single data-cell of the original table, along with its corresponding header structure.
-The standardized structure of the category table enables fully automated parsing with ChemDataExtractor. Within ChemDataExtractor all of the functionality of TableDataExtractor can be accessed via an instance of the :class:`~chemdataextractor.doc.table_new.Table` object, ``table``, as ``table.tde_table``.
+The standardized structure of the category table enables fully automated parsing with ChemDataExtractor. Within ChemDataExtractor all of the functionality of TableDataExtractor can be accessed via an instance of the :class:`~chemdataextractor.doc.table.Table` object, ``table``, as ``table.tde_table``.
 
 In most cases it should not be necessary to interact directly with TableDataExtractor. However, it is recommended to test it on an individual corpus of literature, before a production run.
 Visual inspection is the best option to do so::
@@ -204,7 +204,7 @@ On the other hand, if you only wish to extract data from tables, the automated t
 Migrating Existing Code
 =================================
 
-This section is aimed at migrating existing code to run in ChemDataExtractor 1.5.0 without adding any new functionality. For information on how to take advantage of the new features please also refer to `Upgrading Existing Code`_.
+This section is aimed at migrating existing code to run in ChemDataExtractor 2.0 without adding any new functionality. For information on how to take advantage of the new features please also refer to `Upgrading Existing Code`_.
 
 Migrating Models
 -----------------
@@ -287,7 +287,7 @@ Note also that the parser now inherits from :class:`~chemdataextractor.parse.bas
 Extracting Properties
 -----------------------
 
-To extract a certain model, prior to 1.5.0, one had to set the parsers or the document. Instead of this, you now pass in the model that you want to extract from the document, so instead of this::
+To extract a certain model, prior to 2.0, one had to set the parsers or the document. Instead of this, you now pass in the model that you want to extract from the document, so instead of this::
 
     document.parsers = [BpParser()]
 
@@ -301,12 +301,12 @@ Note that you should now pass in the class for the model you are parsing instead
 Upgrading Existing Code
 =============================
 
-The above small alterations are enough to get your code up and running, but to make the most of what ChemDataExtractor 1.5.0, you can upgrade your existing codebase to extract richer properties more easily.
+The above small alterations are enough to get your code up and running, but to make the most of what ChemDataExtractor 2.0, you can upgrade your existing codebase to extract richer properties more easily.
 
 Upgrading Models
 ------------------
 
-A key new feature of version 1.5.0 are the new :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` classes. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
+A key new feature of version 2.0 are the new :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` classes. These new models are much more versatile in that they extract values and errors as floats (or lists of floats), and units are properly identified and extracted. If your existing models are already of one of the dimensions defined in ChemDataExtractor, i.e. Length, Mass, Time, or Temperature, then it's easy. Just remove value and units properties, as those are included by default, and write the model as a subclass of the appropriate model.
 
 For example, the :python:`BoilingPoint` class we wrote earlier can be further transformed::
 
@@ -456,10 +456,12 @@ To define this model is great, but we also need to upgrade the parser to make su
             except TypeError as e:
                 log.debug(e)
 
+These parsers can also be made faster by setting the optional :attr:`~chemdataextractor.parse.base.BaseParser.trigger_phrase` attribute. The parse element contained in this attribute is run before the root phrase is run, which can result in substantial performance improvements if the root phrase is large and complicated. However, in the case of :python:`BpParser` above, the root phrase itself is so simple that setting this attribute could make the parser slightly slower. You should consider setting the :attr:`~chemdataextractor.parse.base.BaseParser.trigger_phrase` for real, more complicated parsers if you are finding the parser to be running too slowly.
+
 Using Automatic Parsers
 ----------------------------
 
-This is actually the easiest part of upgrading to take advantage of 1.5.0's features; you only need to add a basic specifier and not set your own parsers, then ChemDataExtractor will handle it all for you. ::
+This is actually the easiest part of upgrading to take advantage of 2.0's features; you only need to add a basic specifier and not set your own parsers, then ChemDataExtractor will handle it all for you. ::
 
     from chemdataextractor.model import TemperatureModel, StringType, ModelType
     from chemdataextractor.model import Compound
@@ -467,7 +469,7 @@ This is actually the easiest part of upgrading to take advantage of 1.5.0's feat
     from chemdataextractor.parse import I
 
     class BoilingPoint(TemperatureModel):
-        specifier = StringType(parse_expression=I('Boiling') + I('Point'), required=True)
+        specifier = StringType(parse_expression=(I('Boiling') + I('Point')).add_action(join), required=True)
         compound = ModelType(Compound)
 
 Alternatively, if you want to use the parser you wrote yourself instead of the automatic sentence parser, you can do the following::
@@ -497,7 +499,7 @@ Alternatively, if you want to use the parser you wrote yourself instead of the a
 Fully Nested Models
 -----------------------
 
-v1.5.0 brings the capability to nest models within other models. A simple example of this is that many models, such as the :python:`BoilingPoint` model we defined earlier, contains a model for compound. However, this also works with user-defined properties, and each of these models only needs to parse its surface-level properties, with everything else being merged in later. This nesting can in theory go multiple levels.
+v2.0 brings the capability to nest models within other models. A simple example of this is that many models, such as the :python:`BoilingPoint` model we defined earlier, contains a model for compound. However, this also works with user-defined properties, and each of these models only needs to parse its surface-level properties, with everything else being merged in later. This nesting can in theory go multiple levels.
 
 As a toy example, say we wanted to associate some additional properties to the boiling point, like the specific heat capacity of the material, and we're in turn interested in the dimensions of the apparatus used to measure the specific heat capacity::
 

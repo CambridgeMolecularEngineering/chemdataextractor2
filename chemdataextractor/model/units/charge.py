@@ -2,7 +2,7 @@
 """
 Units and models for charge.
 
-Batuhan Yildirim (by256@cam.ac.uk)
+.. codeauthor:: Batuhan Yildirim (by256@cam.ac.uk)
 
 """
 

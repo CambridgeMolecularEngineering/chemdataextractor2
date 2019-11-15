@@ -1,8 +1,0 @@
-<(Cobalt,name_1,0,1), (Curie temperature,specifier_1,9,11), (1388,value_1,12,13), (K,units_1,13,14)> Confidence:  1.0
-<(69,value_1,46,47), (Tc,specifier_1,44,45), (EuO,name_1,41,42), (K,units_1,47,48)> Confidence:  1.0
-<(K,units_1,13,14), (627,value_1,12,13), (Ni,name_1,17,18), (Curie temperature (,specifier_1,9,12)> Confidence:  1.0
-<(CoS2,name_1,0,1), (116,value_1,8,9), (K,units_1,9,10), (Curie temperature,specifier_1,5,7)> Confidence:  1.0
-<(1103,value_1,9,10), (curie temperature,specifier_1,6,8), (K,units_1,10,11), (BiFeO3,name_1,0,1)> Confidence:  1.0
-<(Fe3O4,name_1,9,10), (850,value_1,25,26), (Curie temperature ( Tc,specifier_1,20,24), (K,units_1,26,27)> Confidence:  1.0
-<(Fe3O4,name_1,2,3), (K,units_1,20,21), (858,value_1,19,20), (Curie temperature (,specifier_1,15,18)> Confidence:  1.0
-<(Curie temperature,specifier_1,19,21), (CrO2,name_1,6,7), (395,value_1,22,23), (K,units_1,23,24)> Confidence:  1.0

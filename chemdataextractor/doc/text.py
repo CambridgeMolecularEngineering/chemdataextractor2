@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from abc import abstractproperty, abstractmethod
+from abc import abstractproperty
 import collections
 import logging
 import re
@@ -30,9 +30,6 @@ from ..parse.definitions import specifier_definition
 from ..parse.cem import chemical_name, cem_phrase
 from ..parse.quantity import construct_quantity_re
 from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
-
-from lxml import etree
-
 
 log = logging.getLogger(__name__)
 
@@ -269,7 +266,7 @@ class Text(collections.Sequence, BaseText):
         """A list of :class:`str` part of speech tags for each sentence in this text passage."""
         return [sent.pos_tags for sent in self.sentences]
 
-    @memoized_property
+    @property
     def unprocessed_ner_tagged_tokens(self):
         """
         A list of (:class:`Token` token, :class:`str` named entity recognition tag)
@@ -279,7 +276,7 @@ class Text(collections.Sequence, BaseText):
         """
         return [sent.unprocessed_ner_tagged_tokens for sent in self.sentences]
 
-    @memoized_property
+    @property
     def unprocessed_ner_tags(self):
         """
         A list of :class:`str` unprocessed named entity tags for the tokens in this sentence.
@@ -432,7 +429,7 @@ class Caption(Text):
     def _repr_html_(self):
         return '<caption class="cde-caption">' + self.text + '</caption>'
 
-    @memoized_property
+    @property
     def definitions(self):
         return [definition for sent in self.sentences for definition in sent.definitions]
 

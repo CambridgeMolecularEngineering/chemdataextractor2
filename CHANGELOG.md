@@ -1,5 +1,23 @@
 # Change Log
 
+## [v2.0](https://github.com/mcs07/ChemDataExtractor/releases/tag/v2.0) (2019-09-xx)
+[Full Changelog](https://github.com/mcs07/ChemDataExtractor/compare/...)
+
+**Implemented enhancements:**
+
+ - New model structure changed so that the Compound class is no longer at the root of all properties
+ - Hierarchy changed so that documents own models, not parsers, so that the user doesn’t need to remember to pass in all the correct parsers.
+ - Quantity based models, allowing for easy detection of units and values. Also allows for better comparisons of models.
+ - Completely new table parsing routine with the incorporation of TableDataExtractor. This returns a more structured form for tables without any user input.
+ - Automatically generated parsers based on the dimensional information of properties.
+ - Forward looking Interdependency Resolution for detecting definitions of specifier terms and chemical names.
+ - Improved Interdendency Resolution to account for more complex models.
+ - Snowball integration where Snowball parsers can be used seamlessly alongside rule-based parsers.
+ - Improved performance, with parsing up to 2x faster in real-world usage.
+ - The incorporation of an evaluation package for measuring the performance of CDE.
+ - Improved tokenisation when using new quantity based models.
+ - Improved documentation, including a migration guide for users coming from older versions.
+
 ## [v1.3.0](https://github.com/mcs07/ChemDataExtractor/releases/tag/v1.3.0) (2017-02-03)
 [Full Changelog](https://github.com/mcs07/ChemDataExtractor/compare/v1.2.3...v1.3.0)
 

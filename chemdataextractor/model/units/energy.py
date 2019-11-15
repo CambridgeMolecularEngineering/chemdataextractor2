@@ -5,7 +5,7 @@ chemdataextractor.units.temperatures.py
 
 Units and models for energy.
 
-Batuhan Yildirim (by256@cam.ac.uk)
+.. codeauthor:: Batuhan Yildirim (by256@cam.ac.uk)
 
 """
 

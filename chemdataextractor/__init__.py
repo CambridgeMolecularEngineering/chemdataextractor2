@@ -11,11 +11,11 @@ import logging
 
 
 __title__ = 'ChemDataExtractor'
-__version__ = '1.3.0'
-__author__ = 'Matt Swain'
-__email__ = 'm.swain@me.com'
+__version__ = '2.0'
+__author__ = 'Matt Swain, Callum Court, Edward Beard, Juraj Mavracic and Taketomo Isazawa'
+__email__ = 'm.swain@me.com, cc889@cam.ac.uk, ejb207@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2017 Matt Swain and contributors'
+__copyright__ = 'Copyright 2019 Matt Swain and contributors'
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())

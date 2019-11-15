@@ -2,7 +2,7 @@
 """
 Units and models for power
 
-Juraj Mavračić <jm2111@cam.ac.uk>
+.. codeauthor:: Juraj Mavračić <jm2111@cam.ac.uk>
 
 """
 
