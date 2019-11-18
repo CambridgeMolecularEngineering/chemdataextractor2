@@ -116,6 +116,7 @@ class ElsevierXmlReader(XmlReader):
     figure_css = 'ce|figure'
     figure_caption_css = 'ce|figure ce|caption'
     figure_label_css = 'ce|figure ce|label'
+    figure_download_link_css = ''
     reference_css = 'ce|cross-ref, ce|cross-refs'
     citation_css = 'ce|bib-reference'
 
@@ -218,3 +219,17 @@ class ElsevierXmlReader(XmlReader):
             r.extend([Cell('')] * (len(max(rows, key=len)) - len(r)))
         rows = [r for r in rows if any(r)]
         return rows
+    
+    def _parse_figure_links(self, el):
+        """Parse awkward elsevier figure links
+        """
+        figure_link_css = self._css('ce|link', el)
+        figure_link_locator = figure_link_css[0].get('locator', '') if figure_link_css else None
+        links = []
+        # find the locator id in the objects
+        objects = self._css('default|object', self.root)
+        for obj in objects:
+            ref = obj.get('ref', '0')
+            if ref == figure_link_locator:
+                links.append(obj.text)
+        return links

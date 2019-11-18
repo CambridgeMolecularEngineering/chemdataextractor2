@@ -70,6 +70,8 @@ class RscHtmlReader(HtmlReader):
     reference_css = 'small sup a, a[href^="#cit"], a[href^="#fn"], a[href^="#tab"]'
     figure_css = '.image_table'
     figure_caption_css = '.graphic_title'
+    figure_label_css = 'td.image_title b'
+    figure_download_link_css = 'img::attr(src)'
     ignore_css = '.table_caption + table, .left_head, sup span.sup_ref, small sup a, a[href^="#fn"], .PMedLink'
 
     def _parse_table_footnotes(self, fns, refs, specials):
