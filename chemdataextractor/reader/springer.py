@@ -92,7 +92,7 @@ class SpringerHtmlReader(HtmlReader):
     table_cell_css = 'td, th'
     figure_css = 'figure'
     figure_caption_css = 'figcaption'
-    reference_css = 'span[class^="CitationRef"]'
+    figure_label_css = 'figcaption span[class^="CaptionNumber"]'
     # citation_css = 'ce|bib-reference'
     ignore_css = 'a[class="skip-to__link pseudo-focus"], div[class="nojs-banner u-interface"], a[class="skip-to__link skip-to__link--contents pseudo-focus"],\
                   p[class="leaderboard__label"], div[class="u-screenreader-only"], label[for="search-springerlink"], span[class="search-button__title"],\

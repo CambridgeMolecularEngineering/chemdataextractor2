@@ -51,6 +51,8 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
     reference_css = 'a.ref'
     figure_css = 'figure'
     figure_caption_css = 'figcaption'
+    figure_label_css = 'figcaption span[class^="CaptionNumber"]'
+    figure_download_link_css = 'a::attr(href), img::attr(src)'
     citation_css = 'cite'
 
     metadata_css = 'head'
@@ -140,11 +142,19 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
             except TypeError as e:
                 log.warning('Adding of two objects was skipped. {} and {} cannot be added.'.format(str(type(element)), str(type(next_element))))
         return [element]
+    
+    def _parse_figure_links(self, el):
+        return self._css(self.figure_download_link_css, el)
 
     def _parse_figure(self, el, refs, specials):
         caps = self._css(self.figure_caption_css, el)
+
+        label_css = self._css(self.figure_label_css, el)
+        label = label_css[0].text if label_css else None
+
+        links = self._parse_figure_links(el)
         caption = self._parse_text(caps[0], refs=refs, specials=specials, element_cls=Caption)[0] if caps else Caption('')
-        fig = Figure(caption, id=el.get('id', None))
+        fig = Figure(caption, label=label, links=links)
         return [fig]
 
     def _parse_table_rows(self, els, refs, specials):
