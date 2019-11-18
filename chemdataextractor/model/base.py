@@ -506,7 +506,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                     if hasattr(field, 'model_class') and isinstance(other, field.model_class):
                         # print('model class case activated')
                         log.debug('model class case')
-                        if self[field_name] is not None and not self[field_name].contextual_fulfilled:
+                        if self[field_name] is not None and field.contextual and not self[field_name].contextual_fulfilled:
                             if self[field_name].merge_contextual(other):
                                 did_merge = True
                         elif (field.contextual and self[field_name] is None
