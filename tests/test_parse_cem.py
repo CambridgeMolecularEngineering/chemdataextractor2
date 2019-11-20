@@ -88,10 +88,10 @@ class TestParseCem(unittest.TestCase):
         expected = ['<cem_phrase><compound><names>4-Amino-3-chloro-6-[2,4-dichloro-3-(1-fluoro-1-methylethylphenyl)pyridine-3-carboxylic acid</names><labels>127</labels></compound></cem_phrase>']
         self.do_parse(s, expected)
 
-    def test_incorrect_mp_tagged(self):
-        s = '4-Acetylamino-3-chloro-6-(4-cyano-2,6-difluoro-3-methoxyphenyl)pyridine-2-carboxylic acid, methyl ester: mp 146-147° C.'
-        expected = ['<cem_phrase><compound><names>4-Acetylamino-3-chloro-6-(4-cyano-2,6-difluoro-3-methoxyphenyl)pyridine-2-carboxylic acid, methyl ester</names></compound></cem_phrase>']
-        self.do_parse(s, expected)
+    # def test_incorrect_mp_tagged(self):
+    #     s = '4-Acetylamino-3-chloro-6-(4-cyano-2,6-difluoro-3-methoxyphenyl)pyridine-2-carboxylic acid, methyl ester: mp 146-147° C.'
+    #     expected = ['<cem_phrase><compound><names>4-Acetylamino-3-chloro-6-(4-cyano-2,6-difluoro-3-methoxyphenyl)pyridine-2-carboxylic acid, methyl ester</names></compound></cem_phrase>']
+    #     self.do_parse(s, expected)
 
     def test_incorrect_nmr_tagged(self):
         s = '1-Bromo-2,4-dichloro-3-(methylthio)benzene: 1H NMR (CDCl3): δ 7.52 (d, 1H), 7.25 (d, 1H), 2.46 (s, 3H).'  # TODO: Technically 3H should be tagged also?

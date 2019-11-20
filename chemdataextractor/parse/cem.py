@@ -33,8 +33,7 @@ numeric = R('^\d{1,3}$')
 letter_number = R('^(H\d)?[LSNM]{1,2}\d\d?$')
 
 # Blacklist to truncate chemical mentions where tags continue on incorrectly
-cm_label_blacklist = (R('[a-z]') + T('I-CM') + R('[a-z]'))
-cm_blacklist = (W('in') | I('electrodes') | I('anodes') | I('specimen') | I('and') | cm_label_blacklist | W(':') + R('^m\.?p\.?$', re.I) | W(':') + Any() + R('^N\.?M\.?R\.?\(?$', re.I))
+cm_blacklist = (W('in') | I('electrodes') | I('anodes') | I('specimen') | I('and') | W(':') + R('^m\.?p\.?$', re.I) | W(':') + Any() + R('^N\.?M\.?R\.?\(?$', re.I))
 
 exclude_prefix = Start() + (lbrct + roman_numeral + rbrct + Not(hyphen) | (R('^\d{1,3}(\.\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?)?$') + Not(hyphen)) | (I('stage') | I('step') | I('section') | I('part')) + (alphanumeric | numeric | roman_numeral | R('^[A-Z]$')))
 
@@ -107,7 +106,7 @@ informal_values = (metals | transition_metals | lanthanides | ion_symbol | other
 # Informal labelling, used for associating properties to informal compounds
 informal_chemical_label_1 = (informal_chemical_symbol
                              + W('=')
-                             + OneOrMore(informal_values | R('^[,:;\.]$') | I('and')))('label').add_action(join)
+                             + OneOrMore(informal_values | R('^[,:;\.]$') | I('and') | informal_chemical_symbol | W('=')))('label').add_action(join)
 
 # Informal label phrase 2, "property = value for the <element> compound"
 informal_chemical_label_2 = (informal_values
@@ -137,7 +136,7 @@ amino_acid_name = (
 #: Chemical formula patterns, updated to include Inorganic compound formulae
 formula = (
     R('^C\(?\d{1,3}\)?(([HNOP]|Cl)\(?\d\d?\)?)+(\(?\d?[\+\-]\d?\)?)?$') |
-    R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[rn][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr\d]|R[abefghnu]|S[bcegimnr(\d\.?)]|T[abehil\d]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') |
+    R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[rn][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr\d]|R[abefghnuE]|S[bcegimnr(\d\.?)]|T[abehil\d]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') |
     R('^((\(?\d{2,3}\)?)?(Fe|Ti|Mg|Ru|Cd|Se)\(?(\d\d?|[IV]+)?\)?((O|Hg)\(?\d?\d?\)?)?)+(\(?\d?[\+\-]\d?\)?)?$') |
     R('(NaOH|CaCl\d?\d?|EtOH|EtAc|MeOH|CF\d|C\d?\d?H\d\d?)+$') |
     R('(NO\d|BH4|Ca\(2\+\)|Ti\(0\)2|\(CH3\)2CHOH|\(CH3\)2CO|\(CH3\)2NCOH|C2H5CN|CH2ClCH2Cl|CH3C6H5|CH3CN|CH3CO2H|CH3COCH3|CH3COOH|CH3NHCOH|CH3Ph|CH3SOCH3|Cl2CH2|ClCH2CH2Cl)') |
@@ -270,7 +269,7 @@ solvent_name = (Optional(include_prefix) + solvent_name_options)('names').add_ac
 chemical_name_blacklist = (I('mmc'))
 proper_chemical_name_options = Not(chemical_name_blacklist) + (
     cm | element_name | element_symbol | registry_number | amino_acid | amino_acid_name | formula
-) + Not(I('electrodes'))
+)
 
 # Mixtures e.g. 30% mol MnAs + 70% mol ZnGeAs2
 mixture_component = (R('\d+(\.\d+)?') + W('%') + Optional(I('mol')) + proper_chemical_name_options).add_action(join)
@@ -306,7 +305,7 @@ name_with_comma_within = Start() + Group(Optional(synthesis_of) + (cm + W(',') +
 name_with_doped_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + doped_chemical_label)('compound')
 
 # Chemical name with an informal label after
-name_with_informal_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + informal_chemical_label)('compound')
+name_with_informal_label = (chemical_name + Optional(R('compounds?')) + OneOrMore(delim | I('with') | I('for')) + informal_chemical_label)('compound')
 
 # to_give_bracketed_label = to_give + lenient_name  # TODO: Come back to this
 
@@ -373,14 +372,15 @@ class CompoundParser(BaseSentenceParser):
         lenient_name_with_bracketed_label = (Start() + Optional(synthesis_of) + lenient_name + lbrct + label_type.hide() + label + rbrct)('compound')
 
         # Chemical name with a doped label after
-        name_with_doped_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
+        # name_with_doped_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
 
         # Chemical name with an informal label after
-        name_with_informal_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
-        return Group(lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label | name_with_informal_label | name_with_doped_label)('cem_phrase')
+        # name_with_informal_label = (chemical_name + Optional(R('compounds?')) + OneOrMore(delim | I('with') | I('for')) + informal_chemical_label)('compound')
+        return Group(name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label)('cem_phrase')
 
     def interpret(self, result, start, end):
         # TODO: Parse label_type into label model object
+        print(etree.tostring(result))
         for cem_el in result.xpath('./compound'):
             c = self.model(
                 names=cem_el.xpath('./names/text()'),

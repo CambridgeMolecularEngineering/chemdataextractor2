@@ -34,7 +34,7 @@ class MetaData(BaseElement):
 
     @property
     def records(self):
-        return [self]
+        return []
 
     def serialize(self):
         return {'MetaData': {k: v for k, v in self.data.items() if v}}
