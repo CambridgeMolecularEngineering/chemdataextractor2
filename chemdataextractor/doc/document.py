@@ -273,6 +273,8 @@ class Document(BaseDocument):
 
             #: BACKWARD INTERDEPENDENCY RESOLUTION BEGINS HERE
             for record in el_records:
+                if isinstance(record, MetaData):
+                    continue
                 if isinstance(record, Compound):
                     # Keep track of the most recent compound record with labels
                     if isinstance(el, Paragraph) and record.labels:

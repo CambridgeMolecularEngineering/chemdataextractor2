@@ -70,6 +70,12 @@ class TestDocument(unittest.TestCase):
         expected = [{'definition': 'Curie temperature', 'specifier': 'TC', 'tokens': [('Curie', 'JJ'), ('temperature', 'NN'), ('(', '-LRB-'), ('TC', 'NN'), (')', '-RRB-')], 'start': 4, 'end': 9}, {'definition': 'uv - vis absorption maximum', 'specifier': 'λmax', 'tokens': [('uv', 'NN'), ('-', 'HYPH'), ('vis', 'NN'), ('absorption', 'NN'), ('maximum', 'NN'), (',', ','), ('λmax', 'NN')], 'start': 4, 'end': 11}, {'definition': 'melting point', 'specifier': 'Tm', 'tokens': [('melting', 'NN'), ('point', 'NN'), (',', ','), ('Tm', 'NN')], 'start': 3, 'end': 7}]
         self.assertEqual(defs, expected)
 
+    def test_doc_meta(self):
+        f = open('tests/data/elsevier/j.jnoncrysol.2017.07.006.xml', 'rb')
+        d = Document.from_file(f)
+        result = d.metadata.records.serialize()
+        expected = {'MetaData': {'title': 'STRUCTURALELECTROCHEMICALCHARACTERIZATIONCA50MG20CU25ZN5AMORPHOUSALLOY', 'authors': ['BABILAS'], 'publisher': '© 2017 Elsevier B.V. All rights reserved.', 'journal': 'Journal of Non-Crystalline Solids', 'date': '2017-07-14', 'volume': '471', 'issue': '0022-3093', 'firstpage': '467', 'lastpage': '475', 'doi': '10.1016/j.jnoncrysol.2017.07.006', 'html_url': 'https://sciencedirect.com/science/article/pii/S0022309317303496'}}
+        self.assertEqual(result, expected)
 
 if __name__ == '__main__':
     unittest.main()

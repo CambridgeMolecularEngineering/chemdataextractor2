@@ -33,12 +33,13 @@ numeric = R('^\d{1,3}$')
 letter_number = R('^(H\d)?[LSNM]{1,2}\d\d?$')
 
 # Blacklist to truncate chemical mentions where tags continue on incorrectly
-cm_blacklist = (W('in') | W(':') + R('^m\.?p\.?$', re.I) | W(':') + Any() + R('^N\.?M\.?R\.?\(?$', re.I))
+cm_label_blacklist = (R('[a-z]') + T('I-CM') + R('[a-z]'))
+cm_blacklist = (W('in') | I('electrodes') | I('anodes') | I('specimen') | I('and') | cm_label_blacklist | W(':') + R('^m\.?p\.?$', re.I) | W(':') + Any() + R('^N\.?M\.?R\.?\(?$', re.I))
 
 exclude_prefix = Start() + (lbrct + roman_numeral + rbrct + Not(hyphen) | (R('^\d{1,3}(\.\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?)?$') + Not(hyphen)) | (I('stage') | I('step') | I('section') | I('part')) + (alphanumeric | numeric | roman_numeral | R('^[A-Z]$')))
 
 # Tagged chemical mentions - One B-CM tag followed by zero or more I-CM tags.
-cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)) | (bcm + ZeroOrMore(Not(cm_blacklist) + icm))
+cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)) | (bcm + ZeroOrMore(Not(cm_blacklist) + icm)).add_action(join)
 
 comma = (W(',') | T(',')).hide()
 colon = (W(':') | T(':')).hide()
@@ -46,7 +47,7 @@ colon = (W(':') | T(':')).hide()
 # Prefixes to include in the name
 include_prefix = Not(bcm) + R('^(deuterated|triflated|butylated|brominated|acetylated|twisted)$', re.I)
 
-label_type = (Optional(I('reference') | I('comparative')) + R('^(compound|ligand|chemical|dye|derivative|complex|example|intermediate|product|formulae?|preparation)s?$', re.I))('roles').add_action(join) + Optional(colon).hide()
+label_type = (Optional(I('reference') | I('comparative')) + R('^(compound|ligand|chemical|dye|derivative|complex|example|intermediate|product|formulae?|preparation|specimen)s?$', re.I))('roles').add_action(join) + Optional(colon).hide()
 
 synthesis_of = ((I('synthesis') | I('preparation') | I('production') | I('data')) + (I('of') | I('for')))('roles').add_action(join)
 
@@ -269,9 +270,13 @@ solvent_name = (Optional(include_prefix) + solvent_name_options)('names').add_ac
 chemical_name_blacklist = (I('mmc'))
 proper_chemical_name_options = Not(chemical_name_blacklist) + (
     cm | element_name | element_symbol | registry_number | amino_acid | amino_acid_name | formula
-)
+) + Not(I('electrodes'))
 
-chemical_name_options = proper_chemical_name_options + ZeroOrMore(joining_characters + proper_chemical_name_options)
+# Mixtures e.g. 30% mol MnAs + 70% mol ZnGeAs2
+mixture_component = (R('\d+(\.\d+)?') + W('%') + Optional(I('mol')) + proper_chemical_name_options).add_action(join)
+mixture_phrase = (mixture_component + W('+') + mixture_component).add_action(join)('names')
+
+chemical_name_options = (proper_chemical_name_options | mixture_phrase) + ZeroOrMore(joining_characters + (proper_chemical_name_options | mixture_phrase))
 
 chemical_name = (Optional(include_prefix) + chemical_name_options)('names').add_action(join).add_action(fix_whitespace)
 
@@ -401,6 +406,7 @@ class ChemicalLabelParser(BaseSentenceParser):
         return self._root_phrase
 
     def interpret(self, result, start, end):
+        print(etree.tostring(result))
         roles = [standardize_role(r) for r in result.xpath('./roles/text()')]
         for label in result.xpath('./labels/text()'):
             yield self.model(labels=[label], roles=roles)
