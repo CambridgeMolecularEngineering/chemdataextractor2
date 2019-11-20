@@ -380,7 +380,7 @@ class CompoundParser(BaseSentenceParser):
 
     def interpret(self, result, start, end):
         # TODO: Parse label_type into label model object
-        print(etree.tostring(result))
+        # print(etree.tostring(result))
         for cem_el in result.xpath('./compound'):
             c = self.model(
                 names=cem_el.xpath('./names/text()'),
