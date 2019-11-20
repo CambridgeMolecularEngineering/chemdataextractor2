@@ -406,7 +406,7 @@ class ChemicalLabelParser(BaseSentenceParser):
         return self._root_phrase
 
     def interpret(self, result, start, end):
-        print(etree.tostring(result))
+        # print(etree.tostring(result))
         roles = [standardize_role(r) for r in result.xpath('./roles/text()')]
         for label in result.xpath('./labels/text()'):
             yield self.model(labels=[label], roles=roles)
