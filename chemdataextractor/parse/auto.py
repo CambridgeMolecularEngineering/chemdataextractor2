@@ -190,7 +190,7 @@ class BaseAutoParser(BaseParser):
 
         model_instance = self.model(**property_entities)
 
-        if requirements and model_instance.required_fulfilled:
+        if requirements:
             # records the parser that was used to generate this record, can be used for evaluation
             model_instance.record_method = self.__class__.__name__
             yield model_instance
