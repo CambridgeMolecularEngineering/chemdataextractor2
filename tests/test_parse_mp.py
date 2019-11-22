@@ -18,6 +18,7 @@ from lxml import etree
 
 from chemdataextractor.doc.text import Sentence, Paragraph
 from chemdataextractor.parse.mp_new import mp_phrase
+from chemdataextractor.model.model import MeltingPoint
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -30,6 +31,7 @@ class TestParseMp(unittest.TestCase):
 
     def do_parse(self, input, expected):
         s = Sentence(input)
+        s.models = [MeltingPoint]
         log.debug(s)
         log.debug(s.tagged_tokens)
         result = next(mp_phrase.scan(s.tagged_tokens))[0]
@@ -216,6 +218,7 @@ class TestParseMpCompound(unittest.TestCase):
 
     def do_parse(self, input, expected):
         p = Paragraph(input)
+        p.models = [MeltingPoint]
         log.debug(p)
         log.debug([r.serialize() for r in p.records])
         print([r.serialize() for r in p.records])

@@ -58,10 +58,10 @@ class TestText(unittest.TestCase):
         footnotes_m = d.footnotes[0].models
         captions_m = d.footnotes[0].models
         for model in paragraph_m:
-            self.assertIn(model, [Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition])
-        self.assertEqual(title_m, [Compound])
-        self.assertEqual(heading_m, [Compound])
-        self.assertEqual(captions_m, [Compound])
+            self.assertIn(model, [])
+        self.assertEqual(title_m, [])
+        self.assertEqual(heading_m, [])
+        self.assertEqual(captions_m, [])
 
     def test_set_cem(self):
         d = Document(Title('Test'), config=self.get_config())

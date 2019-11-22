@@ -369,7 +369,7 @@ class Title(Text):
 
     def __init__(self, text, **kwargs):
         super(Title, self).__init__(text, **kwargs)
-        self.models = [Compound]
+        self.models = []
 
     def _repr_html_(self):
         return '<h1 class="cde-title">' + self.text + '</h1>'
@@ -379,7 +379,7 @@ class Heading(Text):
 
     def __init__(self, text, **kwargs):
         super(Heading, self).__init__(text, **kwargs)
-        self.models = [Compound]
+        self.models = []
         # default_parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
 
     def _repr_html_(self):
@@ -392,7 +392,7 @@ class Paragraph(Text):
         super(Paragraph, self).__init__(text, **kwargs)
         # default_parsers = [CompoundParser(), ChemicalLabelParser(), NmrParser(), IrParser(), UvvisParser(), MpParser(),
         #        TgParser(), ContextParser()]
-        self.models = [Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition]
+        self.models = []
 
     def _repr_html_(self):
         return '<p class="cde-paragraph">' + self.text + '</p>'
@@ -403,7 +403,7 @@ class Footnote(Text):
     def __init__(self, text, **kwargs):
         super(Footnote, self).__init__(text, **kwargs)
         # default_parsers = [ContextParser(), CaptionContextParser()]
-        self.models = [Compound]
+        self.models = []
 
     def _repr_html_(self):
         return '<p class="cde-footnote">' + self.text + '</p>'
@@ -423,7 +423,7 @@ class Caption(Text):
 
     def __init__(self, text, **kwargs):
         super(Caption, self).__init__(text, **kwargs)
-        self.models = [Compound]
+        self.models = []
         # default_parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
 
     def _repr_html_(self):
@@ -475,7 +475,7 @@ class Sentence(BaseText):
             inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
         """
-        self.models = [Compound]
+        self.models = []
         super(Sentence, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, **kwargs)
         #: The start index of this sentence within the text passage.
         self.start = start

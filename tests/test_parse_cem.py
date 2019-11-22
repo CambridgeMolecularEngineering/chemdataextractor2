@@ -18,6 +18,7 @@ from lxml import etree
 from chemdataextractor.doc.document import Document
 from chemdataextractor.doc.text import Sentence, Heading, Paragraph
 from chemdataextractor.parse.cem import cem_phrase, compound_heading_phrase, chemical_label_phrase
+from chemdataextractor.model.model import Compound, MeltingPoint
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -203,6 +204,7 @@ class TestParseCemHeading(unittest.TestCase):
 
     def do_parse(self, input, expected):
         s = Sentence(input)
+        s.models=[Compound]
         log.debug(s)
         log.debug(s.tagged_tokens)
         results = []
@@ -254,6 +256,7 @@ class TestParseHeading(unittest.TestCase):
 
     def do_parse(self, input, expected):
         s = Heading(input)
+        s.models = [Compound]
         log.debug(s)
         log.debug(s.tagged_tokens)
         results = [r.serialize() for r in s.records]
@@ -373,6 +376,7 @@ class TestParseLabelPhrase(unittest.TestCase):
 
     def do_parse(self, input, expected):
         s = Sentence(input)
+        s.models = [Compound]
         log.debug(s)
         log.debug(s.tagged_tokens)
         results = []
@@ -445,6 +449,7 @@ class TestParseDocument(unittest.TestCase):
             Heading('Example 3'),
             Paragraph('The solid is suspended in hexanes, stirred and filtered to give the product as a bright yellow solid. (MP 93-94\xc2\xb0 C.).')
         )
+        d.models = [Compound]
         results = [r.serialize() for r in d.records]
         self.assertEqual(results, [{'Compound': {'names': [u'hexanes']}},
                                    {'Compound': {'labels': [u'3'], 'names': [u'2-Amino-3-methoxy-5-chloropyridine'], 'roles': ['product', 'example']}}])
@@ -457,6 +462,7 @@ class TestParseDocument(unittest.TestCase):
             Heading('Preparation of 5-Bromo-6-pentadecyl-2-hydroxybenzoic acid (DBAA)'),
             Paragraph('The product had a melting point of 70-75° C. and has structural formula VII.')
         )
+        d.models = [Compound, MeltingPoint]
         results = [r.serialize() for r in d.records]
         print(results)
         self.assertEqual(results, [
