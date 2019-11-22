@@ -767,7 +767,7 @@ class Sentence(BaseText):
                         if record in records:
                             continue
                         # Skip just labels that have already been seen (bit of a hack)
-                        if (isinstance(record, Compound) and all(k in {'labels', 'roles'} for k in p['Compound'].keys()) and
+                        if (isinstance(record, Compound) and 'Compound' in p.keys() and all(k in {'labels', 'roles'} for k in p['Compound'].keys()) and
                           set(record.labels).issubset(seen_labels)):
                             continue
                         if isinstance(record, Compound):
