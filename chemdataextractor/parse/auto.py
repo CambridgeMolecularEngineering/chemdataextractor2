@@ -234,9 +234,10 @@ class BaseAutoParser(BaseParser):
 
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
-    def __init__(self, lenient=False):
+    def __init__(self, lenient=False, chem_name=(cem | chemical_label | lenient_chemical_label)):
         super(AutoSentenceParser, self).__init__()
         self.lenient = lenient
+        self.chem_name = chem_name
 
     @property
     def trigger_phrase(self):
@@ -260,7 +261,7 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
     @property
     def root(self):
         # is always found, our models currently rely on the compound
-        chem_name = (cem | chemical_label | lenient_chemical_label)
+        chem_name = self.chem_name
         compound_model = self.model.compound.model_class
         labels = compound_model.labels.parse_expression('labels')
         entities = [labels]
@@ -309,10 +310,14 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
 class AutoTableParser(BaseAutoParser, BaseTableParser):
     """ Additions for automated parsing of tables"""
+
+    def __init__(self, chem_name=(cem | chemical_label | lenient_chemical_label)):
+        super(AutoTableParser, self).__init__()
+        self.chem_name = chem_name
     @property
     def root(self):
         # is always found, our models currently rely on the compound
-        chem_name = (cem | chemical_label | lenient_chemical_label)
+        chem_name = self.chem_name
         compound_model = self.model.compound.model_class
         labels = compound_model.labels.parse_expression('labels')
         entities = [labels]
