@@ -24,7 +24,7 @@ import re
 
 # XML stripper that removes the tags around numbers in chemical formulas
 strip_els_xml = Cleaner(strip_xpath='.//ce:inf | .//ce:italic | .//ce:bold | .//ce:formula | .//mml:* | .//ce:sup | .//ce:table//ce:sup',
-                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:cross-ref | .//ce:cross-refs')
+                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:cross-ref | .//ce:cross-refs | .//ce:note-para')
 
 def fix_elsevier_xml_whitespace(document):
     """ Fix tricky xml tags"""
