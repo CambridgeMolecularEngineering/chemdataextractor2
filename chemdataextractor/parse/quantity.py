@@ -55,6 +55,8 @@ _end_bracket_pattern = re.compile('\)\w*')
 _open_bracket_pattern = re.compile('/\(')
 # A regex pattern to match a unit being divided by another
 _division_pattern = re.compile('[/]\D*')
+# A regex pattern containing all the shorthand single letter magnitude indicators, that could be misconstrued as units
+_magnitude_indicators = re.compile('[pnµmTGMkc]')
 
 
 def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('raw_units').add_action(merge)):
@@ -444,7 +446,7 @@ def _find_unit_types(tokenized_sentence, dimensions):
             # Split into substrings for each unit
             splitting_symbols = splitting_symbols[:-1]
             splitting_symbols += ')'
-            split = re.split(splitting_symbols, element)
+            split = [str for str in re.split(splitting_symbols, element) if str != '']
 
             # Iterate through the substrings to find the occurences of the units.
             # Constructs a list of tuples of (Unit, string in which the unit was found, string corresponding to the unit itself)
@@ -453,6 +455,8 @@ def _find_unit_types(tokenized_sentence, dimensions):
             #   + Append it and its string to the units_list, (path 1a), unless
             #   + The token corresponds to the same unit as the previous token, then that probably represents a magnitude (e.g. mm),
             #     so add the string to the 'string in which the unit was found' for the previous tuple (path 1b).
+            #   + The previous token is a string that can indicate magnitude, but was determined to be a unit (eg. the m in mA assigned as meters).
+            #     so update the unit to contain the order and change update the unit type (path 1c).
             # - If the token's a number, it's a power of some sort, so add it to the previous tuple (path 2).
             # - Else add it to the current_string so that it's incorporated in the next unit that comes along's tuple, as it
             # represents a magnitude of some sort, e.g. kilo or mega (path 3).
@@ -462,10 +466,13 @@ def _find_unit_types(tokenized_sentence, dimensions):
                 if string in found_units.keys():
                     # path 1
                     if found_units[string] == prev_unit:
-                        # path 1a
-                        units_list[-1] = (prev_unit, units_list[-1][1] + string, units_list[-1][2])
-                    else:
                         # path 1b
+                        units_list[-1] = (prev_unit, units_list[-1][1] + string, units_list[-1][2])
+                    elif prev_unit and re.match(_magnitude_indicators, split[index-1]) and split[index-1] in found_units.keys():
+                        # path 1c
+                        units_list[-1] = (found_units[string], units_list[-1][1] + string, string)
+                    else:
+                        # path 1a
                         units_list.append((found_units[string], current_string + string, string))
                     current_string = ''
                     prev_unit = found_units[string]
