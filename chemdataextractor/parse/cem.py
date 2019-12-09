@@ -38,7 +38,10 @@ cm_blacklist = (W('in') | I('electrodes') | I('anodes') | I('specimen') | I('and
 exclude_prefix = Start() + (lbrct + roman_numeral + rbrct + Not(hyphen) | (R('^\d{1,3}(\.\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?)?$') + Not(hyphen)) | (I('stage') | I('step') | I('section') | I('part')) + (alphanumeric | numeric | roman_numeral | R('^[A-Z]$')))
 
 # Tagged chemical mentions - One B-CM tag followed by zero or more I-CM tags.
-cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)) | (bcm + ZeroOrMore(Not(cm_blacklist) + icm)).add_action(join)
+# cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)) | (bcm + ZeroOrMore(Not(cm_blacklist) + icm)).add_action(join)
+# TODO jm2111, edited due to weird matching ('-100 °C' was matched)
+cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)).add_action(join)
+
 
 comma = (W(',') | T(',')).hide()
 colon = (W(':') | T(':')).hide()
@@ -445,7 +448,7 @@ class CompoundTableParser(BaseTableParser):
         labels = compound_model.labels.parse_expression('labels')
         entities = [labels]
 
-        specifier = (I('Formula') | I('Compound')).add_action(join)('specifier')
+        specifier = (I('Formula') | I('Compound') | I('Alloy')).add_action(join)('specifier')
         entities.append(specifier)
 
         # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
