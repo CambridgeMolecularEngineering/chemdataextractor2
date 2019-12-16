@@ -13,6 +13,7 @@ from datetime import datetime
 from chemdataextractor.scrape import Selector, RscHtmlDocument, ElsevierXmlDocument
 from chemdataextractor.scrape.pub.springer import SpringerHtmlDocument
 from .evaluation import documents
+from cde_additions.analysis.compounds import find_elements
 
 
 def detect_publisher(fstring):
@@ -175,7 +176,6 @@ class Extractor:
                 entry['long_form'] = ' '.join(abrv[1])
                 abbreviation_definitions.append(entry)
 
-
             # TODO Add chemical definitions in the future
             # chemical_definitions = doc[0].chemical_definitions
 
@@ -206,9 +206,17 @@ class Extractor:
                         self.n_definition_update += 1
 
                     # Build the full MongoDB entry to insert into the database
+                    # save the record
                     entry = record.serialize()
+                    # add the cde2 method (parser) information
                     entry[record.__class__.__name__]['cde2_method'] = record.record_method
+                    # add information about the definitions update
                     entry[record.__class__.__name__]['cde2_updated'] = record.updated
+                    # add the chemical elements explicitly
+                    compounds = entry[record.__class__.__name__]['compound'][record.compound.__class__.__name__]['names']
+                    elements = find_elements(compounds)
+                    entry[record.__class__.__name__]['compound']['elements'] = elements
+                    # add metadata from the journal/document
                     entry['Document'] = {}
                     entry['Document']['doi'] = document_info['doi']
                     entry['Document']['journal'] = document_info['journal']
@@ -225,7 +233,7 @@ class Extractor:
                     entry['Document']['cems'] = cems
                     entry['Document']['abbreviation_definitions'] = abbreviation_definitions
                     entry['Document']['definitions'] = definitions
-                    # TODO Add chemical definitions in the future
+                    # add chemical definitions
                     # entry['Document']['chemical_definitions'] = chemical_definitions
 
                     if self.verbose:
