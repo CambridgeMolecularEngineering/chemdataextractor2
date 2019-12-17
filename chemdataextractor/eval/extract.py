@@ -213,21 +213,25 @@ class Extractor:
                     # add information about the definitions update
                     entry[record.__class__.__name__]['cde2_updated'] = record.updated
                     # add the chemical elements explicitly
-                    compounds = entry[record.__class__.__name__]['compound'][record.compound.__class__.__name__]['names']
-                    elements = find_elements(compounds)
-                    entry[record.__class__.__name__]['compound']['elements'] = elements
+                    try:
+                        compounds = entry[record.__class__.__name__]['compound'][record.compound.__class__.__name__]['names']
+                    except KeyError:
+                        pass
+                    else:
+                        elements = find_elements(compounds)
+                        entry[record.__class__.__name__]['compound']['elements'] = elements
                     # add metadata from the journal/document
                     entry['Document'] = {}
-                    entry['Document']['doi'] = document_info['doi']
-                    entry['Document']['journal'] = document_info['journal']
-                    entry['Document']['volume'] = document_info['volume']
-                    entry['Document']['issue'] = document_info['issue']
-                    entry['Document']['pages'] = document_info['pages']
-                    entry['Document']['copyright'] = document_info['copyright']
-                    entry['Document']['published_date'] = datetime.strptime(document_info['published_date'], '%Y-%m-%d')
-                    entry['Document']['authors'] = document_info['authors']
-                    entry['Document']['title'] = document_info['title']
-                    entry['Document']['url'] = document_info['url']
+                    entry['Document']['doi'] = document_info['doi'] if 'doi' in document_info else None
+                    entry['Document']['journal'] = document_info['journal'] if 'journal' in document_info else None
+                    entry['Document']['volume'] = document_info['volume'] if 'volume' in document_info else None
+                    entry['Document']['issue'] = document_info['issue'] if 'issue' in document_info else None
+                    entry['Document']['pages'] = document_info['pages'] if 'pages' in document_info else None
+                    entry['Document']['copyright'] = document_info['copyright'] if 'copyright' in document_info else None
+                    entry['Document']['published_date'] = datetime.strptime(document_info['published_date'], '%Y-%m-%d') if 'published_date' in document_info else None
+                    entry['Document']['authors'] = document_info['authors'] if 'authors' in document_info else None
+                    entry['Document']['title'] = document_info['title'] if 'title' in document_info else None
+                    entry['Document']['url'] = document_info['url'] if 'url' in document_info else None
                     entry['Document']['html_url'] = html_url
                     entry['Document']['pdf_url'] = pdf_url
                     entry['Document']['cems'] = cems
@@ -242,7 +246,7 @@ class Extractor:
 
                     # insert entry into MongoDB database
                     mongo_result = self.collection.insert_one(entry)
-                    if mongo_result.inserted_id and self.verbose:
+                    if mongo_result.inserted_id:
                         print("    MongoID: {}".format(mongo_result.inserted_id))
                     elif not mongo_result.acknowledged:
                         print("    Writing to MongoDB failed!")
