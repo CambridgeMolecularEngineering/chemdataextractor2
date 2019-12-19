@@ -150,10 +150,13 @@ class Extractor:
             if n_paper <= self.n_paper and self.n_paper >= 0:
                 continue
 
+            if self.limits_reached:
+                break
+
             # add the models first, as otherwise there might be interference with other things, such as doc.cems
             doc[0].models = [self.cde_model]
 
-            print("Paper {}/{}".format(n_paper, self.n_papers))
+            print("Paper {}/{}, MyRank: {}".format(n_paper, self.n_papers, myrank))
 
             # document info which will be associated with each record for this document
             document_info = get_cde_document_info(doc[1])
@@ -235,18 +238,13 @@ class Extractor:
                     # insert entry into MongoDB database
                     mongo_result = self.collection.insert_one(entry)
                     if mongo_result.inserted_id:
-                        print("    Paper {}, MongoID: {}".format(n_paper, mongo_result.inserted_id))
+                        print("    Paper {}, MyRank: {}, MongoID: {}".format(n_paper, myrank, mongo_result.inserted_id))
                     elif not mongo_result.acknowledged:
-                        print("    Paper {}, Writing to MongoDB failed!".format(n_paper))
-
-                if self.limits_reached:
-                    break
+                        print("    Paper {}, MyRank: {}, Writing to MongoDB failed!".format(n_paper, myrank))
 
             # updating the number of the current paper being processed
             self.n_paper = n_paper
-
-            if self.limits_reached:
-                break
+       
 
     @property
     def limits_reached(self):
