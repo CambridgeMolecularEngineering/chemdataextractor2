@@ -6,8 +6,6 @@ Tools for production run data-extraction.
 """
 
 import os
-import sys
-from pprint import pprint
 from pymongo import MongoClient
 from datetime import datetime
 from chemdataextractor.scrape import Selector, RscHtmlDocument, ElsevierXmlDocument
@@ -81,8 +79,6 @@ class Extractor:
     :param mongodb_host: Host of the MongoDb database, in MongoDB URI format
     :param name: Used to name the output and pickle files
     :param n_papers_limit: Maximal number of papers to process
-    :param n_records_limit: Maximal number of records to retrieve
-    :param verbose: Paper information, with URL links and records are printed
 
     :type cde_model: ~chemdataextractor.model.base.BaseModel
     :type database: (str,str)
@@ -143,20 +139,24 @@ class Extractor:
 
         for n_paper, doc in enumerate(documents(self.sources_dir)):
 
+            # skip this paper if it's the wrong core
             if n_paper % ranks != myrank:
                 continue
 
-            # if loaded from pickle, eval will start where left of
+            # eval will start where left of, or where specified externally
             if n_paper <= self.n_paper and self.n_paper >= 0:
                 continue
 
-            if self.limits_reached:
+            # check if limits have been reached
+            if n_paper > self.n_papers_limit:
                 break
 
             # add the models first, as otherwise there might be interference with other things, such as doc.cems
             doc[0].models = [self.cde_model]
 
-            print("Paper {}/{}, MyRank: {}".format(n_paper, self.n_papers, myrank))
+            # TODO Remove MyRank from print statement after testing
+            # This line should never be printed twice for a given paper
+            print("Paper {}/{}, MyRank: {}".format(n_paper, self.n_papers, myrank), flush=True)
 
             # document info which will be associated with each record for this document
             document_info = get_cde_document_info(doc[1])
@@ -238,18 +238,13 @@ class Extractor:
                     # insert entry into MongoDB database
                     mongo_result = self.collection.insert_one(entry)
                     if mongo_result.inserted_id:
-                        print("    Paper {}, MyRank: {}, MongoID: {}".format(n_paper, myrank, mongo_result.inserted_id))
+                        # TODO Remove MyRank from print statement after testing
+                        print("{:>35} {}, MyRank: {}, MongoID: {}".format('Paper', n_paper, myrank, mongo_result.inserted_id), flush=True)
                     elif not mongo_result.acknowledged:
-                        print("    Paper {}, MyRank: {}, Writing to MongoDB failed!".format(n_paper, myrank))
+                        print("{:>35} {}, MyRank: {}, Writing to MongoDB failed!".format('Paper', n_paper, myrank), flush=True)
 
             # updating the number of the current paper being processed
             self.n_paper = n_paper
-       
 
-    @property
-    def limits_reached(self):
-        if self.n_paper+1 >= self.n_papers_limit:
-            return True
-        else:
-            return False
+
 
