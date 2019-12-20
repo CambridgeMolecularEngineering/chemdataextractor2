@@ -154,9 +154,8 @@ class Extractor:
             # add the models first, as otherwise there might be interference with other things, such as doc.cems
             doc[0].models = [self.cde_model]
 
-            # TODO Remove MyRank from print statement after testing
             # This line should never be printed twice for a given paper
-            print("Paper {}/{}, MyRank: {}".format(n_paper, self.n_papers, myrank), flush=True)
+            print("Paper {}/{}".format(n_paper, self.n_papers), flush=True)
 
             # document info which will be associated with each record for this document
             document_info = get_cde_document_info(doc[1])
@@ -238,10 +237,9 @@ class Extractor:
                     # insert entry into MongoDB database
                     mongo_result = self.collection.insert_one(entry)
                     if mongo_result.inserted_id:
-                        # TODO Remove MyRank from print statement after testing
-                        print("{:>35} {}, MyRank: {}, MongoID: {}".format('Paper', n_paper, myrank, mongo_result.inserted_id), flush=True)
+                        print("{:>35} {}, MongoID: {}".format('Paper', n_paper, mongo_result.inserted_id), flush=True)
                     elif not mongo_result.acknowledged:
-                        print("{:>35} {}, MyRank: {}, Writing to MongoDB failed!".format('Paper', n_paper, myrank), flush=True)
+                        print("{:>35} {}, Writing to MongoDB failed!".format('Paper', n_paper), flush=True)
 
             # updating the number of the current paper being processed
             self.n_paper = n_paper
