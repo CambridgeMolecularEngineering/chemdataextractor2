@@ -63,24 +63,26 @@ def documents(folder):
             yield doc, file_path
 
 
-def records(cde_doc, model):
+def records(cde_doc, models):
     """Yields CDE records for a given CDE document and CDE model"""
-    cde_doc.models = [model]
+    cde_doc.models = []
+    for m in models:
+        cde_doc.models.append(m)
     recs = cde_doc.records
     if recs:
         for record in recs:
-            if isinstance(record, model):
+            if isinstance(record, tuple(models)):
                 yield record
 
 
 class Evaluate:
     """Main class for evaluation of a particular model on a given corpus of literature"""
-    def __init__(self, model, folder=r'./', n_papers_limit=200, n_records_limit=200, play_sound=True, show_website=True, _automated=False):
+    def __init__(self, models, folder=r'./', n_papers_limit=200, n_records_limit=200, play_sound=True, show_website=True, _automated=False):
         self._automated = _automated
         self.play_sound = play_sound
         self.show_website = show_website
         self.folder = folder
-        self.model = model
+        self.models = models
         self.n_papers_limit = n_papers_limit
         self.n_records_limit = n_records_limit
         self.n_papers = len(os.listdir(folder))
@@ -141,7 +143,7 @@ class Evaluate:
             print("HTML Url:  {}".format(doc[0].metadata.html_url))
 
             doc_opened = False
-            for record in records(doc[0], self.model):
+            for record in records(doc[0], self.models):
                 if record.is_unidentified:
                     self.n_unidentified += 1
                 if not record.is_unidentified:

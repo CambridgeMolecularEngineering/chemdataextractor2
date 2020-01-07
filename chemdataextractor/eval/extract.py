@@ -60,12 +60,13 @@ def get_cde_document_info(fname):
     return None
 
 
-def records(doc, model):
+def records(cde_doc, models):
     """Yields CDE records for a given CDE document and CDE model"""
-    recs = doc.records
+    cde_doc.models = models
+    recs = cde_doc.records
     if recs:
         for record in recs:
-            if isinstance(record, model):
+            if isinstance(record, tuple(models)):
                 yield record
 
 
@@ -74,7 +75,7 @@ class Extractor:
     Main class for extraction of data for a particular CDE 2.0 model on a given corpus of literature.
     Automatically connects to a MongoDB host and writes to the database.
 
-    :param cde_model: ChemDataExtractor 2.0 User Model
+    :param cde_models: ChemDataExtractor 2.0 User Models list
     :param database: Tuple containing the name of the database and the name of the collection
     :param sources_dir: Directory containing the papers to be processed
     :param mongodb_host: Host of the MongoDb database, in MongoDB URI format
@@ -83,7 +84,7 @@ class Extractor:
     :param n_records_limit: Maximal number of records to retrieve
     :param verbose: Paper information, with URL links and records are printed
 
-    :type cde_model: ~chemdataextractor.model.base.BaseModel
+    :type cde_models: ~chemdataextractor.model.base.BaseModel
     :type database: (str,str)
     :type sources_dir: str
     :type mongodb_host: str
@@ -93,7 +94,7 @@ class Extractor:
     :type verbose: bool
     """
     def __init__(self,
-                 cde_model,
+                 cde_models,
                  database,
                  sources_dir=r'./',
                  mongodb_host='mongodb://localhost:27017/',
@@ -105,7 +106,7 @@ class Extractor:
         """
         Initializes the user-defined parameters, checks MongoDB connection and stores a pickle object.
         """
-        self.cde_model = cde_model
+        self.cde_models = cde_models
         self.sources_dir = sources_dir
         self.mongodb_host = mongodb_host
         self.name = name
@@ -148,7 +149,9 @@ class Extractor:
                 continue
 
             # add the models first, as otherwise there might be interference with other things, such as doc.cems
-            doc[0].models = [self.cde_model]
+            doc[0].models = []
+            for model in self.cde_models:
+                doc[0].models.append(model)
 
             print("Paper {}/{}".format(n_paper, self.n_papers))
             if self.verbose:
@@ -179,7 +182,7 @@ class Extractor:
             # TODO Add chemical definitions in the future
             # chemical_definitions = doc[0].chemical_definitions
 
-            for record in records(doc[0], self.cde_model):
+            for record in records(doc[0], self.cde_models):
                 if record.is_unidentified:
                     self.n_unidentified += 1
                 if not record.is_unidentified:

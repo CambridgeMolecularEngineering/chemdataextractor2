@@ -59,12 +59,12 @@ def get_cde_document_info(fname):
     return None
 
 
-def records(doc, model):
+def records(doc, models):
     """Yields CDE records for a given CDE document and CDE model"""
     recs = doc.records
     if recs:
         for record in recs:
-            if isinstance(record, model):
+            if isinstance(record, tuple(models)):
                 yield record
 
 
@@ -73,14 +73,14 @@ class Extractor:
     Main class for extraction of data for a particular CDE 2.0 model on a given corpus of literature.
     Automatically connects to a MongoDB host and writes to the database.
 
-    :param cde_model: ChemDataExtractor 2.0 User Model
+    :param cde_models: ChemDataExtractor 2.0 User Model list
     :param database: Tuple containing the name of the database and the name of the collection
     :param sources_dir: Directory containing the papers to be processed
     :param mongodb_host: Host of the MongoDb database, in MongoDB URI format
     :param name: Used to name the output and pickle files
     :param n_papers_limit: Maximal number of papers to process
 
-    :type cde_model: ~chemdataextractor.model.base.BaseModel
+    :type cde_models: ~chemdataextractor.model.base.BaseModel
     :type database: (str,str)
     :type sources_dir: str
     :type mongodb_host: str
@@ -88,7 +88,7 @@ class Extractor:
     :type n_papers_limit: int
     """
     def __init__(self,
-                 cde_model,
+                 cde_models,
                  database,
                  sources_dir=r'./',
                  mongodb_host='mongodb://localhost:27017/',
@@ -98,7 +98,7 @@ class Extractor:
         """
         Initializes the user-defined parameters, checks MongoDB connection and stores a pickle object.
         """
-        self.cde_model = cde_model
+        self.cde_models = cde_models
         self.sources_dir = sources_dir
         self.mongodb_host = mongodb_host
         self.name = name
@@ -152,7 +152,7 @@ class Extractor:
                 break
 
             # add the models first, as otherwise there might be interference with other things, such as doc.cems
-            doc[0].models = [self.cde_model]
+            doc[0].models = self.cde_models
 
             # This line should never be printed twice for a given paper
             print("Paper {}/{}".format(n_paper, self.n_papers), flush=True)
@@ -175,7 +175,7 @@ class Extractor:
                 entry['long_form'] = ' '.join(abrv[1])
                 abbreviation_definitions.append(entry)
 
-            for record in records(doc[0], self.cde_model):
+            for record in records(doc[0], self.cde_models):
                 if record.is_unidentified:
                     self.n_unidentified += 1
                 if not record.is_unidentified:
