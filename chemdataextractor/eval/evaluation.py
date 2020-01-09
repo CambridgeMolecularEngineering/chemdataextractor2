@@ -54,7 +54,7 @@ sys.stdout = Logger()
 
 def documents(folder):
     """Yields CDE documents for a given folder"""
-    for i, filename in sorted(enumerate(os.listdir(folder))):
+    for i, filename in enumerate(sorted(os.listdir(folder))):
         if filename[0] != '.':
             file_path = os.path.join(folder, filename)
             fb = open(file_path, 'rb')
