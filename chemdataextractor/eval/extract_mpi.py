@@ -1,5 +1,5 @@
 """
-Tools for production run data-extraction.
+Tools for production run data-extraction with MPI.
 
 .. codeauthor:: Juraj Mavračić <jm2111@cam.ac.uk>
 
