@@ -86,12 +86,14 @@ def value_element_plain():
     :returns: An Element to look for values.
     :rtype: BaseParserElement
     """
-    number = R('^[\+\-–−]?\d+(([\.・,\d])+)?$')
+    fraction = R('^[\+\-–−]?\d+/\d+$') | (R('^[\+\-–−]?\d+$') + R('^/$') + R('^\d+$')).add_action(merge)
+    pure_number = R('^[\+\-–−]?\d+(([\.・,\d])+)?$')
+    number = fraction | pure_number
     joined_range = R('^[\+\-–−]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
     spaced_range = (number + R('^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
     to_range = (number + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
-    bracket_range = R(number.pattern[:-1] + '\(\d+\)' + '$')('raw_value')
+    bracket_range = R(pure_number.pattern[:-1] + '\(\d+\)' + '$')('raw_value')
     between_range = (I('between').hide() + number + I('and') + number).add_action(join)
     value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range | bracket_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
@@ -187,7 +189,10 @@ def extract_value(string):
             float_val = float(value)
             values.append(float_val)
         except ValueError:
-            pass
+            try:
+                values.append(float(Fraction(value)))
+            except ValueError:
+                pass
     return values
 
 
@@ -225,6 +230,9 @@ def _find_value_strings(string):
             flag += 1
         else:
             new_split_by_num.append(value)
+    # Hack for merging-back fractions, jm2111
+    if len(new_split_by_num) == 3 and new_split_by_num[1] == '/':
+        new_split_by_num = [''.join(new_split_by_num)]
     return new_split_by_num
 
 
