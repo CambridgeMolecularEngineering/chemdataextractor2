@@ -38,9 +38,9 @@ cm_blacklist = (W('in') | I('electrodes') | I('anodes') | I('specimen') | I('and
 exclude_prefix = Start() + (lbrct + roman_numeral + rbrct + Not(hyphen) | (R('^\d{1,3}(\.\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?)?$') + Not(hyphen)) | (I('stage') | I('step') | I('section') | I('part')) + (alphanumeric | numeric | roman_numeral | R('^[A-Z]$')))
 
 # Tagged chemical mentions - One B-CM tag followed by zero or more I-CM tags.
-# cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)) | (bcm + ZeroOrMore(Not(cm_blacklist) + icm)).add_action(join)
-# TODO jm2111, edited due to weird matching ('-100 °C' was matched)
-cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)).add_action(join)
+cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)) | (bcm + ZeroOrMore(Not(cm_blacklist) + icm)).add_action(join)
+# TODO jm2111, edited below due to weird matching ('-100 °C' was matched), however, had to be reversed due to many unittests breaking
+# cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)).add_action(join)
 
 
 comma = (W(',') | T(',')).hide()
