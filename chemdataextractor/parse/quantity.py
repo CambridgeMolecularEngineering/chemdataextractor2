@@ -191,7 +191,7 @@ def extract_value(string):
         except ValueError:
             try:
                 values.append(float(Fraction(value)))
-            except ValueError:
+            except (ValueError, ZeroDivisionError):
                 pass
     return values
 
