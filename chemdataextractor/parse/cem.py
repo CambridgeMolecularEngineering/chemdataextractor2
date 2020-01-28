@@ -24,7 +24,7 @@ from lxml import etree
 
 log = logging.getLogger(__name__)
 
-joining_characters = R('^\@|\/$')
+joining_characters = R('^\@|\/|[-–‐‑‒–—―]$')
 
 alphanumeric = R('^(d-)?(\d{1,2}[A-Za-z]{1,2}[′″‴‶‷⁗]?)(-d)?$')
 

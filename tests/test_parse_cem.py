@@ -195,7 +195,10 @@ class TestParseCem(unittest.TestCase):
         expected = ['<cem_phrase><compound><names>Ba0.55K0.45As2Fe2+δ</names></compound></cem_phrase>']
         self.do_parse(s, expected)
 
-
+    def test_inorganic_mixture_simple(self):
+        s = 'CaO-MgO-SiO2-P2O5'
+        expected = ['<cem_phrase><compound><names>CaO-MgO-SiO2-P2O5</names></compound></cem_phrase>']
+        self.do_parse(s, expected)
 
 
 class TestParseCemHeading(unittest.TestCase):
