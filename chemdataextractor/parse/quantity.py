@@ -230,7 +230,7 @@ def _find_value_strings(string):
             flag += 1
         else:
             new_split_by_num.append(value)
-    # Hack for merging-back fractions, jm2111
+    # Merging-back fractions
     if len(new_split_by_num) == 3 and new_split_by_num[1] == '/':
         new_split_by_num = [''.join(new_split_by_num)]
     return new_split_by_num
