@@ -195,10 +195,7 @@ class TestParseCem(unittest.TestCase):
         expected = ['<cem_phrase><compound><names>Ba0.55K0.45As2Fe2+δ</names></compound></cem_phrase>']
         self.do_parse(s, expected)
 
-    def test_inorganic_mixture_simple(self):
-        s = 'CaO-MgO-SiO2-P2O5'
-        expected = ['<cem_phrase><compound><names>CaO-MgO-SiO2-P2O5</names></compound></cem_phrase>']
-        self.do_parse(s, expected)
+
 
 
 class TestParseCemHeading(unittest.TestCase):
@@ -468,12 +465,13 @@ class TestParseDocument(unittest.TestCase):
         d.models = [Compound, MeltingPoint]
         results = [r.serialize() for r in d.records]
         print(results)
-        self.assertListEqual(results, [
+        self.assertCountEqual(results, [
+            {'MeltingPoint': {'units': u'Celsius^(1.0)', 'value': [70.0, 75.0], 'raw_value': '70-75',
+                              'raw_units': '\xb0C.',
+                              'compound': {'Compound': {'labels': [u'VII'], 'roles': ['formula']}}}},
             {'Compound': {'names': [u'5-Bromo-6-pentadecyl-2-hydroxybenzoic acid', u'DBAA'], 'roles': ['product']}},
-            {'Compound': {'labels': [u'VII'], 'roles': [u'formula']}},
-            {'MeltingPoint': {'units': u'Celsius^(1.0)', 'value': [70.0, 75.0], 'raw_value': '70-75', 'raw_units': '\xb0C.',
-             'compound': {'Compound': {'labels': [u'VII'], 'roles': ['formula']}}}}
-             ])  # example-3?
+            {'Compound': {'labels': [u'VII'], 'roles': [u'formula']}}
+        ])  # example-3?
 
 
 if __name__ == '__main__':
