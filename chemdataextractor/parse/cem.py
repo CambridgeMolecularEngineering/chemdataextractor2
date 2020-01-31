@@ -24,7 +24,7 @@ from lxml import etree
 
 log = logging.getLogger(__name__)
 
-joining_characters = R('^\@|\/$')
+joining_characters = R('^\@|\/|[-–‐‑‒–—―]$')
 
 alphanumeric = R('^(d-)?(\d{1,2}[A-Za-z]{1,2}[′″‴‶‷⁗]?)(-d)?$')
 
@@ -39,6 +39,9 @@ exclude_prefix = Start() + (lbrct + roman_numeral + rbrct + Not(hyphen) | (R('^\
 
 # Tagged chemical mentions - One B-CM tag followed by zero or more I-CM tags.
 cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)) | (bcm + ZeroOrMore(Not(cm_blacklist) + icm)).add_action(join)
+# TODO jm2111, edited below due to weird matching ('-100 °C' was matched), however, had to be reversed due to many unittests breaking
+# cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)).add_action(join)
+
 
 comma = (W(',') | T(',')).hide()
 colon = (W(':') | T(':')).hide()
@@ -445,7 +448,7 @@ class CompoundTableParser(BaseTableParser):
         labels = compound_model.labels.parse_expression('labels')
         entities = [labels]
 
-        specifier = (I('Formula') | I('Compound')).add_action(join)('specifier')
+        specifier = (I('Formula') | I('Compound') | I('Alloy')).add_action(join)('specifier')
         entities.append(specifier)
 
         # the optional, user-defined, entities of the model are added, they are tagged with the name of the field

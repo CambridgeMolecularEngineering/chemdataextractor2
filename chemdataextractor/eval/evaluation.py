@@ -54,33 +54,35 @@ sys.stdout = Logger()
 
 def documents(folder):
     """Yields CDE documents for a given folder"""
-    for i, filename in sorted(enumerate(os.listdir(folder))):
+    for i, filename in enumerate(sorted(os.listdir(folder))):
         if filename[0] != '.':
             file_path = os.path.join(folder, filename)
             fb = open(file_path, 'rb')
             doc = Document.from_file(fb)
             fb.close()
-            yield doc
+            yield doc, file_path
 
 
-def records(doc, model):
+def records(cde_doc, models):
     """Yields CDE records for a given CDE document and CDE model"""
-    doc.models = [model]
-    recs = doc.records
+    cde_doc.models = []
+    for m in models:
+        cde_doc.models.append(m)
+    recs = cde_doc.records
     if recs:
         for record in recs:
-            if isinstance(record, model):
+            if isinstance(record, tuple(models)):
                 yield record
 
 
 class Evaluate:
     """Main class for evaluation of a particular model on a given corpus of literature"""
-    def __init__(self, model, folder=r'./', n_papers_limit=200, n_records_limit=200, play_sound=True, show_website=True, _automated=False):
+    def __init__(self, models, folder=r'./', n_papers_limit=200, n_records_limit=200, play_sound=True, show_website=True, _automated=False):
         self._automated = _automated
         self.play_sound = play_sound
         self.show_website = show_website
         self.folder = folder
-        self.model = model
+        self.models = models
         self.n_papers_limit = n_papers_limit
         self.n_records_limit = n_records_limit
         self.n_papers = len(os.listdir(folder))
@@ -134,14 +136,14 @@ class Evaluate:
                 continue
 
             print("Paper {}/{}".format(n_paper, self.n_papers))
-            print("DOI:       {}".format(doc.metadata.doi))
-            print("Journal:   {}".format(doc.metadata.journal))
-            print("Publisher: {}".format(doc.metadata.publisher))
-            print("PDF Url:   {}".format(doc.metadata.pdf_url))
-            print("HTML Url:  {}".format(doc.metadata.html_url))
+            print("DOI:       {}".format(doc[0].metadata.doi))
+            print("Journal:   {}".format(doc[0].metadata.journal))
+            print("Publisher: {}".format(doc[0].metadata.publisher))
+            print("PDF Url:   {}".format(doc[0].metadata.pdf_url))
+            print("HTML Url:  {}".format(doc[0].metadata.html_url))
 
             doc_opened = False
-            for record in records(doc, self.model):
+            for record in records(doc[0], self.models):
                 if record.is_unidentified:
                     self.n_unidentified += 1
                 if not record.is_unidentified:
@@ -156,7 +158,7 @@ class Evaluate:
                         playsound(sound_file)
 
                     if not doc_opened and self.show_website:
-                        webbrowser.open(doc.metadata.html_url)
+                        webbrowser.open(doc[0].metadata.html_url)
                         doc_opened = True
                     if self._automated:
                         input_cw = 0
@@ -183,6 +185,7 @@ class Evaluate:
 
                         if record.updated:
                             self.nc_definition += 1
+                            # print(doc[0].definitions)
 
                     if input_cw == 1:
                         self.ncd += 1
@@ -228,7 +231,7 @@ class Evaluate:
                             self.nw_other += 1
 
                         if input_w == 5:
-                            for table in doc.tables:
+                            for table in doc[0].tables:
                                 print(table.tde_table)
                                 table.tde_table.print()
                                 print(table.tde_table.history)
@@ -343,4 +346,5 @@ class Evaluate:
             print("Definitions update Precision         = {:4.2f}, {}/{}".format(self.nc_definition/(self.nc_definition+self.nw_definition), self.nc_definition, (self.nc_definition+self.nw_definition)), file=destination)
         if self.nw != 0:
             print("Percentage of 'other' errors         = {:4.2f}, {}/{}".format(self.nw_other/self.nw, self.nw_other, self.nw), file=destination)
+
 

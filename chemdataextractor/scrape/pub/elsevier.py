@@ -238,7 +238,6 @@ class ElsevierXmlTable(Entity):
 
 class ElsevierXmlDocument(Entity):
     """ Scraper for Elsevier XML articles """
-    
 
     doi = StringField('doi')
     title = StringField('title')

@@ -91,6 +91,17 @@ class TestUnitClass(unittest.TestCase):
         extracted = self.qp.extract_value(test_string)
         self.assertEqual(extracted[0], 500.8)
 
+    def test_fraction_value(self):
+        test_string = '3/4'
+        extracted = self.qp.extract_value(test_string)
+        print(extracted)
+        self.assertEqual(extracted[0], 0.75)
+
+    def test_fraction_zero(self):
+        test_string = '3/0'
+        extracted = self.qp.extract_value(test_string)
+        self.assertEqual(extracted, [])
+
     def test_unit_mm(self):
         self.qp.model.dimensions = Length()**2 / Time()
         test_string = 'mm2/s'

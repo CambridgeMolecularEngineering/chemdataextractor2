@@ -12,7 +12,7 @@ else:
 
 setup(
     name='ChemDataExtractor',
-    version='1.4.0-beta',
+    version='2.0',
     author='Matt Swain, Callum Court, Edward Beard, Juraj Mavracic, Taketomo Isazawa',
     author_email='m.swain@me.com, cc889@cam.ac.uk, ejb207@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk',
     license='MIT',
