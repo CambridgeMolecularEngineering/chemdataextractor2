@@ -17,7 +17,7 @@ import unittest
 from chemdataextractor.model import Compound, MeltingPoint, UvvisSpectrum, UvvisPeak, Apparatus, BaseModel
 from chemdataextractor.model.units.temperature import TemperatureModel
 from chemdataextractor.parse.elements import I, W
-from chemdataextractor.model.base import StringType, ModelType
+from chemdataextractor.model.base import StringType, ModelType, ListType
 from chemdataextractor.doc.text import Sentence
 from chemdataextractor.parse.auto import AutoSentenceParser
 from chemdataextractor.doc import Document
@@ -183,6 +183,35 @@ class TestModel(unittest.TestCase):
         self.assertFalse(b_list[3].is_subset(b_list[2]))
         self.assertTrue(b_list[2].is_subset(b_list[3]))
         self.assertFalse(b_list[2].is_subset(b_list[0]))
+
+    def test_is_empty(self):
+        class OuterModel(BaseModel):
+            melting_point = ModelType(MeltingPoint)
+            string_field = StringType()
+            list_field = ListType(StringType())
+            complex_list = ListType(ModelType(MeltingPoint))
+
+        empty_records = [OuterModel(),
+                        MeltingPoint(),
+                        OuterModel(melting_point=MeltingPoint()),
+                        OuterModel(melting_point=MeltingPoint(compound=Compound())),
+                        OuterModel(string_field=""),
+                        OuterModel(complex_list=[]),
+                        OuterModel(list_field=[]),
+                        OuterModel(melting_point=MeltingPoint(compound=Compound(names=[])))
+                        ]
+
+        for record in empty_records:
+            self.assertTrue(record.is_empty)
+
+        non_empty_records = [OuterModel(complex_list=[MeltingPoint()]),
+                             OuterModel(melting_point=MeltingPoint(solvent="TEST")),
+                             OuterModel(melting_point=MeltingPoint(compound=Compound(names=["TEST"]))),
+                             OuterModel(string_field="TEST"),
+                             ]
+
+        for record in non_empty_records:
+            self.assertFalse(record.is_empty)
 
 
 if __name__ == '__main__':
