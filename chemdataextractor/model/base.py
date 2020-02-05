@@ -94,6 +94,10 @@ class BaseType(six.with_metaclass(ABCMeta)):
         else:
             return value
 
+    def is_empty(self, value):
+        """Return whether a value is considered empty for the case of this field."""
+        return False
+
 
 class StringType(BaseType):
     """"""
@@ -101,6 +105,11 @@ class StringType(BaseType):
     def process(self, value):
         """Convert value to a unicode string. Useful in case lxml _ElementUnicodeResult are passed from parser."""
         return six.text_type(value) if value is not None else None
+
+    def is_empty(self, value):
+        if value is not None and isinstance(value, str) and value:
+            return False
+        return True
 
 
 class FloatType(BaseType):
@@ -110,8 +119,12 @@ class FloatType(BaseType):
         """Convert value to a float."""
         if value is not None:
             return float(value)
-
         return None
+
+    def is_empty(self, value):
+        if value is not None:
+            return False
+        return True
 
 
 class ModelType(BaseType):
@@ -124,6 +137,11 @@ class ModelType(BaseType):
     def serialize(self, value, primitive=False):
         """Serialize this field."""
         return value.serialize(primitive=primitive)
+
+    def is_empty(self, value):
+        if isinstance(value, self.model_class):
+            return value.is_empty
+        return True
 
 
 class ListType(BaseType):
@@ -148,6 +166,11 @@ class ListType(BaseType):
     def serialize(self, value, primitive=False):
         """Serialize this field."""
         return [self.field.serialize(v, primitive=primitive) for v in value]
+
+    def is_empty(self, value):
+        if isinstance(value, list) and len(value) != 0:
+            return False
+        return True
 
 
 class ModelMeta(ABCMeta):
@@ -689,11 +712,21 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         self._record_method = text
 
     def _clean(self):
+        """
+        Removes any subrecords where the required properties have not been fulfilled.
+        """
         for field_name, field in six.iteritems(self.fields):
             if hasattr(field, 'model_class') and self[field_name] is not None:
                 self[field_name]._clean()
                 if not self[field_name].required_fulfilled:
                     self[field_name] = field.default
+
+    @property
+    def is_empty(self):
+        for field_name, field_type in six.iteritems(self.fields):
+            if not field_type.is_empty(self[field_name]):
+                return False
+        return True
 
 
 @python_2_unicode_compatible
