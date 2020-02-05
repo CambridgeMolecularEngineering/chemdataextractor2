@@ -168,7 +168,8 @@ class Table(CaptionedElement):
             for parser in model.parsers:
                 for cde_table in cde_tables:
                     for record in self._parse_table(parser, cde_table):
-                        table_records.append(record)
+                        if not record.is_empty:
+                            table_records.append(record)
 
         # Step 2
         self._consolidate_by_row_col(table_records)

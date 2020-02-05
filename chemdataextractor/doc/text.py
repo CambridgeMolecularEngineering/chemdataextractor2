@@ -761,7 +761,7 @@ class Sentence(BaseText):
                 if hasattr(parser, 'parse_sentence'):
                     for record in parser.parse_sentence(tagged_tokens):
                         p = record.serialize()
-                        if not p:  # TODO: Potential performance issues?
+                        if record.is_empty:  # TODO: Potential performance issues?
                             continue
                         # Skip duplicate records
                         if record in records:
