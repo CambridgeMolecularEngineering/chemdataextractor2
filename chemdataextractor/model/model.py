@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 import logging
 import six
 
-from .base import BaseModel, StringType, ListType, ModelType
+from .base import BaseModel, StringType, ListType, ModelType, SetType
 from .units.temperature import TemperatureModel
 from .units.length import LengthModel
 from ..parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser, CompoundTableParser, names_only, labels_only, roles_only
@@ -30,9 +30,9 @@ log = logging.getLogger(__name__)
 
 
 class Compound(BaseModel):
-    names = ListType(StringType(), parse_expression=names_only, updatable=True)
-    labels = ListType(StringType(), parse_expression=NoMatch(), updatable=True)
-    roles = ListType(StringType(), parse_expression=roles_only, updatable=True)
+    names = SetType(StringType(), parse_expression=names_only, updatable=True)
+    labels = SetType(StringType(), parse_expression=NoMatch(), updatable=True)
+    roles = SetType(StringType(), parse_expression=roles_only, updatable=True)
     parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser(), CompoundTableParser()]
     # parsers = [CompoundParser(), CompoundHeadingParser(), ChemicalLabelParser()]
     # parsers = [CompoundParser()]
@@ -43,7 +43,7 @@ class Compound(BaseModel):
         for k in self.keys():
             for new_item in other[k]:
                 if new_item not in self[k]:
-                    self[k].append(new_item)
+                    self[k].add(new_item)
         log.debug('Result: %s' % self.serialize())
         return self
 
