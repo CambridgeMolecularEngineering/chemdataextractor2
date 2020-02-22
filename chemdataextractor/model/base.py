@@ -30,7 +30,7 @@ class BaseType(six.with_metaclass(ABCMeta)):
     # This is assigned by ModelMeta to match the attribute on the Model
     name = None
 
-    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None, updatable=False, binding=False):
+    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None, updatable=False, binding=False, ignore_when_merging=False):
         """
 
         :param default: (Optional) The default value for this field if none is set.
@@ -38,8 +38,9 @@ class BaseType(six.with_metaclass(ABCMeta)):
         :param bool required: (Optional) Whether a value is required. Default False.
         :param bool contextual: (Optional) Whether this value is contextual. Default False.
         :param BaseParserElement parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement. Default None.
-        :param bool updatable: (Optional) Whether the parse_expression can be changed by the document as parsing occurs. Default False
-        :param bool binding: (Optional) If this option is set to True, any submodels that have an attribute with the same name must have the same value for this attribute
+        :param bool updatable: (Optional) Whether the parse_expression can be changed by the document as parsing occurs. Default False.
+        :param bool binding: (Optional) If this option is set to True, any submodels that have an attribute with the same name must have the same value for this attribute. Default False/
+        :param bool ignore_when_merging: (Optional) If this option is set to True, any records with a different value for this field is treated as corresponding to the same physical record.
         """
         self.default = copy.deepcopy(default)
         self.null = null
@@ -48,6 +49,7 @@ class BaseType(six.with_metaclass(ABCMeta)):
         self.parse_expression = parse_expression
         self.updatable = updatable
         self.binding = binding
+        self.ignore_when_merging = ignore_when_merging
         if self.parse_expression is None and self.updatable:
             print('No parse_expression supplied but updatable set as True for ', type(self))
             print('updatable refers to whether parse_expression can be changed by the document as parsing occurs. Setting updatable to False.')
@@ -161,7 +163,7 @@ class ListType(BaseType):
             processed = [self.field.process(v) for v in value]
             if self.sorted:
                 processed = sorted(processed)
-            instance._values[self.name] = [self.field.process(v) for v in value]
+            instance._values[self.name] = processed
 
     def serialize(self, value, primitive=False):
         """Serialize this field."""
@@ -169,6 +171,33 @@ class ListType(BaseType):
 
     def is_empty(self, value):
         if isinstance(value, list) and len(value) != 0:
+            return False
+        return True
+
+
+class SetType(BaseType):
+
+    def __init__(self, field, default=None, **kwargs):
+        super(SetType, self).__init__(**kwargs)
+        self.field = field
+        self.default = default if default is not None else set()
+
+    def __set__(self, instance, value):
+        """Descriptor for assigning a value to a SetField in a Model."""
+        # Run process for the nested field type for each value in list
+        if value is None:
+            instance._values[self.name] = None
+        else:
+            instance._values[self.name] = set(self.field.process(v) for v in value)
+
+    def serialize(self, value, primitive=False):
+        """Serialize this field."""
+        if value is None or len(value) == 0:
+            return None
+        return set(self.field.serialize(v, primitive=primitive) for v in value)
+
+    def is_empty(self, value):
+        if isinstance(value, set) and len(value) != 0:
             return False
         return True
 
@@ -521,6 +550,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         log.debug(self.serialize())
         log.debug(other.serialize())
         did_merge = False
+        should_keep_both_records = self._should_keep_both_records(other)
         if self.contextual_fulfilled:
             return self
         if self._binding_compatible(other):
@@ -546,6 +576,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         did_merge = True
         if did_merge:
             self._consolidate_binding()
+            if should_keep_both_records:
+                did_merge = False
         return did_merge
 
     def merge_all(self, other):
@@ -565,7 +597,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
         log.debug(self.serialize())
         log.debug(other.serialize())
+        pre_merge = [self.serialize(), other.serialize()]
         did_merge = False
+        should_keep_both_records = self._should_keep_both_records(other)
         if self._binding_compatible(other):
             if type(self) != type(other):
                 for field_name, field in six.iteritems(self.fields):
@@ -586,21 +620,73 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         did_merge = True
                         self[field_name] = other[field_name]
         if did_merge:
-            self._consolidate_binding()
+            if should_keep_both_records:
+               did_merge = False
         return did_merge
 
     def _compatible(self, other):
+        # return self._compatible_legacy(other)
         match = False
         if type(other) == type(self):
             # Check if the other seems to be describing the same thing as self.
             match = True
             for field_name, field in six.iteritems(self.fields):
-                if (self[field_name] is not None
+                if isinstance(field, ModelType):
+                    if (not field.ignore_when_merging
+                    and self[field_name] is not None
+                    and other[field_name] is not None
+                    and not self[field_name]._compatible(other[field_name])):
+                        match = False
+                        break
+                else:
+                    if (not field.ignore_when_merging
+                      and self[field_name] is not None
+                      and other[field_name] is not None
+                      and self[field_name] != other[field_name]):
+                        match = False
+                        break
+        # legacy_match = self._compatible_legacy(other)
+        # if legacy_match != match:
+        #     print(legacy_match, match)
+        #     pprint(self.serialize())
+        #     pprint(other.serialize())
+        return match
+
+    def _compatible_legacy(self, other):
+        match = False
+        if type(other) == type(self):
+            # Check if the other seems to be describing the same thing as self.
+            match = True
+            for field_name, field in six.iteritems(self.fields):
+
+                if (not field.ignore_when_merging
+                  and self[field_name] is not None
                   and other[field_name] is not None
                   and self[field_name] != other[field_name]):
                     match = False
                     break
         return match
+
+    def _should_keep_both_records(self, other):
+        should_keep_both = False
+        if type(other) == type(self):
+            # Check if the other seems to be describing the same thing as self.
+            for field_name, field in six.iteritems(self.fields):
+                if isinstance(field, ModelType):
+                    if (field.ignore_when_merging
+                    and self[field_name] is not None
+                    and other[field_name] is not None
+                    and not self[field_name]._compatible(other[field_name])):
+                        should_keep_both = True
+                        break
+                else:
+                    if (field.ignore_when_merging
+                      and self[field_name] is not None
+                      and other[field_name] is not None
+                      and self[field_name] != other[field_name]):
+                        should_keep_both = True
+                        break
+        return should_keep_both
 
     @classmethod
     def flatten(cls):
