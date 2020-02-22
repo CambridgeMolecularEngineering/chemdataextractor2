@@ -134,15 +134,12 @@ class BaseAutoParser(BaseParser):
         # print(etree.tostring(result))
         if result is None:
             return
-        requirements = True
         property_entities = {}
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
             raw_value = first(result.xpath('./raw_value/text()'))
             log.debug(raw_value)
-            if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
-                requirements = False
             if raw_value != 'NoValue':
                 value = self.extract_value(raw_value)
             else:
@@ -156,8 +153,6 @@ class BaseAutoParser(BaseParser):
             # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
             # print(etree.tostring(result))
             raw_value = first(result.xpath('./raw_value/text()'))
-            if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
-                requirements = False
             raw_units = first(result.xpath('./raw_units/text()'))
             if raw_value != 'NoValue':
                 value = self.extract_value(raw_value)
@@ -186,11 +181,10 @@ class BaseAutoParser(BaseParser):
                 except TypeError as e:
                     log.debug(self.model)
                     log.debug(e)
-                    requirements = False
 
         model_instance = self.model(**property_entities)
 
-        if requirements:
+        if model_instance.noncontextual_required_fulfilled:
             # records the parser that was used to generate this record, can be used for evaluation
             model_instance.record_method = self.__class__.__name__
             yield model_instance
