@@ -268,7 +268,7 @@ class TestParseHeading(unittest.TestCase):
     def test_preparation_of(self):
         s = 'Preparation of 4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid, methyl ester (Compound 41)'
         expected = [
-            {'Compound': {'labels': ['41'], 'names': ['4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid, methyl ester'], 'roles': ['compound', 'product']}}
+            {'Compound': {'labels': {'41'}, 'names': {'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid, methyl ester'}, 'roles': {'compound', 'product'}}}
         ]
         self.do_parse(s, expected)
 
@@ -286,26 +286,26 @@ class TestParseHeading(unittest.TestCase):
 
     def test_label_list(self):
         s = 'Compounds 8a, 8b, 8c: pH Responsive Dye Conjugates'
-        expected = [{'Compound': {'labels': ['8a'], 'roles': ['compounds']}},
-         {'Compound': {'labels': ['8b'], 'roles': ['compounds']}},
-         {'Compound': {'labels': ['8c'], 'roles': ['compounds']}}]
+        expected = [{'Compound': {'labels': {'8a'}, 'roles': {'compounds'}}},
+         {'Compound': {'labels': {'8b'}, 'roles': {'compounds'}}},
+         {'Compound': {'labels': {'8c'}, 'roles': {'compounds'}}}]
         self.do_parse(s, expected)
 
     def test_name_label(self):
         s = '4-[4-(4-[5-[5-(4-Hydroxyphenyl)-3-phenyl-1H-pyrrol-2-ylimino]-4-phenyl-5H-pyrrol-2-yl]-phenoxymethyl)-[1,2,3]triazol-1-yl]butyric acid (8b)'
-        expected = [{'Compound': {'labels': ['8b'], 'names': ['4-[4-(4-[5-[5-(4-Hydroxyphenyl)-3-phenyl-1H-pyrrol-2-ylimino]-4-phenyl-5H-pyrrol-2-yl]-phenoxymethyl)-[1,2,3]triazol-1-yl]butyric acid']}}]
+        expected = [{'Compound': {'labels': {'8b'}, 'names': {'4-[4-(4-[5-[5-(4-Hydroxyphenyl)-3-phenyl-1H-pyrrol-2-ylimino]-4-phenyl-5H-pyrrol-2-yl]-phenoxymethyl)-[1,2,3]triazol-1-yl]butyric acid'}}}]
         self.do_parse(s, expected)
 
     def test_cas(self):
         """"""
         s = 'CAS 1242336-53-3'
-        expected = [{'Compound': {'names': [u'CAS 1242336-53-3']}}]
+        expected = [{'Compound': {'names': {u'CAS 1242336-53-3'}}}]
         self.do_parse(s, expected)
 
     def test_section_numeral(self):
         """"""
         s = '(vii) 1,3,5-Tricyano-2,4,6-tris[4-(p-diphenylaminostyryl)styryl]benzene (3j)'
-        expected = [{'Compound': {'labels': [u'3j'], 'names': [u'1,3,5-Tricyano-2,4,6-tris[4-(p-diphenylaminostyryl)styryl]benzene']}}]
+        expected = [{'Compound': {'labels': {u'3j'}, 'names': {u'1,3,5-Tricyano-2,4,6-tris[4-(p-diphenylaminostyryl)styryl]benzene'}}}]
         self.do_parse(s, expected)
 
     def test_fluorescent_nano_beads(self):
@@ -323,49 +323,49 @@ class TestParseHeading(unittest.TestCase):
     def test_example_colon(self):
         """"""
         s = 'EXAMPLE: 3'
-        expected = [{'Compound': {'labels': [u'3'], 'roles': ['example']}}]
+        expected = [{'Compound': {'labels': {u'3'}, 'roles': {'example'}}}]
         self.do_parse(s, expected)
 
     def test_comparative_example(self):
         """"""
         s = 'Comparative example 14'
-        expected = [{'Compound': {'labels': [u'14'], 'roles': ['comparative example']}}]
+        expected = [{'Compound': {'labels': {u'14'}, 'roles': {'comparative example'}}}]
         self.do_parse(s, expected)
 
     def test_reference_example(self):
         """"""
         s = 'Reference example IV'
-        expected = [{'Compound': {'labels': [u'IV'], 'roles': ['reference example']}}]
+        expected = [{'Compound': {'labels': {u'IV'}, 'roles': {'reference example'}}}]
         self.do_parse(s, expected)
 
     def test_step(self):
         """Test synthesis step."""
         s = 'Step B: 7-Fluoro-4H-1,2,4-benzothiadiazine 1,1-dioxide'
-        expected = [{'Compound': {'names': [u'7-Fluoro-4H-1,2,4-benzothiadiazine 1,1-dioxide']}}]
+        expected = [{'Compound': {'names': {u'7-Fluoro-4H-1,2,4-benzothiadiazine 1,1-dioxide'}}}]
         self.do_parse(s, expected)
 
     def test_label_14(self):
         """"""
         s = '1-(3,4-Dibenzyloxycinnamoyl)-3,4′-dibenzyloxyresveratrol (14):'
-        expected = [{'Compound': {'labels': [u'14'], 'names': [u'1-(3,4-Dibenzyloxycinnamoyl)-3,4\u2032-dibenzyloxyresveratrol']}}]
+        expected = [{'Compound': {'labels': {u'14'}, 'names': {u'1-(3,4-Dibenzyloxycinnamoyl)-3,4\u2032-dibenzyloxyresveratrol'}}}]
         self.do_parse(s, expected)
 
     def test_section_decimal(self):
         """"""
         s = '3.2 [3-(2-p-Tolylimidazo[1,2-a]pyridin-6-yl)phenyl]methanol'
-        expected = [{'Compound': {'names': [u'[3-(2-p-Tolylimidazo[1,2-a]pyridin-6-yl)phenyl]methanol']}}]
+        expected = [{'Compound': {'names': {u'[3-(2-p-Tolylimidazo[1,2-a]pyridin-6-yl)phenyl]methanol'}}}]
         self.do_parse(s, expected)
 
     def test_prep_label(self):
         """"""
         s = 'Preparation of (E)-1-(4-(benzyloxy)phenyl)-2-(3,5-bis(benzyloxy)phenyl)ethene (I)'
-        expected = [{'Compound': {'labels': [u'I'], 'names': [u'(E)-1-(4-(benzyloxy)phenyl)-2-(3,5-bis(benzyloxy)phenyl)ethene'], 'roles': ['product']}}]
+        expected = [{'Compound': {'labels': {u'I'}, 'names': {u'(E)-1-(4-(benzyloxy)phenyl)-2-(3,5-bis(benzyloxy)phenyl)ethene'}, 'roles': {'product'}}}]
         self.do_parse(s, expected)
 
     def test_comma_label(self):
         """"""
         s = 'Preparation of 2-(10-bromoanthracene-9-yl)thiophene, 11'
-        expected = [{'Compound': {'labels': [u'11'], 'names': [u'2-(10-bromoanthracene-9-yl)thiophene'], 'roles': [u'product']}}]
+        expected = [{'Compound': {'labels': {u'11'}, 'names': {u'2-(10-bromoanthracene-9-yl)thiophene'}, 'roles': {u'product'}}}]
         self.do_parse(s, expected)
 
 
@@ -451,8 +451,8 @@ class TestParseDocument(unittest.TestCase):
         )
         d.models = [Compound]
         results = [r.serialize() for r in d.records]
-        self.assertEqual(results, [{'Compound': {'names': [u'hexanes']}},
-                                   {'Compound': {'labels': [u'3'], 'names': [u'2-Amino-3-methoxy-5-chloropyridine'], 'roles': ['product', 'example']}}])
+        self.assertEqual(results, [{'Compound': {'names': {u'hexanes'}}},
+                                   {'Compound': {'labels': {u'3'}, 'names': {u'2-Amino-3-methoxy-5-chloropyridine'}, 'roles': {'product', 'example'}}}])
 
     # Edited by ti250 (8/11/2018)
     # Changed format of the expected results for new-style models.
@@ -468,9 +468,9 @@ class TestParseDocument(unittest.TestCase):
         self.assertCountEqual(results, [
             {'MeltingPoint': {'units': u'Celsius^(1.0)', 'value': [70.0, 75.0], 'raw_value': '70-75',
                               'raw_units': '\xb0C.',
-                              'compound': {'Compound': {'labels': [u'VII'], 'roles': ['formula']}}}},
-            {'Compound': {'names': [u'5-Bromo-6-pentadecyl-2-hydroxybenzoic acid', u'DBAA'], 'roles': ['product']}},
-            {'Compound': {'labels': [u'VII'], 'roles': [u'formula']}}
+                              'compound': {'Compound': {'labels': {u'VII'}, 'roles': {'formula'}}}}},
+            {'Compound': {'names': {u'5-Bromo-6-pentadecyl-2-hydroxybenzoic acid', u'DBAA'}, 'roles': {'product'}}},
+            {'Compound': {'labels': {u'VII'}, 'roles': {u'formula'}}}
         ])  # example-3?
 
 

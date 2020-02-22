@@ -52,7 +52,7 @@ class TestSnowball(unittest.TestCase):
         candidates = [r.serialize() for r in sb.candidates(sentence.tagged_tokens)]
         expected = [{'specifier': 'Curie temperature', 'compound': {'names': 'MnO'}, 'raw_value': '120', 'raw_units': 'K', 'confidence': 0}]
         self.assertEqual(expected, candidates)
-    
+
     def test_retrieve_entities(self):
         """Test entity retrieval from a parse result
         """
@@ -65,7 +65,7 @@ class TestSnowball(unittest.TestCase):
                     detected.append((entity[0], entity[1]))
         expected = [('1103', 'raw_value'), ('K', 'raw_units'), ('Curie temperature', 'specifier'), ('BiFeO3', ('compound', 'names'))]
         self.assertCountEqual(detected, expected)
-    
+
     def test_parse_sentence(self):
         """Test Snowball Sentence Parsing
         """
@@ -77,7 +77,7 @@ class TestSnowball(unittest.TestCase):
         models = []
         for model in sb.parse_sentence(test_sentence.tagged_tokens):
             models.append(model.serialize())
-        expected = [{'CurieTemperature': {'compound': {'Compound': {'names': ['MnO']}},
+        expected = [{'CurieTemperature': {'compound': {'Compound': {'names': {'MnO'}}},
                         'confidence': 0.7333333333333333,
                         'raw_units': 'K',
                         'raw_value': '120',

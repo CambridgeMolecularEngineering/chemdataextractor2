@@ -149,14 +149,14 @@ class TestMultiQuantityTemplate(unittest.TestCase):
     def test_interpret_1(self):
         s = Sentence(
             'BiFeO3 is very interesting as it exhibits two transitions at TC1 = 640 K and TC2 = 1103 K')
-        expected = [{'Compound': {'names': ['BiFeO3']}},
-                    {'CurieTemperature': {'compound': {'Compound': {'names': ['BiFeO3']}},
+        expected = [{'Compound': {'names': {'BiFeO3'}}},
+                    {'CurieTemperature': {'compound': {'Compound': {'names': {'BiFeO3'}}},
                                           'raw_units': 'K',
                                           'raw_value': '1103',
                                           'specifier': 'TC2',
                                           'units': 'Kelvin^(1.0)',
                                           'value': [1103.0]}},
-                    {'CurieTemperature': {'compound': {'Compound': {'names': ['BiFeO3']}},
+                    {'CurieTemperature': {'compound': {'Compound': {'names': {'BiFeO3'}}},
                                           'raw_units': 'K',
                                           'raw_value': '640',
                                           'specifier': 'TC1',

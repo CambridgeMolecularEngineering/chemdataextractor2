@@ -156,8 +156,8 @@ class TestAutoSentenceParser(unittest.TestCase):
         test_sentence = Sentence('CH3 was found to have a speed of approximately 25 km/h at a temperature of 283 K')
         test_sentence.models = [SpeedModel]
         found_records = test_sentence.records.serialize()
-        expected = [{'Compound': {'names': ['CH3']}},
+        expected = [{'Compound': {'names': {'CH3'}}},
                     {'SpeedModel': {'raw_value': '25', 'raw_units': 'km/h', 'value': [25.0],
                                     'units': '(10^3.0) * Hour^(-1.0)  Meter^(1.0)', 'specifier': 'speed',
-                                    'compound': {'Compound': {'names': ['CH3']}}}}]
+                                    'compound': {'Compound': {'names': {'CH3'}}}}}]
         self.assertEqual(found_records, expected)
