@@ -123,7 +123,7 @@ class Table(CaptionedElement):
 
     @property
     def records(self):
-        table_records = []
+        table_records = ModelList()
         caption_records = self.caption.records
         if self.tde_subtables:
             for subtable in self.tde_subtables:
