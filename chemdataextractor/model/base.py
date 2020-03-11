@@ -578,8 +578,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                        and other.get(field_name, None) is not None):
                         self[field_name] = other[field_name]
                         did_merge = True
+        self._consolidate_binding()
         if did_merge:
-            self._consolidate_binding()
             if should_keep_both_records:
                 did_merge = False
         return did_merge
@@ -623,6 +623,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                       and other.get(field_name, None) is not None):
                         did_merge = True
                         self[field_name] = other[field_name]
+        self._consolidate_binding()
         if did_merge:
             if should_keep_both_records:
                did_merge = False
