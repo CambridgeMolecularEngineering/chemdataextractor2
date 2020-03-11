@@ -77,7 +77,7 @@ class TestSnowball(unittest.TestCase):
         models = []
         for model in sb.parse_sentence(test_sentence.tagged_tokens):
             models.append(model.serialize())
-        expected = [{'CurieTemperature': {'compound': {'Compound': {'names': {'MnO'}}},
+        expected = [{'CurieTemperature': {'compound': {'Compound': {'names': ['MnO']}},
                         'confidence': 0.7333333333333333,
                         'raw_units': 'K',
                         'raw_value': '120',

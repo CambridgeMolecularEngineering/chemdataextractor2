@@ -37,24 +37,33 @@ class TestExtract(unittest.TestCase):
             Paragraph('This gave 1.95 g (75% of the theoretical) of 4-amino-2-(3-thienyl)phenol hydrochloride with a melting point of 130-132° C.'))
         d.models = [Compound, MeltingPoint]
         expected = [
-            {'Compound': {'names': {'4-nitro-2-(3-thienyl)phenol'}}},
-            {'Compound': {'names': {'ethanol'}}},
-            {'Compound': {'names': {'palladium'}}},
-            {'Compound': {'names': {'carbon'}}},
-            {'Compound': {'names': {'hydrogen'}}},
-            {'Compound': {'names': {'diethyl ether'}}},
-            {'MeltingPoint': {'value': [130.0, 132.0], 'units': 'Celsius^(1.0)', 'raw_value': '130-132', 'raw_units': '\xb0C', 'compound': {'Compound': {'names': {'4-amino-2-(3-thienyl)phenol hydrochloride', '4-Amino-2-(3-thienyl)phenol Hydrochloride'}, 'roles': {'product'}}}}},
-            {'Compound': {'names': {'4-Amino-2-(3-thienyl)phenol Hydrochloride',
-                                    '4-amino-2-(3-thienyl)phenol hydrochloride'}, 'roles': {'product'}}}
+             {'Compound': {'names': ['4-nitro-2-(3-thienyl)phenol']}},
+             {'Compound': {'names': ['ethanol']}},
+             {'Compound': {'names': ['palladium']}},
+             {'Compound': {'names': ['carbon']}},
+             {'Compound': {'names': ['hydrogen']}},
+             {'Compound': {'names': ['diethyl ether']}},
+             {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride',
+                                     '4-amino-2-(3-thienyl)phenol hydrochloride'],
+                           'roles': ['product']}},
+             {'MeltingPoint': {'compound': {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol '
+                                                                   'Hydrochloride',
+                                                                   '4-amino-2-(3-thienyl)phenol '
+                                                                   'hydrochloride'],
+                                                         'roles': ['product']}},
+                               'raw_units': '°C',
+                               'raw_value': '130-132',
+                               'units': 'Celsius^(1.0)',
+                               'value': [130.0, 132.0]}}
         ]
-        self.assertCountEqual(expected, d.records.serialize())
+        self.assertEqual(expected, d.records.serialize())
 
     def test_parse_control_character(self):
         """Test control character in text is handled correctly."""
         # The parser doesn't like controls because it uses LXML model so must be XML compatible.
         d = Document(Paragraph('Yielding 2,4,6-trinitrotoluene,\n m.p. 20 \x0eC.'))
         d.models = [Compound]
-        expected = [{'Compound': {'names': {'2,4,6-trinitrotoluene'}}}]
+        expected = [{'Compound': {'names': ['2,4,6-trinitrotoluene']}}]
         self.assertEqual(expected, d.records.serialize())
 
     def test_merge_contextual(self):
@@ -68,23 +77,29 @@ class TestExtract(unittest.TestCase):
             Paragraph('This gave 1.95 g (75% of the theoretical) of 4-amino-2-(3-thienyl)phenol hydrochloride with a melting point of 130-132° C as measured with the HORIBA F-7000 spectrofluorimeter.'))
         d.models = [Compound, MeltingPoint, Apparatus]
         expected = [
-            {'Compound': {'names': {'4-nitro-2-(3-thienyl)phenol'}}},
-            {'Compound': {'names': {'ethanol'}}},
-            {'Compound': {'names': {'palladium'}}},
-            {'Compound': {'names': {'carbon'}}},
-            {'Compound': {'names': {'hydrogen'}}},
-            {'Compound': {'names': {'diethyl ether'}}},
-            {'Apparatus': {'name': 'HORIBA F-7000 spectrofluorimeter'}},
-            {'MeltingPoint': {'value': [130.0, 132.0],
-                              'units': 'Celsius^(1.0)',
-                              'raw_value': '130-132',
-                              'raw_units': '\xb0C',
-                              'compound': {'Compound': {'names': {'4-amino-2-(3-thienyl)phenol hydrochloride', '4-Amino-2-(3-thienyl)phenol Hydrochloride'}, 'roles': {'product'}}},
-                              'apparatus': {'Apparatus': {'name': 'HORIBA F-7000 spectrofluorimeter'}}}},
-            {'Compound': {'names': {'4-Amino-2-(3-thienyl)phenol Hydrochloride',
-                                    '4-amino-2-(3-thienyl)phenol hydrochloride'}, 'roles': {'product'}}}
+             {'Compound': {'names': ['4-nitro-2-(3-thienyl)phenol']}},
+             {'Compound': {'names': ['ethanol']}},
+             {'Compound': {'names': ['palladium']}},
+             {'Compound': {'names': ['carbon']}},
+             {'Compound': {'names': ['hydrogen']}},
+             {'Compound': {'names': ['diethyl ether']}},
+             {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol Hydrochloride',
+                                     '4-amino-2-(3-thienyl)phenol hydrochloride'],
+                           'roles': ['product']}},
+             {'Apparatus': {'name': 'HORIBA F-7000 spectrofluorimeter'}},
+             {'MeltingPoint': {'apparatus': {'Apparatus': {'name': 'HORIBA F-7000 '
+                                                                   'spectrofluorimeter'}},
+                               'compound': {'Compound': {'names': ['4-Amino-2-(3-thienyl)phenol '
+                                                                   'Hydrochloride',
+                                                                   '4-amino-2-(3-thienyl)phenol '
+                                                                   'hydrochloride'],
+                                                         'roles': ['product']}},
+                               'raw_units': '°C',
+                               'raw_value': '130-132',
+                               'units': 'Celsius^(1.0)',
+                               'value': [130.0, 132.0]}}
         ]
-        self.assertCountEqual(expected, d.records.serialize())
+        self.assertEqual(expected, d.records.serialize())
 
 
 

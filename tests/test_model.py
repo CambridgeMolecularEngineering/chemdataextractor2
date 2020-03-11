@@ -39,7 +39,7 @@ class TestModel(unittest.TestCase):
 
     def test_serialize(self):
         """Test model serializes as expected."""
-        self.assertEqual(Compound(names=['Coumarin 343']).serialize(), {'Compound': {'names': {'Coumarin 343'}}})
+        self.assertEqual(Compound(names=['Coumarin 343']).serialize(), {'Compound': {'names': ['Coumarin 343']}})
 
     def test_is_unidentified(self):
         """Test is_unidentified method returns expected result."""

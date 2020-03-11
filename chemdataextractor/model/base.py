@@ -194,7 +194,11 @@ class SetType(BaseType):
         """Serialize this field."""
         if value is None or len(value) == 0:
             return None
-        return set(self.field.serialize(v, primitive=primitive) for v in value)
+        # a list, instead of a set is needed for easy compatibility with JSON output formats
+        # a new sorted list instance ensures the same order for different runs
+        # sorting in place results in an empty list in this case
+        rec_list = list(self.field.serialize(v, primitive=primitive) for v in value)
+        return sorted(rec_list)
 
     def is_empty(self, value):
         if isinstance(value, set) and len(value) != 0:
