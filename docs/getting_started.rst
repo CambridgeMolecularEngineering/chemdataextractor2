@@ -43,6 +43,8 @@ To get up and running with ChemDataExtractor, you will need to install the pytho
 necessary data files.
 There are a few different ways to download and install the ChemDataExtractor toolkit.
 
+.. note:: A Python version earlier than 3.8 must be used with ChemDataExtractor.
+
 .. rubric:: Option 1. Using conda
 
 This method is recommended for all Windows users, as well as beginners on all platforms who don't already have Python
