@@ -171,7 +171,7 @@ class Cluster:
             sentence = Sentence(phrase.full_sentence)
             relations = phrase.relations
             found_relations = self.get_relations(sentence.tagged_tokens)
-            # print("Found relations", found_relations)
+            # print("Found relations", found_relations, len(found_relations))
             # print("Known relations", relations)
             for fr in found_relations:
                 if fr in relations:
@@ -197,7 +197,7 @@ class Cluster:
         Returns:
             Relations -- The found Relations
         """
-        # print("Getting relations from", ' '.join([t[0] for t in tokens]))
+        # print("Getting relations from", ' '.join([t[0] for t in tokens]), "\n\n")
         relations = []
         entity_type_indexes = {}
 
@@ -205,6 +205,7 @@ class Cluster:
             match = res[0]
             # print(etree.tostring(match))
             for pattern_relation in self.pattern.relations:
+                # print("Relation", pattern_relation)
                 found_entities = []
                 for pattern_entity in pattern_relation.entities:
                     if pattern_entity.tag not in entity_type_indexes.keys():
@@ -213,23 +214,20 @@ class Cluster:
                         if pattern_entity not in entity_type_indexes[pattern_entity.tag]:
                             entity_type_indexes[pattern_entity.tag].append(pattern_entity)
                     # print(pattern_entity.tag)
-                    if '__' in pattern_entity.tag:
-                        xpath_str = '/'.join([i for i in pattern_entity.tag.split('__')])
-                    else:
-                        xpath_str = pattern_entity.tag
+                    xpath_str = pattern_entity.tag
                     # print(xpath_str)
 
                     entity_matches = match.xpath('./' + xpath_str + '/text()')
+                    # print(entity_matches)
 
                     if len(entity_matches) > 0:
                         entity_text = entity_matches[entity_type_indexes[pattern_entity.tag].index(pattern_entity)]
-                    else:
-                        entity_text[0]
-                    entity_tokens = [s[0] for s in Sentence(entity_text).tagged_tokens]
-                    start_idx, end_idx = subfinder([t[0] for t in tokens], entity_tokens)
-                    found_entity = Entity(entity_text, pattern_entity.tag, pattern_entity.parse_expression, start_idx, end_idx)
-                    found_entities.append(found_entity)
+                        entity_tokens = [s[0] for s in Sentence(entity_text).tagged_tokens]
+                        start_idx, end_idx = subfinder([t[0] for t in tokens], entity_tokens)
+                        found_entity = Entity(entity_text, pattern_entity.tag, pattern_entity.parse_expression, start_idx, end_idx)
+                        found_entities.append(found_entity)
                 found_relation = Relation(found_entities, confidence=0)
+                # print("Found relation", found_relation)
                 relations.append(found_relation)
-        
+        # print("output", relations)
         return relations

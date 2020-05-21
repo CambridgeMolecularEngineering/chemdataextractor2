@@ -45,18 +45,13 @@ class TestRelation(unittest.TestCase):
         """Test relation serialization
         """
         entities = [
-            Entity('e1', 'cem', I('e1'), 0, 2), 
-            Entity('e2', 'specifier', I('e2'), 2, 4), 
-            Entity('e3', 'value', I('e3'), 4, 6), 
-            Entity('e4', 'unit', I('e4'), 6, 7)]
+            Entity('e1', 'model__cem', I('e1'), 0, 2), 
+            Entity('e2', 'model__specifier', I('e2'), 2, 4), 
+            Entity('e3', 'model__value', I('e3'), 4, 6), 
+            Entity('e4', 'model__unit', I('e4'), 6, 7)]
         relation = Relation(entities, confidence=0)
-        expected = {
-            'cem': 'e1',
-            'specifier': 'e2',
-            'value': 'e3',
-            'unit': 'e4',
-            'confidence': 0}
-        self.assertEqual(relation.serialize(), expected)
+        expected = {'model': {'specifier': 'e2', 'value': 'e3', 'unit': 'e4', 'cem': 'e1'}, 'confidence': 0}
+        self.assertDictEqual(relation.serialize(), expected)
     
     def test_relation_not_eq(self):
         entities = [
