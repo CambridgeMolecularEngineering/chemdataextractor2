@@ -53,7 +53,6 @@ class Relation(object):
         output = {}
         for entity in self.entities:
             entity_data = entity.serialize()
-            print(entity_data)
             entity_root = list(entity_data.keys())[0]
             if entity_root not in output.keys():
                 output[entity_root] = {}

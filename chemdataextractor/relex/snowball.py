@@ -446,7 +446,7 @@ class Snowball(BaseSentenceParser):
         Returns:
             The matching records
         """
-        print("\n\nParsing sentece", ' '.join([t[0] for t in tokens]))
+        # print("\n\nParsing sentece", ' '.join([t[0] for t in tokens]))
         # Use the default tagger to find candidate relationships
         candidate_relations = self.candidates(tokens)
         # print("Candidates", candidate_relations)
@@ -566,14 +566,14 @@ class Snowball(BaseSentenceParser):
         Arguments:
             relation {[type]} -- [description]
         """
-        print("\n\n", "Interpretting")
+        # print("\n\n", "Interpreting")
         # Set the confidence field if not already set
         if not 'confidence' in self.model.fields.keys():
             setattr(self.model, 'confidence', FloatType())
 
         # Get the serialized relation data
         relation_data = relation.serialize()
-        print(relation_data)
+        # print(relation_data)
         # Do conversions etc
         models = list(self.model.flatten())
         model_instances = []
@@ -585,7 +585,7 @@ class Snowball(BaseSentenceParser):
             else:
                 is_root_instance=False
 
-            print(model_name)
+            # print(model_name)
             model_data = {}
             if 'specifier' in relation_data[model_name].keys():
                 model_data['specifier'] = relation_data[model_name]['specifier']
@@ -632,9 +632,7 @@ class Snowball(BaseSentenceParser):
                     except (TypeError, KeyError) as e:
                         log.debug(self.model)
                         log.debug(e)
-            print(model_data)
             model_instance = model(**model_data)
-            print(model_instance.serialize())
             model_instances.append((model_instance, is_root_instance))
         
         root_model_instance = [i[0] for i in model_instances if i[1]][0]
