@@ -53,6 +53,23 @@ class Relation(object):
         output = {}
         for entity in self.entities:
             entity_data = entity.serialize()
-            output.update(entity_data)
+            print(entity_data)
+            entity_root = list(entity_data.keys())[0]
+            if entity_root not in output.keys():
+                output[entity_root] = {}
+            
+            output[entity_root].update(entity_data[entity_root])
         output['confidence'] = self.confidence
         return output
+    
+    def is_valid(self):
+        # Returns False if relationship contains entities with different tags at the same location
+        for i in range(len(self.entities)):
+            e1 = self.entities[i]
+            for j in range(i+1, len(self.entities)):
+                e2 = self.entities[j]
+                if e1.tag != e2.tag and e1.start == e2.start and e1.end == e2.end:
+                    return False
+        return True
+
+
