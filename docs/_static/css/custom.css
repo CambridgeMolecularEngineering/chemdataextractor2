@@ -1,0 +1,10 @@
+/* Sidebar header (and topbar for mobile) */
+.wy-side-nav-search, .wy-nav-top {
+  background: #ffffff;
+}
+/* Sidebar */
+.wy-nav-side {
+  background: linear-gradient(to right,#24243E, #304A6E, #304A6E);
+}
+
+
