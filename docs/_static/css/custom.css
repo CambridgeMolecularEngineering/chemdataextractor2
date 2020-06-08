@@ -4,7 +4,14 @@
 }
 /* Sidebar */
 .wy-nav-side {
-  background: linear-gradient(to right,#24243E, #304A6E, #304A6E);
+  background: linear-gradient(135deg, #24243E,  #24243E, #304A6E);
 }
 
+.wy-side-nav-search > div.version {
+    color: #444;
+}
+
+.rst-versions .rst-current-version {
+    color: #ffe74c;
+}
 
