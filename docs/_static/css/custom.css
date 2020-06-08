@@ -8,10 +8,11 @@
 }
 
 .wy-side-nav-search > div.version {
-    color: #444;
+    color: #777;
 }
 
 .rst-versions .rst-current-version {
     color: #ffe74c;
+    background-color: #24243E;
 }
 
