@@ -116,7 +116,7 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
-html_logo = 'logo.svg'
+html_logo = 'logo2.png'
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
