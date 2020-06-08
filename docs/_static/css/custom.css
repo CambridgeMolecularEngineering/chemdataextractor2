@@ -11,8 +11,19 @@
     color: #777;
 }
 
+.rst-versions {
+    background: #24243E;;
+}
+
 .rst-versions .rst-current-version {
     color: #ffe74c;
     background-color: #24243E;
 }
 
+.rst-versions .rst-other-version {
+    background-color: #24243E;
+}
+
+.content-wrap {
+    background: #ffffff;
+}
