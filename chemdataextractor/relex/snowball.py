@@ -263,6 +263,25 @@ class Snowball(BaseSentenceParser):
                 if chosen_candidates:
                     self.update(s.raw_tokens, chosen_candidates)
         return candidate_found
+    
+    def required_fulfilled(self, model, entities_dict):
+        """Recursive check for requiredd entities on nested models
+
+        Args:
+            model ([type]): [description]
+            entities_dict ([type]): [description]
+        """
+        model_name = model.__name__.lower()
+        for field in model.fields:
+            if hasattr(model.fields[field], 'model_class'):
+                if not self.required_fulfilled(model.fields[field].model_class, entities_dict):
+                    return False
+            else:
+                if model.fields[field].required and not model_name + '__' + field in entities_dict.keys():
+                    print("Model %s missing field %s" % (model_name, field))
+                    return False
+        return True
+
 
     def candidates(self, tokens):
         """Find all candidate relationships of self.model within a sentence
@@ -322,11 +341,8 @@ class Snowball(BaseSentenceParser):
         # print("\n", entities_dict, "\n")
 
         # jm2111, Fixed check for required fields
-        for field in self.model.fields:
-            if self.model.fields[field].required and all(field not in key for key in entities_dict.keys()):
-                # print("{}, required = {} , entities: {}".format(field,
-                #       self.model.fields[field].required, entities_dict.keys()))
-                return []
+        if not self.required_fulfilled(self.model, entities_dict):
+            return []
 
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
