@@ -278,7 +278,7 @@ class Snowball(BaseSentenceParser):
                     return False
             else:
                 if model.fields[field].required and not model_name + '__' + field in entities_dict.keys():
-                    print("Model %s missing field %s" % (model_name, field))
+                    # print("Model %s missing field %s" % (model_name, field))
                     return False
         return True
 
