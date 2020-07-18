@@ -11,7 +11,7 @@ from itertools import combinations
 
 import numpy as np
 import six
-
+import pprint
 from ..doc.document import Document, Paragraph
 from ..model.base import BaseModel
 from ..parse.auto import AutoSentenceParser
@@ -273,14 +273,36 @@ class Snowball(BaseSentenceParser):
         """
         model_name = model.__name__.lower()
         for field in model.fields:
+            # print(model_name, field)
             if hasattr(model.fields[field], 'model_class'):
-                if not self.required_fulfilled(model.fields[field].model_class, entities_dict):
+                # print(field, "is a submodel, required = ", model.fields[field].required)
+                if model.fields[field].required and not self.required_fulfilled(model.fields[field].model_class, entities_dict):
                     return False
             else:
                 if model.fields[field].required and not model_name + '__' + field in entities_dict.keys():
                     # print("Model %s missing field %s" % (model_name, field))
                     return False
         return True
+    
+    def filter_incomplete(self, model, entities_dict):
+        """ Remove entities from the dict if the relationship isnt complete """
+        model_name = model.__name__.lower()
+        for field in model.fields:
+            if hasattr(model.fields[field], 'model_class'):
+                entities_dict = self.filter_incomplete(model.fields[field].model_class, entities_dict)
+            else:
+                if model.fields[field].required and not model_name + '__' + field in entities_dict.keys():
+                    # If the field is required by the model, but its not in the entities dict
+                    # print("Entities dict %s missing field %s" % (model_name, field))
+                    # Delete all fields of this model from entities_dict
+                    key = model_name + '__'
+                    dict_keys = [ i for i in entities_dict.keys()]
+                    for entity_key in dict_keys:
+                        if entity_key.startswith(key):
+                            entities_dict.pop(entity_key, None)
+                    break
+
+        return entities_dict
 
 
     def candidates(self, tokens):
@@ -308,7 +330,7 @@ class Snowball(BaseSentenceParser):
             sentence_parser.model = model
             for result in sentence_parser.root.scan(tokens):
                 if result:
-                    # print(etree.tostring(result[0]))
+                    print(etree.tostring(result[0]))
                     for entity in self.retrieve_entities(model, result[0]):
                         # print(entity)
                         # print("\n")
@@ -339,6 +361,8 @@ class Snowball(BaseSentenceParser):
                     entities_dict[tag].append(entity)
 
         # print("\n", entities_dict, "\n")
+        # Filter out incomplete models
+        entities_dict = self.filter_incomplete(self.model, entities_dict)
 
         # jm2111, Fixed check for required fields
         if not self.required_fulfilled(self.model, entities_dict):
@@ -349,20 +373,18 @@ class Snowball(BaseSentenceParser):
         # Intra-Candidate sorting (within each candidate)
         for i in range(len(all_entities)):
             all_entities[i] = sorted(all_entities[i], key=lambda t: t.start)
-
         candidates = list(product(*all_entities))
-        # Inter-Candidate sorting (sort all candidates)
-        for i in range(len(candidates)):
-            lst = sorted(candidates[i], key=lambda t: t.start)
-            candidates[i] = tuple(lst)
 
         for candidate in candidates:
-            # Remove candidates
+            lst = sorted(candidate, key=lambda t: t.start)
+            candidate = tuple(lst)
+
+            # Remove candidates that are not valid (if a token has two different tags at the same location)
             r = Relation(candidate, confidence=0)
+            # print(r)
             if r.is_valid():
                 # print(candidate, "is valid", "\n")
                 candidate_relationships.append(r)
-
         return candidate_relationships
 
     def retrieve_entities(self, model, result):
