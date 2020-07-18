@@ -330,7 +330,7 @@ class Snowball(BaseSentenceParser):
             sentence_parser.model = model
             for result in sentence_parser.root.scan(tokens):
                 if result:
-                    print(etree.tostring(result[0]))
+                    # print(etree.tostring(result[0]))
                     for entity in self.retrieve_entities(model, result[0]):
                         # print(entity)
                         # print("\n")
