@@ -62,6 +62,6 @@ class Ampere(ElectricalCurrentUnit):
         return error
 
 
-units_dict = {R('(A|a)(mpere(s)?)?', group=0): Ampere}
+units_dict = {R('A(mpere(s)?)?|ampere(s)?', group=0): Ampere}
 ElectricalCurrent.units_dict = units_dict
 ElectricalCurrent.standard_units = Ampere()
