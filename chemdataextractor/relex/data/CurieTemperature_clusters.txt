@@ -2,4 +2,4 @@ Cluster set contains 1 clusters.
 Cluster 0 contains 2 phrases
 	 The Curie temperature of BiFeO3 is 1103 K
 	 The Curie temperature for MnO is 120 K
-The cluster centroid pattern is: The (specifier) for (compound__names) is (raw_value) <Blank> (raw_units) <Blank> with confidence score 0.75
+The cluster centroid pattern is: The (curietemperature__specifier) for (compound__names) is (curietemperature__raw_value) <Blank> (curietemperature__raw_units) <Blank> with confidence score 0.75
