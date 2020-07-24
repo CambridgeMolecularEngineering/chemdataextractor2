@@ -339,6 +339,7 @@ class Snowball(BaseSentenceParser):
         if not detected:
             return []
         detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
+        # print(detected)
         toks = [tok[0] for tok in tokens]
         for text, tag, parse_expression in detected:
             text_length = len(text.split(' '))
@@ -352,7 +353,6 @@ class Snowball(BaseSentenceParser):
             # Add to dictionary  if it doesn't exist
             if tag not in entities_dict.keys():
                 entities_dict[tag] = []
-
             entities = [Entity(text, tag, parse_expression, index, index + text_length) for index in start_indices]
 
             # Add entities to dictionary if new
@@ -360,13 +360,25 @@ class Snowball(BaseSentenceParser):
                 if entity not in entities_dict[tag]:
                     entities_dict[tag].append(entity)
 
-        # print("\n", entities_dict, "\n")
+        for k in entities_dict.keys():
+            entities = entities_dict[k]
+            if len(entities_dict[k]) > 1:
+                to_pop = []
+                for i in range(len(entities)):
+                    for j in range(i+1, len(entities)):
+                        if entities[i].start == entities[j].start:
+                            to_pop.append([i, j][np.argmin([entities[i].end, entities[j].end])])
+                for p in to_pop:
+                    entities_dict[k].pop(p)
+
         # Filter out incomplete models
         entities_dict = self.filter_incomplete(self.model, entities_dict)
 
         # jm2111, Fixed check for required fields
         if not self.required_fulfilled(self.model, entities_dict):
             return []
+
+        # print("\n", entities_dict, "\n")
 
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
@@ -623,8 +635,10 @@ class Snowball(BaseSentenceParser):
             else:
                 is_root_instance=False
 
-            # print(model_name)
             model_data = {}
+            if model_name not in relation_data.keys():
+                continue
+
             if 'specifier' in relation_data[model_name].keys():
                 model_data['specifier'] = relation_data[model_name]['specifier']
             model_data['confidence'] = relation_data['confidence']
