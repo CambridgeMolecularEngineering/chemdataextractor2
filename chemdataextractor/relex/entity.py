@@ -25,7 +25,9 @@ class Entity(object):
         self.text = six.text_type(text)
         self.tag = tag
         self.parse_expression = copy.copy(parse_expression)
-        if self.parse_expression.name is None:
+        self.parse_expression.set_name(None)
+
+        if self.parse_expression.name is None or self.parse_expression.name == 'compound':
             if isinstance(self.tag, tuple):
                 for sub_tag in self.tag:
                     self.parse_expression = Group(self.parse_expression)(sub_tag)
@@ -51,6 +53,7 @@ class Entity(object):
         return self.__repr__()
     
     def serialize(self):
+        
         output = current = {}
         if '__' in self.tag:
             tag = [i for i in self.tag.split('__')]

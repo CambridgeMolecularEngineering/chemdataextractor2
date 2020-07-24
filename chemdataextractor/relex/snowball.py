@@ -11,7 +11,7 @@ from itertools import combinations
 
 import numpy as np
 import six
-
+import pprint
 from ..doc.document import Document, Paragraph
 from ..model.base import BaseModel
 from ..parse.auto import AutoSentenceParser
@@ -263,6 +263,47 @@ class Snowball(BaseSentenceParser):
                 if chosen_candidates:
                     self.update(s.raw_tokens, chosen_candidates)
         return candidate_found
+    
+    def required_fulfilled(self, model, entities_dict):
+        """Recursive check for requiredd entities on nested models
+
+        Args:
+            model ([type]): [description]
+            entities_dict ([type]): [description]
+        """
+        model_name = model.__name__.lower()
+        for field in model.fields:
+            # print(model_name, field)
+            if hasattr(model.fields[field], 'model_class'):
+                # print(field, "is a submodel, required = ", model.fields[field].required)
+                if model.fields[field].required and not self.required_fulfilled(model.fields[field].model_class, entities_dict):
+                    return False
+            else:
+                if model.fields[field].required and not model_name + '__' + field in entities_dict.keys():
+                    # print("Model %s missing field %s" % (model_name, field))
+                    return False
+        return True
+    
+    def filter_incomplete(self, model, entities_dict):
+        """ Remove entities from the dict if the relationship isnt complete """
+        model_name = model.__name__.lower()
+        for field in model.fields:
+            if hasattr(model.fields[field], 'model_class'):
+                entities_dict = self.filter_incomplete(model.fields[field].model_class, entities_dict)
+            else:
+                if model.fields[field].required and not model_name + '__' + field in entities_dict.keys():
+                    # If the field is required by the model, but its not in the entities dict
+                    # print("Entities dict %s missing field %s" % (model_name, field))
+                    # Delete all fields of this model from entities_dict
+                    key = model_name + '__'
+                    dict_keys = [ i for i in entities_dict.keys()]
+                    for entity_key in dict_keys:
+                        if entity_key.startswith(key):
+                            entities_dict.pop(entity_key, None)
+                    break
+
+        return entities_dict
+
 
     def candidates(self, tokens):
         """Find all candidate relationships of self.model within a sentence
@@ -280,15 +321,25 @@ class Snowball(BaseSentenceParser):
 
         #: Uses the default autosentenceparser to retrieve candidates
         sentence_parser = AutoSentenceParser(lenient=True)
-        sentence_parser.model = self.model
-        for result in sentence_parser.root.scan(tokens):
-            if result:
-                for entity in self.retrieve_entities(self.model, result[0]):
-                    detected.append(entity)
+        all_models = list(set(self.model.flatten()))
+        for model in all_models:
+            # Skip the compound model
+            if model.__name__ == 'Compound':
+                continue
+            # print(model.__name__)
+            sentence_parser.model = model
+            for result in sentence_parser.root.scan(tokens):
+                if result:
+                    # print(etree.tostring(result[0]))
+                    for entity in self.retrieve_entities(model, result[0]):
+                        # print(entity)
+                        # print("\n")
+                        detected.append(entity)
 
         if not detected:
             return []
         detected = list(set(detected))  # Remove duplicate entries (handled by indexing)
+        # print(detected)
         toks = [tok[0] for tok in tokens]
         for text, tag, parse_expression in detected:
             text_length = len(text.split(' '))
@@ -302,7 +353,6 @@ class Snowball(BaseSentenceParser):
             # Add to dictionary  if it doesn't exist
             if tag not in entities_dict.keys():
                 entities_dict[tag] = []
-
             entities = [Entity(text, tag, parse_expression, index, index + text_length) for index in start_indices]
 
             # Add entities to dictionary if new
@@ -310,36 +360,43 @@ class Snowball(BaseSentenceParser):
                 if entity not in entities_dict[tag]:
                     entities_dict[tag].append(entity)
 
-        # check all required entities are present
-        required_fields = self.model.required_fields
+        for k in entities_dict.keys():
+            entities = entities_dict[k]
+            if len(entities_dict[k]) > 1:
+                to_pop = []
+                for i in range(len(entities)):
+                    for j in range(i+1, len(entities)):
+                        if entities[i].start == entities[j].start:
+                            to_pop.append([i, j][np.argmin([entities[i].end, entities[j].end])])
+                for p in to_pop:
+                    entities_dict[k].pop(p)
 
-        # TODO This doesn't work, self.model.required fields is not working perfectly. However, problem is solved below.
-        if not all(e in entities_dict.keys() for e in required_fields):
-            return []
+        # Filter out incomplete models
+        entities_dict = self.filter_incomplete(self.model, entities_dict)
 
         # jm2111, Fixed check for required fields
-        for field in self.model.fields:
-            if self.model.fields[field].required and all(field not in key for key in entities_dict.keys()):
-                # print("{}, required = {} , entities: {}".format(field,
-                #       self.model.fields[field].required, entities_dict.keys()))
-                return []
+        if not self.required_fulfilled(self.model, entities_dict):
+            return []
+
+        # print("\n", entities_dict, "\n")
 
         # Construct all valid combinations of entities
         all_entities = [e for e in entities_dict.values()]
         # Intra-Candidate sorting (within each candidate)
         for i in range(len(all_entities)):
             all_entities[i] = sorted(all_entities[i], key=lambda t: t.start)
-
         candidates = list(product(*all_entities))
 
-        # Inter-Candidate sorting (sort all candidates)
-        for i in range(len(candidates)):
-            lst = sorted(candidates[i], key=lambda t: t.start)
-            candidates[i] = tuple(lst)
-
         for candidate in candidates:
-            candidate_relationships.append(Relation(candidate, confidence=0))
+            lst = sorted(candidate, key=lambda t: t.start)
+            candidate = tuple(lst)
 
+            # Remove candidates that are not valid (if a token has two different tags at the same location)
+            r = Relation(candidate, confidence=0)
+            # print(r)
+            if r.is_valid():
+                # print(candidate, "is valid", "\n")
+                candidate_relationships.append(r)
         return candidate_relationships
 
     def retrieve_entities(self, model, result):
@@ -357,11 +414,11 @@ class Snowball(BaseSentenceParser):
                 #: Nested models
                 if hasattr(field, 'model_class'):
                     for nested_entity in self.retrieve_entities(field.model_class, result.xpath('./' + tag)):
-                        yield (nested_entity[0], (tag, nested_entity[1]), nested_entity[2])
+                        yield nested_entity
                 else:
                     text_list = result.xpath('./' + tag + '/text()')
                     for text in text_list:
-                        yield (text, (tag), field.parse_expression)
+                        yield (text, (model.__name__.lower(), tag), field.parse_expression)
 
     def update(self, sentence_tokens, relations=[]):
         """Update the learned extraction pattern clusters based on the incoming sentence and relation
@@ -506,85 +563,23 @@ class Snowball(BaseSentenceParser):
             best_candidate_cluster.add_phrase(best_candidate_phrase)
             self.save()
 
-            # print(best_candidatex_phrase)
+            # print(best_candidate_phrase.relations)
 
             for relation in best_candidate_phrase.relations:
                 for model in self.interpret(relation):
                     yield model
 
-
-    def interpret(self, relation):
-        """Convert a detected relation to a ModelType Record
-
-        Arguments:
-            relation {[type]} -- [description]
-        """
-        # Set the confidence field if not already set
-        if not 'confidence' in self.model.fields.keys():
-            setattr(self.model, 'confidence', FloatType())
-
-        # Get the serialized relation data
-        relation_data = relation.serialize()
-
-        # Do conversions etc
-        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
-            # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
-            raw_value = relation_data['raw_value']
-            value = self.extract_value(raw_value)
-            error = self.extract_error(raw_value)
-            relation_data.update({"raw_value": raw_value,
-                                      "value": value,
-                                      "error": error})
-
-        elif hasattr(self.model, 'dimensions') and self.model.dimensions:
-            # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
-            # print(etree.tostring(result))
-            raw_value = relation_data['raw_value']
-            raw_units = relation_data['raw_units']
-            value = self.extract_value(raw_value)
-            error = self.extract_error(raw_value)
-            units = None
-            try:
-                units = self.extract_units(raw_units, strict=True)
-            except TypeError as e:
-                log.debug(e)
-            relation_data.update({"raw_value": raw_value,
-                                      "raw_units": raw_units,
-                                      "value": value,
-                                      "error": error,
-                                      "units": units})
-        elif hasattr(self.model, 'category') and self.model.category:
-            raw_value = relation_data['raw_value']
-            relation_data.update({"raw_value": raw_value})
-
-        for field_name, field in six.iteritems(self.model.fields):
-            if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
-                try:
-                    data = self._get_data(field_name, field, relation_data)
-                    if data is not None:
-                        relation_data.update(data)
-                # if field is required, but empty, the requirements have not been met
-                except TypeError as e:
-                    log.debug(self.model)
-                    log.debug(e)
-
-        model_instance = self.model(**relation_data)
-
-        # records the parser that was used to generate this record, can be used for evaluation
-        model_instance.record_method = self.__class__.__name__
-
-        yield model_instance
-
     def _get_data(self, field_name, field, relation_data):
-        if hasattr(field, 'model_class'):
-            field_result = relation_data[field_name]
+        if hasattr(field, 'model_class'): # temperature, compound
+            field_result = relation_data[field_name]  # {spec. val. units}
+
             if field_result is None and field.required and not field.contextual:
                 raise TypeError('Could not find element for ' + str(field_name))
             elif field_result is None:
                 return None
 
             field_data = {}
-            for subfield_name, subfield in six.iteritems(field.model_class.fields):
+            for subfield_name, subfield in six.iteritems(field.model_class.fields):  # compound, names
                 data = self._get_data(subfield_name, subfield, field_result)
                 if data is not None:
                     field_data.update(data)
@@ -615,4 +610,90 @@ class Snowball(BaseSentenceParser):
                 raise TypeError('Could not find element for ' + str(field_name))
             return {field_name: field_result}
 
+    def interpret(self, relation):
+        """Convert a detected relation to a ModelType Record
 
+        Arguments:
+            relation {[type]} -- [description]
+        """
+        # print("\n\n", "Interpreting")
+        # Set the confidence field if not already set
+        if not 'confidence' in self.model.fields.keys():
+            setattr(self.model, 'confidence', FloatType())
+
+        # Get the serialized relation data
+        relation_data = relation.serialize()
+        # print(relation_data)
+        # Do conversions etc
+        models = list(self.model.flatten())
+        model_instances = []
+
+        for model in models:
+            model_name = model.__name__.lower()
+            if model_name == self.model.__name__.lower():
+                is_root_instance=True
+            else:
+                is_root_instance=False
+
+            model_data = {}
+            if model_name not in relation_data.keys():
+                continue
+
+            if 'specifier' in relation_data[model_name].keys():
+                model_data['specifier'] = relation_data[model_name]['specifier']
+            model_data['confidence'] = relation_data['confidence']
+
+            if hasattr(model, 'dimensions') and not model.dimensions:
+                # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
+                raw_value = relation_data[model_name]['raw_value']
+                value = self.extract_value(raw_value)
+                error = self.extract_error(raw_value)
+
+                model_data.update({"raw_value": raw_value,
+                                        "value": value,
+                                        "error": error})
+
+            elif hasattr(model, 'dimensions') and model.dimensions:
+                # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
+                # print(etree.tostring(result))
+                raw_value = relation_data[model_name]['raw_value']
+                raw_units = relation_data[model_name]['raw_units']
+                value = self.extract_value(raw_value)
+                error = self.extract_error(raw_value)
+                units = None
+                try:
+                    units = self.extract_units(raw_units, strict=True)
+                except TypeError as e:
+                    log.debug(e)
+                model_data.update({"raw_value": raw_value,
+                                        "raw_units": raw_units,
+                                        "value": value,
+                                        "error": error,
+                                        "units": units})
+            elif hasattr(model, 'category') and model.category:
+                raw_value = relation_data[model_name]['raw_value']
+                model_data.update({"raw_value": raw_value})
+
+            for field_name, field in six.iteritems(model.fields):
+                if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'specifier', 'confidence']:
+                    try:
+                        data = self._get_data(field_name, field, relation_data)
+                        if data is not None:
+                            model_data.update(data)
+                    # if field is required, but empty, the requirements have not been met
+                    except (TypeError, KeyError) as e:
+                        log.debug(self.model)
+                        log.debug(e)
+            model_instance = model(**model_data)
+            model_instances.append((model_instance, is_root_instance))
+        
+        root_model_instance = [i[0] for i in model_instances if i[1]][0]
+        for m in model_instances:
+            if m[1]:
+                continue
+            root_model_instance.merge_all(m[0])
+        
+
+        # records the parser that was used to generate this record, can be used for evaluation
+        root_model_instance.record_method = self.__class__.__name__
+        yield root_model_instance

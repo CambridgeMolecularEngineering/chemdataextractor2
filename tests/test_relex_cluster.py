@@ -37,10 +37,10 @@ class CurieTemperature(TemperatureModel):
 
 tokens = ['the', 'curie', 'temperature', 'of', 'BiFeO3', 'is', '1103', 'K', '.']
 entities = [
-            Entity('curie temperature', 'specifier', (I('curie') + I('temperature')).add_action(join), 1, 3),
+            Entity('curie temperature', 'curietemperature__specifier', (I('curie') + I('temperature')).add_action(join), 1, 3),
             Entity('BiFeO3', 'compound__names', names_only, 4, 5),
-            Entity('1103', 'raw_value', R(r'\d+(\.\d+)?'), 6, 7),
-            Entity('K', 'raw_units', I('K'), 7, 8)]
+            Entity('1103', 'curietemperature__raw_value', R(r'\d+(\.\d+)?'), 6, 7),
+            Entity('K', 'curietemperature__raw_units', I('K'), 7, 8)]
 
 relations = [Relation(entities, confidence=1.0)]
 
@@ -77,7 +77,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(expected, test_cluster.dictionaries)
     
     def test_cluster_pattern(self):
-        expected = 'the (specifier) of (compound__names) is (raw_value) <Blank> (raw_units) .'
+        expected = 'the (curietemperature__specifier) of (compound__names) is (curietemperature__raw_value) <Blank> (curietemperature__raw_units) .'
         self.assertEqual(expected, test_cluster.pattern.to_string())
     
     def test_cluster_pattern_confidence(self):
@@ -93,9 +93,9 @@ class TestCluster(unittest.TestCase):
         result = [r.serialize() for r in test_cluster.get_relations(s.tagged_tokens)]
         expected = [{
             'compound': {'names': 'MnO'},
-            'specifier': 'curie temperature',
+            'curietemperature': {'specifier': 'curie temperature',
             'raw_value': '100',
-            'raw_units': 'K',
+            'raw_units': 'K'},
             'confidence': 0}]
         self.assertEqual(result, expected)
     
