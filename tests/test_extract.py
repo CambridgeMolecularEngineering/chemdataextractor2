@@ -56,7 +56,7 @@ class TestExtract(unittest.TestCase):
                                'units': 'Celsius^(1.0)',
                                'value': [130.0, 132.0]}}
         ]
-        self.assertEqual(expected, d.records.serialize())
+        self.assertCountEqual(expected, d.records.serialize())
 
     def test_parse_control_character(self):
         """Test control character in text is handled correctly."""
@@ -99,7 +99,7 @@ class TestExtract(unittest.TestCase):
                                'units': 'Celsius^(1.0)',
                                'value': [130.0, 132.0]}}
         ]
-        self.assertEqual(expected, d.records.serialize())
+        self.assertCountEqual(expected, d.records.serialize())
 
 
 
