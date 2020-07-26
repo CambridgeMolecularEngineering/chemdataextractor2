@@ -1,68 +1,84 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="1301px" height="231px" viewBox="0 0 1301 231" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 52.6 (67491) - http://www.bohemiancoding.com/sketch -->
-    <title>Artboard</title>
-    <desc>Created with Sketch.</desc>
-    <g id="Artboard" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="cde-logo" transform="translate(4.500000, 4.500000)">
-            <path d="M117.514,192.187 L82.022,171.696 L82.022,130.712 L117.514,110.221 L153.007,130.712 L153.007,171.696 L117.514,192.187 Z" id="Path" stroke="#FFFFFF" stroke-width="12" fill-opacity="0" fill="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="41.04,41.04,41.016,41.016,41.016,1200"></path>
-            <g id="Group" transform="translate(106.424000, 0.588000)" fill="#FFFFFF">
-                <path d="M0.979,0.912 L0.979,20.354" id="Path"></path>
-                <path d="M0.979,0.912 L0.979,20.354" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(106.424000, 20.588000)" fill="#FFFFFF">
-                <path d="M0.979,0.354 C0.979,5.889 6.134,10.376 12.493,10.376" id="Path"></path>
-                <path d="M0.979,0.354 C0.979,5.889 6.134,10.376 12.493,10.376" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(118.424000, 29.588000)" fill="#FFFFFF">
-                <path d="M0.493,1.376 L18.019,1.376" id="Path"></path>
-                <path d="M0.493,1.376 L18.019,1.376" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(129.424000, 23.588000)" fill="#FFFFFF">
-                <path d="M6.552,0.317 L6.552,44.462" id="Path"></path>
-                <polygon id="Path" points="12.552 0.317 12.552 58.556 0.552 51.871 0.552 0.317"></polygon>
-            </g>
-            <g id="Group" transform="translate(11.424000, 182.588000)" fill="#FFFFFF">
-                <path d="M33.413,1.22 L0.791,1.22" id="Path"></path>
-                <path d="M33.413,1.22 L0.791,1.22" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(1.424000, 173.588000)" fill="#FFFFFF">
-                <path d="M11.59,10.22 C5.231,10.22 0.076,5.733 0.076,0.198" id="Path"></path>
-                <path d="M11.59,10.22 C5.231,10.22 0.076,5.733 0.076,0.198" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(0.424000, 10.588000)" fill="#FFFFFF">
-                <path d="M1.076,164.494 L1.076,0.451" id="Path"></path>
-                <path d="M1.076,164.494 L1.076,0.451" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(1.424000, 0.588000)" fill="#FFFFFF">
-                <path d="M0.076,10.934 C0.076,5.399 5.231,0.912 11.59,0.912" id="Path"></path>
-                <path d="M0.076,10.934 C0.076,5.399 5.231,0.912 11.59,0.912" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(11.424000, 0.588000)" fill="#FFFFFF">
-                <path d="M0.791,0.912 L95.979,0.912" id="Path"></path>
-                <path d="M0.791,0.912 L95.979,0.912" id="Path" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(20.424000, 48.588000)" fill="#FFFFFF" fill-opacity="0.77">
-                <path d="M0.622,0.95 L96.474,0.95" id="Path"></path>
-                <path d="M0.622,0.95 L96.474,0.95" id="Path" stroke-opacity="0.768512228" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(20.424000, 77.588000)" fill="#FFFFFF" fill-opacity="0.77">
-                <path d="M0.622,6.655 L67.11,6.655" id="Path"></path>
-                <polygon id="Path" points="79.531 0.655 58.528 12.655 0.622 12.655 0.622 0.655"></polygon>
-            </g>
-            <g id="Group" transform="translate(20.424000, 118.588000)" fill="#FFFFFF" fill-opacity="0.77">
-                <path d="M0.622,1.359 L24.413,1.359" id="Path"></path>
-                <path d="M0.622,1.359 L24.413,1.359" id="Path" stroke-opacity="0.768512228" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <g id="Group" transform="translate(20.424000, 148.588000)" fill="#FFFFFF" fill-opacity="0.77">
-                <path d="M0.622,0.564 L24.413,0.564" id="Path"></path>
-                <path d="M0.622,0.564 L24.413,0.564" id="Path" stroke-opacity="0.768512228" stroke="#FFFFFF" stroke-width="12"></path>
-            </g>
-            <path d="M113.888,1.5 L136.443,24.659 L136.443,30.964 L118.917,30.964 C112.558,30.964 107.403,26.477 107.403,20.942 L107.403,1.5 L113.888,1.5 Z" id="Path" stroke="#FFFFFF" stroke-width="12" fill-opacity="0" fill="#FFFFFF"></path>
-            <polygon id="Path" stroke="#FFFFFF" stroke-width="12" fill-opacity="0" fill="#000000" stroke-linecap="round" stroke-linejoin="round" points="117.514 219.804 58.105 185.504 58.105 116.904 117.514 82.604 176.924 116.904 176.924 185.504"></polygon>
-        </g>
-        <text id="ChemDataExtractor" font-family="HelveticaNeue, Helvetica Neue" font-size="120" font-weight="normal" letter-spacing="2.02588105" fill="#FFFFFF">
-            <tspan x="216.226655" y="159.876953">ChemDataExtractor</tspan>
-        </text>
-    </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   sodipodi:docname="logo.svg"
+   id="svg93"
+   version="1.1"
+   viewBox="0 0 1208.7965 216.8401"
+   height="216.8401"
+   width="1208.7965">
+  <metadata
+     id="metadata99">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Artboard</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs97" />
+  <sodipodi:namedview
+     inkscape:current-layer="svg93"
+     inkscape:window-maximized="1"
+     inkscape:window-y="-11"
+     inkscape:window-x="-11"
+     inkscape:cy="29.879249"
+     inkscape:cx="444.08827"
+     inkscape:zoom="1.1614143"
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     showgrid="false"
+     id="namedview95"
+     inkscape:window-height="2066"
+     inkscape:window-width="3840"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     guidetolerance="10"
+     gridtolerance="10"
+     objecttolerance="10"
+     borderopacity="1"
+     bordercolor="#666666"
+     pagecolor="#ffffff" />
+  <!-- Generator: Sketch 52.6 (67491) - http://www.bohemiancoding.com/sketch -->
+  <title
+     id="title2">Artboard</title>
+  <desc
+     id="desc4">Created with Sketch.</desc>
+  <text
+     inkscape:export-ydpi="100.01"
+     inkscape:export-xdpi="100.01"
+     y="-22.07399"
+     x="-16.36474"
+     id="ChemDataExtractor"
+     font-family="HelveticaNeue, 'Helvetica Neue'"
+     font-size="120px"
+     font-weight="normal"
+     letter-spacing="2.02588"
+     fill="#ffffff"
+     style="font-size:96px;fill:#000000;fill-rule:evenodd;stroke:none;stroke-width:1;"><tspan
+       x="199.86192"
+       y="137.80296"
+       id="tspan89"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:96px;font-family:'Futura Hv BT';-inkscape-font-specification:'Futura Hv BT';fill:#000000;">ChemDataExtractor 2</tspan></text>
+  <path
+     inkscape:export-ydpi="100.01"
+     inkscape:export-xdpi="100.01"
+     style="stroke:none;stroke-width:1.34087;fill:#000000"
+     fill-rule="nonzero"
+     fill="#000000"
+     id="Combined-Shape"
+     d="m 123.69586,79.380917 41.92931,24.207893 c 5.60072,3.23357 9.05089,9.20946 9.05089,15.6766 v 48.41581 c 0,6.46713 -3.45017,12.44302 -9.05089,15.67659 l -41.92931,24.2079 c -5.6007,3.23357 -12.50107,3.23357 -18.10177,0 l -41.929314,-24.2079 c -5.60072,-3.23357 -9.05089,-9.20946 -9.05089,-15.67659 v -48.41581 c 0,-6.46714 3.45017,-12.44303 9.05089,-15.67659 L 105.59409,79.380917 c 5.6007,-3.233571 12.50107,-3.233571 18.10177,0 z M 111.62801,89.831982 69.698696,114.03988 c -1.86691,1.07786 -3.01696,3.06982 -3.01696,5.22553 v 48.41581 c 0,2.1557 1.15005,4.14766 3.01696,5.22552 l 41.929314,24.2079 c 1.8669,1.07786 4.16702,1.07786 6.03393,0 l 41.92931,-24.2079 c 1.86691,-1.07786 3.01696,-3.06982 3.01696,-5.22552 v -48.41581 c 0,-2.15571 -1.15005,-4.14767 -3.01696,-5.22553 L 117.66194,89.831982 c -1.86691,-1.07786 -4.16703,-1.07786 -6.03393,0 z m -27.495204,70.370588 32.520444,18.76179 c 2.24506,1.29523 3.01506,4.16522 1.71983,6.41028 -1.29523,2.24506 -4.16522,3.01506 -6.41028,1.71983 L 79.442356,168.33268 c -2.24506,-1.29523 -3.01506,-4.16521 -1.71983,-6.41028 1.29523,-2.24506 4.16522,-3.01506 6.41028,-1.71983 z M 110.62803,0 136.76936,24.216505 V 81.425798 L 124.70152,74.457286 V 41.567034 h -14.07916 c -9.11863,0 -16.536514,-7.281778 -16.755904,-16.347608 l -0.005,-0.413293 V 12.067849 H 16.760947 c -2.591906,0 -4.693052,2.10115 -4.693052,4.693052 V 165.5977 c 0,2.59191 2.101146,4.69305 4.693052,4.69305 h 33.086018 l 0.001,2.23205 c 0,3.6993 1.411141,7.19769 3.853341,9.83685 l -36.940405,-10e-4 C 7.50411,182.35865 0,174.85454 0,165.59775 V 16.760901 C 0,7.50411 7.50411,0 16.760901,0 Z m 36.86831,120.00805 c 2.5055,0 4.55244,1.96341 4.68611,4.43556 l 0.007,0.25749 v 37.54442 c 0,2.59191 -2.10115,4.69305 -4.69305,4.69305 -2.5055,0 -4.55244,-1.96341 -4.68611,-4.43555 l -0.007,-0.2575 V 124.7011 c 0,-2.59191 2.10114,-4.69305 4.69305,-4.69305 z m -97.649013,17.43134 v 12.06785 H 28.829158 v -12.06785 z m 68.551123,-33.85646 c 1.29523,2.24506 0.52523,5.11504 -1.71983,6.41028 l -32.539794,18.77295 c -2.24507,1.29523 -5.11505,0.52523 -6.41028,-1.71983 -1.29523,-2.24506 -0.52523,-5.11506 1.71983,-6.41028 L 111.98817,101.8631 c 2.24506,-1.29524 5.11505,-0.52525 6.41028,1.71983 z m -90.239728,4.35727 23.221984,3.1e-4 c -0.915223,1.82766 -1.446463,3.85403 -1.522772,5.95626 l -0.0094,0.52706 -0.0011,5.58422 H 28.158856 V 107.9402 l 23.22199,3.1e-4 z M 97.689646,78.441016 76.786786,90.508862 H 28.829158 V 78.441016 Z M 109.28149,48.941831 V 61.009679 H 28.829158 V 48.941831 Z m -3.35218,-36.844483 v 12.708785 c 0,2.505504 1.96341,4.55243 4.43555,4.686108 l 0.2575,0.007 h 14.07916 v -0.0118 z" />
 </svg>

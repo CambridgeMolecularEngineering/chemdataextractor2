@@ -1,10 +1,8 @@
-ChemDataExtractor-Development
+ChemDataExtractor
 ==================================
 
-ChemDataExtractor is a toolkit for extracting chemical information from the scientific literature.
+ChemDataExtractor v2 is a toolkit for extracting chemical information from the scientific literature.
 
-This is the development version of ChemDataExtractor. The most recent unstable release is
-available [here](https://github.com/CambridgeMolecularEngineering/chemdataextractor)
 
 Features
 --------
@@ -26,8 +24,7 @@ https://cambridgemolecularengineering-chemdataextractor-development.readthedocs-
 License
 -------
 
-ChemDataExtractor is licensed under the `MIT license`_, a permissive, business-friendly license for open source
+ChemDataExtractor v2 is licensed under the `MIT license`_, a permissive, business-friendly license for open source
 software.
 
-installation options: http://chemdataextractor.org/docs/install
 MIT license: https://github.com/CambridgeMolecularEngineering/ChemDataExtractor/blob/master/LICENSE

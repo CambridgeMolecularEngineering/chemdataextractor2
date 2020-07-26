@@ -1,2 +1,2 @@
-<(Curie temperature,specifier,1,3), (BiFeO3,compound__names,4,5), (1103,raw_value,6,7), (K,raw_units,7,8)> Confidence:  0
-<(Curie temperature,specifier,1,3), (MnO,compound__names,4,5), (120,raw_value,6,7), (K,raw_units,7,8)> Confidence:  0.7333333333333333
+<(Curie temperature,curietemperature__specifier,1,3), (BiFeO3,compound__names,4,5), (1103,curietemperature__raw_value,6,7), (K,curietemperature__raw_units,7,8)> Confidence:  0
+<(Curie temperature,curietemperature__specifier,1,3), (MnO,compound__names,4,5), (120,curietemperature__raw_value,6,7), (K,curietemperature__raw_units,7,8)> Confidence:  0.7333333333333333

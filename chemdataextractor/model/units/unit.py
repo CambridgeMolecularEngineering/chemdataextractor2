@@ -39,6 +39,11 @@ class UnitType(BaseType):
     def serialize(self, value, primitive=False):
         return str(value**1.0)
 
+    def is_empty(self, value):
+        if isinstance(value, Unit):
+            return False
+        return True
+
 
 class MetaUnit(type):
     """

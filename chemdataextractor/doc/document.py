@@ -10,6 +10,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractproperty
+from pprint import pprint
 import collections
 import io
 import json
@@ -267,7 +268,9 @@ class Document(BaseDocument):
                     first_sent_records = el.sentences[0].records
                     if len(first_sent_records) == 1 and isinstance(first_sent_records[0], Compound) and first_sent_records[0].is_id_only:
                         sent_record = first_sent_records[0]
-                        if sent_record.labels or (sent_record.names and len(sent_record.names[0]) > len(el.sentences[0].text) / 2):  # TODO: Why do the length check?
+                        if sent_record.names:
+                           longest_name = sorted(sent_record.names, key=len)[0]
+                        if sent_record.labels or (sent_record.names and len(longest_name) > len(el.sentences[0].text) / 2):  # TODO: Why do the length check? Maybe to make sure that the sentence mostly refers to a compound?
                             head_def_record = sent_record
                             head_def_record_i = i
 
@@ -293,9 +296,9 @@ class Document(BaseDocument):
                             if (len(el.records) == 1 and record.is_id_only and len(prev.records) == 1 and
                                 isinstance(prev.records[0], Compound) and prev.records[0].is_id_only and not (record.labels and prev.records[0].labels) and
                                     not (record.names and prev.records[0].names)):
-                                record.names.extend(prev.records[0].names)
-                                record.labels.extend(prev.records[0].labels)
-                                record.roles.extend(prev.records[0].roles)
+                                record.names.update(prev.records[0].names)
+                                record.labels.update(prev.records[0].labels)
+                                record.roles.update(prev.records[0].roles)
 
                 # Unidentified records -- those without compound names or labels
                 if record.is_unidentified:
@@ -351,9 +354,9 @@ class Document(BaseDocument):
                         name = ' '.join(long_)
                         abbrev = ' '.join(short)
                         if name in compound.names and abbrev not in compound.names:
-                            compound.names.append(abbrev)
+                            compound.names.add(abbrev)
                         if abbrev in compound.names and name not in compound.names:
-                            compound.names.append(name)
+                            compound.names.add(name)
 
         # Merge Compound records with any shared name/label
         len_l = len(records)
@@ -380,7 +383,7 @@ class Document(BaseDocument):
                     onames_std = {''.join(n.split()).lower() for n in other_r_compound.names}
 
                     # Clashing labels, don't merge
-                    if len(set(r_compound.labels) - set(other_r_compound.labels)) > 0 and len(set(other_r_compound.labels) - set(r_compound.labels)) > 0:
+                    if len(r_compound.labels - other_r_compound.labels) > 0 and len(other_r_compound.labels - r_compound.labels) > 0:
                         j += 1
                         continue
 
@@ -407,13 +410,18 @@ class Document(BaseDocument):
                 j += 1
             i += 1
 
+        # print("\n\n\nAFTER:")
+        # pprint(records.serialize())
+
         # clean up records
         cleaned_records = ModelList()
         for record in records:
-            record._clean()
-            if record.required_fulfilled and record not in cleaned_records:
-                if (self.models and type(record) in self.models) or not self.models:
-                    cleaned_records.append(record)
+            if (self.models and type(record) in self.models) or not self.models:
+                record._clean()
+                # print("\nCLEANEDRECORD:", record.required_fulfilled, record not in cleaned_records)
+                # pprint(record.serialize())
+                if record.required_fulfilled and record not in cleaned_records:
+                        cleaned_records.append(record)
 
         cleaned_records.remove_subsets()
 

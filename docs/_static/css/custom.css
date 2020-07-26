@@ -1,0 +1,29 @@
+/* Sidebar header (and topbar for mobile) */
+.wy-side-nav-search, .wy-nav-top {
+  background: #ffffff;
+}
+/* Sidebar */
+.wy-nav-side {
+  background: linear-gradient(135deg, #24243E,  #24243E, #304A6E);
+}
+
+.wy-side-nav-search > div.version {
+    color: #777;
+}
+
+.rst-versions {
+    background: #24243E;;
+}
+
+.rst-versions .rst-current-version {
+    color: #ffe74c;
+    background-color: #24243E;
+}
+
+.rst-versions .rst-other-version {
+    background-color: #24243E;
+}
+
+.my-nav-content-wrap {
+    background: #ffffff;
+}

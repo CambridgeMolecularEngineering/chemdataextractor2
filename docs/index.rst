@@ -26,7 +26,6 @@ Features:
    getting_started
    examples
    code_documentation
-   internal
    migration_guide
    changelog
    license
