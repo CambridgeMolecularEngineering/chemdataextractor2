@@ -20,12 +20,6 @@ __copyright__ = 'Copyright 2019 Matt Swain and contributors'
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-# jm2111
-# all messages with effective level higher or equal to warning will be shown
-# in every module/file set:
-#     log = logging.getLogger(__name__)
-#     log.setLevel(logging.DEBUG)
-# to change the effective level of the module logger
-logging.basicConfig(format=u'%(levelname)-10s in %(filename)-20s--> %(message)s', level=logging.INFO, filename='log.txt', filemode='w')
+logging.basicConfig(level=logging.INFO, format=u'%(levelname)-10s in %(filename)-20s--> %(message)s', handlers=[logging.FileHandler('log.txt', mode='w', encoding='utf-8')])
 
 from .doc.document import Document
