@@ -13,8 +13,8 @@ else:
 setup(
     name='ChemDataExtractor',
     version='2.01',
-    author='Matt Swain, Callum Court, Edward Beard, Juraj Mavracic, Taketomo Isazawa',
-    author_email='m.swain@me.com, cc889@cam.ac.uk, ejb207@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk',
+    author='Matt Swain, Callum Court, Juraj Mavracic, Taketomo Isazawa, and contributors',
+    author_email='m.swain@me.com, cc889@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk',
     license='MIT',
     url='https://github.com/CambridgeMolecularEngineering/ChemDataExtractor',
     packages=find_packages(),
