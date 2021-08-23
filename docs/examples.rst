@@ -12,3 +12,4 @@ Examples
    examples/creating_units
 
 
+Check out the Jupyter notebook examples in the source code!
