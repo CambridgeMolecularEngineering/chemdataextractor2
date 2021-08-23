@@ -6,3 +6,4 @@ nbsphinx == 0.3.5
 nbsphinx-link == 1.1.1
 appdirs>=1.4.0
 DAWG>=0.7.8
+jinja2<3.0.0
