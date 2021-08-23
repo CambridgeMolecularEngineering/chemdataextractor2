@@ -24,6 +24,7 @@ Features:
    :caption: Contents:
 
    getting_started
+   examples
    code_documentation
    migration_guide
    changelog
