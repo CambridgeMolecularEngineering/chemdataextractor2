@@ -354,3 +354,67 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
         combined_entities = create_entities_list(entities)
         root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
         return root_phrase
+
+
+class MultiAutoTableParser(AutoTableParser):
+    
+    def interpret(self, result, start, end):
+        # print(etree.tostring(result))
+        if result is None:
+            return
+        property_entities = {}
+
+        if hasattr(self.model, 'dimensions') and not self.model.dimensions:
+            # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
+            raw_value_list = result.xpath('./raw_value/text()')
+            raw_value = ' '.join(raw_value_list)
+            log.debug(raw_value)
+            if raw_value != 'NoValue':
+                value = self.extract_value(raw_value)
+            else:
+                value = None
+            error = self.extract_error(raw_value)
+            property_entities.update({"raw_value": raw_value,
+                                      "value": value,
+                                      "error": error})
+
+        elif hasattr(self.model, 'dimensions') and self.model.dimensions:
+            # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
+            # print(etree.tostring(result))
+            raw_value_list = result.xpath('./raw_value/text()')
+            raw_value = ' '.join(raw_value_list)
+            raw_units = first(result.xpath('./raw_units/text()'))
+            if raw_value != 'NoValue':
+                value = self.extract_value(raw_value)
+            else:
+                value = None
+            error = self.extract_error(raw_value)
+            units = None
+            try:
+                units = self.extract_units(raw_units, strict=True)
+            except TypeError as e:
+                log.debug(e)
+
+            property_entities.update({"raw_value": raw_value,
+                                      "raw_units": raw_units,
+                                      "value": value,
+                                      "error": error,
+                                      "units": units})
+            
+        for field_name, field in six.iteritems(self.model.fields):
+            if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
+                try:
+                    data = self._get_data(field_name, field, result)
+                    if data is not None:
+                        property_entities.update(data)
+                # if field is required, but empty, the requirements have not been met
+                except TypeError as e:
+                    log.debug(self.model)
+                    log.debug(e)
+
+        model_instance = self.model(**property_entities)
+
+        if model_instance.noncontextual_required_fulfilled:
+            # records the parser that was used to generate this record, can be used for evaluation
+            model_instance.record_method = self.__class__.__name__
+            yield model_instance
