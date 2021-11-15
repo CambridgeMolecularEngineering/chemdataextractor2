@@ -25,8 +25,23 @@ setup(
     entry_points={'console_scripts': ['cde = chemdataextractor.cli:cli']},
     tests_require=['pytest'],
     install_requires=[
-        'appdirs', 'beautifulsoup4', 'click==6.7', 'cssselect', 'lxml', 'nltk', 'pdfminer.six', 'python-dateutil',
-        'requests', 'six', 'python-crfsuite', 'DAWG', 'PyYAML', 'selenium', 'numpy', 'scipy==1.1.0'
+        'appdirs',
+        'beautifulsoup4',
+        'click==6.7',
+        'cssselect',
+        'lxml',
+        'nltk',
+        'pdfminer.six',
+        'python-dateutil',
+        'requests',
+        'six',
+        'python-crfsuite',
+        'TableDataExtractor @ git+https://github.com/CambridgeMolecularEngineering/tabledataextractor',
+        'DAWG @ git+https://github.com/ti250/DAWG-patched',
+        'PyYAML',
+        'selenium',
+        'numpy',
+        'scipy==1.1.0'
     ],
     classifiers=[
         'Intended Audience :: Developers',
