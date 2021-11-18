@@ -41,7 +41,7 @@ setup(
         'PyYAML',
         'selenium',
         'numpy',
-        'scipy==1.1.0'
+        'scipy'
     ],
     classifiers=[
         'Intended Audience :: Developers',
