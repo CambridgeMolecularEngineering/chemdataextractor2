@@ -27,6 +27,7 @@ install:
   - conda info -a
   - conda create -q -n cde python=$TRAVIS_PYTHON_VERSION pytest sphinx pandoc
   - source activate cde
+  - pip install --upgrade pip
   - pip install nbsphinx==0.3.5 nbsphinx-link m2r ipython ipykernel sphinx-rtd-theme
   - pip install future==0.17.1
   - pip install unittest2==1.1.0
