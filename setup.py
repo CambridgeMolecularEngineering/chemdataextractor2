@@ -33,7 +33,7 @@ setup(
         'nltk',
         'pdfminer.six',
         'python-dateutil',
-        'requests',
+        'requests==2.21.0',
         'six',
         'python-crfsuite',
         'TableDataExtractor @ git+https://github.com/CambridgeMolecularEngineering/tabledataextractor',
