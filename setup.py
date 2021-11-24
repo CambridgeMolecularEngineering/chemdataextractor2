@@ -37,10 +37,13 @@ setup(
         'six',
         'python-crfsuite',
         'TableDataExtractor @ git+https://github.com/CambridgeMolecularEngineering/tabledataextractor',
-        'DAWG @ git+https://github.com/ti250/DAWG-patched',
+        'DAWG @ git+https://github.com/ti250/DAWG-patched ; python_version >= "3.7.0"',
+        'DAWG; python_version < "3.7.0"',
         'PyYAML',
-        'selenium',
+        'selenium==3.141.0',
         'numpy',
+        'numpy==1.16; python_version < "3.7.0"',
+        'numpy>=1.16; python_version >= "3.7.0"',
         'scipy'
     ],
     classifiers=[
