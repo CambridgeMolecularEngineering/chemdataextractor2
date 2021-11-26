@@ -28,7 +28,7 @@ magnitudes_dict = {R('c(enti)?', group=0): -2.,
                   R('G(iga)?', group=0): 9.,
                   R('T(era)?', group=0): 12.,
                   R('m(illi)?', group=0): -3.,
-                  R('µ|(micro)|(mu)', group=0): -6.,
+                  R('µ|(micro)|(mu)|\u03bc', group=0): -6.,
                   R('n(ano)?', group=0): -9.,
                   R('p(ico)?', group=0): -12.}
 
