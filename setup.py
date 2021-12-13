@@ -5,21 +5,22 @@ import os
 from setuptools import setup, find_packages
 
 
-if os.path.exists('README.rst'):
-    long_description = open('README.rst').read()
+if os.path.exists('README.md'):
+    long_description = open('README.md').read()
 else:
     long_description = '''A toolkit for extracting chemical information from the scientific literature.'''
 
 setup(
-    name='ChemDataExtractor',
-    version='2.01',
+    name='chemdataextractor2',
+    version='2.0.1',
     author='Matt Swain, Callum Court, Juraj Mavracic, Taketomo Isazawa, and contributors',
     author_email='m.swain@me.com, cc889@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk',
     license='MIT',
-    url='https://github.com/CambridgeMolecularEngineering/ChemDataExtractor',
+    url='https://github.com/CambridgeMolecularEngineering/ChemDataExtractor2',
     packages=find_packages(),
     description='A toolkit for extracting chemical information from the scientific literature.',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     keywords='text-mining mining chemistry cheminformatics nlp html xml science scientific',
     zip_safe=False,
     entry_points={'console_scripts': ['cde = chemdataextractor.cli:cli']},

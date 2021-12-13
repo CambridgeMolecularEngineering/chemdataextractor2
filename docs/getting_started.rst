@@ -45,31 +45,15 @@ There are a few different ways to download and install the ChemDataExtractor too
 
 .. note:: A Python version earlier than 3.8 must be used with ChemDataExtractor.
 
-.. rubric:: Option 1. Using conda
-
-This method is recommended for all Windows users, as well as beginners on all platforms who don't already have Python
-installed. Anaconda Python is a self-contained Python environment that is particularly useful for scientific
-applications.
-
-Start by installing `Miniconda <https://conda.io/miniconda.html>`_, which includes a complete Python distribution and the
-conda package manager, or Anaconda, which additionally includes many pre-installed packages, including NumPy and
-Matplotlib. Choose the Python 3.5 version, unless you have a particular reason why you must use Python 2.7.
-
-Once installed, at the command line, run::
-
-    $ conda install -c chemdataextractor chemdataextractor
-
-This command installs the chemdataextractor package from the chemdataextractor conda channel.
-
-.. rubric:: Option 2. Using pip
+.. rubric:: Option 1. Using pip
 
 If you already have Python installed, it's easiest to install the ChemDataExtractor package using pip. At the command line, run::
 
-    $ pip install ChemDataExtractor
+    $ pip install chemdataextractor2
 
 On Windows, this will require the Microsoft Visual C++ Build Tools to be installed. If you don't already have pip installed, you can install it using ``get-pip.py``.
 
-.. rubric:: Option 3. Download the Latest Release
+.. rubric:: Option 2. Download the Latest Release
 
 Alternatively, download the latest release manually from github or the ChemDataExtractor website and install it yourself by running::
 
@@ -78,7 +62,7 @@ Alternatively, download the latest release manually from github or the ChemDataE
 
 The ``setup.py`` command will install ChemDataExtractor in your site-packages folder so it is automatically available to all your python scripts.
 
-You can also get the latest release by cloning the git source code repository from https://github.com/CambridgeMolecularEngineering/chemdataextractor/.
+You can also get the latest release by cloning the git source code repository from https://github.com/CambridgeMolecularEngineering/chemdataextractor2/.
 
 .. rubric:: Getting the Data Files
 
