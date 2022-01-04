@@ -12,7 +12,7 @@ else:
 
 setup(
     name='chemdataextractor2',
-    version='2.0.1',
+    version='2.0.2',
     author='Matt Swain, Callum Court, Juraj Mavracic, Taketomo Isazawa, and contributors',
     author_email='m.swain@me.com, cc889@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk',
     license='MIT',
@@ -37,8 +37,8 @@ setup(
         'requests==2.21.0',
         'six',
         'python-crfsuite',
-        'TableDataExtractor @ git+https://github.com/CambridgeMolecularEngineering/tabledataextractor',
-        'DAWG @ git+https://github.com/ti250/DAWG-patched ; python_version >= "3.7.0"',
+        'tabledataextractor',
+        'DAWG-Patched; python_version >= "3.7.0"',
         'DAWG; python_version < "3.7.0"',
         'PyYAML',
         'selenium==3.141.0',
