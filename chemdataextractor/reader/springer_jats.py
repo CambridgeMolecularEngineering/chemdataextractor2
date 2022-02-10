@@ -16,7 +16,7 @@ strip_spr_xml = Cleaner(strip_xpath='.//bold | .//label | .//xref | .//italic | 
                         kill_xpath='.//tex-math | .//alternatives | .//mml:math | .//label')
 
 
-class SpringerXmlReader(XmlReader):
+class SpringerJatsReader(XmlReader):
     """Reader for Springer XML documents."""
 
     cleaners = [clean, strip_spr_xml]

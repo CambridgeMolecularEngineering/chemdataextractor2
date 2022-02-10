@@ -18,7 +18,7 @@ from .plaintext import PlainTextReader
 from .rsc import RscHtmlReader
 from .nlm import NlmXmlReader
 from .uspto import UsptoXmlReader
-from .springerjats import SpringerXmlReader
+from .springer_jats import SpringerJatsReader
 
 
 DEFAULT_READERS = [
@@ -32,5 +32,5 @@ DEFAULT_READERS = [
     HtmlReader(),
     PdfReader(),
     PlainTextReader(),
-    SpringerXmlReader(),
+    SpringerJatsReader(),
 ]

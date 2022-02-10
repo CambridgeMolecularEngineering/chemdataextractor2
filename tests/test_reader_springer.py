@@ -12,7 +12,7 @@ import io
 import os
 
 from chemdataextractor.doc.document import Document
-from chemdataextractor.reader.springerjats import SpringerXmlReader
+from chemdataextractor.reader.springer_jats import SpringerJatsReader
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -20,11 +20,9 @@ log.setLevel(logging.DEBUG)
 
 class TestSpringerXMLReader(unittest.TestCase):
 
-    maxDiff = None
-
     def test_detect(self):
         """Test RscXMLReader can detect an RSC document."""
-        r = SpringerXmlReader()
+        r = SpringerJatsReader()
         fname = 'spr_test1.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'springer', fname), 'rb')
         content = f.read()
@@ -33,20 +31,20 @@ class TestSpringerXMLReader(unittest.TestCase):
 
     def test_direct_usage(self):
         """Test RscXMLReader used directly to parse file."""
-        r = SpringerXmlReader()
+        r = SpringerJatsReader()
         fname = 'spr_test1.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'springer', fname), 'rb')
         content = f.read()
         d = r.readstring(content)
         f.close()
-        self.assertEqual(len(d.elements), 279)
+        self.assertEqual(len(d.elements), 307)
 
     def test_document_usage(self):
         """Test RscXMLReader used via Document.from_file."""
         fname = 'spr_test2.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'springer', fname), 'rb')
-        d = Document.from_file(f, readers=[SpringerXmlReader()])
-        self.assertEqual(len(d.elements), 60)
+        d = Document.from_file(f, readers=[SpringerJatsReader()])
+        self.assertEqual(len(d.elements), 68)
 
 
 if __name__ == '__main__':
