@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class TestSpringerXMLReader(unittest.TestCase):
+class TestSpringerJatsReader(unittest.TestCase):
 
     def test_detect(self):
         """Test RscXMLReader can detect an RSC document."""
