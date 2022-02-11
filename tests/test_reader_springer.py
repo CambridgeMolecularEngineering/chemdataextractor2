@@ -41,10 +41,10 @@ class TestSpringerJatsReader(unittest.TestCase):
 
     def test_document_usage(self):
         """Test RscXMLReader used via Document.from_file."""
-        fname = 'spr_test2.xml'
+        fname = 'spr_test1.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'springer', fname), 'rb')
         d = Document.from_file(f, readers=[SpringerJatsReader()])
-        self.assertEqual(len(d.elements), 68)
+        self.assertEqual(len(d.elements), 307)
 
 
 if __name__ == '__main__':
