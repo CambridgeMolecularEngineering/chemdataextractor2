@@ -284,13 +284,17 @@ class Word(BaseParserElement):
 class Tag(BaseParserElement):
     """Match tag exactly."""
 
-    def __init__(self, match):
+    def __init__(self, match, tag_type=None):
         super(Tag, self).__init__()
         self.match = match
+        if tag_type:
+            self.tag_type = tag_type
+        else:
+            self.tag_type = 1
 
     def _parse_tokens(self, tokens, i, actions=True):
         token = tokens[i]
-        tag = token[1]
+        tag = token[self.tag_type]
         if tag == self.match:
             return [E(self.name or safe_name(tag), token[0])], i + 1
         raise ParseException(tokens, i, 'Expected %s, got %s' % (self.match, tag), self)
@@ -490,15 +494,51 @@ class Or(ParseExpression):
         if self.name:
             furthest_match = furthest_match.set_name(self.name)
 
+        # NOTE: While it may seem that there is a performance gain to be made by not redoing
+        # the parse result, it's balanced out by the fact that actions are not
+        # performed for try_parse.
         result, result_i = furthest_match.parse(tokens, i, actions=actions)
-        # if self.name:
-        #     result.tag = self.name
         return result, result_i
 
     def __ixor__(self, other):
         if isinstance(other, six.text_type):
             other = Word(other)
         return self.append(other)
+
+
+class Every(ParseExpression):
+    """
+    Match all of the containing parse expressions, and return the longest
+    """
+
+    def _parse_tokens(self, tokens, i, actions=True):
+        furthest_exception_i = -1
+        furthest_match_i = -1
+        furthest_exception = None
+        for e in self.exprs:
+            try:
+                end_i = e.try_parse(tokens, i)
+            except IndexError:
+                if len(tokens) > furthest_exception_i:
+                    furthest_exception = ParseException(tokens, len(tokens), '', self)
+                    furthest_exception_i = len(tokens)
+            else:
+                if end_i > furthest_match_i:
+                    furthest_match_i = end_i
+                    furthest_match = e
+
+        if furthest_match_i < 0:
+            if furthest_exception is not None:
+                raise furthest_exception
+            else:
+                raise ParseException(tokens, i, 'No alternatives match', self)
+
+        # If a name is assigned to an Every, it replaces the name of the contained result
+        if self.name:
+            furthest_match = furthest_match.set_name(self.name)
+
+        result, result_i = furthest_match.parse(tokens, i, actions=actions)
+        return result, result_i
 
 
 class First(ParseExpression):
@@ -644,7 +684,7 @@ class Optional(ParseElementEnhance):
             results, i = self.expr.parse(tokens, i, actions)
         except (ParseException, IndexError):
             pass
-        return results, i
+        return ([E(self.name, *results)] if self.name else results), i
 
 
 class Group(ParseElementEnhance):

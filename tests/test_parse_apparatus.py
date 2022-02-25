@@ -33,9 +33,9 @@ class TestParseApparatus(unittest.TestCase):
     def do_parse(self, input, expected):
         s = Sentence(input)
         log.debug(s)
-        log.debug(s.tagged_tokens)
+        log.debug(s.tokens)
         results = []
-        for i, r in enumerate(apparatus_phrase.scan(s.tagged_tokens)):
+        for i, r in enumerate(apparatus_phrase.scan(s.tokens)):
             log.debug(etree.tostring(r[0], pretty_print=True, encoding='unicode'))
             results.append(etree.tostring(r[0], encoding='unicode'))
         self.assertEqual(expected, results)

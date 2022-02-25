@@ -40,7 +40,7 @@ ir_solvent = (I('KBr') | I('ATR') | I('neat') | I('NaCl') | I('CaF2') | I('AgCl'
 solvent = (ir_solvent | chemical_name)('solvent').add_action(join)
 
 units = Optional(W('/')).hide() + (
-    R('^\[?cm[-–−‒]?1\]?$') |
+    (Optional(W('[')) + R('^\[?cm[-–−‒]?1\]?$') + Optional(W(']'))) |
     W('cm') + R('^[-–−‒]$') + W('1')
 )('units').add_action(merge)
 

@@ -23,15 +23,12 @@ class Figure(CaptionedElement):
         """
         super(Figure, self).__init__(caption=caption, label=label, models=models, **kwargs)
         self.links = links
-        self.caption_tokens = []
-        for sent in self.caption.sentences:
-            self.caption_tokens.extend(sent.tagged_tokens)
-    
+        self.caption_tokens = None
 
     @property
     def records(self):
         """ Return FigureData records
-        
+
         Returns:
             [type] -- [description]
         """
@@ -39,20 +36,27 @@ class Figure(CaptionedElement):
         seen_labels = set()
 
         p = None
+
+        if not self.caption_tokens:
+            self.caption_tokens = []
+            for sent in self.caption.sentences:
+                self.caption_tokens.extend(sent.tokens)
+
         for model in self._streamlined_models:
             for parser in model.parsers:
                 parser_records = []
 
                 if hasattr(parser, 'parse_caption'):
-                    for record in parser.parse_caption(self.caption_tokens, self.label, self.links):
+                    for record in parser.parse_caption(self.caption, self.label, self.links):
                         parser_records.append(record)
-    
+
                 elif hasattr(parser, 'parse_sentence'):
-                    for record in parser.parse_sentence(self.caption_tokens):
-                        parser_records.append(record)
+                    for caption_sentence in self.caption.sentences:
+                        for record in parser.parse_sentence(caption_sentence):
+                            parser_records.append(record)
                 else:
                     continue
-                
+
                 if not parser_records:
                     continue
 

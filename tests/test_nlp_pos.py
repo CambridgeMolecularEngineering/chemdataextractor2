@@ -34,7 +34,7 @@ class TestApPosTagger(unittest.TestCase):
         """Test the PerceptronTagger on a simple sentence."""
         self.assertEqual(
             [('And', 'CC'), ('now', 'RB'), ('for', 'IN'), ('something', 'NN'), ('completely', 'RB'), ('different', 'JJ')],
-            self.t.tag(['And', 'now', 'for', 'something', 'completely', 'different'])
+            self.t.legacy_tag(['And', 'now', 'for', 'something', 'completely', 'different'])
         )
 
     def test_text_sentence(self):
@@ -57,7 +57,7 @@ class TestChemApPosTagger(unittest.TestCase):
         """Test the ChemApPosTagger  on a simple sentence."""
         self.assertEqual(
             [('And', 'CC'), ('now', 'RB'), ('for', 'IN'), ('something', 'NN'), ('completely', 'RB'), ('different', 'JJ')],
-            self.t.tag(['And', 'now', 'for', 'something', 'completely', 'different'])
+            self.t.legacy_tag(['And', 'now', 'for', 'something', 'completely', 'different'])
         )
 
     def test_text_sentence(self):

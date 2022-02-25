@@ -22,6 +22,20 @@ Tools for performing the NLP stages, such as POS tagging, Word clustering, CNER,
     :members:
     :undoc-members:
 
+.nlp.new_cem
+------------------------------------------------
+
+.. automodule:: chemdataextractor.nlp.new_cem
+    :members:
+    :undoc-members:
+
+.nlp.allennlpwrapper
+------------------------------------------------
+
+.. automodule:: chemdataextractor.nlp.allennlpwrapper
+    :members:
+    :undoc-members:
+
 .nlp.corpus
 ------------------------------------------------
 

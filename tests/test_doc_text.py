@@ -16,7 +16,8 @@ import unittest
 import os
 
 from chemdataextractor.doc.document import Document
-from chemdataextractor.doc.text import Paragraph, Title, Heading, Caption, Footnote
+from chemdataextractor.doc.text import Paragraph, Title, Heading, Caption, Footnote, Sentence, RichToken
+from chemdataextractor.nlp.tag import BaseTagger
 from chemdataextractor.config import Config
 from chemdataextractor.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
 from chemdataextractor.nlp import *
@@ -67,7 +68,7 @@ class TestText(unittest.TestCase):
         d = Document(Title('Test'), config=self.get_config())
         title = d.titles[0]
         self.assertEqual(type(title.pos_tagger), CrfPosTagger)
-        self.assertEqual(type(title.ner_tagger), CiDictCemTagger)
+        self.assertEqual(type(title.ner_tagger), CemTagger)
         self.assertEqual(type(title.lexicon), Lexicon)
         self.assertEqual(type(title.sentence_tokenizer), SentenceTokenizer)
         self.assertEqual(type(title.word_tokenizer), WordTokenizer)
@@ -79,4 +80,23 @@ class TestText(unittest.TestCase):
         self.assertEqual(type(title.ner_tagger), CemTagger)
         self.assertEqual(type(title.lexicon), ChemLexicon)
         self.assertEqual(type(title.sentence_tokenizer), ChemSentenceTokenizer)
-        self.assertEqual(type(title.word_tokenizer), ChemWordTokenizer)
+        self.assertEqual(type(title.word_tokenizer), BertWordTokenizer)
+
+    def test_richtokens(self):
+        class TestTagger(BaseTagger):
+            tag_type = "test_tag"
+
+            def tag(self, tokens):
+                tags = []
+                for token in tokens:
+                    pos_tag = token.pos_tag
+                    new_tag = "TEST" + pos_tag
+                    tags.append((token, new_tag))
+                return tags
+
+        sent = Sentence("3-Bromo-2,6-dichloroaniline: mp 71-72° C.")
+        sent.taggers.append(TestTagger())
+
+        for index, token in enumerate(sent.tokens):
+            self.assertEqual("TEST" + token.pos_tag, token.test_tag)
+            self.assertEqual(sent.tokens[index][1], token[1])

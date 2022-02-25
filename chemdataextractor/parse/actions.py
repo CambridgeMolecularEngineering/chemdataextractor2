@@ -68,4 +68,10 @@ def fix_whitespace(tokens, start, result):
                 for hyphen in HYPHENS:
                     child.text = child.text.replace(' %s ' % hyphen, '%s' % hyphen)
                 child.text = re.sub(r'- (.) -', r'-\1-', child.text)
+                child.text = child.text.replace(" -", "-")
+                child.text = child.text.replace(" ( ", "(").replace(" ) ", ")")
+                child.text = child.text.replace(" / ", "/")
+                child.text = child.text.replace(" [ ", "[").replace(" ] ", "]")
+                child.text = child.text.replace("( ", "(").replace(" )", ")")
+                child.text = child.text.replace("[ ", "[").replace(" ]", "]")
     return result

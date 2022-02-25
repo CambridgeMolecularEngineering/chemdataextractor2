@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.5', '3.6', '3.9' ]
+        python-version: [ '3.6', '3.8' ]
     name: Test on Python ${{ matrix.python-version }}
     steps:
     - uses: actions/checkout@v2
@@ -33,4 +33,4 @@ jobs:
         cde data download
     - name: Running tests
       run: |
-        pytest
+        pytest -W ignore::DeprecationWarning

@@ -32,13 +32,13 @@ class TestParseUvvis(unittest.TestCase):
     def do_parse(self, input, expected):
         s = Sentence(input)
         log.debug(s)
-        log.debug(s.tagged_tokens)
-        result = next(uvvis.scan(s.tagged_tokens))[0]
+        log.debug(s.tokens)
+        result = next(uvvis.scan(s.tokens))[0]
         log.debug(etree.tostring(result, pretty_print=True, encoding='unicode'))
         self.assertEqual(expected, etree.tostring(result, encoding='unicode'))
         parser = UvvisParser()
         parser.model = UvvisSpectrum
-        for c in parser.parse_sentence(s.tagged_tokens):
+        for c in parser.parse_sentence(s):
             print(c.serialize())
 
     def test_uvvis1(self):

@@ -17,7 +17,7 @@ import unittest
 from chemdataextractor.model import Compound, MeltingPoint, UvvisSpectrum, UvvisPeak, Apparatus, BaseModel
 from chemdataextractor.model.units.temperature import TemperatureModel
 from chemdataextractor.parse.elements import I, W
-from chemdataextractor.model.base import StringType, ModelType, ListType
+from chemdataextractor.model.base import StringType, ModelType, ListType, InferredProperty
 from chemdataextractor.doc.text import Sentence
 from chemdataextractor.parse.auto import AutoSentenceParser
 from chemdataextractor.doc import Document
@@ -94,7 +94,7 @@ class TestModel(unittest.TestCase):
         definitions = elements[0].definitions
         NeelTemperature.update(definitions)
         test_sentence = Sentence('TN = 300 K')
-        results = [i for i in NeelTemperature.parsers[0].parse_sentence(test_sentence.tagged_tokens)][0].serialize()
+        results = [i for i in NeelTemperature.parsers[0].parse_sentence(test_sentence)][0].serialize()
 
         self.assertEqual(results, {'NeelTemperature': {'raw_value': '300', 'raw_units': 'K', 'value': [300.0], 'units': 'Kelvin^(1.0)', 'specifier': 'TN'}})
 
@@ -212,6 +212,41 @@ class TestModel(unittest.TestCase):
 
         for record in non_empty_records:
             self.assertFalse(record.is_empty)
+
+    def test_keypath(self):
+        class InnerModel(BaseModel):
+            string_field = StringType()
+
+        class OuterModel(BaseModel):
+            inner_model = ModelType(InnerModel)
+
+        inner_model = InnerModel(string_field="1234")
+        outer_model = OuterModel(inner_model=inner_model)
+        self.assertEqual(outer_model["inner_model.string_field"], "1234")
+
+    def test_inferred_property(self):
+        def reverse_string(string, instance):
+            if string is not None:
+                return string[::-1]
+
+        class InnerModel(BaseModel):
+            string_field = StringType()
+
+        class OuterModel(BaseModel):
+            inferred_from_field = InferredProperty(StringType(), origin_field="origin_field",
+                                                   inferrer=reverse_string)
+            inferred_from_nested = InferredProperty(StringType(), origin_field="origin_model.string_field",
+                                                    inferrer=reverse_string)
+            origin_field = StringType()
+            origin_model = ModelType(InnerModel)
+
+        inner_model = InnerModel(string_field="1234")
+        outer_model = OuterModel(origin_model=inner_model, origin_field="abcd")
+        expected = {"OuterModel": {"origin_field": "abcd",
+                                   "origin_model": {"InnerModel": {"string_field": "1234"}},
+                                   "inferred_from_field": "dcba",
+                                   "inferred_from_nested": "4321"}}
+        self.assertEqual(expected, outer_model.serialize())
 
 
 if __name__ == '__main__':

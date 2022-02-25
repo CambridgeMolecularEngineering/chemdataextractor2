@@ -20,13 +20,12 @@ sys.path.insert(0, os.path.abspath('../chemdataextractor'))
 # -- Project information -----------------------------------------------------
 
 project = 'ChemDataExtractor'
-copyright = '2018, University of Cambridge, Molecular Engineering Group'
 author = 'University of Cambridge, Molecular Engineering Group'
 
 # The short X.Y version
-version = '2.0'
+version = '2.1'
 # The full version, including alpha/beta/rc tags
-release = 'v2.0.2'
+release = 'v2.1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -40,6 +39,7 @@ needs_sphinx = '1.8.2'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
@@ -50,7 +50,7 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
-    'm2r',
+    'm2r2',
     'nbsphinx',
     'nbsphinx_link',
 ]
@@ -77,7 +77,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store',  '**.ipynb_checkpoints']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -87,8 +87,8 @@ pygments_style = None
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-html_theme = 'sphinx_rtd_theme'
+
+html_theme = 'pydata_sphinx_theme'
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -97,7 +97,9 @@ html_theme = 'sphinx_rtd_theme'
 #
 html_theme_options = {
     # "page_width": "128ch",
-    'logo_only': 'true'
+    'logo': 'logo2.png',
+    'logo_alt': 'ChemDataExtractor',
+    'logo_only': True,
 }
 
 
@@ -105,7 +107,6 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_css_files = ['css/custom.css']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -118,6 +119,7 @@ html_css_files = ['css/custom.css']
 # html_sidebars = {}
 
 html_logo = 'logo2.png'
+html_favicon = 'favicon.svg'
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
@@ -211,3 +213,36 @@ autodoc_default_options = {'special-members': '__init__',
                            'show-inheritance': 'true'}
 autodoc_member_order = 'bysource'
 autodoc_mock_imports = ['tabledataextractor']
+
+"""
+Solution from
+https://stackoverflow.com/questions/25145817/ellipsis-truncation-on-module-attribute-value-in-sphinx-generated-documentatio/25163963#25163963
+to ensure that any values that are too long are truncated in the documentation.
+"""
+
+from sphinx.ext.autodoc import DataDocumenter, ModuleLevelDocumenter, SUPPRESS
+from sphinx.util.inspect import object_description
+
+
+def add_directive_header(self, sig):
+    ModuleLevelDocumenter.add_directive_header(self, sig)
+    if not self.options.annotation:
+        try:
+            objrepr = object_description(self.object)
+
+            # PATCH: truncate the value if longer than 50 characters
+            if len(objrepr) > 50:
+                objrepr = objrepr[:50] + "..."
+
+        except ValueError:
+            pass
+        else:
+            self.add_line(u'   :annotation: = ' + objrepr, '<autodoc>')
+    elif self.options.annotation is SUPPRESS:
+        pass
+    else:
+        self.add_line(u'   :annotation: %s' % self.options.annotation,
+                      '<autodoc>')
+
+
+DataDocumenter.add_directive_header = add_directive_header

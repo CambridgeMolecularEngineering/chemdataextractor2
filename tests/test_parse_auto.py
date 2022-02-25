@@ -29,7 +29,7 @@ from chemdataextractor.model.units.temperature import Temperature, TemperatureMo
 from chemdataextractor.model.units.mass import Mass, Gram
 from chemdataextractor.model.units.energy import Energy
 from chemdataextractor.parse.auto import construct_unit_element, match_dimensions_of, AutoSentenceParser
-from chemdataextractor.parse.quantity import value_element_plain
+from chemdataextractor.parse.quantity import value_element
 from chemdataextractor.doc.text import Sentence
 from chemdataextractor.parse.elements import I
 from chemdataextractor.model import Compound, ModelType, StringType
@@ -71,7 +71,7 @@ class TestAutoRules(unittest.TestCase):
     def test_unit_element(self):
         test_sentence = Sentence('The speed was 31 m/s and')
         units_expression = construct_unit_element(Speed()).with_condition(match_dimensions_of(SpeedModel))('raw_units')
-        results = units_expression.scan(test_sentence.tagged_tokens)
+        results = units_expression.scan(test_sentence.tokens)
         results_list = []
         for result in results:
             results_list.append(etree.tostring(result[0]))
@@ -81,7 +81,7 @@ class TestAutoRules(unittest.TestCase):
     def test_unit_element_2(self):
         test_sentence = Sentence('The specific heat was 16 J/(kgK) which was')
         units_expression = construct_unit_element(SpecificHeat()).with_condition(match_dimensions_of(SpecificHeatModel()))('raw_units')
-        results = units_expression.scan(test_sentence.tagged_tokens)
+        results = units_expression.scan(test_sentence.tokens)
         results_list = []
         for result in results:
             results_list.append(etree.tostring(result[0]))
@@ -90,9 +90,9 @@ class TestAutoRules(unittest.TestCase):
 
     def test_unit_element_3(self):
         test_sentence = Sentence('The specific heat was 16 J/kg-K which was')
-        print(test_sentence.tagged_tokens)
+        print(test_sentence.tokens)
         units_expression = construct_unit_element(SpecificHeat()).with_condition(match_dimensions_of(SpecificHeatModel()))('raw_units')
-        results = units_expression.scan(test_sentence.tagged_tokens)
+        results = units_expression.scan(test_sentence.tokens)
         results_list = []
         for result in results:
             results_list.append(etree.tostring(result[0]))
@@ -102,7 +102,7 @@ class TestAutoRules(unittest.TestCase):
     def test_unit_element_nospace(self):
         test_sentence = Sentence('Area was increasing at 31 m2/s and')
         units_expression = construct_unit_element(AreaPerTime()).with_condition(match_dimensions_of(AreaPerTimeModel))('raw_units')
-        results = units_expression.scan(test_sentence.tagged_tokens)
+        results = units_expression.scan(test_sentence.tokens)
         results_list = []
         for result in results:
             results_list.append(etree.tostring(result[0]))
@@ -111,8 +111,8 @@ class TestAutoRules(unittest.TestCase):
 
     def test_value_element(self):
         test_sentence = Sentence('The value was 123.8')
-        value_expression = value_element_plain()
-        results = value_expression.scan(test_sentence.tagged_tokens)
+        value_expression = value_element()
+        results = value_expression.scan(test_sentence.tokens)
         results_list = []
         for result in results:
             results_list.append(etree.tostring(result[0]))
@@ -121,8 +121,8 @@ class TestAutoRules(unittest.TestCase):
 
     def test_value_element_comma(self):
         test_sentence = Sentence('The value was 3,123.8')
-        value_expression = value_element_plain()
-        results = value_expression.scan(test_sentence.tagged_tokens)
+        value_expression = value_element()
+        results = value_expression.scan(test_sentence.tokens)
         results_list = []
         for result in results:
             results_list.append(etree.tostring(result[0]))
@@ -131,8 +131,8 @@ class TestAutoRules(unittest.TestCase):
 
     def test_value_element_european(self):
         test_sentence = Sentence('The value was 123,8')
-        value_expression = value_element_plain()
-        results = value_expression.scan(test_sentence.tagged_tokens)
+        value_expression = value_element()
+        results = value_expression.scan(test_sentence.tokens)
         results_list = []
         for result in results:
             results_list.append(etree.tostring(result[0]))
@@ -141,8 +141,8 @@ class TestAutoRules(unittest.TestCase):
 
     def test_value_element_brackets(self):
         test_sentence = Sentence('The value was 123(8)')
-        value_expression = value_element_plain()
-        results = value_expression.scan(test_sentence.tagged_tokens)
+        value_expression = value_element()
+        results = value_expression.scan(test_sentence.tokens)
         results_list = []
         for result in results:
             results_list.append(etree.tostring(result[0]))

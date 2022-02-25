@@ -1,4 +1,19 @@
-# Change Log
+# Changelog
+
+##[v2.1.0](https://github.com/CambridgeMolecularEngineering/ChemDataExtractor/releases/tag/v2.1.0) 
+
+**Implemented Enhancements:**
+- An improved NER system that allows for much better performance on inorganic materials.
+- New tokenization to go with the new NER system.
+- The addition of InferredProperty allows for users to define explicit links between different properties included in their data models, reducing a large amount of boilerplate parser code.
+- The Every parse element means that users can specify that a certain token satisfy multiple condition.
+- A more flexible tagging system that allows for the creation of taggers beyond just part of speech and NER taggers.
+- Batch tagging.
+- A new, modern theme for the documentation, along with much more detail in the documentation on certain parts of ChemDataExtractor, such as tagging and tokenization.
+
+**Breaking Changes:**
+- Any taggers previously written by the user will be broken. Please refer to the migration guide for version 2.1.
+- The new tokenization can break some parse rules written by the user. This can either be fixed by adopting a few changes to the parse rules, or by reverting to the previous NER system and tokenizer. Please refer to the migration guide for more details.
 
 ## [v2.0](https://github.com/mcs07/ChemDataExtractor/releases/tag/v2.0) (2019-09-xx)
 [Full Changelog](https://github.com/mcs07/ChemDataExtractor/compare/...)
@@ -11,11 +26,11 @@
  - Completely new table parsing routine with the incorporation of TableDataExtractor. This returns a more structured form for tables without any user input.
  - Automatically generated parsers based on the dimensional information of properties.
  - Forward looking Interdependency Resolution for detecting definitions of specifier terms and chemical names.
- - Improved Interdendency Resolution to account for more complex models.
+ - Improved Interdependency Resolution to account for more complex models.
  - Snowball integration where Snowball parsers can be used seamlessly alongside rule-based parsers.
  - Improved performance, with parsing up to 2x faster in real-world usage.
  - The incorporation of an evaluation package for measuring the performance of CDE.
- - Improved tokenisation when using new quantity based models.
+ - Improved tokenization when using new quantity based models.
  - Improved documentation, including a migration guide for users coming from older versions.
 
 ## [v1.3.0](https://github.com/mcs07/ChemDataExtractor/releases/tag/v1.3.0) (2017-02-03)

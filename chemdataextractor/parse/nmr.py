@@ -27,8 +27,9 @@ log = logging.getLogger(__name__)
 number = R('^\d+(\.\d+)?$')
 
 nucleus = (
+    (W('13C') + W('{') + W('1H') + W('}')) |
     W('1H') | W('13C') | W('15N') | W('31P') | W('19F') | W('11B') | W('29Si') | W('17O') | W('73Ge') | W('195Pt') |
-    W('33S') | W('13C{1H}') | W('13C{1H') + W('}') | W('H1') | W('C13') | W('N15') | W('P31') | W('F19') | W('B11') |
+    W('33S') | W('13C{1H') + W('}') | W('H1') | W('C13') | W('N15') | W('P31') | W('F19') | W('B11') |
     W('Si29') | W('Ge73') | W('Pt195') | W('S33')
 )('nucleus').add_action(merge)
 
@@ -81,11 +82,16 @@ split = R('^(br?)?(s|S|d|D|t|T|q|Q|quint|sept|m|M|dd|ddd|dt|td|tt|br|bs|sb|h|ABq
 multiplicity = (OneOrMore(split) + Optional(W('of') + split))('multiplicity').add_action(join)
 
 coupling_value = (number + ZeroOrMore(R('^[,;&]$') + number + Not(W('H'))))('value').add_action(join)
-coupling = ((R('^\d?J([HCNPFD\d,]*|cis|trans)$') + Optional(R('^[\-–−‒]$') + R('^[HCNPF\d]$')) + Optional('=')).hide() + coupling_value + Optional(W('Hz')('units')) + ZeroOrMore(R('^[,;&]$').hide() + coupling_value + W('Hz')('units')))('coupling')
+# coupling = ((R('^\d?J([HCNPFD\d,]*|cis|trans)$') + Optional(R('^[\-–−‒]$') + R('^[HCNPF\d]$')) + Optional('=')).hide() + coupling_value + Optional(W('Hz')('units')) + ZeroOrMore(R('^[,;&]$').hide() + coupling_value + W('Hz')('units')))('coupling')
+coupling = ((R('^\d?J([HCNPFD\d,]*|cis|trans)$') + ZeroOrMore(R('^J?([HCNPFD\d,]*|cis|trans)$'))
+             + Optional(R('^[\-–−‒]$') + R('^[HCNPF\d]$'))
+             + Optional('=')).hide()
+            + coupling_value + Optional(W('Hz')('units'))
+            + ZeroOrMore(R('^[,;&]$').hide() + coupling_value + W('Hz')('units')))('coupling')
 
 number = (R('^\d+(\.\d+)?[HCNPF]\.?$') | (R('^\d+(\.\d+)?$') + R('^[HCNPF]\.?$')))('number').add_action(merge)
 
-assignment_options = (OneOrMore(R('([CNHOPS\-–−‒=]+\d*[A-Za-z]?′*)+') | chemical_name | R('^(C?quat\.?|Ac|Ar|Ph|linker|bridge)$')) + Optional(W('×') + R('^\d+$')))('assignment').add_action(join)
+assignment_options = (OneOrMore(R('([CNHOPS\-–−‒=]+\d*[A-Za-z]?′*)+') | W('′') | chemical_name | R('^(C?quat\.?|Ac|Ar|Ph|linker|bridge)$')) + Optional(W('×') + R('^\d+$')))('assignment').add_action(join)
 assignment = Optional(R('^\d{1,2}$')('number') + Optional(W('×')).hide()) + (assignment_options + ZeroOrMore(T('CC').hide() + assignment_options))
 
 note = (W('overlapped') | (W('×') + R('^\d+$')))('note').add_action(join)

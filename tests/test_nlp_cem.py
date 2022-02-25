@@ -16,7 +16,8 @@ import logging
 import unittest
 
 from chemdataextractor.doc import Span, Document
-from chemdataextractor.nlp.cem import CiDictCemTagger, CrfCemTagger, CemTagger
+from chemdataextractor.nlp.cem import CiDictCemTagger, CrfCemTagger
+from chemdataextractor.nlp.cem import LegacyCemTagger as CemTagger
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class TestCrfCemTagger(unittest.TestCase):
                 (('in', 'IN'), 'O'),
                 (('THF', 'NN'), 'B-CM')
             ],
-            dt.tag([
+            dt.legacy_tag([
                 ('UV-vis', 'JJ'),
                 ('spectrum', 'NN'),
                 ('of', 'IN'),
@@ -63,7 +64,7 @@ class TestCemDictionaryTagger(unittest.TestCase):
                  (u'and', None),
                  (u'imidazo\xfd1,2-b\xa8pyridazine', u'B-CM'),
                  (u'derivatives', None)],
-                dt.tag(['Novel', 'imidazo\xfd1,2-a\xa8pyridine', 'and', 'imidazo\xfd1,2-b\xa8pyridazine', 'derivatives'])
+                dt.legacy_tag(['Novel', 'imidazo\xfd1,2-a\xa8pyridine', 'and', 'imidazo\xfd1,2-b\xa8pyridazine', 'derivatives'])
             )
 
 
@@ -76,9 +77,9 @@ class TestCemTagger(unittest.TestCase):
         GitHub issue #12.
         """
         ct = CemTagger()
-        self.assertEqual([(('benzene-aromatic', 'NN'), 'B-CM')], ct.tag([('benzene-aromatic', 'NN')]))
-        self.assertEqual([(('-aromatic', 'JJ'), None)], ct.tag([('-aromatic', 'JJ')]))
-        self.assertEqual([(('non-aromatic', 'JJ'), None)], ct.tag([('non-aromatic', 'JJ')]))
+        self.assertEqual([(('benzene-aromatic', 'NN'), 'B-CM')], ct.legacy_tag([('benzene-aromatic', 'NN')]))
+        self.assertEqual([(('-aromatic', 'JJ'), None)], ct.legacy_tag([('-aromatic', 'JJ')]))
+        self.assertEqual([(('non-aromatic', 'JJ'), None)], ct.legacy_tag([('non-aromatic', 'JJ')]))
 
     def test_cems_stoplist(self):
         """Test Document cems removes words in stoplist, ncluding words entirely made up of ignore prefix/suffix.

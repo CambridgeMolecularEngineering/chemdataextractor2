@@ -66,17 +66,17 @@ class TestSnowball(unittest.TestCase):
         """Test that Candidate Relation objects are correctly created
         """
         sentence = Sentence('The Curie temperature Tc of MnO is 120 K,')
-        candidates = [r.serialize() for r in sb.candidates(sentence.tagged_tokens)][0]
+        candidates = [r.serialize() for r in sb.candidates(sentence.tokens)][0]
         expected = [{'curietemperature': {'specifier': 'Curie temperature', 'raw_value': '120', 'raw_units': 'K'}, 'compound': {'names': 'MnO'}, 'confidence': 0}]
         self.assertDictEqual(expected[0], candidates)
-    
+
     def test_retrieve_entities(self):
         """Test entity retrieval from a parse result
         """
         sentence = Sentence('BiFeO3 displays a Curie temperature of 1103 K,')
         sentence_parser = [p for p in sb.model.parsers if isinstance(p, AutoSentenceParser)][0]
         detected = []
-        for result in sentence_parser.root.scan(sentence.tagged_tokens):
+        for result in sentence_parser.root.scan(sentence.tokens):
             if result:
                 for entity in sb.retrieve_entities(CurieTemperature, result[0]):
                     detected.append((entity[0], entity[1]))
@@ -87,12 +87,12 @@ class TestSnowball(unittest.TestCase):
         """Test Snowball Sentence Parsing
         """
         train_sentence = Sentence('The Curie temperature of BiFeO3 is 1103 K')
-        candidates = sb.candidates(train_sentence.tagged_tokens)
+        candidates = sb.candidates(train_sentence.tokens)
         sb.update(train_sentence.raw_tokens, candidates)
 
         test_sentence = Sentence('The Curie temperature for MnO is 120 K')
         models = []
-        for model in sb.parse_sentence(test_sentence.tagged_tokens):
+        for model in sb.parse_sentence(test_sentence.tokens):
             models.append(model.serialize())
         expected = [{'CurieTemperature': {'compound': {'Compound': {'names': ['MnO']}},
                         'confidence': 0.7333333333333333,
@@ -102,16 +102,16 @@ class TestSnowball(unittest.TestCase):
                         'units': 'Kelvin^(1.0)',
                         'value': [120.0]}}]
         self.assertDictEqual(expected[0], models[0])
-    
+
     def test_parse_nested_sentence(self):
         s1 = Sentence('Si has a  band gap of 1.1 eV at an applied temperature of 300 K.')
         s2 = Sentence('MnO has a band gap of 5 eV in an applied temperature of 700 K.')
-        candidates = nested_snowball.candidates(s1.tagged_tokens)
+        candidates = nested_snowball.candidates(s1.tokens)
         c = [i for i in candidates if i.entities[2].tag == 'bandgap__raw_value']
         nested_snowball.update(s1.raw_tokens, c)
 
         models = []
-        for model in nested_snowball.parse_sentence(s2.tagged_tokens):
+        for model in nested_snowball.parse_sentence(s2.tokens):
             models.append(model.serialize())
         expected = [{'BandGap': {'compound': {'Compound': {'names': ['MnO']}},
               'confidence': 0.9555555555555555,
@@ -122,11 +122,12 @@ class TestSnowball(unittest.TestCase):
                                               'raw_units': 'K',
                                               'raw_value': '700',
                                               'specifier': 'temperature',
-                                              'value': [700.0]}},
+                                              'value': [700.0],
+                                              'units': 'Kelvin^(1.0)',}},
               'units': 'ElectronVolt^(1.0)',
               'value': [5.0]}}]
         self.assertDictEqual(expected[0], models[0])
-        
+
 
 
 

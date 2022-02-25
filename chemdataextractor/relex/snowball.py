@@ -237,7 +237,7 @@ class Snowball(BaseSentenceParser):
             s {[type]} -- [description]
         """
         candidate_dict = {}
-        candidate_relationships = self.candidates(s.tagged_tokens)
+        candidate_relationships = self.candidates(s.tokens)
         candidate_found = False
         if len(candidate_relationships) > 0:
             candidate_found = True
@@ -343,7 +343,7 @@ class Snowball(BaseSentenceParser):
         toks = [tok[0] for tok in tokens]
         for text, tag, parse_expression in detected:
             text_length = len(text.split(' '))
-            pattern = [s[0] for s in Sentence(text).tagged_tokens]
+            pattern = [s[0] for s in Sentence(text).tokens]
             text_length = len(pattern)
             start_indices = [s for s in KnuthMorrisPratt(toks, pattern)]
 

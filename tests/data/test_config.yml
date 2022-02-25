@@ -11,7 +11,7 @@
 
 POS_TAGGER: CrfPosTagger
 
-NER_TAGGER: CiDictCemTagger
+NER_TAGGER: CemTagger
 
 LEXICON: Lexicon
 

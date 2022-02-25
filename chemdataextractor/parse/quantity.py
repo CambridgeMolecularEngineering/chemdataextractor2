@@ -12,8 +12,9 @@ from __future__ import unicode_literals
 import logging
 import re
 import six
+import copy
 from fractions import Fraction
-from abc import abstractproperty
+from deprecation import deprecated
 
 from .common import lbrct, rbrct
 from .actions import merge, join
@@ -28,7 +29,7 @@ magnitudes_dict = {R('c(enti)?', group=0): -2.,
                   R('G(iga)?', group=0): 9.,
                   R('T(era)?', group=0): 12.,
                   R('m(illi)?', group=0): -3.,
-                  R('µ|(micro)|(mu)|\u03bc', group=0): -6.,
+                  R('µ|μ|(micro)|(mu)|\u03bc', group=0): -6.,
                   R('n(ano)?', group=0): -9.,
                   R('p(ico)?', group=0): -12.}
 
@@ -59,51 +60,40 @@ _division_pattern = re.compile('[/]\D*')
 _magnitude_indicators = re.compile('[pnµmTGMkc]')
 
 
-def value_element(units=(OneOrMore(T('NN')) | OneOrMore(T('NNP')) | OneOrMore(T('NNPS')) | OneOrMore(T('NNS')))('raw_units').add_action(merge)):
+def value_element(units=None):
     """
-    Returns an Element for values with given units. By default, uses tags to guess that a unit exists.
-
-    :param BaseParserElement units: (Optional) A parser element for the units that are to be looked for. Default option looks for nouns.
-    :returns: An Element to look for values and units.
-    :rtype: BaseParserElement
+    Create a Parse element that can extract all sorts of values.
     """
-    number = R('^[\+\-–−]?\d+(([\.・,\d])+)?$')
-    joined_range = R('^[\+\-–−]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
-    spaced_range = (number + Optional(units).hide() + (R('^[\-–−~∼˜]$') + number | number))('raw_value').add_action(merge)
-    to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
+    pure_number = R(r'^(([\+\-–−~∼˜]?\d+(([\.・,\d])+)?)|(\<nUm\>)|(×))+$')
+    spaced_power_number = pure_number + R(r'^×$') + pure_number
+    fraction = R(r'^(([\+\-–−]?\d+/\d+)|(\<nUm\>))$') | (R(r'^(([\+\-–−]?\d+)|(\<nUm\>))$') + R(r'^/$') + R(r'^((\d+)|(\<nUm\>))$')).add_action(merge)
+    number = spaced_power_number | fraction | pure_number
+    joined_range = R(r'^[\+\-–−~∼˜]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
+    if units is not None:
+        spaced_range = (number + Optional(units).hide() + (R(r'^[\-–−~∼˜]$') + number | number))('raw_value').add_action(merge)
+        to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
+    else:
+        spaced_range = (number + R(r'^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
+        to_range = (number + I('to') + number)('raw_value').add_action(join)
     plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
-    bracket_range = R(number.pattern[:-1] + '\(\d+\)' + '$')('raw_value')
+    bracket_range = R('^' + _number_pattern.pattern + '\(\d+\)' + '$')('raw_value')
+    spaced_bracket_range = (pure_number + W('(') + pure_number + W(')')).add_action(merge)('raw_value')
     between_range = (I('between').hide() + number + I('and') + number).add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (bracket_range | plusminus_range | joined_range | spaced_range | to_range | between_range))('raw_value').add_action(merge)
+    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range | bracket_range | spaced_bracket_range))('raw_value').add_action(merge)
     value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
-    return value + units
-
-
-@memoize
-def value_element_plain():
-    """
-    Returns an element similar to value_element but without any units.
-
-    :returns: An Element to look for values.
-    :rtype: BaseParserElement
-    """
-    fraction = R('^[\+\-–−]?\d+/\d+$') | (R('^[\+\-–−]?\d+$') + R('^/$') + R('^\d+$')).add_action(merge)
-    pure_number = R('^[\+\-–−]?\d+(([\.・,\d])+)?$')
-    number = fraction | pure_number
-    joined_range = R('^[\+\-–−]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
-    spaced_range = (number + R('^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
-    to_range = (number + I('to') + number)('raw_value').add_action(join)
-    plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
-    bracket_range = R(pure_number.pattern[:-1] + '\(\d+\)' + '$')('raw_value')
-    between_range = (I('between').hide() + number + I('and') + number).add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range | bracket_range))('raw_value').add_action(merge)
-    value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
-    value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
+    if units is not None:
+        value = value + units
     return value
 
 
 @memoize
+@deprecated(deprecated_in="2.1", details="Deprecated in favour of calling value_element with no arguments.")
+def value_element_plain():
+    return value_element()
+
+
+# @memoize
 def construct_quantity_re(*models):
     # Handle all the magnitudes
     units_regex = '(('
@@ -114,7 +104,10 @@ def construct_quantity_re(*models):
     units_regex += '('
     units_dict = {}
     for model in models:
-        if hasattr(model, 'dimensions') and model.dimensions.units_dict is not None:
+        if hasattr(model, 'dimensions_to_look_for'):
+            for dimension in model.dimensions_to_look_for:
+                units_dict.update(dimension.units_dict)
+        elif hasattr(model, 'dimensions') and model.dimensions.units_dict is not None:
             units_dict.update(model.dimensions.units_dict)
     if len(units_dict) == 0:
         return None
@@ -122,8 +115,8 @@ def construct_quantity_re(*models):
     units_regex += '(\((?!\d))|(\)|\])|\-|'
     # Handle all the units
     for element, unit in six.iteritems(units_dict):
-        if unit is not None:
-            units_regex += '(' + element.pattern + ')|'
+        # if unit is not None:
+        units_regex += '(' + element.pattern + ')|'
     units_regex += '(\/)'
     # Case when we have powers, or one or more units
     units_regex2 = units_regex + '|([\+\-–−]?\d+(\.\d+)?)'
@@ -186,7 +179,19 @@ def extract_value(string):
         return None
     new_split_by_num = _find_value_strings(string)
     values = []
-    for index, value in enumerate(new_split_by_num):
+    index = 0
+    while index < len(new_split_by_num):
+        value = new_split_by_num[index]
+        if value == '×' and index != len(new_split_by_num) - 1:
+            remaining = new_split_by_num[index + 1:]
+            if remaining[0] == '10':
+                string_power = remaining[1]
+                index += 2
+            elif remaining[0][:2] == '10':
+                string_power = remaining[0][2:]
+                index += 1
+            exponent = 10 ** float(string_power)
+            values[-1] = values[-1] * exponent
         try:
             float_val = float(value)
             values.append(float_val)
@@ -195,6 +200,7 @@ def extract_value(string):
                 values.append(float(Fraction(value)))
             except (ValueError, ZeroDivisionError):
                 pass
+        index += 1
     return values
 
 
@@ -215,27 +221,21 @@ def _find_value_strings(string):
     split_by_num = []
     for elem in split_by_space:
         split_by_num.extend([r for r in re.split(_number_pattern, elem) if r])
-    if split_by_num[0] == "-":
-        split_by_num[0] = "-" + split_by_num.pop(1)
-    flag = 0
-    new_split_by_num = []
+    split_by_num_merge_minus = []
+    merge_next_in = False
     for index, value in enumerate(split_by_num):
-        if flag == 2:
-            new_split_by_num.append(split_by_num[index - 2])
-            new_split_by_num.append(split_by_num[index - 1] + value)
-            flag = 0
-        elif flag == 1 and re.match(_negative_number_pattern, value):
-            new_split_by_num.append(split_by_num[index - 1])
-            new_split_by_num.append(value)
-            flag = 0
-        elif not re.match(_negative_number_pattern, value):
-            flag += 1
+        if value == "-" and (index == 0 or split_by_num[index - 1] == "10"):
+            merge_next_in = True
+        elif merge_next_in:
+            split_by_num_merge_minus.append(split_by_num[index - 1] + value)
+            merge_next_in = False
         else:
-            new_split_by_num.append(value)
+            split_by_num_merge_minus.append(value)
+
     # Merging-back fractions
-    if len(new_split_by_num) == 3 and new_split_by_num[1] == '/':
-        new_split_by_num = [''.join(new_split_by_num)]
-    return new_split_by_num
+    if len(split_by_num_merge_minus) == 3 and split_by_num_merge_minus[1] == '/':
+        split_by_num_merge_minus = [''.join(split_by_num_merge_minus)]
+    return split_by_num_merge_minus
 
 
 def _clean_value_string(string):
@@ -348,7 +348,13 @@ def extract_units(string, dimensions, strict=False):
     if string[0] == '[' and string[-1] == ']':
         string = string[1:-1]
     # Split string at numbers, /s, and brackets, so we have the units tokenized into the right units for later processing stages.
-    split_string = _split(string)
+    try:
+        split_string = _split(string)
+    except IndexError as e:
+        if not strict:
+            return None
+        else:
+            raise TypeError('Failed to successfully split string: ', string)
     # Find the units by matching strings, e.g. K for Kelvin, m for Meter
     unit_types = _find_unit_types(split_string, dimensions)
     # Find the powers associated with each unit
@@ -439,22 +445,35 @@ def _find_unit_types(tokenized_sentence, dimensions):
     units_list = []
     # This is O(m*n), m being the length of the units dictionary, n the number of components of powers.
     for element in tokenized_sentence:
-        # Find the elements first, but don't look for the locations
+        # Find the potential matches for each of the units using the regex supplied by the user in units_dict
+        all_results = []
         found_units = {}
-        # splitting_symbols is used to split the string into the parts pertaining to each element later
-        splitting_symbols = '('
         for unit in units_dict.keys():
-            for result in unit.scan([[element, 'a']]):
-                found_units[result[0].text] = units_dict[unit]
-                splitting_symbols += result[0].text + '|'
+            matches = [res for res in re.finditer(unit.pattern, element)]
+            if matches is not None:
+                for match in matches:
+                    text = match.group(0)
+                    span = match.span()
+                    all_results.append((text, span[0], span[1]))
+                    found_units[text] = units_dict[unit]
         # If none found, then return the original string and that no units were found.
         if len(found_units) == 0:
             units_list.append((None, element, None))
         else:
-            # Split into substrings for each unit
-            splitting_symbols = splitting_symbols[:-1]
-            splitting_symbols += ')'
-            split = [str for str in re.split(splitting_symbols, element) if str != '']
+            # Filter the results to remove any overlapping ranges
+            filtered_results = _remove_subranges(all_results)
+            # Sort the results to make splitting the string into each unit's tokens easier
+            sorted_results = sorted(filtered_results, key=lambda el: el[1])
+            # Split into each unit's token
+            split = []
+            prev_index = 0
+            for result in sorted_results:
+                if prev_index != result[1]:
+                    split.append(element[prev_index: result[1]])
+                split.append(element[result[1]: result[2]])
+                prev_index = result[2]
+            if prev_index < len(element):
+                split.append(element[prev_index: len(element)])
 
             # Iterate through the substrings to find the occurences of the units.
             # Constructs a list of tuples of (Unit, string in which the unit was found, string corresponding to the unit itself)
@@ -476,7 +495,7 @@ def _find_unit_types(tokenized_sentence, dimensions):
                     if found_units[string] == prev_unit:
                         # path 1b
                         units_list[-1] = (prev_unit, units_list[-1][1] + string, units_list[-1][2])
-                    elif prev_unit and re.match(_magnitude_indicators, split[index-1]) and split[index-1] in found_units.keys():
+                    elif prev_unit and re.fullmatch(_magnitude_indicators, split[index - 1]) and split[index - 1] in found_units.keys():
                         # path 1c
                         units_list[-1] = (found_units[string], units_list[-1][1] + string, string)
                     else:
@@ -493,6 +512,19 @@ def _find_unit_types(tokenized_sentence, dimensions):
                     if index == len(split) - 1:
                         units_list[-1] = (units_list[-1][0], units_list[-1][1] + current_string, units_list[-1][2])
     return units_list
+
+
+def _remove_subranges(ranges):
+    should_remove_indices = []
+    for parent_index, parent in enumerate(ranges):
+        parent_range = (parent[1], parent[2])
+        for child_index, child in enumerate(ranges):
+            if child_index != parent_index:
+                child_range = (child[1], child[2])
+                if child_range[0] >= parent_range[0] and child_range[1] <= parent_range[1]:
+                    should_remove_indices.append(child_index)
+    new_ranges = [original_range for index, original_range in enumerate(ranges) if index not in should_remove_indices]
+    return new_ranges
 
 
 def _find_powers(units_list):
@@ -583,8 +615,6 @@ def _find_units(powers_cleaned, dimensions, strict):
     :rtype: chemdataextractor.quantities.Unit
     """
     unassociated_elements = []
-    total_elements = len(powers_cleaned)
-    unassociated_elements = []
     powers = {}
     for power in powers_cleaned:
         original_string = power[1]
@@ -628,4 +658,62 @@ def _find_units(powers_cleaned, dimensions, strict):
             raise TypeError('Parsed with Dimensions ' + str(end_unit.dimensions) + ', expected' + str(dimensions))
     else:
         return end_unit
+
+
+def infer_value(string, instance):
+    """
+    Infer the value expressed in the string. Intended to be used with :class:`~chemdataextractor.model.base.InferredProperty`.
+    If one simply wishes to extract the value from a string, consider using the extract_value function instead.
+
+    :param str string: String representation of the value
+    :param BaseModel instance: The instance for which the value is being inferred.
+    :returns: The value expressed as a list of floats of length 1 if the value had no range,
+        and as a list of floats of length 2 if it was a range.
+    :rtype: list(float)
+    """
+    value = None
+    if string != 'NoValue' and string != '':
+        try:
+            value = extract_value(string)
+        except (TypeError, IndexError) as e:
+            log.debug(e)
+    return value
+
+
+def infer_error(string, instance):
+    """
+    Infer the error expressed in the string. Intended to be used with :class:`~chemdataextractor.model.base.InferredProperty`.
+    If one simply wishes to extract the error from a string, consider using the extract_error function instead.
+
+    :param str string: String representation of the error
+    :param BaseModel instance: The instance for which the error is being inferred.
+    :returns: The error expressed as a float.
+    :rtype: float
+    """
+    error = None
+    if string != 'NoValue':
+        try:
+            error = extract_error(string)
+        except (TypeError, IndexError) as e:
+            log.debug(e)
+    return error
+
+
+def infer_unit(string, instance):
+    """
+    Infer the units expressed in the string. Intended to be used with :class:`~chemdataextractor.model.base.InferredProperty`.
+    If one simply wishes to extract the units from a string, consider using the extract_units function instead.
+
+    :param str string: String representation of the units
+    :param BaseModel instance: The instance for which the units are being inferred.
+    :returns: The string expressed as a Unit
+    :rtype: chemdataextractor.quantities.Unit
+    """
+    units = None
+    try:
+        units = extract_units(string, instance.dimensions)
+    except TypeError as e:
+        log.debug(e)
+    return units
+
 

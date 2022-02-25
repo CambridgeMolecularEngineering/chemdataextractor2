@@ -106,7 +106,7 @@ class BaseSentenceParser(BaseParser):
     impelement the interpret function.
     """
 
-    def parse_sentence(self, tokens):
+    def parse_sentence(self, sentence):
         """
         Parse a sentence. This function is primarily called by the
         :attr:`~chemdataextractor.doc.text.Sentence.records` property of
@@ -119,9 +119,9 @@ class BaseSentenceParser(BaseParser):
         :rtype: Iterator[:class:`chemdataextractor.model.base.BaseModel`]
         """
         if self.trigger_phrase is not None:
-            trigger_phrase_results = [result for result in self.trigger_phrase.scan(tokens)]
+            trigger_phrase_results = [result for result in self.trigger_phrase.scan(sentence.tokens)]
         if self.trigger_phrase is None or trigger_phrase_results:
-            for result in self.root.scan(tokens):
+            for result in self.root.scan(sentence.tokens):
                 for model in self.interpret(*result):
                     yield model
 
@@ -146,8 +146,10 @@ class BaseTableParser(BaseParser):
         :returns: All the models found in the table.
         :rtype: Iterator[:class:`chemdataextractor.model.base.BaseModel`]
         """
-        if self.root is not None:
-            for result in self.root.scan(cell.tagged_tokens):
+        if self.trigger_phrase is not None:
+            trigger_phrase_results = [result for result in self.trigger_phrase.scan(cell.tokens)]
+        if (self.trigger_phrase is None or trigger_phrase_results) and self.root is not None:
+            for result in self.root.scan(cell.tokens):
                 try:
                     for model in self.interpret(*result):
                         yield model

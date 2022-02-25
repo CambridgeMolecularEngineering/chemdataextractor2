@@ -15,32 +15,47 @@ import logging
 import re
 from lxml import etree
 
-from .actions import join, fix_whitespace
+from .actions import join, fix_whitespace, merge
 from .common import roman_numeral, cc, nnp, hyph, nns, nn, cd, ls, optdelim, bcm, icm, rbrct, lbrct, sym, jj, hyphen, quote, \
     dt, delim
 from .base import BaseSentenceParser, BaseTableParser
-from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any, SkipTo
+from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any, SkipTo, Every
 from lxml import etree
 
 log = logging.getLogger(__name__)
 
+
+def not_separator(result):
+    """
+    To make things as simple as possible when parsing Tables, we concatenate the Cell content
+    and the table headings using special characters (we have chosen 🙃 as we don't believe
+    this should ever occur in a paper). This checks whether this is included in the result.
+    """
+    if '🙃' in result[0].text:
+        return False
+    return True
+
+
+icm = icm.with_condition(not_separator)
+bcm = bcm.with_condition(not_separator)
 joining_characters = R('^\@|\/|[-–‐‑‒–—―]$')
 
-alphanumeric = R('^(d-)?(\d{1,2}[A-Za-z]{1,2}[′″‴‶‷⁗]?)(-d)?$')
+# Tagged chemical mentions - One B-CM tag followed by zero or more I-CM tags.
+cm = (bcm + ZeroOrMore((joining_characters + bcm) | icm)).add_action(join)
 
-numeric = R('^\d{1,3}$')
+alphanumeric = Every([R('^(d-)?(\d{1,2}[A-Za-z]{1,2}[′″‴‶‷⁗]?)(-d)?$'), Not(bcm | icm)])
+lenient_alphanumeric = R('^(d-)?(\d{1,2}[A-Za-z]{1,2}[′″‴‶‷⁗]?)(-d)?$')
 
-letter_number = R('^(H\d)?[LSNM]{1,2}\d\d?$')
+numeric = Every([R('^\d{1,3}$'), Not(bcm | icm)])
+lenient_numeric = R('^\d{1,3}$')
+
+letter_number = Every([R('^(H\d)?[LSNM]{1,2}\d\d?$'), Not(bcm | icm)])
+lenient_letter_number = R('^(H\d)?[LSNM]{1,2}\d\d?$')
 
 # Blacklist to truncate chemical mentions where tags continue on incorrectly
 cm_blacklist = (W('in') | I('electrodes') | I('anodes') | I('specimen') | I('and') | W(':') + R('^m\.?p\.?$', re.I) | W(':') + Any() + R('^N\.?M\.?R\.?\(?$', re.I))
 
 exclude_prefix = Start() + (lbrct + roman_numeral + rbrct + Not(hyphen) | (R('^\d{1,3}(\.\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?)?$') + Not(hyphen)) | (I('stage') | I('step') | I('section') | I('part')) + (alphanumeric | numeric | roman_numeral | R('^[A-Z]$')))
-
-# Tagged chemical mentions - One B-CM tag followed by zero or more I-CM tags.
-cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)) | (bcm + ZeroOrMore(Not(cm_blacklist) + icm)).add_action(join)
-# TODO jm2111, edited below due to weird matching ('-100 °C' was matched), however, had to be reversed due to many unittests breaking
-# cm = (exclude_prefix.hide() + OneOrMore(Not(cm_blacklist) + icm)).add_action(join)
 
 
 comma = (W(',') | T(',')).hide()
@@ -57,12 +72,14 @@ to_give = (I('to') + (I('give') | I('yield') | I('afford')) | I('afforded') | I(
 
 label_blacklist = R('^(wR.*|R\d|31P|[12]H|[23]D|15N|14C|[4567890]\d+|2A)$')
 
-prefixed_label = R('^(cis|trans)-((d-)?(\d{1,2}[A-Za-z]{0,2}[′″‴‶‷⁗]?)(-d)?|[LS]\d\d?)$')
+prefixed_label = Every([R('^(cis|trans)-((d-)?(\d{1,2}[A-Za-z]{0,2}[′″‴‶‷⁗]?)(-d)?|[LS]\d\d?)$'), Not(bcm | icm)])
 
 #: Chemical label. Very permissive - must be used in context to avoid false positives.
 strict_chemical_label = Not(label_blacklist) + (alphanumeric | roman_numeral | letter_number | prefixed_label)('labels')
 
-lenient_chemical_label = numeric('labels') | R('^([A-Z]\d{1,3})$')('labels') | strict_chemical_label
+lenient_chemical_label = numeric('labels') | Every([R('^([A-Z]\d{1,3})$'), Not(bcm | icm)])('labels') | strict_chemical_label
+
+very_lenient_chemical_label = lenient_numeric('labels') | R('^([A-Z]\d{1,3})$')('labels') | strict_chemical_label
 
 chemical_label = ((label_type + lenient_chemical_label + ZeroOrMore((T('CC') | comma) + lenient_chemical_label)) | (Optional(label_type.hide()) + strict_chemical_label + ZeroOrMore((T('CC') | comma) + strict_chemical_label)))
 
@@ -73,10 +90,12 @@ chemical_label_phrase2 = (synthesis_of + Optional(label_type) + lenient_chemical
 # Chemical label with to give/afforded etc. before, and some restriction after.
 chemical_label_phrase3 = (to_give + Optional(dt) + Optional(label_type) + lenient_chemical_label + Optional(lbrct + OneOrMore(Not(rbrct) + Any()) + rbrct).hide() + (End() | I('as') | colon | comma).hide())
 
+
 ###### DOPED CHEMICAL LABELS ##########
 doped_chemical_identifier = (W('x') | W('y'))
 doping_value = R('^(\d\.?)+$')
-doping_range = (doping_value + (T('HYPH')|I('to')) + doping_value)
+doping_range = (doping_value + (T('HYPH', tag_type="pos_tag") | I('to')) + doping_value)
+
 
 doping_label_1 = (doping_value + R('^\<$') + doped_chemical_identifier +
                   R('^\<$') + doping_value)
@@ -88,10 +107,11 @@ doping_label_2 = (
 doped_chemical_label = Group((doping_label_1 | doping_label_2)('labels')).add_action(join)
 chemical_label_phrase = Group(doped_chemical_label | chemical_label_phrase1 | chemical_label_phrase2 | chemical_label_phrase3)('chemical_label_phrase')
 
+
 ###### INFORMAL CHEMICAL LABELS ##########
 # Identifiers typically used as informal chemical symbols
 informal_chemical_symbol = (W('AE') | W('T') | W('RE') | (W('R') + Not(lbrct + W('Å') + rbrct)) | W('REM') | W('REO') | W('REY') | W('LREE') | W('HREE') | I('Ln') | R('^B\′?$') | W('M') | W('ET')
-                                | W('IM2py') | W('NN′3') | W('TDAE') | W('X') | I('H2mal') | (W('A') + Not(lbrct + W('Å') + rbrct)))
+                            | W('IM2py') | W('NN′3') | W('TDAE') | W('X') | I('H2mal') | (W('A') + Not(lbrct + W('Å') + rbrct)))
 
 # list of chemical elements or ion symbols by type
 metals = (R('^(Li|Be|Na|Mg|Al|Ca|Sc|Ti|V|Cr|K|Mn|Fe|Co|Ni|Cu|Zn|Ga|Rb|Sr|Y|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|In|Sn|Cs|Ba|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu|Hf|Ta|W|Re|Os|Ir|Pt|Au|Hg|Tl|Pb|Bi|Po|Fr|Ra|Ac|Th|Pa|U|Np|Pu|Am|Cm|Bk|Cf|Es|Fm|Md|No|Lr|Rf|Db|Sg|Bh|Hs|Mt|Ds|Rg|Cn|Uut|Fl|Uup|Lv)$') | R('^metal(s)?$'))
@@ -126,7 +146,7 @@ element_name = R('^(actinium|aluminium|aluminum|americium|antimony|argon|arsenic
 element_symbol = R('^(Ag|Au|Br|Cd|Cl|Cu|Fe|Gd|Ge|Hg|Mg|Pb|Pd|Pt|Ru|Sb|Si|Sn|Ti|Xe|Zn|Zr)$')
 
 #: Registry number patterns
-registry_number = R('^BRN-?\d+$') | R('^CHEMBL-?\d+$') | R('^GSK-?\d{3-7}$') | R('^\[?(([1-9]\d{2,7})|([5-9]\d))-\d\d-\d\]?$')
+registry_number = R('^BRN-?\d+$') | R('^CHEMBL-?\d+$') | R('^GSK-?\d{3-7}$') | R('^\[?(([1-9]\d{2,7})|([5-9]\d))-\d\d-\d\]?$') | (W('CAS') +  OneOrMore(R('^(\-?(\d+)|\-)$'))).add_action(join)
 
 #: Amino acid abbreviations. His removed, too ambiguous
 amino_acid = R('^((Ala|Arg|Asn|Asp|Cys|Glu|Gln|Gly|Ile|Leu|Lys|Met|Phe|Pro|Ser|Thr|Trp|Tyr|Val)-?)+$')
@@ -137,7 +157,7 @@ amino_acid_name = (
 )
 
 #: Chemical formula patterns, updated to include Inorganic compound formulae
-formula = (
+formula = ((
     R('^C\(?\d{1,3}\)?(([HNOP]|Cl)\(?\d\d?\)?)+(\(?\d?[\+\-]\d?\)?)?$') |
     R('^(\(?(A([glmru]|(s\d\.?))|B[ahikr]?|C[adeflmnorsu(\d)]|D[bsy]|E[rsu]|F[elmr$]|G[ade]|H[efgos]|I[rn][1-9]?|K[r(\d\.?)]|(L[airuv])|M[dgnot]|N[abdeip(\d\.?)]|O[s\d.]?|P[abdmotuOr\d]|R[abefghnuE]|S[bcegimnr(\d\.?)]|T[abehil\d]|U(u[opst])|V|Xe|Yb?|Z[nr])(\)?([\d.]+)?)+){2,}(\+[δβγ])?') |
     R('^((\(?\d{2,3}\)?)?(Fe|Ti|Mg|Ru|Cd|Se)\(?(\d\d?|[IV]+)?\)?((O|Hg)\(?\d?\d?\)?)?)+(\(?\d?[\+\-]\d?\)?)?$') |
@@ -147,14 +167,14 @@ formula = (
     R('^[\[\{\(].*(NH\d|H2O|NO\d|C\d?H\d|C–H|NBu4|CF3|CD3|CO2|[bp]i?py|\(CO\)|\d,\d[\'′]?-|BF4|PF6|Cl\d|Fe\d|Ph\d).*[\]\}\)]$') |
     R('^[\[\{\(]{1,2}(Ru|Ph|Py|Cu|Ir|Pt|Et\d).*[\]\}\)]$') |
     R('^(GABA|NO|\(\d\)H|KCl)$')
-)
+) + Optional(W('+') + W('δ'))).add_action(merge)
 
 solvent_formula = (
     W('CCl4') | W('(CH3)2CHOH') | W('(CH3)2CO') | W('(CH3)2NCOH') | W('C2H4Cl2') | W('C2H5CN') | W('C2H5OH') |
     W('C5H5N') | W('C6H12') | W('C6H14') | W('C6H5CH3') | W('C6H5Cl') | W('C6H6') | W('C7H8') | W('CH2Cl2') |
     W('CH2ClCH2Cl') | W('CH3C6H5') | W('CH3Cl') | W('CH3CN') | W('CH3CO2H') | W('CH3COCH3') | W('CH3COOH') |
     W('CH3NHCOH') | W('CH3NO2') | W('CH3OH') | W('CH3Ph') | W('CH3SOCH3') | W('CHCl2') | W('CHCl3') | W('Cl2CH2') |
-    W('ClCH2CH2Cl')
+    W('ClCH2CH2Cl') |  W('CDCl3')
 )
 
 # Over-tokenized variants first, useful for matching in tables with fine tokenizer
@@ -270,9 +290,10 @@ other_solvent = (
 solvent_name_options = (nmr_solvent | solvent_formula | other_solvent)
 solvent_name = (Optional(include_prefix) + solvent_name_options)('names').add_action(join).add_action(fix_whitespace)
 chemical_name_blacklist = (I('mmc'))
-proper_chemical_name_options = Not(chemical_name_blacklist) + (
-    cm | element_name | element_symbol | registry_number | amino_acid | amino_acid_name | formula
-)
+proper_chemical_name_options = Group(Not(chemical_name_blacklist) + (
+    formula ^ cm ^ element_name ^ element_symbol ^ registry_number ^ amino_acid ^ amino_acid_name
+))
+
 
 # Mixtures e.g. 30% mol MnAs + 70% mol ZnGeAs2
 mixture_component = (R('\d+(\.\d+)?') + W('%') + Optional(I('mol')) + proper_chemical_name_options).add_action(join)
@@ -281,28 +302,28 @@ mixture_phrase = (mixture_component + W('+') + mixture_component).add_action(joi
 chemical_name_options = (proper_chemical_name_options | mixture_phrase) + ZeroOrMore(joining_characters + (proper_chemical_name_options | mixture_phrase))
 
 chemical_name = (Optional(include_prefix) + chemical_name_options)('names').add_action(join).add_action(fix_whitespace)
+# chemical_name = cm('names').add_action(fix_whitespace)
 
 # Label phrase structures
 # label_type delim? label delim? chemical_name ZeroOrMore(delim cc label delim? chemical_name)
 
-label_name_cem = (chemical_label + optdelim + chemical_name)('compound')
+likely_abbreviation = (Optional(include_prefix + Optional(hyphen)) + R('^([A-Z]{2,6}(\-[A-Z]{1,6})?|[A-Z](\-[A-Z]{2,6}))$'))('names').add_action(join).add_action(fix_whitespace)
+
+# Lenient name match that should be used with stricter surrounding context
+lenient_name = OneOrMore((bcm | icm | jj | nn | nnp | nns | hyph | cd | ls | W(',')))('names').add_action(join).add_action(fix_whitespace)
+
+label_name_cem = ((lenient_alphanumeric | lenient_numeric | lenient_letter_number)('labels') + optdelim + lenient_name)('compound')
 labelled_as = (R('^labell?ed$') + W('as')).hide()
 optquote = Optional(quote.hide())
 
-label_before_name = Optional(synthesis_of | to_give) + label_type + optdelim + label_name_cem + ZeroOrMore(optdelim + cc + optdelim + label_name_cem)
-
-likely_abbreviation = (Optional(include_prefix + Optional(hyphen)) + R('^([A-Z]{2,6}(\-[A-Z]{1,6})?|[A-Z](\-[A-Z]{2,6}))$'))('names').add_action(join).add_action(fix_whitespace)
-
 name_with_optional_bracketed_label = (Optional(synthesis_of | to_give) + chemical_name + Optional(lbrct + Optional(labelled_as + optquote) + (chemical_label | lenient_chemical_label | likely_abbreviation) + optquote + rbrct))('compound')
 
-# Lenient name match that should be used with stricter surrounding context
-lenient_name = OneOrMore(Not(rbrct) + (bcm | icm | jj | nn | nnp | nns | hyph | cd | ls | W(',')))('names').add_action(join).add_action(fix_whitespace)
-
+label_before_name = Optional(synthesis_of | to_give) + label_type + optdelim + label_name_cem + ZeroOrMore(optdelim + cc + optdelim + label_name_cem)
 # Very lenient name and label match, with format like "name (Compound 3)"
 lenient_name_with_bracketed_label = (Start() + Optional(synthesis_of) + lenient_name + lbrct + label_type.hide() + lenient_chemical_label + rbrct)('compound')
 
 # chemical name with a comma in it that hasn't been tagged.
-name_with_comma_within = Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and')))('names').add_action(join).add_action(fix_whitespace))('compound')
+name_with_comma_within = Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(bcm | icm) + Not(I('and')))('names').add_action(join).add_action(fix_whitespace))('compound')
 
 # Chemical name with a doped label after
 name_with_doped_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + doped_chemical_label)('compound')
@@ -314,7 +335,7 @@ name_with_informal_label = (chemical_name + Optional(R('compounds?')) + OneOrMor
 
 # TODO: Currently ensuring roles are captured from text preceding cem/cem_phrase ... abstract out the 'to_give"
 
-cem = (name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label)
+cem = (label_before_name | name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | name_with_comma_within | name_with_optional_bracketed_label)
 
 cem_phrase = Group(cem)('cem_phrase').add_action(fix_whitespace)
 
@@ -327,12 +348,12 @@ comma_after_name = comma + Optional(labelled_as + optquote) + (chemical_label | 
 compound_heading_ending = (Optional(comma) + ((lbrct + (chemical_label | lenient_chemical_label | lenient_name) + Optional(Optional(comma) + r_equals | of_table) + rbrct) | chemical_label) + Optional(R('^[:;]$')).hide() | comma + (chemical_label | lenient_chemical_label)) + Optional(W('.')) + End()
 
 # Section number, to allow at the start of a heading
-section_no = Optional(I('stage') | I('step') | I('section') | I('part')) + (T('CD') | R('^\d{1,3}(\.\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?)?$') | (Optional(lbrct) + roman_numeral + rbrct))
+section_no = Every([Optional(I('stage') | I('step') | I('section') | I('part')) + (T('CD') | R('^\d{1,3}(\.\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?)?$') | (Optional(lbrct) + roman_numeral + rbrct)), Not(bcm | icm)])
 
 compound_heading_style1 = Start() + Optional(section_no.hide()) + Optional(synthesis_of) + OneOrMore(Not(compound_heading_ending) + (bcm | icm | jj | nn | nnp | nns | hyph | sym | cd | ls | W(',')))('names').add_action(join).add_action(fix_whitespace) + compound_heading_ending + End()
 compound_heading_style2 = chemical_name + Optional(bracketed_after_name)
 compound_heading_style3 = synthesis_of + (lenient_name | chemical_name) + Optional(bracketed_after_name | comma_after_name)  # Possibly redundant?
-compound_heading_style4 = label_type + lenient_chemical_label + ZeroOrMore((T('CC') | comma) + lenient_chemical_label) + (lenient_name | chemical_name) + Optional(bracketed_after_name | comma_after_name)
+compound_heading_style4 = label_type + very_lenient_chemical_label + ZeroOrMore((T('CC') | comma) + lenient_chemical_label) + (lenient_name | chemical_name) + Optional(bracketed_after_name | comma_after_name)
 compound_heading_style5 = informal_chemical_label
 compound_heading_style6 = doped_chemical_label
 # TODO: Capture label type in output
@@ -341,9 +362,9 @@ compound_heading_phrase = Group(compound_heading_style6 | compound_heading_style
 
 names_only = Group((solvent_name | chemical_name
               | likely_abbreviation
-              | (Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(cm) + Not(I('and'))).add_action(join).add_action(fix_whitespace)))))('compound')
+              | (Start() + Group(Optional(synthesis_of) + (cm + W(',') + cm + Not(bcm | icm) + Not(I('and'))).add_action(join).add_action(fix_whitespace)))))('compound')
 
-labels_only = Group((doped_chemical_label | informal_chemical_label | numeric | R('^([A-Z]\d{1,3})$') | strict_chemical_label))('compound')
+labels_only = Group((doped_chemical_label | informal_chemical_label | numeric | Every([R('^([A-Z]\d{1,3})$'), Not(bcm | icm)]) | strict_chemical_label))('compound')
 
 roles_only = Group((label_type | synthesis_of | to_give))('compound')
 

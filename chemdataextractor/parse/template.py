@@ -15,11 +15,12 @@ from ..nlp.tokenize import ChemWordTokenizer, ChemSentenceTokenizer
 from .actions import merge, join, fix_whitespace, flatten
 from .base import BaseSentenceParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, End
-from .auto import construct_unit_element, match_dimensions_of, value_element, value_element_plain, BaseAutoParser, construct_category_element
+from .auto import construct_unit_element, match_dimensions_of, value_element, BaseAutoParser, construct_category_element
 import six
 log = logging.getLogger(__name__)
 
 delim = R('^[:;\.,]$')
+
 
 class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     """Template parser for QuantityModel-type structures
@@ -39,7 +40,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     def value_phrase(self):
         """Value and units"""
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
-            return value_element_plain()
+            return value_element()
         elif hasattr(self.model, 'category') and self.model.category:
             return self.model.category.parse_expression('category')
 
@@ -230,17 +231,17 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     def value_with_optional_unit(self):
         """Value possibly followed by a unit"""
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
-            return value_element_plain()
+            return value_element()
         elif hasattr(self.model, 'category') and self.model.category:
             return self.model.category.parse_expression('category')
-        value = value_element_plain()
+        value = value_element()
         return Group(value + Optional(self.unit))
 
     @property
     def value_phrase(self):
         """Value with unit"""
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
-            return value_element_plain()
+            return value_element()
         elif hasattr(self.model, 'category') and self.model.category:
             return self.model.category.parse_expression('category')
         return value_element(self.unit)

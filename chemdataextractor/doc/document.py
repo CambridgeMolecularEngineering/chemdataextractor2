@@ -15,11 +15,12 @@ import collections
 import io
 import json
 import logging
+import copy
 
 import six
 
 from ..utils import python_2_unicode_compatible
-from .text import Paragraph, Citation, Footnote, Heading, Title, Caption
+from .text import Paragraph, Citation, Footnote, Heading, Title, Caption, RichToken
 from .element import CaptionedElement
 from .table import Table
 from .figure import Figure
@@ -85,7 +86,6 @@ class Document(BaseDocument):
                 encoding = get_encoding(element)
                 log.warning('Guessed bytestring encoding as %s. Use unicode strings to avoid this warning.', encoding)
                 element = Paragraph(element.decode(encoding))
-            # print(type(element))
             element.document = self
             self._elements.append(element)
         if 'config' in kwargs.keys():
@@ -283,7 +283,7 @@ class Document(BaseDocument):
                     if isinstance(el, Paragraph) and record.labels:
                         last_id_record = record
                     # # Keep track of the most recent compound 'product' record
-                    if 'product' in record.roles:
+                    if record.roles and 'product' in record.roles:
                         last_product_record = record
 
                     # Heading records with compound ID's
@@ -353,10 +353,11 @@ class Document(BaseDocument):
                     if entity == 'CM':
                         name = ' '.join(long_)
                         abbrev = ' '.join(short)
-                        if name in compound.names and abbrev not in compound.names:
-                            compound.names.add(abbrev)
-                        if abbrev in compound.names and name not in compound.names:
-                            compound.names.add(name)
+                        if compound.names:
+                            if name in compound.names and abbrev not in compound.names:
+                                compound.names.add(abbrev)
+                            if abbrev in compound.names and name not in compound.names:
+                                compound.names.add(name)
 
         # Merge Compound records with any shared name/label
         len_l = len(records)
@@ -379,15 +380,29 @@ class Document(BaseDocument):
                     other_r_compound = other_r.compound
                 if r_compound and other_r_compound:
                     # Strip whitespace and lowercase to compare names
-                    rnames_std = {''.join(n.split()).lower() for n in r_compound.names}
-                    onames_std = {''.join(n.split()).lower() for n in other_r_compound.names}
+                    r_names = r_compound.names
+                    if r_names is None:
+                        r_names = []
+
+                    other_r_names = other_r_compound.names
+                    if other_r_names is None:
+                        other_r_names = []
+
+                    rnames_std = {''.join(n.split()).lower() for n in r_names}
+                    onames_std = {''.join(n.split()).lower() for n in other_r_names}
 
                     # Clashing labels, don't merge
-                    if len(r_compound.labels - other_r_compound.labels) > 0 and len(other_r_compound.labels - r_compound.labels) > 0:
+                    if (r_compound.labels is not None and
+                        other_r_compound.labels is not None and
+                        len(r_compound.labels - other_r_compound.labels) > 0 and len(other_r_compound.labels - r_compound.labels) > 0):
                         j += 1
                         continue
 
-                    if any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels):
+                    if (r_compound.labels is not None and
+                        other_r_compound.labels is not None and
+                        rnames_std is not None and
+                        onames_std is not None and
+                        (any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels))):
                         r_compound.merge(other_r_compound)
                         other_r_compound.merge(r_compound)
                         if isinstance(r, Compound) and isinstance(other_r, Compound):
@@ -584,4 +599,33 @@ class Document(BaseDocument):
             html_lines.append(element._repr_html_())
         html_lines.append('</div>')
         return '\n'.join(html_lines)
+
+    def _batch_assign_tags(self, tagger, tag_type):
+        """
+        Batch assign all the tags for a certain tag type.
+        This is called by the :class:`Sentence` class when it encounters
+        a token without tags of a given tag type, and the tagger for that
+        tag type implements the `batch_tag` method.
+
+        See :ref:`this guide<creating_taggers>` for more details.
+        """
+        elements = copy.copy(self.elements)
+
+        all_tokens = []
+        for element in elements:
+            if element.elements is not None:
+                elements.extend(element.elements)
+            if hasattr(element, "tokens") and tagger in element.taggers:
+                if len(element.tokens) and isinstance(element.tokens[0], RichToken) and tag_type not in element.tokens[0]._tags.keys():
+                    all_tokens.append(element.tokens)
+
+        if hasattr(tagger, "batch_tag_for_type"):
+            tag_results = tagger.batch_tag_for_type(all_tokens, tag_type)
+        else:
+            tag_results = tagger.batch_tag(all_tokens)
+
+        for tag_result in tag_results:
+            for token, tag in tag_result:
+                token._tags[tag_type] = tag
+
 
