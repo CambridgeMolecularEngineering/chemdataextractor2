@@ -38,6 +38,8 @@ Where we measured took the performance on the CHEMDNER dataset to be representat
 
 However, if you've written any parse rules, this new tokenization will require some changes to your parser. These will mostly come in very predictable ways that we detail below, as we found when porting over our own code. In fact, even for all of the built-in parsers included in ChemDataExtractor, it only took a few days of work by one person to make these parsers pass all of the extensive tests included in ChemDataExtractor. We've included some tips for how to adjust your parse rules to take advantage of the new NER and tokenization rules, but if you're not ready to spend the time doing that yet, you can revert to the previous NER and tokenization behavior as shown in the `Maintaining Backwards Compatibility for Parsers`_ section.
 
+If you have overridden the `parse_sentence` method, you will want to adjust it to take as its input a `Sentence` object instead of a list of tokens. To preserve previous behaviour, the quickest thing to do would be to just take the sentence's tokens with something along the lines of `tokens = sentence.tokens`.
+
 Migrating Parse Rules
 ---------------------
 

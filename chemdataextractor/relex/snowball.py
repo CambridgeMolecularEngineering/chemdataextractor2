@@ -488,14 +488,15 @@ class Snowball(BaseSentenceParser):
         return
 
     #: Override from BaseSentenceParser
-    def parse_sentence(self, tokens):
+    def parse_sentence(self, sentence):
         """Parse a Sentence object probabilistically using the Snowball Method
 
         Arguments:
-            tokens -- The tokens to parse
+            sentence -- The sentence
         Returns:
             The matching records
         """
+        tokens = sentence.tokens
         # print("\n\nParsing sentece", ' '.join([t[0] for t in tokens]))
         # Use the default tagger to find candidate relationships
         candidate_relations = self.candidates(tokens)

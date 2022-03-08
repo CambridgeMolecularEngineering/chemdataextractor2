@@ -92,7 +92,7 @@ class TestSnowball(unittest.TestCase):
 
         test_sentence = Sentence('The Curie temperature for MnO is 120 K')
         models = []
-        for model in sb.parse_sentence(test_sentence.tokens):
+        for model in sb.parse_sentence(test_sentence):
             models.append(model.serialize())
         expected = [{'CurieTemperature': {'compound': {'Compound': {'names': ['MnO']}},
                         'confidence': 0.7333333333333333,
@@ -111,7 +111,7 @@ class TestSnowball(unittest.TestCase):
         nested_snowball.update(s1.raw_tokens, c)
 
         models = []
-        for model in nested_snowball.parse_sentence(s2.tokens):
+        for model in nested_snowball.parse_sentence(s2):
             models.append(model.serialize())
         expected = [{'BandGap': {'compound': {'Compound': {'names': ['MnO']}},
               'confidence': 0.9555555555555555,
