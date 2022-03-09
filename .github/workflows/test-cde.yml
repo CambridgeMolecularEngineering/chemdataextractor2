@@ -1,0 +1,36 @@
+name: CDE tests
+
+on: [push]
+
+jobs:
+  python_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.6', '3.8' ]
+    name: Test on Python ${{ matrix.python-version }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set up Selenium
+      run: |
+        wget https://github.com/mozilla/geckodriver/releases/download/v0.11.1/geckodriver-v0.11.1-linux64.tar.gz
+        mkdir geckodriver
+        tar -xzf geckodriver-v0.11.1-linux64.tar.gz -C geckodriver
+        export PATH=$PATH:$PWD/geckodriver
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install nbsphinx==0.3.5 nbsphinx-link m2r ipython ipykernel sphinx-rtd-theme
+        pip install future==0.17.1
+        pip install unittest2==1.1.0
+        pip install playsound
+        pip install -r requirements/development.txt
+        pip install .
+        cde data download
+    - name: Running tests
+      run: |
+        pytest -W ignore::DeprecationWarning

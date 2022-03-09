@@ -41,9 +41,11 @@ class Compound(BaseModel):
         """Merge data from another Compound into this Compound."""
         log.debug('Merging: %s and %s' % (self.serialize(), other.serialize()))
         for k in self.keys():
-            for new_item in other[k]:
-                if new_item not in self[k]:
-                    self[k].add(new_item)
+            if other[k] is not None:
+                if self[k] is not None:
+                    for new_item in other[k]:
+                        if new_item not in self[k]:
+                            self[k].add(new_item)
         log.debug('Result: %s' % self.serialize())
         return self
 

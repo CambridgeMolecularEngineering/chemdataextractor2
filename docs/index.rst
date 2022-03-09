@@ -26,10 +26,10 @@ Features:
    getting_started
    examples
    code_documentation
-   migration_guide
+   migration_guides/index
    changelog
    license
-
+   internal
 
 
 Indices and tables

@@ -31,9 +31,9 @@ class TestParseCem(unittest.TestCase):
     def do_parse(self, input, expected):
         s = Sentence(input)
         log.debug(s)
-        log.debug(s.tagged_tokens)
+        log.debug(s.tokens)
         results = []
-        for i, r in enumerate(cem_phrase.scan(s.tagged_tokens)):
+        for i, r in enumerate(cem_phrase.scan(s.tokens)):
             log.debug(etree.tostring(r[0], pretty_print=True, encoding='unicode'))
             results.append(etree.tostring(r[0], encoding='unicode'))
         self.assertEqual(expected, results)
@@ -48,13 +48,13 @@ class TestParseCem(unittest.TestCase):
 
     def test_without_tags(self):
         """Test on input where the CEM tagger has missed some obvious chemical entities."""
-        tagged_tokens = [(u'A', u'DT'), (u'sample', u'NN'), (u'of', u'IN'), (u'aspartic', u'NN'), (u'acid', u'NN'), (u'with', u'IN'), (u'Ala-Arg-Val', u'NN'), (u'.', u'.')]
+        tokens = [(u'A', u'DT'), (u'sample', u'NN'), (u'of', u'IN'), (u'aspartic', u'NN'), (u'acid', u'NN'), (u'with', u'IN'), (u'Ala-Arg-Val', u'NN'), (u'.', u'.')]
         expected = [
             '<cem_phrase><compound><names>aspartic acid</names></compound></cem_phrase>',
             '<cem_phrase><compound><names>Ala-Arg-Val</names></compound></cem_phrase>'
         ]
         results = []
-        for i, r in enumerate(cem_phrase.scan(tagged_tokens)):
+        for i, r in enumerate(cem_phrase.scan(tokens)):
             log.debug(etree.tostring(r[0], pretty_print=True, encoding='unicode'))
             results.append(etree.tostring(r[0], encoding='unicode'))
         self.assertEqual(expected, results)
@@ -95,13 +95,12 @@ class TestParseCem(unittest.TestCase):
     #     self.do_parse(s, expected)
 
     def test_incorrect_nmr_tagged(self):
-        s = '1-Bromo-2,4-dichloro-3-(methylthio)benzene: 1H NMR (CDCl3): δ 7.52 (d, 1H), 7.25 (d, 1H), 2.46 (s, 3H).'  # TODO: Technically 3H should be tagged also?
+        s = '1-Bromo-2,4-dichloro-3-(methylthio)benzene: 1H NMR (CDCl3): δ 7.52 (d, 1H), 7.25 (d, 1H), 2.46 (s, 3H).'
         expected = [
             '<cem_phrase><compound><names>1-Bromo-2,4-dichloro-3-(methylthio)benzene</names></compound></cem_phrase>',
             '<cem_phrase><compound><names>1H</names></compound></cem_phrase>',
             '<cem_phrase><compound><names>CDCl3</names></compound></cem_phrase>',
-            '<cem_phrase><compound><names>1H</names></compound></cem_phrase>',
-            '<cem_phrase><compound><names>1H</names></compound></cem_phrase>'
+            '<cem_phrase><compound><names>3H</names></compound></cem_phrase>',
         ]
         self.do_parse(s, expected)
 
@@ -121,7 +120,7 @@ class TestParseCem(unittest.TestCase):
             '<cem_phrase><compound><names>CHCl3</names></compound></cem_phrase>',
             '<cem_phrase><compound><names>toluene</names></compound></cem_phrase>',
             '<cem_phrase><compound><names>ethanol</names></compound></cem_phrase>',
-            '<cem_phrase><compound><names>H2O / CrEl</names></compound></cem_phrase>',
+            '<cem_phrase><compound><names>H2O/CrEl</names></compound></cem_phrase>',
         ]
         self.do_parse(s, expected)
 
@@ -182,12 +181,12 @@ class TestParseCem(unittest.TestCase):
 
     def test_inorganic_chemical_formula_3(self):
         s = 'La1+xSrxMnO3'
-        expected = ['<cem_phrase><compound><names>La1+xSrxMnO3</names></compound></cem_phrase>']
+        expected = ['<cem_phrase><compound><names>La1 + xSrxMnO3</names></compound></cem_phrase>']
         self.do_parse(s, expected)
 
     def test_inorganic_chemical_formula_4(self):
         s = '(La,Sr)MnO3'
-        expected = ['<cem_phrase><compound><names>(La,Sr)MnO3</names></compound></cem_phrase>']
+        expected = ['<cem_phrase><compound><names>(La, Sr)MnO3</names></compound></cem_phrase>']
         self.do_parse(s, expected)
 
     def test_inorganic_chemical_formula_5(self):
@@ -196,19 +195,17 @@ class TestParseCem(unittest.TestCase):
         self.do_parse(s, expected)
 
 
-
-
 class TestParseCemHeading(unittest.TestCase):
 
     maxDiff = None
 
     def do_parse(self, input, expected):
         s = Sentence(input)
-        s.models=[Compound]
+        s.models = [Compound]
         log.debug(s)
-        log.debug(s.tagged_tokens)
+        log.debug(s.tokens)
         results = []
-        for i, r in enumerate(compound_heading_phrase.scan(s.tagged_tokens)):
+        for i, r in enumerate(compound_heading_phrase.scan(s.tokens)):
             log.debug(etree.tostring(r[0], pretty_print=True, encoding='unicode'))
             results.append(etree.tostring(r[0], encoding='unicode'))
         self.assertEqual(expected, results)
@@ -236,7 +233,7 @@ class TestParseCemHeading(unittest.TestCase):
 
     def test_example_name(self):
         s = 'EXAMPLE 436 N-tert-Butyl-3-[6′-methyl-4′-(4-trifluoromethoxy-phenyl)-[2,2′]bipyridinyl-6-yl]-benzenesulfonamide'
-        expected = ['<compound><roles>EXAMPLE</roles><labels>436</labels><names>N-tert-Butyl-3-[6\u2032-methyl-4\u2032-(4-trifluoromethoxy-phenyl)-[2,2\u2032]bipyridinyl-6-yl]-benzenesulfonamide</names></compound>']
+        expected = ['<compound><roles>EXAMPLE</roles><labels>436</labels><names>N-tert-Butyl-3-[6 \u2032-methyl-4 \u2032-(4-trifluoromethoxy-phenyl)-[2,2 \u2032]bipyridinyl-6-yl]-benzenesulfonamide</names></compound>']
         self.do_parse(s, expected)
 
     def test_label_list(self):
@@ -258,7 +255,7 @@ class TestParseHeading(unittest.TestCase):
         s = Heading(input)
         s.models = [Compound]
         log.debug(s)
-        log.debug(s.tagged_tokens)
+        log.debug(s.tokens)
         results = [r.serialize() for r in s.records]
         log.debug(results)
         log.debug(expected)
@@ -347,12 +344,12 @@ class TestParseHeading(unittest.TestCase):
     def test_label_14(self):
         """"""
         s = '1-(3,4-Dibenzyloxycinnamoyl)-3,4′-dibenzyloxyresveratrol (14):'
-        expected = [{'Compound': {'labels': [u'14'], 'names': [u'1-(3,4-Dibenzyloxycinnamoyl)-3,4\u2032-dibenzyloxyresveratrol']}}]
+        expected = [{'Compound': {'labels': [u'14'], 'names': [u'1-(3,4-Dibenzyloxycinnamoyl)-3,4 \u2032-dibenzyloxyresveratrol']}}]
         self.do_parse(s, expected)
 
     def test_section_decimal(self):
         """"""
-        s = '3.2 [3-(2-p-Tolylimidazo[1,2-a]pyridin-6-yl)phenyl]methanol'
+        s = '3.2: [3-(2-p-Tolylimidazo[1,2-a]pyridin-6-yl)phenyl]methanol'
         expected = [{'Compound': {'names': [u'[3-(2-p-Tolylimidazo[1,2-a]pyridin-6-yl)phenyl]methanol']}}]
         self.do_parse(s, expected)
 
@@ -378,9 +375,9 @@ class TestParseLabelPhrase(unittest.TestCase):
         s = Sentence(input)
         s.models = [Compound]
         log.debug(s)
-        log.debug(s.tagged_tokens)
+        log.debug(s.tokens)
         results = []
-        for i, r in enumerate(chemical_label_phrase.scan(s.tagged_tokens)):
+        for i, r in enumerate(chemical_label_phrase.scan(s.tokens)):
             log.debug(etree.tostring(r[0], pretty_print=True, encoding='unicode'))
             results.append(etree.tostring(r[0], encoding='unicode'))
         self.assertEqual(expected, results)
@@ -467,7 +464,7 @@ class TestParseDocument(unittest.TestCase):
         print(results)
         self.assertCountEqual(results, [
             {'MeltingPoint': {'units': u'Celsius^(1.0)', 'value': [70.0, 75.0], 'raw_value': '70-75',
-                              'raw_units': '\xb0C.',
+                              'raw_units': '\xb0C',
                               'compound': {'Compound': {'labels': [u'VII'], 'roles': ['formula']}}}},
             {'Compound': {'names': [u'5-Bromo-6-pentadecyl-2-hydroxybenzoic acid', u'DBAA'], 'roles': ['product']}},
             {'Compound': {'labels': [u'VII'], 'roles': [u'formula']}}

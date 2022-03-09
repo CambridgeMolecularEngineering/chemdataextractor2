@@ -40,7 +40,7 @@ class TestDictionaryTagger(unittest.TestCase):
              ('Washington', 'B-CM'),
              (',', 'I-CM'),
              ('D.C.', 'I-CM')],
-            dt.tag(['The', 'Washington', 'Monument', 'is', 'the', 'most', 'prominent', 'structure', 'in', 'Washington', ',', 'D.C.'])
+            dt.legacy_tag(['The', 'Washington', 'Monument', 'is', 'the', 'most', 'prominent', 'structure', 'in', 'Washington', ',', 'D.C.'])
         )
 
     def test_dictionary_simple2(self):
@@ -59,7 +59,7 @@ class TestDictionaryTagger(unittest.TestCase):
              ('Washington', 'B-CM'),
              (',', 'I-CM'),
              ('D.C.', 'I-CM')],
-            dt.tag(['The', 'Washington', 'Monument', 'is', 'the', 'most', 'prominent', 'structure', 'in', 'Washington', ',', 'D.C.'])
+            dt.legacy_tag(['The', 'Washington', 'Monument', 'is', 'the', 'most', 'prominent', 'structure', 'in', 'Washington', ',', 'D.C.'])
         )
 
     def test_dictionary_simple3(self):
@@ -78,7 +78,7 @@ class TestDictionaryTagger(unittest.TestCase):
              ('Washington', 'B-CM'),
              (',', None),
              ('D.C.', None)],
-            dt.tag(['The', 'Washington', 'Monument', 'is', 'the', 'most', 'prominent', 'structure', 'in', 'Washington', ',', 'D.C.'])
+            dt.legacy_tag(['The', 'Washington', 'Monument', 'is', 'the', 'most', 'prominent', 'structure', 'in', 'Washington', ',', 'D.C.'])
         )
 
     def test_dictionary_simple4(self):
@@ -97,7 +97,7 @@ class TestDictionaryTagger(unittest.TestCase):
              ('Washington', 'B-CM'),
              (',', None),
              ('D.C.', None)],
-            dt.tag(['The', 'Washington', 'Monument', 'is', 'the', 'most', 'prominent', 'structure', 'in', 'Washington', ',', 'D.C.'])
+            dt.legacy_tag(['The', 'Washington', 'Monument', 'is', 'the', 'most', 'prominent', 'structure', 'in', 'Washington', ',', 'D.C.'])
         )
 
 

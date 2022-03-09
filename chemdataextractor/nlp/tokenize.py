@@ -9,14 +9,18 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
+from deprecation import deprecated
 import logging
 import re
 
 import six
 
 from ..text import bracket_level, GREEK
-from ..data import load_model
+from ..data import load_model, find_data
 
+from lxml import etree
+
+from tokenizers import BertWordPieceTokenizer
 
 log = logging.getLogger(__name__)
 
@@ -29,14 +33,13 @@ class BaseTokenizer(six.with_metaclass(ABCMeta)):
 
     """
 
+    @deprecated(deprecated_in="2.0", details="Deprecated in favour of looking at the tokens from the Sentence object.")
     def tokenize(self, s):
         """Return a list of token strings from the given sentence.
 
         :param string s: The sentence string to tokenize.
         :rtype: iter(str)
         """
-        log.debug('BaseTokenizer.tokenize is deprecated as of May 2019')
-        print('BaseTokenizer.tokenize is deprecated as of May 2019')
         return [s[start:end] for start, end in self.span_tokenize(s)]
 
     @abstractmethod
@@ -47,23 +50,6 @@ class BaseTokenizer(six.with_metaclass(ABCMeta)):
         :rtype: iter(tuple(int, int))
         """
         return
-
-    # def tokenize_sents(self, strings):
-    #     """Apply the ``tokenize`` method to each sentence in ``strings``.
-
-    #     :param list(str) sentences: A list of sentence strings to tokenize.
-    #     :rtype: iter(iter(str))
-    #     """
-    #     return [self.tokenize(s) for s in strings]
-
-    # def span_tokenize_sents(self, strings):
-    #     """Apply the ``span_tokenize`` method to each sentence in ``strings``.
-
-    #     :param list(str) sentences: A list of sentence strings to tokenize.
-    #     :rtype: iter(iter(tuple(int, int)))
-    #     """
-    #     for s in strings:
-    #         yield list(self.span_tokenize(s))
 
 
 def regex_span_tokenize(s, regex):
@@ -327,6 +313,18 @@ class WordTokenizer(BaseTokenizer):
         return sentence._tokens_for_spans(self.span_tokenize(sentence.text, additional_regex))
 
     def get_additional_regex(self, sentence):
+        """
+        Any additional regex to further split the tokens. These regular expressions may be supplied by
+        the sentence contexually and on the fly. For example, a sentence may have certain models
+        associated with it and dimensions associated with these models. These dimensions can
+        inform the tokenizer what to do with high confidence; for example, if given a string like
+        "12K", then if a temperature is desired, then the tokenizer will automatically split this
+        given the information provided.
+
+        :param chemdataextractor.doc.text.Sentence sentence: The sentence for which to get additional regex
+        :returns: Expression to further split the tokens
+        :rtype: re.expression
+        """
         return None
 
     def handle_additional_regex(self, s, span, nextspan, additional_regex):
@@ -937,3 +935,72 @@ class FineWordTokenizer(WordTokenizer):
 
         # Perform all normal WordTokenizer splits
         return super(FineWordTokenizer, self)._subspan(s, span, nextspan, additional_regex)
+
+
+class BertWordTokenizer(ChemWordTokenizer):
+    """
+    A word tokenizer for BERT with some additional allowances in case one wants to override its choices.
+    Concrete overrides that are used in CDE include not splitting if it seems like a decimal point is in the
+    middle of a number, and splitting values and units.
+    """
+
+    do_not_split = []
+    do_not_split_if_in_num = [".", ","]
+
+    def __init__(self, split_last_stop=True, path=None, lowercase=True):
+        super().__init__(split_last_stop)
+        if path is None:
+            path = find_data('models/scibert_uncased_vocab-1.0.txt')
+        self.tokenizer = BertWordPieceTokenizer(path, lowercase=lowercase)
+
+    def span_tokenize(self, s, additional_regex=None):
+        output = self.tokenizer.encode(str(s))
+        offsets = output.offsets[1: -1]
+        given_tokens = output.tokens[1: -1]
+        current_span = (0, 0)
+        spans = []
+        i = 0
+        zipped = [el for el in zip(offsets, given_tokens)]
+
+        while i < len(zipped):
+            offset, token = zipped[i]
+
+            # If symbol is in do_not_split and it's part of a word, i.e. it's not surrounded
+            # by whitespace, then don't split it
+            if (s[offset[0]: offset[1]] in self.do_not_split_if_in_num and offset[0] == current_span[1]
+               and i < len(zipped) - 1 and zipped[i + 1][0][0] == offset[1]
+               and re.match("\d+$", s[zipped[i + 1][0][0]: zipped[i + 1][0][1]])):
+                i += 1
+                offset, token = zipped[i]
+                current_span = (current_span[0], offset[1])
+            # If symbol is in do_not_split and it's part of a word, i.e. it's not surrounded
+            # by whitespace, then don't split it
+            elif (s[offset[0]: offset[1]] in self.do_not_split and offset[0] == current_span[1]
+               and i < len(zipped) - 1 and zipped[i + 1][0][0] == offset[1]):
+                i += 1
+                offset, token = zipped[i]
+                current_span = (current_span[0], offset[1])
+            # If the token is a subword, as defined by BERT, then merge it with the previous token
+            elif len(token) > 2 and token[:2] == "##":
+                current_span = (current_span[0], offset[1])
+            # Otherwise, split it
+            else:
+                if current_span != (0, 0):
+                    spans.append(current_span)
+                current_span = offset
+            i += 1
+
+        spans.append(current_span)
+
+        # Perform additional tokenisation as required by the additional regex
+        if additional_regex is not None:
+            i = 0
+            while i < len(spans):
+                subspans = self.handle_additional_regex(s, spans[i], spans[i + 1] if i + 1 < len(spans) else None, additional_regex)
+                if subspans is None:
+                    subspans = [spans[i]]
+                spans[i:i + 1] = [subspan for subspan in subspans if subspan[1] - subspan[0] > 0]
+                if len(subspans) == 1:
+                    i += 1
+
+        return spans

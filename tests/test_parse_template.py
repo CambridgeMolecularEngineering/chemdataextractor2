@@ -23,7 +23,7 @@ class TestQuantityModelTemplate(unittest.TestCase):
         parser = QuantityModelTemplateParser()
         parser.model = model
         result = etree.tostring(
-            [i for i in getattr(parser, element, None).scan(sentence.tagged_tokens)][0][0])
+            [i for i in getattr(parser, element, None).scan(sentence.tokens)][0][0])
         return result
 
     def interpet(self, s):
@@ -76,7 +76,7 @@ class TestMultiQuantityTemplate(unittest.TestCase):
         parser = MultiQuantityModelTemplateParser()
         parser.model = model
         result = etree.tostring(
-            [i for i in getattr(parser, element, None).scan(sentence.tagged_tokens)][0][0])
+            [i for i in getattr(parser, element, None).scan(sentence.tokens)][0][0])
         return result
 
     def interpret(self, sentence):

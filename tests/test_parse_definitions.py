@@ -39,8 +39,8 @@ class TestParseDefinitions(unittest.TestCase):
     def do_parse(self, phrase, input, expected):
         s = Sentence(input)
         log.debug(s)
-        log.debug(s.tagged_tokens)
-        result = next(phrase.scan(s.tagged_tokens))[0]
+        log.debug(s.tokens)
+        result = next(phrase.scan(s.tokens))[0]
         log.debug(etree.tostring(result, pretty_print=True, encoding='unicode'))
         self.assertEqual(expected, etree.tostring(result, encoding='unicode'))
 

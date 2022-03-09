@@ -22,9 +22,18 @@ from .markup import XmlReader
 from lxml import etree
 import re
 
+def remove_if_reference(el):
+    text = el.text
+    check_regex = re.compile('\[\d')
+    if check_regex.match(text):
+        return None
+    return el
+
 # XML stripper that removes the tags around numbers in chemical formulas
 strip_els_xml = Cleaner(strip_xpath='.//ce:inf | .//ce:italic | .//ce:bold | .//ce:formula | .//mml:* | .//ce:sup | .//ce:table//ce:sup',
-                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:cross-ref | .//ce:cross-refs | .//ce:note-para')
+                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:note-para',
+                        process_xpaths={'.//ce:cross-ref//ce:sup | .//ce:cross-ref | .//ce:cross-refs':
+                                        remove_if_reference})
 
 def fix_elsevier_xml_whitespace(document):
     """ Fix tricky xml tags"""
@@ -133,7 +142,7 @@ class ElsevierXmlReader(XmlReader):
     metadata_doi_css = 'xocs|doi, xocs|eii'
     metadata_pii_css = 'xocs|pii-unformatted'
 
-    
+
     ignore_css = 'ce|bibliography, ce|acknowledgment, ce|correspondence, ce|author, ce|doi, ja|jid, ja|aid, ce|pii, xocs|oa-sponsor-type, xocs|open-access, default|openaccess,'\
                  'default|openaccessArticle, dc|format, dc|creator, dc|identifier,'\
                  'default|eid, default|pii, xocs|meta, xocs|ref-info, default|scopus-eid,'\
@@ -156,7 +165,7 @@ class ElsevierXmlReader(XmlReader):
         if b'xmlns="http://www.elsevier.com/xml/svapi/article/dtd"' in fstring:
             return True
         return False
-    
+
     def _parse_metadata(self, el, refs, specials):
         title = self._css(self.metadata_title_css, el)
         authors = self._css(self.metadata_author_css,el)
@@ -190,7 +199,7 @@ class ElsevierXmlReader(XmlReader):
                 }
         meta = MetaData(metadata)
         return [meta]
-    
+
     def _parse_table_rows(self, els, refs, specials):
         hdict = {}
         for row, tr in enumerate(els):
@@ -219,7 +228,7 @@ class ElsevierXmlReader(XmlReader):
             r.extend([Cell('')] * (len(max(rows, key=len)) - len(r)))
         rows = [r for r in rows if any(r)]
         return rows
-    
+
     def _parse_figure_links(self, el):
         """Parse awkward elsevier figure links
         """

@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 from __future__ import division
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
+from deprecation import deprecated
 import io
 import logging
 import pickle
@@ -26,24 +27,84 @@ from .lexicon import Lexicon
 log = logging.getLogger(__name__)
 
 
-class BaseTagger(six.with_metaclass(ABCMeta)):
-    """Abstract tagger class from which all taggers inherit.
+POS_TAG_TYPE = "pos_tag"
+NER_TAG_TYPE = "ner_tag"
 
-    Subclasses must implement a ``tag()`` method.
+
+class BaseTagger(six.with_metaclass(ABCMeta)):
+    """
+    Abstract tagger class from which all taggers inherit.
+
+    Subclasses must implement at least one of the following sets of methods for tagging:
+
+    - ``legacy_tag()``
+    - ``tag()``
+    - ``batch_tag()``
+    - ``can_tag()`` and ``tag_for_type()``
+    - ``can_tag()`` and ``can_batch_tag()`` and ``batch_tag_for_type()``
+
+    The above interface is called when required by classes including :class:`~chemdataextractor.doc.text.Sentence` or
+    :class:`~chemdataextractor.doc.document.Document`, depending on whether only the tag for a sentence is required or
+    for the whole document.
+
+    If the user has implemented more than one of the combinations above, the order of presedence for the
+    tagging methods is as follows:
+
+    - ``batch_tag_for_type()``
+    - ``tag_for_type()``
+    - ``batch_tag()``
+    - ``tag()``
+    - ``legacy_tag()``
+
+    Most users should not have to implement the top two options, and the default impelementations are discussed in the
+    documentation for :class:`~chemdataextractor.nlp.tag.EnsembleTagger` instead of here.
+
+    An implementation of the other tagging methods should have the following signatures and
+    should be implemented in the following cases:
+
+    - **tag(self, list(** :class:`~chemdataextractor.doc.text.RichToken` **) tokens) -> list(** :class:`~chemdataextractor.doc.text.RichToken` **, obj)**
+      Take a list of all the tokens from an element, and return a list of (token, tag) pairs.
+      This should be the default implementation for any new tagger. More information on how to create a new tagger can be found at
+      :ref:`in this guide<creating_taggers>`.
+
+    - **batch_tag(self, list(list(** :class:`~chemdataextractor.doc.text.RichToken` **)) sents) -> list(list(** :class:`~chemdataextractor.doc.text.RichToken` **, obj))**
+      Take a list of lists of all the tokens from all the elements in a document, and return a list of lists of (token, tag) pairs.
+      One thing to note is that the resulting list of lists of (token, tag) pairs need not be in the same order as the incoming list
+      of lists of tokens, so some sorting can be done if, for example, bucketing of sentences by their lengths is desired.
+      In addition to ``tag``, the ``batch_tag`` method should be implemented instead of the ``tag`` method in cases where the taggers rely on
+      backends that are more performant when tagging multiple sentences, and the tagger will be called for every element.
+      More information can be found in :ref:`in this guide<creating_taggers>`.
+
+      .. note::
+        If a tagger only has ``batch_tag`` implemented, the tagger will fail when applied to an element that does not belong to a document.
+
+    - **legacy_tag(self, list(obj tokens) -> (list(obj), obj)**
+      ``legacy_tag`` corresponds to the ``tag`` method in ChemDataExtractor 2.0 and earlier. This has been renamed
+      ``legacy_tag`` due to its complexity in that it could be called with either a list of strings or a list of (token, PoS tag) pairs.
+      This made it incompatible with the new taggers in their current form. ChemDataExtractor 2.1 will call this method with a list of strings
+      instead of a list of (token, PoS tag) pairs. This should only be used for converting previously written taggers with as few
+      code changes as possible, as shown in the :ref:`migration guide<migration_guide_2_1>`.
+
+    To express intent to the ChemDataExtractor framework that the tagger can tag for a certain tag type, you should implement the
+    ``can_tag`` method, which takes a tag type and returns a boolean. The default implementation, provided by this class,
+    looks at the ``tag_type`` attribute of the tagger and returns True if it matches the tag type provided.
+
+    .. warning::
+        While the :class:`~chemdataextractor.doc.text.RichToken` class maintains backwards compatibility in most cases, e.g. parsers by assigning
+        the ``1`` key in dictionary-style lookup with the combined PoS and NER tag, calling this key in an NER or PoS tagger will cause
+        your script to crash. To avoid this, please change any previous bits of code such as ``token[1]`` to ``token["ner_tag"]`` or ``token.ner_tag``.
     """
 
-    @abstractmethod
-    def tag(self, tokens):
-        """Return a list of (token, tag) tuples for the given list of token strings.
+    tag_type = ""
+    """
+    The tag type for this tagger. When this tag type is asked for from the token, as described in :class:`~chemdataextractor.doc.text.RichToken`, this
+    tagger will be called.
+    """
 
-        :param list(str) tokens: The list of tokens to tag.
-        :rtype: list(tuple(str, str))
-        """
-        return
-
+    @deprecated(deprecated_in="2.1", details="Deprecated in conjunction with the deprecation of the legacy_tag function. Please write equivalent functionality to use RichTokens.")
     def tag_sents(self, sentences):
         """Apply the ``tag`` method to each sentence in ``sentences``."""
-        return [self.tag(s) for s in sentences]
+        return [self.legacy_tag(s) for s in sentences]
 
     def evaluate(self, gold):
         """Evaluate the accuracy of this tagger using a gold standard corpus.
@@ -58,12 +119,109 @@ class BaseTagger(six.with_metaclass(ABCMeta)):
         accuracy = float(sum(x == y for x, y in six.moves.zip(gold_tokens, test_tokens))) / len(test_tokens)
         return accuracy
 
+    def can_tag(self, tag_type):
+        """
+        Whether this tagger can tag the given tag type.
+
+        :param obj tag_type: The tag type which the system wants to tag. Usually a string.
+        :returns: True if this parser can tag the given tag type
+        :rtype: bool
+        """
+        return tag_type == self.tag_type
+
+    def can_batch_tag(self, tag_type):
+        """
+        Whether this tagger can batch tag the given tag type.
+
+        :param obj tag_type: The tag type which the system wants to batch tag. Usually a string.
+        :returns: True if this parser can tag the given tag type
+        :rtype: bool
+        """
+        return False
+
+
+class EnsembleTagger(BaseTagger):
+    """
+    A class for taggers which act on the results of multiple other taggers.
+    This could also be done by simply adding each tagger to the sentence and having
+    the taggers each act on the results from the other taggers by accessing RichToken attributes,
+    but an EnsembleTagger allows for the user to add one tagger instead,
+    cleaning up the interface.
+
+    The EnsembleTagger is also useful in collating the results from multiple taggers of the same type,
+    as can be seen in the case of :class:`~chemdataextractor.nlp.cem.CemTagger` which collects
+    multiple types of NER labellers (a CRF and multiple dictionary taggers), to create a single
+    coherent NER label.
+    """
+    tag_type = ""
+    taggers = []
+
+    def __init__(self, *args, **kwargs):
+        super(EnsembleTagger, self).__init__(*args, **kwargs)
+        taggers_dict = {}
+        for i, tagger in enumerate(self.taggers):
+            if tagger.tag_type == self.tag_type:
+                tag_type = "_" + self.tag_type + "_" + str(i)
+                tagger.tag_type = tag_type
+                taggers_dict[tag_type] = tagger
+            else:
+                taggers_dict[tagger.tag_type] = tagger
+        self.taggers_dict = taggers_dict
+        self.taggers_dict[self.tag_type] = self
+
+    def tag_for_type(self, tokens, tag_type):
+        """
+        This method will be called if the EnsembleTagger has previously
+        claimed that it can tag the given tag type via the :meth:`~chemdataextractor.nlp.tag.EnsembleTagger.can_tag` method. The appropriate
+        tagger within EnsembleTagger is called and the results returned.
+
+        .. note::
+            This method can handle having legacy taggers mixed in with
+            newer taggers.
+
+        :param list(chemdataextractor.doc.text.RichToken) tokens: The tokens which should be tagged
+        :param obj tag_type: The tag type for which EnsembleTagger should tag the tokens.
+        :return: A list of tuples of the given tokens and the corresponding tags.
+        :rtype: list(tuple(~chemdataextractor.doc.text.RichToken, obj))
+        """
+        tagger = self.taggers_dict[tag_type]
+        if hasattr(tagger, "tag"):
+            return tagger.tag(tokens)
+        else:
+            return tagger.legacy_tag([token.text for token in tokens])
+
+    def batch_tag_for_type(self, sents, tag_type):
+        """
+        This method will be called if the EnsembleTagger has previously
+        claimed that it can batch tag the given tag type via the
+        :meth:`~chemdataextractor.nlp.tag.EnsembleTagger.can_batch_tag` method. The appropriate
+        tagger within EnsembleTagger is called and the results returned.
+
+        :param list(~chemdataextractor.doc.text.RichToken) tokens: The tokens which should be tagged
+        :param obj tag_type: The tag type for which EnsembleTagger should tag the tokens.
+        :return: A list of tuples of the given tokens and the corresponding tags.
+        :rtype: list(tuple(~chemdataextractor.doc.text.RichToken, obj))
+        """
+        tagger = self.taggers_dict[tag_type]
+        return tagger.batch_tag(sents)
+
+    def can_batch_tag(self, tag_type):
+        return hasattr(self.taggers_dict[tag_type], "batch_tag")
+
+    def can_tag(self, tag_type):
+        return tag_type in self.taggers_dict.keys()
+
 
 class NoneTagger(BaseTagger):
     """Tag every token with None."""
 
+    def __init__(self, tag_type=None):
+        if tag_type is not None:
+            self.tag_type = tag_type
+        else:
+            self.tag_type = None
+
     def tag(self, tokens):
-        """"""
         return [(token, None) for token in tokens]
 
 
@@ -212,7 +370,7 @@ class ApTagger(six.with_metaclass(ABCMeta, BaseTagger)):
         self.clusters = clusters if clusters is not None else self.clusters
         log.debug('%s: Initializing with %s' % (self.__class__.__name__, self.model))
 
-    def tag(self, tokens):
+    def legacy_tag(self, tokens):
         """Return a list of (token, tag) tuples for a given list of tokens."""
         # Lazy load model first time we tag
         if not self.classes:
@@ -319,7 +477,7 @@ class CrfTagger(BaseTagger):
         self._tagger.open(find_data(model))
         self._loaded_model = True
 
-    def tag(self, tokens):
+    def legacy_tag(self, tokens):
         """Return a list of ((token, tag), label) tuples for a given list of (token, tag) tuples."""
         # Lazy load model first time we tag
         if not self._loaded_model:
@@ -395,8 +553,10 @@ class DictionaryTagger(BaseTagger):
         else:
             return ' '.join(self.lexicon[t].lower for t in tokens)
 
-    def tag(self, tokens):
+    def legacy_tag(self, tokens):
         """Return a list of (token, tag) tuples for a given list of tokens."""
+        if len(tokens) > 0 and isinstance(tokens[0], tuple):
+            tokens = [token[0] for token in tokens]
         if not self._loaded_model:
             self.load(self.model)
         tags = [None] * len(tokens)

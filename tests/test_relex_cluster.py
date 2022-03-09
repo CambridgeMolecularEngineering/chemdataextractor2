@@ -35,6 +35,7 @@ class CurieTemperature(TemperatureModel):
     specifier = StringType(parse_expression=specifier_expression, required=True, updatable=True)
     compound = ModelType(Compound, required=True)
 
+
 tokens = ['the', 'curie', 'temperature', 'of', 'BiFeO3', 'is', '1103', 'K', '.']
 entities = [
             Entity('curie temperature', 'curietemperature__specifier', (I('curie') + I('temperature')).add_action(join), 1, 3),
@@ -75,22 +76,21 @@ class TestCluster(unittest.TestCase):
                 'total words': 1,
                 'unique words': []}}
         self.assertEqual(expected, test_cluster.dictionaries)
-    
+
     def test_cluster_pattern(self):
         expected = 'the (curietemperature__specifier) of (compound__names) is (curietemperature__raw_value) <Blank> (curietemperature__raw_units) .'
         self.assertEqual(expected, test_cluster.pattern.to_string())
-    
+
     def test_cluster_pattern_confidence(self):
         expected = 1.0
         self.assertEqual(expected, test_cluster.pattern.confidence)
 
-
     def test_get_relations(self):
         """Test relation retrieval using Pattern object
         """
-       
+
         s = Sentence('the curie temperature of MnO is 100 K.')
-        result = [r.serialize() for r in test_cluster.get_relations(s.tagged_tokens)]
+        result = [r.serialize() for r in test_cluster.get_relations(s.tokens)]
         expected = [{
             'compound': {'names': 'MnO'},
             'curietemperature': {'specifier': 'curie temperature',
@@ -98,7 +98,7 @@ class TestCluster(unittest.TestCase):
             'raw_units': 'K'},
             'confidence': 0}]
         self.assertEqual(result, expected)
-    
+
 
 if __name__ == '__main__':
     unittest.main()

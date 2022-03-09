@@ -38,13 +38,14 @@ def rsc_html_whitespace(document):
             el.text = el.text.replace('\n', ' ')
     return document
 
+
 def join_rsc_table_captions(document):
     """Add wrapper tag around Tables and their respective captions
-    
+
     Arguments:
         document {[type]} -- [description]
     """
-    for el in document.xpath('//div[@class="table_caption"]'):   
+    for el in document.xpath('//div[@class="table_caption"]'):
         next_el = el.getnext()
         if next_el.tag == 'div' and next_el.attrib['class'] == 'rtable__wrapper':
             caption_el = el

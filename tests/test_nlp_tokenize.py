@@ -834,7 +834,7 @@ class TestChemTokenizer(unittest.TestCase):
 
     def test_chemtext_sentence(self):
         """Test tokenization through the Text and Sentence API."""
-        t = Text('Hi, my name is Matt. What is your name?')
+        t = Text('Hi, my name is Matt. What is your name?', word_tokenizer=self.t)
         self.assertEqual(
             [['Hi', ',', 'my', 'name', 'is', 'Matt', '.'], ['What', 'is', 'your', 'name', '?']],
             [sent.raw_tokens for sent in t.sentences]
@@ -842,7 +842,7 @@ class TestChemTokenizer(unittest.TestCase):
 
     def test_chemtext_sentence2(self):
         """Test tokenization through the ChemText and Sentence API."""
-        t = Text('(Ka: 1.42×10(10) M-1 vs 1.95±0.35×10(10) M-1) and increased (9.9 vs 3.7±0.4 fmol)')
+        t = Text('(Ka: 1.42×10(10) M-1 vs 1.95±0.35×10(10) M-1) and increased (9.9 vs 3.7±0.4 fmol)', word_tokenizer=self.t)
         self.assertEqual(
             [['(', 'Ka', ':', '1.42', '×', '10(10)', 'M-1', 'vs', '1.95', '±', '0.35', '×', '10(10)', 'M-1', ')', 'and', 'increased', '(', '9.9', 'vs', '3.7', '±', '0.4', 'fmol', ')']],
             [sent.raw_tokens for sent in t.sentences]

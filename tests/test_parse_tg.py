@@ -18,6 +18,7 @@ from lxml import etree
 
 from chemdataextractor.doc.text import Sentence
 from chemdataextractor.parse.tg import tg_phrase
+from chemdataextractor.model.units import TemperatureModel
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -30,10 +31,11 @@ class TestParseTg(unittest.TestCase):
 
     def do_parse(self, input, expected):
         s = Sentence(input)
+        s.models = [TemperatureModel]
         log.debug(s)
-        log.debug(s.tagged_tokens)
-        print(s.tagged_tokens)
-        result = next(tg_phrase.scan(s.tagged_tokens))[0]
+        log.debug(s.tokens)
+        print(s.tokens)
+        result = next(tg_phrase.scan(s.tokens))[0]
         print(etree.tostring(result))
         log.debug(etree.tostring(result, pretty_print=True, encoding='unicode'))
         self.assertEqual(expected, etree.tostring(result, encoding='unicode'))
@@ -43,7 +45,7 @@ class TestParseTg(unittest.TestCase):
         s = 'The poly(azide) shows a glass transition temperature of 282.6 °C.'
         expected = '<tg_phrase><tg><value>282.6</value><units>°C</units></tg></tg_phrase>'
         self.do_parse(s, expected)
-    
+
     # Test: "glass transition temp. of with temperature withing '()'"
     def test_tg2(self):
         s = 'Differential scanning calorimetry revealed a glass transition temp. of (-19) ° for the homopolymer and 20° for the copolymer.'
@@ -74,7 +76,7 @@ class TestParseTg(unittest.TestCase):
         expected = '<tg_phrase><tg><value>∼-30</value><units>°</units></tg></tg_phrase>'
         self.do_parse(s, expected)
 
-    # Test Tg: (or Tg >) 
+    # Test Tg: (or Tg >)
     def test_tg7(self):
         s = 'The four-armed compd. (ANTH-OXA6t-OC12) with the dodecyloxy surface group is a high glass transition temp. (Tg:  211°) material and exhibits good soly.'
         #s = 'The four-armed compd. (ANTH-OXA6t-OC12) with the dodecyloxy surface group is a high glass transition temp. (Tg > 211°) material and exhibits good soly.'

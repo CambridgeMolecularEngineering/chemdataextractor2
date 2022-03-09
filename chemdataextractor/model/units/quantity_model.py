@@ -12,13 +12,14 @@ from __future__ import unicode_literals
 import six
 import copy
 from abc import ABCMeta
-from ..base import BaseModel, BaseType, FloatType, StringType, ListType, ModelMeta
+from ..base import BaseModel, BaseType, FloatType, StringType, ListType, ModelMeta, InferredProperty
 from .unit import Unit, UnitType
 from .dimension import Dimensionless
 from ...parse.elements import Any
 from ...parse.auto import AutoSentenceParser, AutoTableParser, construct_unit_element, match_dimensions_of
-from ...parse.quantity import magnitudes_dict, value_element_plain
+from ...parse.quantity import magnitudes_dict, infer_unit, infer_value, infer_error, value_element
 from ...parse.template import QuantityModelTemplateParser, MultiQuantityModelTemplateParser
+
 
 class _QuantityModelMeta(ModelMeta):
     """"""
@@ -28,7 +29,7 @@ class _QuantityModelMeta(ModelMeta):
         unit_element = construct_unit_element(cls.dimensions)
         if unit_element:
             cls.fields['raw_units'].parse_expression = unit_element(None)
-        cls.fields['raw_value'].parse_expression = value_element_plain()(None)
+        cls.fields['raw_value'].parse_expression = value_element()(None)
         return cls
 
 
@@ -46,9 +47,12 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
     """
     raw_value = StringType(required=True, contextual=True)
     raw_units = StringType(required=True, contextual=True)
-    value = ListType(FloatType(contextual=True), contextual=True, sorted=True)
-    units = UnitType(contextual=True)
-    error = FloatType(contextual=True)
+    value = InferredProperty(ListType(FloatType(), sorted_=True),
+                             origin_field='raw_value', inferrer=infer_value, contextual=True)
+    units = InferredProperty(UnitType(),
+                             origin_field='raw_units', inferrer=infer_unit, contextual=True)
+    error = InferredProperty(FloatType(),
+                             origin_field='raw_value', inferrer=infer_error, contextual=True)
     dimensions = None
     specifier = StringType()
     parsers = [MultiQuantityModelTemplateParser(), QuantityModelTemplateParser(), AutoTableParser()]
@@ -104,7 +108,7 @@ class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
         if self.value is not None and other.value is not None:
             if len(self.value) == 2 and len(other.value) == 2:
                 # The following always encompasses the whole range because
-                # value has sorted=True, so it should sort any values.
+                # value has sorted_=True, so it should sort any values.
                 new_val = [self.value[0] * other.value[0],
                            self.value[1] * other.value[1]]
                 new_model.value = new_val

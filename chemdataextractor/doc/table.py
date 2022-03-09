@@ -24,6 +24,7 @@ from tabledataextractor.exceptions import TDEError
 from ..doc.text import Cell
 from ..model.model import Compound
 from ..model.base import ModelList, ModelType
+from ..utils import memoized_property
 from pprint import pprint
 
 log = logging.getLogger(__name__)
@@ -78,11 +79,43 @@ class Table(CaptionedElement):
                 self.tde_table = None
                 self.heading = None
 
+    @memoized_property
+    def cde_tables(self):
+        """
+        CDE tables are lists of lists of Cells, that are used for the purpose of parsing
+        in CDE. For other purposes, the underlying TDE table (`tde_table`) is probably more useful.
+        """
+        cde_tables = []
         if self.tde_table is not None:
             # get the subtables
             self.tde_subtables = self.tde_table.subtables
             # adjust the CDE Table heading from TDE results
             self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
+
+            if self.tde_subtables:
+                for table in self.tde_subtables:
+                    cde_tables.append(self._create_cde_table(table))
+
+            else:
+                cde_tables = [self._create_cde_table(self.tde_table)]
+        return cde_tables
+
+    def _create_cde_table(self, tde_table, assign_document=True):
+        """
+        Creates a CDE Table from a TDE table. A CDE table is a list of cells, so this returns a list
+        of list of Cell objects, which is then used for parsing.
+        """
+        cde_tables = []
+        document = None
+        if assign_document:
+            document = self.document
+        for category_table in self._category_tables(tde_table):
+            cde_table = []
+            for cell in category_table:
+                cde_cell = Cell.from_tdecell(cell, models=self.models, document=document)
+                cde_table.append(cde_cell)
+            cde_tables.append(cde_table)
+        return cde_tables
 
     def serialize(self):
         """
@@ -125,14 +158,11 @@ class Table(CaptionedElement):
     def records(self):
         table_records = ModelList()
         caption_records = self.caption.records
-        if self.tde_subtables:
-            for subtable in self.tde_subtables:
-                table_records.extend(self._records_for_tde_table(subtable, caption_records))
-        elif not self.tde_subtables and self.tde_table is not None:
-            table_records.extend(self._records_for_tde_table(self.tde_table, caption_records))
+        for table in self.cde_tables:
+            table_records.extend(self._records_for_cde_tables(table, caption_records))
         return table_records
 
-    def _records_for_tde_table(self, table, caption_records=None):
+    def _records_for_cde_tables(self, cde_tables, caption_records=None):
         """
         Get the records for the given TDE Table
         The function works via the following steps:
@@ -152,15 +182,6 @@ class Table(CaptionedElement):
         """
         if not caption_records:
             caption_records = ModelList()
-
-        # Create a representation of the table that is more amenable to parsing
-        cde_tables = []
-        for category_table in self._category_tables(table):
-            cde_table = []
-            for cell in category_table:
-                cde_cell = Cell.from_tdecell(cell, models=self.models)
-                cde_table.append(cde_cell)
-            cde_tables.append(cde_table)
 
         # Step 1
         table_records = ModelList()
@@ -184,9 +205,8 @@ class Table(CaptionedElement):
         table_records.remove_subsets()
 
         # Step 6
-        caption_records = [c for c in caption_records if c.contextual_fulfilled]
+        caption_records = ModelList(*[c for c in caption_records if c.required_fulfilled])
         table_records = self._merge(table_records, caption_records)
-        # pprint(table_records.serialize())
 
         return table_records
 
@@ -327,3 +347,13 @@ class Table(CaptionedElement):
             if record.noncontextual_required_fulfilled:
                 new_records.append(record)
         return new_records
+
+    @property
+    def elements(self):
+        elements = []
+        for table in self.cde_tables:
+            for subtable in table:
+                for cell in subtable:
+                    elements.append(cell)
+        elements.append(self.caption)
+        return elements

@@ -1,7 +1,7 @@
 .. _source_code_docs:
 
 =====================
-API Documentation
+API Reference
 =====================
 
 .. note:: Private methods are not included in the documentation!
@@ -100,6 +100,8 @@ API Documentation
 
    nlp
    nlp.abbrev
+   nlp.new_cem
+   nlp.allennlpwrapper
    nlp.cem
    nlp.corpus
    nlp.lexicon

@@ -17,13 +17,13 @@ from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct
 from ..utils import first
 from .actions import merge
-from .quantity import value_element, value_element_plain
+from .quantity import value_element
 from .base import BaseSentenceParser
 from .elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 
 log = logging.getLogger(__name__)
 
-prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct) | R('^m\.?pt?\.?$', re.I) | I('melting') + Optional((I('point') | I('temperature') | I('range'))) | R('^m\.?$', re.I) + R('^pt?\.?$', re.I)).hide() + Optional(lbrct + W('Tm') + rbrct) + Optional(W('=') | I('of') | I('was') | I('is') | I('at')).hide() + Optional(I('in') + I('the') + I('range') + Optional(I('of')) | I('about')).hide()
+prefix = Optional(I('a')).hide() + (Optional(lbrct) + W('Tm') + Optional(rbrct) | R('^m\.?pt?\.?$', re.I) | I('melting') + Optional((I('point') | I('temperature') | I('range'))) | R('^m\.?$', re.I) + Optional(I('.')) + R('^pt?\.?$', re.I) + Optional(I('.'))).hide() + Optional(lbrct + W('Tm') + rbrct) + Optional(W('=') | I('of') | I('was') | I('is') | I('at')).hide() + Optional(I('in') + I('the') + I('range') + Optional(I('of')) | I('about')).hide()
 
 delim = R('^[:;\.,]$')
 
@@ -56,10 +56,7 @@ class MpParser(BaseSentenceParser):
             raw_value = first(result.xpath('./mp/raw_value/text()'))
             raw_units = first(result.xpath('./mp/raw_units/text()'))
             melting_point = self.model(raw_value=raw_value,
-                        raw_units=raw_units,
-                        value=self.extract_value(raw_value),
-                        error=self.extract_error(raw_value),
-                        units=self.extract_units(raw_units, strict=True))
+                        raw_units=raw_units)
             cem_el = first(result.xpath('./compound'))
             if cem_el is not None:
                 log.debug(etree.tostring(cem_el))

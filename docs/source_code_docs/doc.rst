@@ -2,7 +2,7 @@
 .doc
 ======================
 
-Logic for reading/creating documents. That is, splitting documents down into its various elements. The API for documents has been slightly changed as of version 1.5.0. Please refer to the :ref:`migration guide<migration_guide>` and the examples for an overview of the changes.
+Logic for reading/creating documents. That is, splitting documents down into its various elements. The API for documents has been slightly changed as of version 2.0. Please refer to the :ref:`migration guide<migration_guide>` and the examples for an overview of the changes.
 
 .. automodule:: chemdataextractor.doc
     :members:

@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 import logging
 
 from .lexicon import ChemLexicon
-from .tag import ApTagger, CrfTagger
+from .tag import ApTagger, CrfTagger, POS_TAG_TYPE
 
 
 log = logging.getLogger(__name__)
@@ -74,6 +74,7 @@ class ApPosTagger(ApTagger):
 
     """
     model = 'models/pos_ap_wsj_nocluster-1.0.pickle'
+    tag_type = POS_TAG_TYPE
     clusters = False
 
     def _get_features(self, i, context, prev, prev2):
@@ -199,12 +200,14 @@ class ChemApPosTagger(ApPosTagger):
     """
     model = 'models/pos_ap_wsj_genia-1.0.pickle'
     lexicon = ChemLexicon()
+    tag_type = POS_TAG_TYPE
     clusters = True
 
 
 class CrfPosTagger(CrfTagger):
     """"""
     model = 'models/pos_crf_wsj_nocluster-1.0.pickle'
+    tag_type = POS_TAG_TYPE
     clusters = False
 
     def _get_features(self, tokens, i):
@@ -336,5 +339,6 @@ class CrfPosTagger(CrfTagger):
 class ChemCrfPosTagger(CrfPosTagger):
     """"""
     model = 'models/pos_crf_wsj_genia-1.0.pickle'
+    tag_type = POS_TAG_TYPE
     lexicon = ChemLexicon()
     clusters = True

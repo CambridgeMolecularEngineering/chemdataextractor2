@@ -26,11 +26,12 @@ import copy
 
 from .cem import cem, chemical_label, lenient_chemical_label
 from .actions import merge, join
-from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, SkipTo, Or, NoMatch
 from ..utils import first
-from .quantity import magnitudes_dict, value_element, extract_units, value_element_plain, lbrct, rbrct
+from .quantity import magnitudes_dict, value_element, extract_units, lbrct, rbrct
 from .base import BaseSentenceParser, BaseParser, BaseTableParser
 
+from lxml.builder import E
 import xml.etree.ElementTree as etree
 
 log = logging.getLogger(__name__)
@@ -66,7 +67,68 @@ def construct_unit_element(dimensions):
     units_regex += '))+'
     units_regex += (units_regex2[1:-2] + '*')
     units_regex += '$'
-    return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex) | R(pattern=units_regex2))).add_action(merge)
+    return (R(pattern=units_regex) + ZeroOrMore(R(pattern=units_regex) | R(pattern=units_regex2))).add_action(_remove_unmatched_bracket)
+
+
+def _remove_unmatched_bracket(tokens, start, result):
+    """
+    Action to remove unmatched brackets
+    """
+    # Configure the following for all bracket types that should be matched
+    brackets = {"{": 0, "(": 0, "[": 0}
+    bracket_matches = {"}": "{", ")": "(", "]": "["}
+
+    texts = []
+    if len(result) > 0:
+        # Get text for each element
+        for e in result:
+            for child in e.iter():
+                if child.text is not None:
+                    texts.append(child.text)
+
+        # Check whether brackets are matched; each opening bracket increments the count
+        # stored in brackets by one, and each closing one decrements the count.
+        for text in texts:
+            if text in brackets:
+                brackets[text] += 1
+            elif text in bracket_matches:
+                brackets[bracket_matches[text]] -= 1
+
+        # For each type of bracket, we clean the unmatched brackets
+        cleaned_texts = copy.copy(texts)
+        for bracket_type, value in brackets.items():
+
+            # Strip opening brackets
+            if value > 0:
+                count = 0
+                new_cleaned_texts = []
+                for el in cleaned_texts:
+                    if el == value and count < value:
+                        count += 1
+                    else:
+                        new_cleaned_texts.append(el)
+                cleaned_texts = new_cleaned_texts
+
+            # Strip closing brackets
+            elif value < 0:
+                count = 0
+                reversed_texts = reversed(cleaned_texts)
+                new_cleaned_texts = []
+                bracket = None
+
+                for closing_bracket, opening_bracket in bracket_matches.items():
+                    if opening_bracket == bracket_type:
+                        bracket = closing_bracket
+                        break
+
+                for el in reversed_texts:
+                    if el == bracket and count < abs(value):
+                        count += 1
+                    else:
+                        new_cleaned_texts.append(el)
+                cleaned_texts = list(reversed(new_cleaned_texts))
+
+        return [E(result[0].tag, ''.join(cleaned_texts))]
 
 
 def construct_category_element(category_dict):
@@ -140,36 +202,17 @@ class BaseAutoParser(BaseParser):
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
             raw_value = first(result.xpath('./raw_value/text()'))
             log.debug(raw_value)
-            if raw_value != 'NoValue':
-                value = self.extract_value(raw_value)
-            else:
-                value = None
-            error = self.extract_error(raw_value)
-            property_entities.update({"raw_value": raw_value,
-                                      "value": value,
-                                      "error": error})
+            if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
+                requirements = False
+            property_entities.update({"raw_value": raw_value})
 
         elif hasattr(self.model, 'dimensions') and self.model.dimensions:
             # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
             # print(etree.tostring(result))
             raw_value = first(result.xpath('./raw_value/text()'))
             raw_units = first(result.xpath('./raw_units/text()'))
-            if raw_value != 'NoValue':
-                value = self.extract_value(raw_value)
-            else:
-                value = None
-            error = self.extract_error(raw_value)
-            units = None
-            try:
-                units = self.extract_units(raw_units, strict=True)
-            except TypeError as e:
-                log.debug(e)
-
             property_entities.update({"raw_value": raw_value,
-                                      "raw_units": raw_units,
-                                      "value": value,
-                                      "error": error,
-                                      "units": units})
+                                      "raw_units": raw_units})
 
         for field_name, field in six.iteritems(self.model.fields):
             if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
@@ -182,47 +225,62 @@ class BaseAutoParser(BaseParser):
                     log.debug(self.model)
                     log.debug(e)
 
-        model_instance = self.model(**property_entities)
+        model_instance = None
+        if property_entities.keys():
+            model_instance = self.model(**property_entities)
 
-        if model_instance.noncontextual_required_fulfilled:
+        if model_instance and model_instance.noncontextual_required_fulfilled:
             # records the parser that was used to generate this record, can be used for evaluation
             model_instance.record_method = self.__class__.__name__
             yield model_instance
 
-    def _get_data(self, field_name, field, result):
+    def _get_data(self, field_name, field, result, for_list=False):
         if hasattr(field, 'model_class'):
-            field_result = first(result.xpath('./' + field_name))
-            if field_result is None and field.required and not field.contextual:
-                raise TypeError('Could not find element for ' + str(field_name))
-            elif field_result is None:
+            if for_list:
+                field_results = result.xpath('./' + field_name)
+            else:
+                field_results = [first(result.xpath('./' + field_name))]
+            field_objects = []
+            for field_result in field_results:
+                if field_result is None and field.required and not field.contextual:
+                    raise TypeError('Could not find element for ' + str(field_name))
+                elif field_result is None:
+                    continue
+                field_data = {}
+                for subfield_name, subfield in six.iteritems(field.model_class.fields):
+                    data = self._get_data(subfield_name, subfield, field_result, for_list=False)
+                    if data:
+                        field_data.update(data)
+                field_object = None
+                if field_data.keys():
+                    field_object = field.model_class(**field_data)
+                if field_object is not None:
+                    field_objects.append(field_object)
+                log.debug('Created for' + field_name)
+                log.debug(field_object)
+            if not for_list and field_objects:
+                field_objects = field_objects[0]
+            if not field_objects:
                 return None
-            field_data = {}
-            for subfield_name, subfield in six.iteritems(field.model_class.fields):
-                data = self._get_data(subfield_name, subfield, field_result)
-                if data is not None:
-                    field_data.update(data)
-            field_object = field.model_class(**field_data)
-            log.debug('Created for' + field_name)
-            log.debug(field_object)
-            return {field_name: field_object}
+            return {field_name: field_objects}
         elif hasattr(field, 'field'):
             # Case that we have listtype
-            # Always only takes the first found one though
             field = field.field
-            field_data = self._get_data(field_name, field, result)
-            if field_data is not None:
-                if field_data[field_name] is None:
-                    return None
-                field_data = [field_data[field_name]]
-            elif field_data is None and field.required and not field.contextual:
-                raise TypeError('Could not find element for ' + str(field_name))
-            elif field_data is None:
+            field_data = self._get_data(field_name, field, result, for_list=True)
+            if not field_data or not field_data[field_name]:
                 return None
-            return {field_name: field_data}
-        else:
-            field_result = first(result.xpath('./' + field_name + '/text()'))
-            if field_result is None and field.required and not field.contextual:
+            elif not field_data and field.required and not field.contextual:
                 raise TypeError('Could not find element for ' + str(field_name))
+            return {field_name: field_data[field_name]}
+        else:
+            if for_list:
+                field_result = result.xpath('./' + field_name + '/text()')
+            else:
+                field_result = first(result.xpath('./' + field_name + '/text()'))
+            if field_result is None or field_result == []:
+                if field.required and not field.contextual:
+                    raise TypeError('Could not find element for ' + str(field_name))
+                return None
             return {field_name: field_result}
 
 
@@ -256,14 +314,17 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
     def root(self):
         # is always found, our models currently rely on the compound
         chem_name = self.chem_name
-        compound_model = self.model.compound.model_class
-        labels = compound_model.labels.parse_expression('labels')
+        try:
+            compound_model = self.model.compound.model_class
+            labels = compound_model.labels.parse_expression('labels')
+        except AttributeError:
+            labels = NoMatch()
         entities = [labels]
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
             specifier = self.model.specifier.parse_expression('specifier')
-            value_phrase = value_element_plain()
+            value_phrase = value_element()
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -274,14 +335,14 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
             specifier = self.model.specifier.parse_expression('specifier')
             if self.lenient:
-                value_phrase = (value_element(unit_element) | value_element_plain())
+                value_phrase = (value_element(unit_element) | value_element())
             else:
                 value_phrase = value_element(unit_element)
 
             entities.append(specifier)
             entities.append(value_phrase)
 
-        elif hasattr(self.model, 'specifier'):
+        elif hasattr(self.model, 'specifier') and self.model.specifier:
             # now we are parsing an element that has no value but some custom string
             # therefore, there will be no matching interpret function, all entities are custom except for the specifier
             specifier = self.model.specifier.parse_expression('specifier')
@@ -312,15 +373,18 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
     def root(self):
         # is always found, our models currently rely on the compound
         chem_name = self.chem_name
-        compound_model = self.model.compound.model_class
-        labels = compound_model.labels.parse_expression('labels')
+        try:
+            compound_model = self.model.compound.model_class
+            labels = compound_model.labels.parse_expression('labels')
+        except AttributeError:
+            labels = NoMatch()
         entities = [labels]
         no_value_element = W('NoValue')('raw_value')
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the mandatory elements of Dimensionless model are grouped into a entities list
             specifier = self.model.specifier.parse_expression('specifier')
-            value_phrase = value_element_plain() | no_value_element
+            value_phrase = value_element() | no_value_element
             entities.append(specifier)
             entities.append(value_phrase)
 
@@ -331,11 +395,11 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
                 construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
             specifier = self.model.specifier.parse_expression('specifier') + Optional(W('/')) + Optional(
                 unit_element)
-            value_phrase = ((value_element_plain() | no_value_element) + Optional(unit_element))
+            value_phrase = ((value_element() | no_value_element) + Optional(unit_element))
             entities.append(specifier)
             entities.append(value_phrase)
 
-        elif hasattr(self.model, 'specifier'):
+        elif hasattr(self.model, 'specifier') and self.model.specifier:
             # now we are parsing an element that has no value but some custom string
             # therefore, there will be no matching interpret function, all entities are custom except for the specifier
             specifier = self.model.specifier.parse_expression('specifier')

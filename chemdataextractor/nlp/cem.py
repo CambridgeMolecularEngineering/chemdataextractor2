@@ -2,6 +2,8 @@
 """
 Named entity recognition (NER) for Chemical entity mentions (CEM).
 
+This was the default NER system up to version 2.0, while the new NER is
+included in new_cem.
 """
 
 from __future__ import absolute_import
@@ -15,7 +17,7 @@ import six
 
 from ..text import bracket_level
 from .lexicon import ChemLexicon
-from .tag import BaseTagger, CrfTagger, DictionaryTagger
+from .tag import EnsembleTagger, CrfTagger, DictionaryTagger, NER_TAG_TYPE, POS_TAG_TYPE
 
 
 log = logging.getLogger(__name__)
@@ -350,14 +352,53 @@ SPECIALS = [
 ]
 
 
+class _CompatibilityToken(object):
+    """
+    A wrapper around tokens to ensure backwards compatibility when using RichTokens.
+
+    Older taggers utilise indices within tokens to mean special things. 0 is the text, while
+    1 refers to the POS tag *or* the combined NER and POS tag depending on the stage of tagging.
+
+    :class:`~chemdataextractor.doc.text.RichToken` maintain backwards compatibility at a high level
+    by using 1 to refer to the combined NER and POS tag and automatically calculate this when
+    any parser requires this. This allows any older parsing code which also rely on this indexing
+    behaviour to remain unchanged, but causes problems with the older NER taggers as they end up in
+    infinite recursion when trying to get index 1, which these taggers expect to contain the POS tag,
+    but :class:`~chemdataextractor.doc.text.RichToken` takes to mean the combined POS and NER tag,
+    calling the NER tagger's tagging routine again.
+
+    This object exists to get around this. Either way that the user tries to access the results in
+    this class, whether it be via calling token["pos_tag"] or token[1], it should return the expected
+    result.
+    """
+
+    def __init__(self, text, pos_tag, prefetched_tags=None):
+        self.pos_tag = pos_tag
+        self.text = text
+        if prefetched_tags is None:
+            prefetched_tags = {}
+        self.prefetched_tags = prefetched_tags
+
+    def __getitem__(self, key):
+        if key == 0:
+            return self.text
+        elif key == 1 or key == POS_TAG_TYPE:
+            return self.pos_tag
+        elif key in self.prefetched_tags:
+            return self.prefetched_tags[key]
+        raise IndexError("Index out of range")
+
+
 class CiDictCemTagger(DictionaryTagger):
     """Case-insensitive CEM dictionary tagger."""
+    tag_type = NER_TAG_TYPE
     lexicon = ChemLexicon()
     model = 'models/cem_dict-1.0.pickle'
 
 
 class CsDictCemTagger(DictionaryTagger):
     """Case-sensitive CEM dictionary tagger."""
+    tag_type = NER_TAG_TYPE
     lexicon = ChemLexicon()
     model = 'models/cem_dict_cs-1.0.pickle'
     case_sensitive = True
@@ -365,6 +406,7 @@ class CsDictCemTagger(DictionaryTagger):
 
 class CrfCemTagger(CrfTagger):
     """"""
+    tag_type = NER_TAG_TYPE
     model = 'models/cem_crf_chemdner_cemp-1.0.pickle'
     lexicon = ChemLexicon()
     clusters = True
@@ -377,9 +419,40 @@ class CrfCemTagger(CrfTagger):
         'feature.possible_states': False,  # Force to generate all possible state features. Default False.
     }
 
+    def legacy_tag(self, tokens):
+        """
+        :param list(obj tokens) tokens: Tokens to tag
+        :returns (list(obj), obj):
+        ``legacy_tag`` corresponds to the ``tag`` method in ChemDataExtractor 2.0 and earlier. This has been renamed
+        ``legacy_tag`` due to its complexity in that it could be called with either a list of strings or a list of (token, PoS tag) pairs.
+        This made it incompatible with the new taggers in their current form. ChemDataExtractor 2.1 will call this method with a list of strings
+        instead of a list of (token, PoS tag) pairs. This should only be used for converting previously written taggers with as few
+        code changes as possible, as shown in the :ref:`migration guide<migration_guide_2_1>`.
+        """
+        pseudo_rich_tokens = []
+        if len(tokens) > 0 and isinstance(tokens[0], tuple):
+            for token in tokens:
+                pseudo_rich_tokens.append(_CompatibilityToken(token[0], token[1]))
+        else:
+            pseudo_rich_tokens = tokens
+        labelled = self.tag(pseudo_rich_tokens)
+        processed = []
+        for index, element in enumerate(labelled):
+            processed.append((tokens[index], element[1]))
+        return processed
+
+    def tag(self, tokens):
+        if not self._loaded_model:
+            self.load(self.model)
+        features = [self._get_features(tokens, i) for i in range(len(tokens))]
+        tags = self._tagger.tag(features)
+        tagged_sent = list(zip(tokens, tags))
+        return tagged_sent
+
     def _get_features(self, tokens, i):
         """"""
-        token, tag = tokens[i]
+        token = tokens[i].text
+        tag = tokens[i][POS_TAG_TYPE]
         w = self.lexicon[token]
         features = [
             'w.shape=%s' % w.shape,
@@ -429,7 +502,8 @@ class CrfCemTagger(CrfTagger):
             ])
         # Add features for previous tokens if present
         if i > 0:
-            p1token, p1tag = tokens[i-1]
+            p1token = tokens[i-1].text
+            p1tag = tokens[i-1][POS_TAG_TYPE]
             p1 = self.lexicon[p1token]
             features.extend([
                 'p1.lower=%s' % p1.lower,
@@ -446,7 +520,8 @@ class CrfCemTagger(CrfTagger):
                     'p1.cluster20=%s' % p1.cluster[:20],
                 ])
             if i > 1:
-                p2token, p2tag = tokens[i-2]
+                p2token = tokens[i-2].text
+                p2tag = tokens[i-2][POS_TAG_TYPE]
                 p2 = self.lexicon[p2token]
                 features.extend([
                     'p2.lower=%s' % p2.lower,
@@ -463,7 +538,8 @@ class CrfCemTagger(CrfTagger):
         # Add features for next tokens if present
         end = len(tokens) - 1
         if i < end:
-            n1token, n1tag = tokens[i+1]
+            n1token = tokens[i+1].text
+            n1tag = tokens[i+1][POS_TAG_TYPE]
             n1 = self.lexicon[n1token]
             features.extend([
                 'n1.lower=%s' % n1.lower,
@@ -480,7 +556,8 @@ class CrfCemTagger(CrfTagger):
                     'n1.cluster20=%s' % n1.cluster[:20],
                 ])
             if i < end - 1:
-                n2token, n2tag = tokens[i+2]
+                n2token = tokens[i+2].text
+                n2tag = tokens[i+2][POS_TAG_TYPE]
                 n2 = self.lexicon[n2token]
                 features.extend([
                     'n2.lower=%s' % n2.lower,
@@ -505,11 +582,13 @@ class CrfCemTagger(CrfTagger):
         return features
 
 
-class CemTagger(BaseTagger):
+class LegacyCemTagger(EnsembleTagger):
     """Return the combined output of a number of chemical entity taggers."""
 
     #: The individual chemical entity taggers to use.
+    label_type = NER_TAG_TYPE
     taggers = [CrfCemTagger(), CiDictCemTagger(), CsDictCemTagger()]
+    # taggers = [allenwrappertagger, tokentagger, processtagger, CiDictCemTagger(), CsDictCemTagger()]
     lexicon = ChemLexicon()
 
     def _in_stoplist(self, entity):
@@ -540,48 +619,81 @@ class CemTagger(BaseTagger):
                 log.debug('Killed: %s', entity)
                 return True
 
+    def legacy_tag(self, tokens):
+        """
+        :param list(obj tokens) tokens: Tokens to tag
+        :returns (list(obj), obj):
+        ``legacy_tag`` corresponds to the ``tag`` method in ChemDataExtractor 2.0 and earlier. This has been renamed
+        ``legacy_tag`` due to its complexity in that it could be called with either a list of strings or a list of (token, PoS tag) pairs.
+        This made it incompatible with the new taggers in their current form. ChemDataExtractor 2.1 will call this method with a list of strings
+        instead of a list of (token, PoS tag) pairs. This should only be used for converting previously written taggers with as few
+        code changes as possible, as shown in the :ref:`migration guide<migration_guide_2_1>`.
+        """
+        pseudo_rich_tokens = []
+        all_prefetched_tags = {}
+        for tag_type in self.taggers_dict.keys():
+            if tag_type != self.tag_type:
+                tagger = self.taggers_dict[tag_type]
+                all_prefetched_tags[tag_type] = [el[1] for el in tagger.legacy_tag(tokens)]
+        for index, token in enumerate(tokens):
+            prefetched_tags = {}
+            for key, value in all_prefetched_tags.items():
+                prefetched_tags[key] = value[index]
+            pseudo_rich_tokens.append(_CompatibilityToken(token[0], token[1], prefetched_tags))
+        tagged = self.tag(pseudo_rich_tokens)
+        processed = []
+        for index, element in enumerate(tagged):
+            processed.append((tokens[index], element[1]))
+        return processed
+
     def tag(self, tokens):
         """Run individual chemical entity mention taggers and return union of matches, with some postprocessing."""
+
+        # print("labelling for CemTagger", tokens)
         # Combine output from individual taggers
         tags = [None] * len(tokens)
-        just_tokens = [t[0] for t in tokens]
-        for tagger in self.taggers:
-            tag_gen = tagger.tag(tokens) if isinstance(tagger, CrfCemTagger) else tagger.tag(just_tokens)
-            for i, (token, newtag) in enumerate(tag_gen):
-                if newtag == 'I-CM' and not (i == 0 or tag_gen[i - 1][1] not in {'B-CM', 'I-CM'}):
-                    tags[i] = 'I-CM'  # Always overwrite I-CM
-                elif newtag == 'B-CM' and tags[i] is None:
-                    tags[i] = 'B-CM'  # Only overwrite B-CM over None
+
+        for tag_type in self.taggers_dict.keys():
+            # tag_gen = tagger.tag(tokens) if isinstance(tagger, CrfCemTagger) else tagger.tag(just_tokens)
+            if tag_type != self.tag_type:
+                tagger_tags = [token[tag_type] for token in tokens]
+                for i, newtag in enumerate(tagger_tags):
+                    if newtag == 'I-CM' and not (i == 0 or tagger_tags[i - 1] not in {'B-CM', 'I-CM'}):
+                        tags[i] = 'I-CM'  # Always overwrite I-CM
+                    elif newtag == 'B-CM' and (tags[i] is None or tags[i] == "O"):
+                        tags[i] = 'B-CM'  # Only overwrite B-CM over None
         # Postprocess the combined output
         for i, tag in enumerate(tags):
-            token, pos = tokens[i]
+            token = tokens[i].text
+            # pos = tokens[i][POS_TAG_TYPE]
             lex = self.lexicon[token]
-            nexttag = tags[i+1] if i < len(tags) - 1 else None
+            nexttag = tags[i + 1] if i < len(tags) - 1 else None
             # Trim disallowed first tokens
             if tag == 'B-CM' and lex.lower in STRIP_START:
                 tags[i] = None
                 if nexttag == 'I-CM':
-                    tags[i+1] = 'B-CM'
+                    tags[i + 1] = 'B-CM'
             # Trim disallowed final tokens
             if nexttag is None and lex.lower in STRIP_END:
                 tags[i] = None
         # Filter certain entities
         for i, tag in enumerate(tags):
-            token, pos = tokens[i]
+            token = tokens[i].text
+            # pos = tokens[i][POS_TAG_TYPE]
             if tag == 'B-CM':
                 entity_tokens = [self.lexicon[token].lower]
                 end_i = i + 1
-                for j, subsequent in enumerate(tags[i+1:]):
+                for j, subsequent in enumerate(tags[i + 1:]):
                     if subsequent == 'I-CM':
                         end_i += 1
-                        entity_tokens.append(self.lexicon[tokens[i+j+1][0]].lower)
+                        entity_tokens.append(self.lexicon[tokens[i + j + 1].text].lower)
                     else:
                         break
 
                 # Fix combined '1H NMR' on end  # TODO: Also 13C, etc.?
                 if len(entity_tokens) > 2 and entity_tokens[-1] == 'nmr' and entity_tokens[-2] == '1h':
-                    tags[end_i-2] = 'B-CM'
-                    tags[end_i-1] = None
+                    tags[end_i - 2] = 'B-CM'
+                    tags[end_i - 1] = None
                     entity_tokens = entity_tokens[:-2]
 
                 entity = ' '.join(entity_tokens)
@@ -591,12 +703,12 @@ class CemTagger(BaseTagger):
                     bl = bracket_level(entity)
                     # Try and add on brackets in neighbouring tokens if they form part of the name
                     # TODO: Check bracket type matches before adding on
-                    if bl == 1 and len(tokens) > end_i and bracket_level(tokens[end_i][0]) == -1:
-                        #print('BLADJUST: %s - %s' % (entity, tokens[end_i][0]))
+                    if bl == 1 and len(tokens) > end_i and bracket_level(tokens[end_i].text) == -1:
+                        # print('BLADJUST: %s - %s' % (entity, tokens[end_i][0]))
                         tags[end_i] = 'I-CM'
-                    elif bl == -1 and i > 0 and bracket_level(tokens[i-1][0]) == 1:
-                        #print('BLADJUST: %s - %s' % (tokens[i-1][0], entity))
-                        tags[i-1] = 'B-CM'
+                    elif bl == -1 and i > 0 and bracket_level(tokens[i - 1].text) == 1:
+                        # print('BLADJUST: %s - %s' % (tokens[i-1][0], entity))
+                        tags[i - 1] = 'B-CM'
                         tags[i] = 'I-CM'
                     elif not bracket_level(entity) == 0:
                         # Filter entities that overall don't have balanced brackets
@@ -606,6 +718,6 @@ class CemTagger(BaseTagger):
                         if len(entity_tokens) >= 4 and entity_tokens[-1] == ')' and entity_tokens[-3] == '(':
                             if re.match('^(\d{1,2}[A-Za-z]?|I|II|III|IV|V|VI|VII|VIII|IX)$', entity_tokens[-2]):
                                 log.debug('Removing %s from end of CEM', entity_tokens[-2])
-                                tags[end_i-3:end_i] = [None, None, None]
+                                tags[end_i - 3:end_i] = [None, None, None]
         tokentags = list(six.moves.zip(tokens, tags))
         return tokentags

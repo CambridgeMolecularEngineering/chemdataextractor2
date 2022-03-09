@@ -1,7 +1,13 @@
 ChemDataExtractor
 ==================================
 
-ChemDataExtractor v2 is a toolkit for extracting chemical information from the scientific literature.
+ChemDataExtractor v2 is a toolkit for extracting chemical information from the scientific literature. Python 3.5 to Python 3.9 supported.
+
+
+Installation
+------------
+
+`pip install chemdataextractor2`
 
 
 Features

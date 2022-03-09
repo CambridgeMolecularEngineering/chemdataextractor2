@@ -51,6 +51,8 @@ class Cleaner(object):
     strip_xpath = None
     allow_xpath = None
     fix_whitespace = True
+    process_xpaths = {}
+    # a dictionary of string: func(el)->el or None which manipulates the text of an element
 
     namespaces = {
         're': 'http://exslt.org/regular-expressions',
@@ -140,6 +142,17 @@ class Cleaner(object):
                         previous.tail = (previous.tail or '') + el.tail
                 index = parent.index(el)
                 parent[index:index+1] = el[:]
+
+        for xpath, func in self.process_xpaths.items():
+            for el in doc.xpath(xpath, namespaces=self.namespaces):
+                parent = el.getparent()
+                if parent is None or el in to_keep:
+                    continue
+                new_element = func(el)
+                if new_element is None:
+                    parent.remove(el)
+                else:
+                    parent.replace(el, func(el))
 
         # Collapse whitespace down to a single space or a single newline
         if self.fix_whitespace:

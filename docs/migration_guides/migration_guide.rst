@@ -4,7 +4,7 @@
    :language: python
 
 ******************************************
-v2.0 Migration Guide
+Migrating to v2.0
 ******************************************
 
 Overview

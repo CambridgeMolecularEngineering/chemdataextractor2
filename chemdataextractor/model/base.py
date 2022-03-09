@@ -136,6 +136,12 @@ class ModelType(BaseType):
         self.model_name = self.model_class.__name__
         super(ModelType, self).__init__(**kwargs)
 
+    def process(self, value):
+        if isinstance(value, self.model_class):
+            return value
+        else:
+            return None
+
     def serialize(self, value, primitive=False):
         """Serialize this field."""
         return value.serialize(primitive=primitive)
@@ -148,11 +154,11 @@ class ModelType(BaseType):
 
 class ListType(BaseType):
 
-    def __init__(self, field, default=None, sorted=False, **kwargs):
+    def __init__(self, field, default=None, sorted_=False, **kwargs):
         super(ListType, self).__init__(**kwargs)
         self.field = field
         self.default = default if default is not None else []
-        self.sorted = sorted
+        self.sorted = sorted_
 
     def __set__(self, instance, value):
         """Descriptor for assigning a value to a ListField in a Model."""
@@ -167,7 +173,67 @@ class ListType(BaseType):
 
     def serialize(self, value, primitive=False):
         """Serialize this field."""
-        return [self.field.serialize(v, primitive=primitive) for v in value]
+        if value:
+            return [self.field.serialize(v, primitive=primitive) for v in value]
+        else:
+            return None
+
+    def is_empty(self, value):
+        if isinstance(value, list) and len(value) != 0:
+            return False
+        return True
+
+
+class InferredProperty(BaseType):
+    """
+    A property that is inferred from the value of another property via an inferrer function.
+    An example is the processing the raw value extracted from a document into a list of floats,
+    which can be seen in :class:`~chemdataextractor.model.units.quantity_model.QuantityModel`, where
+    :attr:`~chemdataextractor.model.units.quantity_model.QuantityModel.value` is inferred from
+    :attr:`~chemdataextractor.model.units.quantity_model.QuantityModel.raw_value`.
+    """
+
+    def __init__(self, field, origin_field, inferrer, **kwargs):
+        """
+        :param BaseType field: The type expected as a result of inference.
+        :param str origin_field: The name of the field from which to infer the value. This can be a keypath, as detailed in
+            :class:`~chemdataextractor.model.base.BaseModel`
+        :param function inferrer: The function which is used to infer the value of the field.
+            The function should have a signature of
+            (*object* value of the origin field, *BaseModel* the instance for which the value is being inferred)
+            -> *object* the value that the inferred field should have
+        :param default: (Optional) The default value for this field if none is set.
+        :param bool null: (Optional) Include in serialized output even if value is None. Default False.
+        :param bool required: (Optional) Whether a value is required. Default False.
+        :param bool contextual: (Optional) Whether this value is contextual. Default False.
+        :param BaseParserElement parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement. Default None.
+        :param bool updatable: (Optional) Whether the parse_expression can be changed by the document as parsing occurs. Default False
+        :param bool binding: (Optional) If this option is set to True, any submodels that have an attribute with the same name must have the same value for this attribute
+        """
+        self.field = field
+        self.origin_field = origin_field
+        self.inferrer = inferrer
+        super(InferredProperty, self).__init__(**kwargs)
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        value = instance._values.get(self.name)
+        if value is not None and value != self.default:
+            return value
+
+        value = self.inferrer(instance[self.origin_field],
+                              instance)
+        self.__set__(instance, value)
+        if value is None:
+            value = self.default
+        return value
+
+    def process(self, value):
+        return self.field.process(value)
+
+    def serialize(self, value, primitive=False):
+        return self.field.serialize(value)
 
     def is_empty(self, value):
         if isinstance(value, list) and len(value) != 0:
@@ -250,7 +316,36 @@ class ModelMeta(ABCMeta):
 
 @python_2_unicode_compatible
 class BaseModel(six.with_metaclass(ModelMeta)):
-    """"""
+    """
+    A base class for representing a model within ChemDataExtractor.
+    Each model can have a number of fields that are declared with the class::
+
+        class ExampleModel(BaseModel):
+            string_field = StringType()
+            number_field = FloatType()
+
+    See the documentation for :class:`~chemdataextractor.model.base.BaseType` for
+    more information. These fields are required for ChemDataExtractor to correctly
+    identify what to extract and for merging different records for the same model.
+
+    The attributes in the models can then be accessed via either dot notation::
+
+        example_record.string_field
+
+    or dictionary notation::
+
+        example_record["string_field"]
+
+    You can have nexted models, as in the example below, where a
+    new class, ``ExampleModel2`` can contain an ``ExampleModel``::
+
+        class ExampleModel2(BaseModel):
+            model_field = ModelType(ExampleModel)
+
+    keypath notation can be used to find the nested properties::
+
+        example_record2["model_field.string_field"]
+    """
 
     fields = {}
     parsers = [AutoSentenceParser(), AutoTableParser()]
@@ -308,18 +403,65 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
     def __getitem__(self, key):
         """Redirect dictionary-style field access to attribute-style."""
+        return self._get_item(key)
+
+    def _get_item(self, key, create_defaults=False):
+        """
+        A recursive way to items given a key, which can either be a simple property name for a top
+        level property (e.g. `names` for a compound), or a keypath to be able to drill down
+        a record (e.g. `compound.names`) for a property.
+        """
         try:
-            if key in self.fields:
-                return getattr(self, key)
-        except AttributeError:
+            if not isinstance(key, list):
+                key = self._get_keypath(key)
+            if key[0] in self.fields:
+                attribute = getattr(self, key[0])
+
+                if ((attribute is None
+                    or (attribute == [] and len(key) != 1))
+                    and create_defaults):
+                    field = self.fields[key[0]]
+                    is_list = False
+                    while hasattr(field, 'field'):
+                        if isinstance(field, ListType):
+                            is_list = True
+                        field = field.field
+
+                    if isinstance(field, ModelType):
+                        created_attr = field.model_class()
+                    else:
+                        created_attr = field('')
+                    if is_list:
+                        created_attr = [created_attr]
+                    attribute = created_attr
+                    self[key[0]] = created_attr
+
+                if len(key) == 1:
+                    return attribute
+                else:
+                    if isinstance(attribute, list):
+                        attribute = attribute[0]
+                    return attribute[key[1:]]
+        except AttributeError as e:
             pass
         raise KeyError(key)
 
     def __setitem__(self, key, value):
         """Redirect dictionary-style field setting to attribute-style."""
-        if key not in self.fields:
+        if not isinstance(key, list):
+            key = self._get_keypath(key)
+        if key[0] not in self.fields:
             raise KeyError(key)
-        return setattr(self, key, value)
+        target = self
+        if len(key) > 1:
+            target = self._get_item(key[:-1], create_defaults=True)
+            if isinstance(target, list):
+                if len(target) == 0:
+                    self._get_item(key, create_defaults=True)
+                    target = self._get_item(key[:-1], create_defaults=True)[0]
+                else:
+                    target = target[0]
+        return setattr(target, key[-1], value)
 
     def __contains__(self, name):
         try:
@@ -330,6 +472,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
     def __hash__(self):
         return str(self.serialize()).__hash__()
+
+    def _get_keypath(self, string):
+        return string.split(".")
 
     @classmethod
     def reset_updatables(cls):
@@ -498,15 +643,15 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         for field_name, field in six.iteritems(self.fields):
             # Method works recursively so it works with nested models
             if hasattr(field, 'model_class'):
-                if self[field_name] is None:
-                    if other[field_name] is not None:
+                if not self[field_name]:
+                    if other[field_name]:
                         return False
-                elif other[field_name] is None:
+                elif not other[field_name]:
                     pass
                 elif not self[field_name].is_superset(other[field_name]):
                     return False
             else:
-                if other[field_name] is not None and self[field_name] != other[field_name]:
+                if other[field_name] and self[field_name] != other[field_name]:
                     return False
         return True
 
@@ -558,6 +703,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         if self.contextual_fulfilled:
             return self
         if self._binding_compatible(other):
+            _compatible = False
+            if type(self) == type(other) and self._compatible(other):
+                _compatible = True
             if type(self) != type(other):
                 for field_name, field in six.iteritems(self.fields):
                     if hasattr(field, 'model_class') and isinstance(other, field.model_class):
@@ -566,16 +714,16 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         if self[field_name] is not None and field.contextual and not self[field_name].contextual_fulfilled:
                             if self[field_name].merge_contextual(other):
                                 did_merge = True
-                        elif (field.contextual and self[field_name] is None
-                              and other is not None):
+                        elif (field.contextual and not self[field_name]
+                              and other):
                             log.debug(field_name)
                             self[field_name] = copy.copy(other)
                             did_merge = True
             elif self._compatible(other):
                 for field_name, field in six.iteritems(self.fields):
                     if (field.contextual
-                       and self[field_name] is None
-                       and other.get(field_name, None) is not None):
+                       and not self[field_name]
+                       and other.get(field_name, None)):
                         self[field_name] = other[field_name]
                         did_merge = True
         self._consolidate_binding()
@@ -601,7 +749,6 @@ class BaseModel(six.with_metaclass(ModelMeta)):
 
         log.debug(self.serialize())
         log.debug(other.serialize())
-        pre_merge = [self.serialize(), other.serialize()]
         did_merge = False
         should_keep_both_records = self._should_keep_both_records(other)
         if self._binding_compatible(other):
@@ -609,28 +756,31 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 for field_name, field in six.iteritems(self.fields):
                     if hasattr(field, 'model_class') and isinstance(other, field.model_class):
                         log.debug('model class case')
-                        if self[field_name] is not None:
+                        if self[field_name]:
                             if self[field_name].merge_all(other):
                                 did_merge = True
-                        elif (self[field_name] is None
-                              and other is not None):
+                        elif (not self[field_name]
+                              and other):
                             log.debug(field_name)
                             self[field_name] = copy.copy(other)
                             did_merge = True
             elif self._compatible(other):
                 for field_name, field in six.iteritems(self.fields):
-                    if (self[field_name] is None
-                      and other.get(field_name, None) is not None):
+                    if (not self[field_name]
+                      and other.get(field_name, None)):
                         did_merge = True
                         self[field_name] = other[field_name]
         self._consolidate_binding()
         if did_merge:
             if should_keep_both_records:
-               did_merge = False
+                did_merge = False
         return did_merge
 
     def _compatible(self, other):
-        # return self._compatible_legacy(other)
+        """
+        Checks whether two records seem to be compatible for the purposes of merging.
+        This means no conflicting fields, unless `ignore_when_merging` is set.
+        """
         match = False
         if type(other) == type(self):
             # Check if the other seems to be describing the same thing as self.
@@ -643,6 +793,13 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                     and not self[field_name]._compatible(other[field_name])):
                         match = False
                         break
+                elif isinstance(field, ListType):
+                    if (not field.ignore_when_merging
+                      and self[field_name] is not None and self[field_name] != []
+                      and other[field_name] is not None and other[field_name] != []
+                      and self[field_name] != other[field_name]):
+                        match = False
+                        break
                 else:
                     if (not field.ignore_when_merging
                       and self[field_name] is not None
@@ -650,11 +807,6 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                       and self[field_name] != other[field_name]):
                         match = False
                         break
-        # legacy_match = self._compatible_legacy(other)
-        # if legacy_match != match:
-        #     print(legacy_match, match)
-        #     pprint(self.serialize())
-        #     pprint(other.serialize())
         return match
 
     def _compatible_legacy(self, other):
@@ -663,7 +815,6 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             # Check if the other seems to be describing the same thing as self.
             match = True
             for field_name, field in six.iteritems(self.fields):
-
                 if (not field.ignore_when_merging
                   and self[field_name] is not None
                   and other[field_name] is not None
@@ -694,7 +845,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         return should_keep_both
 
     @classmethod
-    def flatten(cls):
+    def flatten(cls, include_inferred=True):
         """
         A set of all models that are associated with this model.
         For example, if we have a model like the following with multiple submodels:
@@ -719,8 +870,12 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         """
         model_set = {cls}
         for field_name, field in six.iteritems(cls.fields):
+            while hasattr(field, 'field') and not isinstance(field, InferredProperty):
+                if hasattr(field, 'model_class'):
+                    model_set.update(field.model_class.flatten(include_inferred=include_inferred))
+                field = field.field
             if hasattr(field, 'model_class'):
-                model_set.update(field.model_class.flatten())
+                model_set.update(field.model_class.flatten(include_inferred=include_inferred))
         log.debug(model_set)
         return model_set
 
@@ -739,7 +894,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         """
         binding_properties = {}
         for field_name, field in six.iteritems(self.fields):
-            if field.binding and self[field_name] is not None:
+            if field.binding and self[field_name]:
                 binding_properties[field_name] = self[field_name]
         return binding_properties
 
@@ -763,12 +918,12 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             for field_name, field in six.iteritems(binding_properties):
                 if other[field_name] != binding_properties[field_name]:
                     return False
-        elif other is None:
+        elif not other:
             pass
         else:
             for field_name, field in six.iteritems(other.fields):
                 if field_name in binding_properties.keys():
-                    if other[field_name] is not None:
+                    if other[field_name]:
                         if not (binding_properties[field_name].is_superset(other[field_name]) or
                                 binding_properties[field_name].is_subset(other[field_name])):
                             return False
@@ -785,7 +940,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         for field_name, field in six.iteritems(self.fields):
             if field_name in binding_properties.keys():
                 self[field_name] = binding_properties[field_name]
-            elif hasattr(field, 'model_class') and self[field_name] is not None:
+            elif hasattr(field, 'model_class') and self[field_name]:
                 self[field_name]._consolidate_binding(binding_properties)
 
 
@@ -807,10 +962,24 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         Removes any subrecords where the required properties have not been fulfilled.
         """
         for field_name, field in six.iteritems(self.fields):
-            if hasattr(field, 'model_class') and self[field_name] is not None:
+            if hasattr(field, 'model_class') and self[field_name]:
                 self[field_name]._clean()
                 if not self[field_name].required_fulfilled:
                     self[field_name] = field.default
+
+    @classmethod
+    def _all_keypaths(cls):
+        all_keypaths = []
+        for field_name, field in six.iteritems(cls.fields):
+            while hasattr(field, 'field'):
+                field = field.field
+            if hasattr(field, 'model_class'):
+                sub_keypaths = field.model_class._all_keypaths()
+                for keypath in sub_keypaths:
+                    all_keypaths.append(field_name + '.' + keypath)
+            else:
+                all_keypaths.append(field_name)
+        return all_keypaths
 
     @property
     def is_empty(self):
@@ -818,6 +987,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             if not field_type.is_empty(self[field_name]):
                 return False
         return True
+
 
 
 @python_2_unicode_compatible

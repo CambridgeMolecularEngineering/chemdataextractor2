@@ -81,7 +81,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
 
     @abstractproperty
     def records(self):
-        """All records found in this Document, as a list of :class:`chemdataextractor.model.base.BaseModel`."""
+        """All records found in this Element, as a :class:`chemdataextractor.model.base.ModelList` of :class:`chemdataextractor.model.base.BaseModel`."""
         return []
 
     # @abstractmethod  # TODO: Put this back?
@@ -113,7 +113,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
             models = set()
             log.debug(self.models)
             for model in self.models:
-                models.update(model.flatten())
+                models.update(model.flatten(include_inferred=False))
             self._streamlined_models_list = sorted(list(models),
                                                    key=operator.attrgetter('__name__'))
         for model in self._streamlined_models_list:
@@ -125,6 +125,13 @@ class BaseElement(six.with_metaclass(ABCMeta)):
         """Convert element to JSON string. The content of the JSON will be equivalent
         to that of :meth:`serialize`."""
         return json.dumps(self.serialize(), *args, **kwargs)
+
+    @property
+    def elements(self):
+        """
+        A list of child elements. Returns None by default.
+        """
+        return None
 
 
 @python_2_unicode_compatible
@@ -159,6 +166,7 @@ class CaptionedElement(BaseElement):
         self.caption = caption
         self.label = label
         super(CaptionedElement, self).__init__(**kwargs)
+        self.caption.document = self.document
 
     def __repr__(self):
         return '%s(id=%r, references=%r, caption=%r)' % (self.__class__.__name__, self.id, self.references, self.caption.text)
@@ -239,3 +247,7 @@ class CaptionedElement(BaseElement):
         """
         data = {'type': self.__class__.__name__, 'caption': self.caption.serialize()}
         return data
+
+    @property
+    def elements(self):
+        return [self.caption]
