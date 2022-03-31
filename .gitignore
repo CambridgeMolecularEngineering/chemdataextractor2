@@ -1,5 +1,6 @@
 chemdataextractor/relex
 tests/chemdataextractor/relex
+tests/data/test_cache
 *log.txt
 log*.txt
 

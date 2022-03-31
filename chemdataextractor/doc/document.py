@@ -20,7 +20,7 @@ import copy
 import six
 
 from ..utils import python_2_unicode_compatible
-from .text import Paragraph, Citation, Footnote, Heading, Title, Caption, RichToken
+from .text import Paragraph, Citation, Footnote, Heading, Title, Caption, RichToken, Sentence, Cell
 from .element import CaptionedElement
 from .table import Table
 from .figure import Figure
@@ -627,5 +627,17 @@ class Document(BaseDocument):
         for tag_result in tag_results:
             for token, tag in tag_result:
                 token._tags[tag_type] = tag
+
+    @property
+    def sentences(self):
+        elements = copy.copy(self.elements)
+
+        sentences = []
+        for element in elements:
+            if element.elements is not None:
+                elements.extend(element.elements)
+            if isinstance(element, Sentence) and not isinstance(element, Cell):
+                sentences.append(element)
+        return sentences
 
 
