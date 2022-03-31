@@ -11,7 +11,7 @@ import logging
 
 
 __title__ = 'ChemDataExtractor'
-__version__ = '2.1.1'
+__version__ = '2.1.2'
 __author__ = 'Matt Swain, Callum Court, Edward Beard, Juraj Mavracic and Taketomo Isazawa'
 __email__ = 'm.swain@me.com, cc889@cam.ac.uk, ejb207@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk'
 __license__ = 'MIT'
