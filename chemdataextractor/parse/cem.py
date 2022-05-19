@@ -156,6 +156,15 @@ amino_acid_name = (
     I('aspartic') + I('acid') | I('glutamic') + I('acid')
 )
 
+#RNA/DNA Bases
+base_pair_strand = (
+    R(u'^', re.I)| Optional(W(u'3′-')) + Optional(I(u'[a-zA-Z]+-'))| Optional(W(u'5′-') + Optional(I(u'[a-zA-Z]+-')))
+    +
+    R('[ACTGU ]{4,100}')
+    +
+    (Optional(I(u'[a-zA-Z]+-')) + Optional(W(u'-3′'))|Optional(I(u'[a-zA-Z]+-'))+ Optional(W(u'-5′')))
+)
+
 #: Chemical formula patterns, updated to include Inorganic compound formulae
 formula = ((
     R('^C\(?\d{1,3}\)?(([HNOP]|Cl)\(?\d\d?\)?)+(\(?\d?[\+\-]\d?\)?)?$') |
