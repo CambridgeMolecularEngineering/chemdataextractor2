@@ -6,7 +6,7 @@ License/Citing
 If you use ChemDataExtractor v2 and/or TableDataExtractor as a resource in your research, please cite the following work:
 
     Juraj Mavračić, Callum J. Court, Taketomo Isazawa, Stephen R. Elliott, Jacqueline M. Cole: ChemDataExtractor 2.0: Auto-Populated Ontologies for Materials Science",
-    J. Chem. Inf. Model. **2020**, *xx* (xx), pp xxxx–xxxx 10.1021/acs.jcim.xxxxxxx
+    J. Chem. Inf. Model. **2021**, *61* (9), pp 4280–4289 10.1021/acs.jcim.1c00446
 
 ChemDataExtractor v2 is based on ChemDataExtractor. So, please also cite the following where relevant:
 
@@ -22,7 +22,12 @@ If you use the Snowball algorithm in particular, please cite the following:
 
 If you use the automatically generated parsers or TableDataExtractor, please cite the following:
 
-*TO BE ADDED*
+    Juraj Mavračić, Callum J. Court, Taketomo Isazawa, Stephen R. Elliott, Jacqueline M. Cole: ChemDataExtractor 2.0: Auto-Populated Ontologies for Materials Science",
+    J. Chem. Inf. Model. **2021**, *61* (9), pp 4280–4289 10.1021/acs.jcim.1c00446
+
+    Embley, D.W., Krishnamoorthy, M.S., Nagy, G., and Seth, S. **2016** Converting heterogeneous statistical tables on the web to searchable databases. Int. J. Doc. Anal. Recognit., *19* (2), 119–138.
+
+    Nagy, G., and Seth, S. **2017** Table headers: An entrance to the data mine. Proc. - Int. Conf. Pattern Recognit., 4065–4070.
 
 If you use the new Named Entity Recognition system from v2.1+, please cite the following:
 
