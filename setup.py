@@ -45,6 +45,7 @@ setup(
         'numpy',
         'numpy==1.16; python_version < "3.7.0"',
         'numpy>=1.16; python_version >= "3.7.0"',
+        'protobuf==3.*',
         # 'scipy',
         'yaspin',
         'deprecation',
