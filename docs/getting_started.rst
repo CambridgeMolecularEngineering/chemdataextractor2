@@ -31,13 +31,13 @@ Paper describing the Snowball algorithm:
 
 Paper describing the enhancements made in CDE 2.0 and TableDataExtractor:
 
-*TO BE ADDED*
+*Juraj Mavračić, Callum J. Court, Taketomo Isazawa, Stephen R. Elliott, Jacqueline M. Cole: ChemDataExtractor 2.0: Auto-Populated Ontologies for Materials Science", J. Chem. Inf. Model. 2021, 61(9), pp 4280–4289 10.1021/acs.jcim.1c00446*
 
 Paper describing the new Named Entity Recognition system:
 
-*TO BE ADDED*
+*Taketomo Isazawa, Jacqueline M. Cole: "Single Model for Organic and Inorganic Chemical Named Entity Recognition in ChemDataExtractor", J. Chem. Inf. Model. 2022, 62 (5), pp 1207-1213 10.1021/acs.jcim.1c01199*
 
-and the associated website https://chemdataextractor.org.
+and the associated website https://chemdataextractor2.org.
 
 The general process for extracting information from scientific text is as follows:
 
