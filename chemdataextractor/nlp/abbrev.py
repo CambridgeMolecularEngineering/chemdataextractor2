@@ -39,24 +39,29 @@ class AbbreviationDetector(object):
 
     def _is_allowed_abbr(self, tokens):
         """Return True if text is an allowed abbreviation."""
-        if len(tokens) <= 2:
+        if len(tokens) <= 2:  # Abbreviations should contain at most 2 tokens.
             abbr_text = ''.join(tokens)
             if self.abbr_min <= len(abbr_text) <= self.abbr_max and bracket_level(abbr_text) == 0:
+                # Check the number of characters in abbrev_text and if it contains balanced brackets or no brackets
                 if abbr_text[0].isalnum() and any(c.isalpha() for c in abbr_text):
                     # Disallow property values
                     if re.match('^\d+(\.\d+)?(g|m[lL]|cm)$', abbr_text):
+                        # int or float followed by "q" or "ml" or "cm"
                         return False
                     return True
         return False
 
     def _max_long_length(self, abbr):
+        """Set upper limit to the length of full name."""
         abbr_len = len(''.join(abbr))
         return min(abbr_len + 5, abbr_len * 2)
 
     def _get_candidates(self, tokens):
+        """Find valid pairs of full names and abbreviations."""
         candidates = []
         bracket_spans = []
         for i, t1 in enumerate(tokens):
+            # Find potential abbreviation and full names in the form short_name=long_name
             if t1 == '=':
                 # abbr = long
                 abbr_span = (i-1, i)
@@ -67,6 +72,7 @@ class AbbreviationDetector(object):
                     if long_span:
                         candidates.append((abbr_span, long_span))
                         #candidates.append((abbr, long))
+            # Find potential abbreviation and full names in the form long_name (short_name)
             if t1 == '(':
                 for j, t2 in enumerate(tokens[i+1:]):
                     if t2 in {')', ';', ','}:
@@ -125,7 +131,7 @@ class AbbreviationDetector(object):
                     return (start, start+i)
 
     def _is_valid_long(self, abbr, tokens):
-        """"""
+        """Return True if a span of tokens is a valid long name"""
 
         def _is_valid(abbr, long):
             # Disallowed characters - @ typically in emails
@@ -139,6 +145,8 @@ class AbbreviationDetector(object):
                 if not current.isalnum():
                     continue
                 while (l_i >= 0 and not long[l_i].lower() == current) or (a_i == 0 and l_i > 0 and long[l_i-1].isalnum()):
+                    # The letters in an abbreviation should appear in the long name
+                    # in the same order as in the abbreviation
                     #print('L: %s' % long[l_i])
                     l_i -= 1
                 if l_i < 0:
