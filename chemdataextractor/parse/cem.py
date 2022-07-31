@@ -89,8 +89,7 @@ chemical_label_phrase1 = (Optional(synthesis_of) + label_type + lenient_chemical
 chemical_label_phrase2 = (synthesis_of + Optional(label_type) + lenient_chemical_label + ZeroOrMore((T('CC') | comma) + lenient_chemical_label))
 # Chemical label with to give/afforded etc. before, and some restriction after.
 chemical_label_phrase3 = (to_give + Optional(dt) + Optional(label_type) + lenient_chemical_label + Optional(lbrct + OneOrMore(Not(rbrct) + Any()) + rbrct).hide() + (End() | I('as') | colon | comma).hide())
-# Chemical label in the form of several-letter abbreviation
-chemical_label_phrase4 = cm('labels')
+
 
 ###### DOPED CHEMICAL LABELS ##########
 doped_chemical_identifier = (W('x') | W('y'))
@@ -391,7 +390,7 @@ class CompoundParser(BaseSentenceParser):
 
         label_before_name = Optional(synthesis_of | to_give) + label_type + optdelim + label_name_cem + ZeroOrMore(optdelim + cc + optdelim + label_name_cem)
 
-        name_with_optional_bracketed_label = (Optional(synthesis_of | to_give) + chemical_name + Optional(lbrct + Optional(labelled_as + optquote) + (label | chemical_label_phrase4) + optquote + rbrct))('compound')
+        name_with_optional_bracketed_label = (Optional(synthesis_of | to_give) + chemical_name + Optional(lbrct + Optional(labelled_as + optquote) + (label) + optquote + rbrct))('compound')
 
         # Very lenient name and label match, with format like "name (Compound 3)"
         lenient_name_with_bracketed_label = (Start() + Optional(synthesis_of) + lenient_name + lbrct + label_type.hide() + label + rbrct)('compound')
@@ -423,7 +422,6 @@ class ChemicalLabelParser(BaseSentenceParser):
 
     @property
     def root(self):
-        # print('Using Branch <abbrev_as_labels>.')
         label = self.model.labels.parse_expression('labels')
         if self._label is label:
             return self._root_phrase

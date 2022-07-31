@@ -397,14 +397,12 @@ class Document(BaseDocument):
                         len(r_compound.labels - other_r_compound.labels) > 0 and len(other_r_compound.labels - r_compound.labels) > 0):
                         j += 1
                         continue
-                    # One additional case will be merged:
-                    # One name is the same as the other's labels.
+
                     if (r_compound.labels is not None and
                         other_r_compound.labels is not None and
                         rnames_std is not None and
                         onames_std is not None and
-                        (any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels)))\
-                            or (any(n in r_compound.labels for n in onames_std) or any(l in rnames_std for l in other_r_compound.labels)):
+                        (any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels))):
                         r_compound.merge(other_r_compound)
                         other_r_compound.merge(r_compound)
                         if isinstance(r, Compound) and isinstance(other_r, Compound):
