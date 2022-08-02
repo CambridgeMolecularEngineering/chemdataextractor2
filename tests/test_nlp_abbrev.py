@@ -16,9 +16,8 @@ import logging
 import unittest
 
 from chemdataextractor.doc.document import Document
-from chemdataextractor.doc.text import Paragraph
+from chemdataextractor.doc.text import Paragraph, Sentence
 from chemdataextractor.nlp.abbrev import ChemAbbreviationDetector
-
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ log = logging.getLogger(__name__)
 class TestChemAbbreviationDetector(unittest.TestCase):
 
     def test_abbr1(self):
-        """Test the ChemAbbreviationDetector on a simple sentence."""
+        """Test the ChemAbbreviationDetector on a simple tokenized sentence."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [([u'HDAC'], [u'histone', u'deacetylase'])],
@@ -35,7 +34,7 @@ class TestChemAbbreviationDetector(unittest.TestCase):
         )
 
     def test_abbr2(self):
-        """Test the ChemAbbreviationDetector on a simple sentence."""
+        """Test the ChemAbbreviationDetector on a simple tokenized sentence."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [([u'VPA'], [u'valproic', u'acid'])],
@@ -43,15 +42,28 @@ class TestChemAbbreviationDetector(unittest.TestCase):
         )
 
     def test_abbr3(self):
-        """Test the ChemAbbreviationDetector on a simple sentence."""
+        """Test the ChemAbbreviationDetector on a simple tokenized sentence."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
-            [(['15-ADON'], ['15-acetyldeoxynivalenol']), (['3-ADON'], ['3-acetyldeoxynivalenol']), (['NIV'], ['nivalenol'])],
-            ad.detect(['potencies', 'of', 'DON', ',', '15-acetyldeoxynivalenol', '(', '15-ADON', ')', ',', '3-acetyldeoxynivalenol', '(', '3-ADON', ')', ',', 'fusarenon', 'X', '(', 'FX', ')', ',', 'and', 'nivalenol', '(', 'NIV', ')', 'in'])
+            [(['15-ADON'], ['15-acetyldeoxynivalenol']), (['3-ADON'], ['3-acetyldeoxynivalenol']),
+             (['NIV'], ['nivalenol'])],
+            ad.detect(['potencies', 'of', 'DON', ',', '15-acetyldeoxynivalenol', '(', '15-ADON', ')',
+                       ',', '3-acetyldeoxynivalenol', '(', '3-ADON', ')', ',', 'fusarenon',
+                       'X', '(', 'FX', ')', ',', 'and', 'nivalenol', '(', 'NIV', ')', 'in'])
+        )
+
+    def test_abbr3_s(self):
+        """Test the ChemAbbreviationDetector on a simple raw sentence."""
+        ad = ChemAbbreviationDetector()
+        self.assertEqual(
+            [(['15', '-', 'ADON'], ['15', '-', 'acetyldeoxynivalenol']),
+             (['3', '-', 'ADON'], ['3' , '-', 'acetyldeoxynivalenol']), (['NIV'], ['nivalenol'])],
+            ad.detect(Sentence("protencies of DON, 15-acetyldeoxynivalenol (15-ADON), 3-acetyldeoxynivalenol (3-ADON), "
+                               "fusarenon X (FX) and nivalenol (NIV) in").raw_tokens)
         )
 
     def test_abbr4(self):
-        """Test the ChemAbbreviationDetector on a simple sentence."""
+        """Test the ChemAbbreviationDetector on a simple tokenized sentence."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [(['THF'], ['tetrahydrofuran'])],
@@ -59,7 +71,7 @@ class TestChemAbbreviationDetector(unittest.TestCase):
         )
 
     def test_abbr5(self):
-        """Test the ChemAbbreviationDetector on a simple sentence."""
+        """Test the ChemAbbreviationDetector on a simple tokenized sentence."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [(['THF'], ['tetrahydrofuran'])],
@@ -67,7 +79,7 @@ class TestChemAbbreviationDetector(unittest.TestCase):
         )
 
     def test_abbr6(self):
-        """Test the ChemAbbreviationDetector on a simple sentence."""
+        """Test the ChemAbbreviationDetector on a simple tokenized sentence."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [(['THF'], ['tetrahydrofuran'])],
@@ -75,15 +87,32 @@ class TestChemAbbreviationDetector(unittest.TestCase):
         )
 
     def test_abbr7(self):
-        """Test the ChemAbbreviationDetector on a simple sentence."""
+        """Test the ChemAbbreviationDetector on a simple tokenized sentence."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [(['NAG'], ['N-acetyl-β-glucosaminidase'])],
             ad.detect(['blood', 'urea', 'nitrogen', ',', 'N-acetyl-β-glucosaminidase', '(', 'NAG', ')', ','])
         )
 
+    def test_abbr7_s(self):
+        """Test the ChemAbbreviationDetector on a simple raw sentence."""
+        ad = ChemAbbreviationDetector()
+        self.assertEqual(
+            [(['NAG'], ['N' , '-', 'acetyl', '-', 'β', '-', 'glucosaminidase'])],
+            ad.detect(Sentence("blood urea nitrogen, N-acetyl-β-glucosaminidase (NAG),").raw_tokens)
+        )
+
+    # def test_abbr8_s(self):
+    #     """Test the ChemAbbreviationDetector on a simple raw sentence."""
+    #     ad = ChemAbbreviationDetector()
+    #     self.assertEqual(
+    #         [(['3BPy', '-', 'pDTC'], ['(4-(3,6-di-tert-butyl-9H-carbazol-9-yl)phenyl)(6-(3,6-di-tert-butyl-9H-carbazol-9-yl)pyridin-3-yl)methanone'])],
+    #         ad.detect(Sentence("A novel (4-(3,6-di-tert-butyl-9H-carbazol-9-yl)phenyl)(6-(3,6-di-tert-butyl-9H-carbazol-9-yl)pyridin-3-yl)methanone (3BPy-pDTC) was synthesized.").raw_tokens)
+    #     )
+
+
     def test_equiv1(self):
-        """Test the ChemAbbreviationDetector where string equivalent is needed."""
+        """Test the ChemAbbreviationDetector where string equivalent is needed in list of tokens."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [(['CTAB'], ['hexadecyltrimethylammonium', 'bromide'])],
@@ -91,7 +120,7 @@ class TestChemAbbreviationDetector(unittest.TestCase):
         )
 
     def test_equiv2(self):
-        """Test the ChemAbbreviationDetector where string equivalent is needed."""
+        """Test the ChemAbbreviationDetector where string equivalent is needed in list of tokens."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [(['MeOH'], ['methanol'])],

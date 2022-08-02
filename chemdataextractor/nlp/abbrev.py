@@ -39,9 +39,10 @@ class AbbreviationDetector(object):
 
     def _is_allowed_abbr(self, tokens):
         """Return True if text is an allowed abbreviation."""
-        if len(tokens) <= 2:  # Abbreviations should contain at most 2 tokens.
+        num_hyph = tokens.count("-")
+        if len(tokens)-2*num_hyph <= 2:  # Abbreviations should contain at most 2 tokens.
             abbr_text = ''.join(tokens)
-            if self.abbr_min <= len(abbr_text) <= self.abbr_max and bracket_level(abbr_text) == 0:
+            if self.abbr_min <= len(abbr_text) - num_hyph <= self.abbr_max and bracket_level(abbr_text) == 0:
                 # Check the number of characters in abbrev_text and if it contains balanced brackets or no brackets
                 if abbr_text[0].isalnum() and any(c.isalpha() for c in abbr_text):
                     # Disallow property values
@@ -52,7 +53,7 @@ class AbbreviationDetector(object):
         return False
 
     def _max_long_length(self, abbr):
-        """Set upper limit to the length of full name."""
+        """Set upper limit to the number of tokens in full name."""
         abbr_len = len(''.join(abbr))
         return min(abbr_len + 5, abbr_len * 2)
 
@@ -64,7 +65,7 @@ class AbbreviationDetector(object):
             # Find potential abbreviation and full names in the form short_name=long_name
             if t1 == '=':
                 # abbr = long
-                abbr_span = (i-1, i)
+                abbr_span = (i-1, i)  # abbreviation of 1 tokens is allowed only.
                 abbr = tokens[abbr_span[0]:abbr_span[1]]
                 if i > 0 and self._is_allowed_abbr(abbr):
                     long_span = self._get_long_span(tokens, abbr_span, start=i+1)
@@ -121,14 +122,36 @@ class AbbreviationDetector(object):
                 return start, end
         elif start is None and end is not None:
             # Expand long backwards from end
-            for i in range(1, min(max_length + 1, len(tokens) + 1)):
-                if self._is_valid_long(abbr, tokens[end-i:end]):
-                    return (end-i, end)
+            # for i in range(1, min(max_length + 1, len(tokens) + 1)):
+            #     if self._is_valid_long(abbr, tokens[end-i:end]):
+            #         return (end-i, end)
+            i = 1
+            while True:
+                long_tokens = tokens[end-i:end]
+                num_hyph = long_tokens.count("-")
+                if len(long_tokens)-2*num_hyph > max_length:
+                    return None
+                else:
+                    if self._is_valid_long(abbr, long_tokens):
+                        return (end - i, end)
+                    i += 1
+
         elif start is not None and end is None:
             # Expand long forwards from start
-            for i in range(1, min(max_length + 1, len(tokens) + 1)):
-                if self._is_valid_long(abbr, tokens[start:start+i]):
-                    return (start, start+i)
+            # for i in range(1, min(max_length + 1, len(tokens) + 1)):
+            #    if self._is_valid_long(abbr, tokens[start:start+i]):
+            #        return (start, start+i)
+            i = 1
+            while True:
+                long_tokens = tokens[start:start+i]
+                num_hyph = long_tokens.count("-")
+                if len(long_tokens)-2*num_hyph > max_length:
+                    return None
+                else:
+                    if self._is_valid_long(abbr, long_tokens):
+                        return (start, start+i)
+                    i += 1
+
 
     def _is_valid_long(self, abbr, tokens):
         """Return True if a span of tokens is a valid long name"""
@@ -156,7 +179,19 @@ class AbbreviationDetector(object):
             return True
 
         abbr = ''.join(abbr)
-        longs = {' '.join(tokens)}
+        # long = ' '.join(tokens)
+        spaced_tokens = []
+        for i, token in enumerate(tokens):
+            if token != "-":
+                spaced_tokens += [token, " "]
+            else:
+                if i != 0:
+                    if spaced_tokens[-1] == " ":
+                        spaced_tokens.pop(-1)
+                spaced_tokens.append("-")
+
+        longs = {"".join(spaced_tokens)}
+
         for before, after in self.abbr_equivs:
             newlongs = set()
             for long in longs:
@@ -204,7 +239,7 @@ class ChemAbbreviationDetector(AbbreviationDetector):
     #: Minimum abbreviation length
     abbr_min = 3
     #: Maximum abbreviation length
-    abbr_max = 10
+    abbr_max = 14
     #: String equivalents to use when detecting abbreviations.
     abbr_equivs = [
         ('silver', 'Ag'),
