@@ -795,8 +795,8 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         break
                 elif isinstance(field, ListType) or isinstance(field, SetType):
                     if (not field.ignore_when_merging
-                      and self[field_name] is not None and len(self[field_name]) != 0
-                      and other[field_name] is not None and len(other[field_name]) != 0
+                      and self[field_name] is not None and len(self[field_name])
+                      and other[field_name] is not None and len(other[field_name])
                       and self[field_name] != other[field_name]):
                         match = False
                         break

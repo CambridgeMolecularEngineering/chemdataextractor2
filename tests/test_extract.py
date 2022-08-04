@@ -101,6 +101,16 @@ class TestExtract(unittest.TestCase):
         ]
         self.assertCountEqual(expected, d.records.serialize())
 
+    def test_merge_contextual_2(self):
+        """Test merging a compound's full name in to another compound record containing its label."""
+        p1 = Paragraph("The structure of 4-amino-2-(3-thienyl)phenol hydrochloride (1a) is shown in Fig. 1.")
+        p1.models = [MeltingPoint]
+        p2 = Paragraph("1a has a melting point of 130-132° C.")
+        p2.models = [MeltingPoint]
+        r1 = p1.records[0]
+        r2 = p2.records[0]
+        r2.merge_contextual(r1)
+        self.assertTrue(r2.compound._compatible(r1))
 
 
 
