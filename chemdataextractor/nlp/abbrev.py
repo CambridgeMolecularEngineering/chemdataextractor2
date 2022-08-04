@@ -135,6 +135,8 @@ class AbbreviationDetector(object):
                     if self._is_valid_long(abbr, long_tokens):
                         return (end - i, end)
                     i += 1
+                if i > end:
+                    return None
 
         elif start is not None and end is None:
             # Expand long forwards from start
@@ -151,6 +153,8 @@ class AbbreviationDetector(object):
                     if self._is_valid_long(abbr, long_tokens):
                         return (start, start+i)
                     i += 1
+                if start + i == len(tokens):
+                    return None
 
 
     def _is_valid_long(self, abbr, tokens):
