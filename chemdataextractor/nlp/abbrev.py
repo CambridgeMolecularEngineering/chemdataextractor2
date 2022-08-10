@@ -40,7 +40,8 @@ class AbbreviationDetector(object):
     def _is_allowed_abbr(self, tokens):
         """Return True if text is an allowed abbreviation."""
         num_hyph = tokens.count("-")
-        if len(tokens)-2*num_hyph <= 2:  # Abbreviations should contain at most 2 tokens.
+        # Abbreviations should contain at most 2 tokens; number tokens minus number of hyphens minus the number of tokens due to splitting on hyphens
+        if len(tokens) - 2 * num_hyph <= 2:
             abbr_text = ''.join(tokens)
             if self.abbr_min <= len(abbr_text) - num_hyph <= self.abbr_max and bracket_level(abbr_text) == 0:
                 # Check the number of characters in abbrev_text and if it contains balanced brackets or no brackets
@@ -48,6 +49,7 @@ class AbbreviationDetector(object):
                     # Disallow property values
                     if re.match('^\d+(\.\d+)?(g|m[lL]|cm)$', abbr_text):
                         # int or float followed by "q" or "ml" or "cm"
+                        # TODO: generalize to any units
                         return False
                     return True
         return False
@@ -127,9 +129,10 @@ class AbbreviationDetector(object):
             #         return (end-i, end)
             i = 1
             while True:
-                long_tokens = tokens[end-i:end]
+                long_tokens = tokens[end - i:end]
                 num_hyph = long_tokens.count("-")
-                if len(long_tokens)-2*num_hyph > max_length:
+                if len(long_tokens) - 2 * num_hyph > max_length:
+                    # ab-cd-ef should be counted as 1 token,  number tokens minus number of hyphens minus the number of tokens due to splitting on hyphens
                     return None
                 else:
                     if self._is_valid_long(abbr, long_tokens):
@@ -145,13 +148,14 @@ class AbbreviationDetector(object):
             #        return (start, start+i)
             i = 1
             while True:
-                long_tokens = tokens[start:start+i]
+                long_tokens = tokens[start:start + i]
                 num_hyph = long_tokens.count("-")
-                if len(long_tokens)-2*num_hyph > max_length:
+                #  number tokens minus number of hyphens minus the number of tokens due to splitting on hyphens
+                if len(long_tokens) - 2 * num_hyph > max_length:
                     return None
                 else:
                     if self._is_valid_long(abbr, long_tokens):
-                        return (start, start+i)
+                        return (start, start + i)
                     i += 1
                 if start + i == len(tokens):
                     return None

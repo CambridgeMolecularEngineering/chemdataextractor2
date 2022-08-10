@@ -52,8 +52,8 @@ class TestChemAbbreviationDetector(unittest.TestCase):
                        'X', '(', 'FX', ')', ',', 'and', 'nivalenol', '(', 'NIV', ')', 'in'])
         )
 
-    def test_abbr3_s(self):
-        """Test the ChemAbbreviationDetector on a simple raw sentence."""
+    def test_abbr3_on_sentence(self):
+        """Test the ChemAbbreviationDetector on a simple Sentence object."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [(['15', '-', 'ADON'], ['15', '-', 'acetyldeoxynivalenol']),
@@ -94,8 +94,8 @@ class TestChemAbbreviationDetector(unittest.TestCase):
             ad.detect(['blood', 'urea', 'nitrogen', ',', 'N-acetyl-β-glucosaminidase', '(', 'NAG', ')', ','])
         )
 
-    def test_abbr7_s(self):
-        """Test the ChemAbbreviationDetector on a simple raw sentence."""
+    def test_abbr7_on_sentence(self):
+        """Test the ChemAbbreviationDetector on a simple Sentence object."""
         ad = ChemAbbreviationDetector()
         self.assertEqual(
             [(['NAG'], ['N' , '-', 'acetyl', '-', 'β', '-', 'glucosaminidase'])],
