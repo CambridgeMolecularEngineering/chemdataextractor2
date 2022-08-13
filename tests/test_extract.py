@@ -110,7 +110,7 @@ class TestExtract(unittest.TestCase):
         r1 = p1.records[0]
         r2 = p2.records[0]
         r2.merge_contextual(r1)
-        self.assertTrue(r2.compound._compatible(r1))
+        self.assertTrue(r2._compatible(r1))
 
 
 

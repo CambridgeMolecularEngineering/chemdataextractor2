@@ -229,7 +229,7 @@ class TestParseMpCompound(unittest.TestCase):
         expected = [
             {'Compound': {'labels': [u'67'], 'names': [u'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid'], 'roles': ['compound']}},
             {'MeltingPoint': {'raw_value': '163-164', 'raw_units': '°C', 'units': u'Celsius^(1.0)', 'value': [163.0, 164.0],
-                             'compound': {'Compound': {'labels': [u'67'], 'names': [u'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid']}}}}
+                             'compound': {'Compound': {'labels': [u'67'], 'names': [u'4-Amino-3-chloro-6-(2,3,4-trifluorophenyl)pyridine-2-carboxylic acid'], "roles": ['compound']}}}}
         ]
         self.do_parse(s, expected)
 
