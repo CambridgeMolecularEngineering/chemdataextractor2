@@ -185,11 +185,11 @@ Create a file ``bp.py`` in the parse package.
 Some very simple logic for extracting boiling points might be::
 
     from chemdataextractor.parse import R, I, W, Optional, merge
-    from chemdataextractor.parse.base import BaseParser
+    from chemdataextractor.parse.base import BaseSentenceParser
     from chemdataextractor.utils import first
 
 
-    prefix = (R(u'^b\.?p\.?$', re.I) | I(u'boiling') + I(u'point')).hide()
+    prefix = (((W('b') + W('.') + W('p') + W('.')) | (I(u'boiling') + I(u'point'))).add_action(join)).hide()
     units = (W(u'°') + Optional(R(u'^[CFK]\.?$')))(u'raw_units').add_action(merge)
     value = R(u'^\d+(\.\d+)?$')(u'raw_value')
     bp = (prefix + value + units)(u'bp')
@@ -213,8 +213,8 @@ In the same file, we create the parser class, that inherits from ``BaseParser``:
 
         def interpret(self, result, start, end):
             try:
-                raw_value = first(result.xpath('./value/text()'))
-                raw_units = first(result.xpath('./units/text()'))
+                raw_value = first(result.xpath('./raw_value/text()'))
+                raw_units = first(result.xpath('./raw_units/text()'))
                 boiling_point = self.model(raw_value=raw_value,
                             raw_units=raw_units,
                             value=self.extract_value(raw_value),
