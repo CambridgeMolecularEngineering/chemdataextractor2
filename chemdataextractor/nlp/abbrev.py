@@ -246,7 +246,8 @@ class ChemAbbreviationDetector(AbbreviationDetector):
 
     #: Minimum abbreviation length
     abbr_min = 3
-    #: Maximum abbreviation length
+    #: Maximum abbreviation length, was 10 in Hearst & Schwartz for biological terminologies.
+    # Now 14 in ChemAbbreviationDetector because it's likely for compound abbreviation to exceeds 10 characters.
     abbr_max = 14
     #: String equivalents to use when detecting abbreviations.
     abbr_equivs = [
