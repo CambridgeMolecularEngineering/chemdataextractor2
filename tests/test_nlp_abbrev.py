@@ -102,15 +102,6 @@ class TestChemAbbreviationDetector(unittest.TestCase):
             ad.detect(Sentence("blood urea nitrogen, N-acetyl-β-glucosaminidase (NAG),").raw_tokens)
         )
 
-    # def test_abbr8_s(self):
-    #     """Test the ChemAbbreviationDetector on a simple raw sentence."""
-    #     ad = ChemAbbreviationDetector()
-    #     self.assertEqual(
-    #         [(['3BPy', '-', 'pDTC'], ['(4-(3,6-di-tert-butyl-9H-carbazol-9-yl)phenyl)(6-(3,6-di-tert-butyl-9H-carbazol-9-yl)pyridin-3-yl)methanone'])],
-    #         ad.detect(Sentence("A novel (4-(3,6-di-tert-butyl-9H-carbazol-9-yl)phenyl)(6-(3,6-di-tert-butyl-9H-carbazol-9-yl)pyridin-3-yl)methanone (3BPy-pDTC) was synthesized.").raw_tokens)
-    #     )
-
-
     def test_equiv1(self):
         """Test the ChemAbbreviationDetector where string equivalent is needed in list of tokens."""
         ad = ChemAbbreviationDetector()

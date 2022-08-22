@@ -124,9 +124,6 @@ class AbbreviationDetector(object):
                 return start, end
         elif start is None and end is not None:
             # Expand long backwards from end
-            # for i in range(1, min(max_length + 1, len(tokens) + 1)):
-            #     if self._is_valid_long(abbr, tokens[end-i:end]):
-            #         return (end-i, end)
             i = 1
             while True:
                 long_tokens = tokens[end - i:end]
@@ -143,9 +140,6 @@ class AbbreviationDetector(object):
 
         elif start is not None and end is None:
             # Expand long forwards from start
-            # for i in range(1, min(max_length + 1, len(tokens) + 1)):
-            #    if self._is_valid_long(abbr, tokens[start:start+i]):
-            #        return (start, start+i)
             i = 1
             while True:
                 long_tokens = tokens[start:start + i]
@@ -247,7 +241,13 @@ class ChemAbbreviationDetector(AbbreviationDetector):
     #: Minimum abbreviation length
     abbr_min = 3
     #: Maximum abbreviation length, was 10 in Hearst & Schwartz for biological terminologies.
-    # Now 14 in ChemAbbreviationDetector because it's likely for compound abbreviation to exceeds 10 characters.
+    # The Schwartz paper's test phrases are mainly "Protein data bank (PDB)".
+    # The long name is a span of every day English words
+    # that forms a terminology, where most tokens contribute only one character to the short name.
+    # But chemical names have different convention e.g. Acetyl = Ac
+    # a simple prefix leads to 2-4 characters in the short name.
+    # As a result, a complex molecule containing 3-4 moieties will have a short name overshooting 10 characters.
+    # Now 14 in ChembbreviationDetector.
     abbr_max = 14
     #: String equivalents to use when detecting abbreviations.
     abbr_equivs = [
