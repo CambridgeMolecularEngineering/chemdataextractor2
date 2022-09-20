@@ -39,7 +39,7 @@ class PlainTextCacher:
 
         sentences = document.sentences
 
-         # Save tokenisation
+        # Save tokenisation
         with open(self._document_tokenizer_cache_path(cache_location_root, document_configuration["tokenizer"]), "w+", encoding='utf-8') as f:
             for sentence in sentences:
                 # We use silly emoji to delineate so that we don't ever get conflicts with actual tokens used.
