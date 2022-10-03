@@ -50,7 +50,7 @@ setup(
         'yaspin',
         'deprecation',
         'allennlp==0.9.0',
-        'tokenizers',
+        'tokenizers==0.12.1',
         'scikit-learn==0.22.1',
         'overrides==3.1.0'
     ],
