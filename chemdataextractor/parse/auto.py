@@ -200,7 +200,7 @@ class BaseAutoParser(BaseParser):
 
         if hasattr(self.model, 'dimensions') and not self.model.dimensions:
             # the specific entities of a DimensionlessModel are retrieved explicitly and packed into a dictionary
-            raw_value = first(result.xpath('./raw_value/text()'))
+            raw_value = first(self._get_data_for_field(result, "raw_value", True))
             log.debug(raw_value)
             if not raw_value and self.model.fields['raw_value'].required and not self.model.fields['raw_value'].contextual:
                 requirements = False
@@ -209,8 +209,8 @@ class BaseAutoParser(BaseParser):
         elif hasattr(self.model, 'dimensions') and self.model.dimensions:
             # the specific entities of a QuantityModel are retrieved explicitly and packed into a dictionary
             # print(etree.tostring(result))
-            raw_value = first(result.xpath('./raw_value/text()'))
-            raw_units = first(result.xpath('./raw_units/text()'))
+            raw_value = first(self._get_data_for_field(result, "raw_value", True))
+            raw_units = first(self._get_data_for_field(result, "raw_units", True))
             property_entities.update({"raw_value": raw_value,
                                       "raw_units": raw_units})
 
@@ -237,9 +237,9 @@ class BaseAutoParser(BaseParser):
     def _get_data(self, field_name, field, result, for_list=False):
         if hasattr(field, 'model_class'):
             if for_list:
-                field_results = result.xpath('./' + field_name)
+                field_results = self._get_data_for_field(result, field_name)
             else:
-                field_results = [first(result.xpath('./' + field_name))]
+                field_results = [first(self._get_data_for_field(result, field_name))]
             field_objects = []
             for field_result in field_results:
                 if field_result is None and field.required and not field.contextual:
@@ -274,19 +274,28 @@ class BaseAutoParser(BaseParser):
             return {field_name: field_data[field_name]}
         else:
             if for_list:
-                field_result = result.xpath('./' + field_name + '/text()')
+                field_result = self._get_data_for_field(result, field_name, True)
             else:
-                field_result = first(result.xpath('./' + field_name + '/text()'))
+                field_result = first(self._get_data_for_field(result, field_name, True))
             if field_result is None or field_result == []:
                 if field.required and not field.contextual:
                     raise TypeError('Could not find element for ' + str(field_name))
                 return None
             return {field_name: field_result}
 
+    def _get_data_for_field(self, result, field_name, get_text=False):
+        if get_text:
+            field_name = field_name + "/text()"
+        strict_result = result.xpath("./" + field_name)
+        if strict_result is not None and len(strict_result):
+            return strict_result
+        else:
+            return result.xpath("//" + field_name)
+
 
 class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
 
-    def __init__(self, lenient=False, chem_name=(cem | chemical_label | lenient_chemical_label)):
+    def __init__(self, lenient=False, chem_name=(cem | chemical_label)):
         super(AutoSentenceParser, self).__init__()
         self.lenient = lenient
         self.chem_name = chem_name
