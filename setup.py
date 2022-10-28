@@ -28,6 +28,8 @@ setup(
     install_requires=[
         'appdirs',
         'beautifulsoup4',
+        'boto3==1.15.18',
+        'botocore==1.18.18',
         'click==6.7',
         'cssselect',
         'lxml',
