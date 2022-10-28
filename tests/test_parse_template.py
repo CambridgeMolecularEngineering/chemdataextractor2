@@ -130,6 +130,12 @@ class TestMultiQuantityTemplate(unittest.TestCase):
         expected = b'<multi_entity_phrase_3><specifier>Curie temperatures</specifier><value_list><raw_value>100</raw_value><raw_value>200</raw_value><raw_value>300</raw_value><raw_units>K</raw_units></value_list><IN>in</IN><cem_list><compound><names>BiFeO3</names></compound><compound><names>LaFeO3</names></compound><compound><names>MnO</names></compound></cem_list></multi_entity_phrase_3>'
         self.assertEqual(expected, self.parse(s, 'multi_entity_phrase_3b'))
 
+    def test_multi_entity_phrase_3c(self):
+        s = Sentence(
+            'Curie temperatures in BiFeO3, LaFeO3 and MnO are found to be 100, 200 and 300 K ')
+        expected = b'<multi_entity_phrase_3><specifier>Curie temperatures</specifier><IN>in</IN><cem_list><compound><names>BiFeO3</names></compound><compound><names>LaFeO3</names></compound><compound><names>MnO</names></compound></cem_list><value_list><raw_value>100</raw_value><raw_value>200</raw_value><raw_value>300</raw_value><raw_units>K</raw_units></value_list></multi_entity_phrase_3>'
+        self.assertEqual(expected, self.parse(s, 'multi_entity_phrase_3c'))
+
     def test_multi_entity_phrase_5(self):
         s = Sentence('Curie temperature of 100 K in BiFeO3 to 300 K in LaFeO3')
         expected = b'<multi_entity_phrase_5><specifier>Curie temperature</specifier><raw_value>100</raw_value><raw_units>K</raw_units><compound><names>BiFeO3</names></compound><raw_value>300</raw_value><raw_units>K</raw_units><compound><names>LaFeO3</names></compound></multi_entity_phrase_5>'

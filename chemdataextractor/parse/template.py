@@ -176,10 +176,9 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         return self.model.specifier.parse_expression('specifier')
 
     @property
-    def prefix(self):
-        """Specifier and prefix"""
-        return (self.specifier_phrase
-                  + Optional(I('values')).hide()
+    def prefix_only(self):
+        """prefix"""
+        return (Optional(I('values')).hide()
                   + Optional(delim).hide()
                   + Optional((I('varies') + I('from')) |
                              R('^increase(s|d)?') | I('falls') | I('reaches')).hide()
@@ -215,6 +214,11 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                   + Optional(W('=') | W('~') | W('≈') |
                              W('≃') | W('>') | W('<')).hide()
                   + ZeroOrMore(lbrct | delim | rbrct).hide()).add_action(join)
+
+    @property
+    def prefix(self):
+        """specifier and prefix"""
+        return (self.specifier_phrase + self.prefix_only).add_action(join)
 
     @property
     def single_cem(self):
@@ -319,10 +323,9 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     @property
     def multi_entity_phrase_3a(self):
         """multiple compounds, single specifier, multiple transitions cems first
-        e.g. TC in BiFeO3 and LaFeO3 of 640 and 750 K
+        e.g. In BiFeO3 and LaFeO3 Tc are found to be 640 and 750 K
         """
-        return Group(Optional(self.specifier_phrase)
-                    + Optional(I('in') | I('for')).hide()
+        return Group(Optional(I('in') | I('for')).hide()
                     + self.list_of_cems
                     + OneOrMore(Not(self.single_cem | self.specifier_phrase | self.value_phrase) + Any().hide())
                     + self.prefix
@@ -341,9 +344,21 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                           + Optional(delim + I('respectively')))('multi_entity_phrase_3')
 
     @property
+    def multi_entity_phrase_3c(self):
+        """multiple compounds, single specifier, multiple transitions cems first
+        e.g. Tc of BiFeO3 and LaFeO3 are found to be 640 and 750 K
+        """
+        return Group(self.specifier_phrase + Optional(I('in') | I('for') | I('of')).hide()
+                     + self.list_of_cems
+                     + OneOrMore(Not(self.single_cem | self.specifier_phrase | self.value_phrase) + Any().hide())
+                     + self.prefix_only
+                     + self.list_of_values
+                     + Optional(delim.hide() + I('respectively').hide()))('multi_entity_phrase_3')
+
+    @property
     def multi_entity_phrase_3(self):
         """Combined phrases of type 3"""
-        return Group(self.multi_entity_phrase_3a | self.multi_entity_phrase_3b)
+        return Group(self.multi_entity_phrase_3a | self.multi_entity_phrase_3b | self.multi_entity_phrase_3c)
 
     @property
     def multi_entity_phrase_4a(self):
