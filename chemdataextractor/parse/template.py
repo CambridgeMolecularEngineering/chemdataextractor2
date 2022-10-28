@@ -184,7 +184,7 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                              R('^increase(s|d)?') | I('falls') | I('reaches')).hide()
                   + Optional(I('steeply')).hide()
                   + Optional(I('recorded') | I('reported')).hide()
-                  + Optional(I('of') | I('was') | I('is') | I('at') | I('near') |
+                  + Optional(I('of') | I('was') | I('is') | I('at') | I('near') | I('are') |
                              I('above') | I('below') | I('with') | I('to') | I('were') | I('a')).hide()
                   + Optional(I('reported') | I('determined') |
                              I('estimated') | I('found') | I('occurs')).hide()
@@ -350,7 +350,6 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         """
         return Group(self.specifier_phrase + Optional(I('in') | I('for') | I('of')).hide()
                      + self.list_of_cems
-                     + OneOrMore(Not(self.single_cem | self.specifier_phrase | self.value_phrase) + Any().hide())
                      + self.prefix_only
                      + self.list_of_values
                      + Optional(delim.hide() + I('respectively').hide()))('multi_entity_phrase_3')

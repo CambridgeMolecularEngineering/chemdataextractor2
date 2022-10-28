@@ -133,7 +133,7 @@ class TestMultiQuantityTemplate(unittest.TestCase):
     def test_multi_entity_phrase_3c(self):
         s = Sentence(
             'Curie temperatures in BiFeO3, LaFeO3 and MnO are found to be 100, 200 and 300 K ')
-        expected = b'<multi_entity_phrase_3><specifier>Curie temperatures</specifier><IN>in</IN><cem_list><compound><names>BiFeO3</names></compound><compound><names>LaFeO3</names></compound><compound><names>MnO</names></compound></cem_list><value_list><raw_value>100</raw_value><raw_value>200</raw_value><raw_value>300</raw_value><raw_units>K</raw_units></value_list></multi_entity_phrase_3>'
+        expected = b'<multi_entity_phrase_3><specifier>Curie temperatures</specifier><cem_list><compound><names>BiFeO3</names></compound><compound><names>LaFeO3</names></compound><compound><names>MnO</names></compound></cem_list><value_list><raw_value>100</raw_value><raw_value>200</raw_value><raw_value>300</raw_value><raw_units>K</raw_units></value_list></multi_entity_phrase_3>'
         self.assertEqual(expected, self.parse(s, 'multi_entity_phrase_3c'))
 
     def test_multi_entity_phrase_5(self):
