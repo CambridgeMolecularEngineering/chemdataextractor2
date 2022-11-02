@@ -561,8 +561,8 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             try:
                 compound = cem_list[::-1][i]
                 c = self.model.compound.model_class(
-                    names=compound.xpath('./names/text()',
-                    labels=compound.xpath('./labels/text()')))
+                    names=compound.xpath('./names/text()'),
+                    labels=compound.xpath('./labels/text()'))
             except Exception:
                 requirements = False
 
@@ -620,8 +620,8 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
             c = None
             try:
                 c = self.model.compound.model_class(
-                    names=cem.xpath('./names/text()',
-                    labels=cem.xpath('./labels/text()')))
+                    names=cem.xpath('./names/text()'),
+                    labels=cem.xpath('./labels/text()'))
             except Exception:
                 requirements = False
 
