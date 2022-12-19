@@ -325,7 +325,7 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
         chem_name = self.chem_name
         try:
             compound_model = self.model.compound.model_class
-            labels = compound_model.labels.parse_expression('labels')
+            labels = Group(compound_model.labels.parse_expression('labels'))('compound')
         except AttributeError:
             labels = NoMatch()
         entities = [labels]
@@ -384,7 +384,7 @@ class AutoTableParser(BaseAutoParser, BaseTableParser):
         chem_name = self.chem_name
         try:
             compound_model = self.model.compound.model_class
-            labels = compound_model.labels.parse_expression('labels')
+            labels = Group(compound_model.labels.parse_expression('labels'))('compound')
         except AttributeError:
             labels = NoMatch()
         entities = [labels]
