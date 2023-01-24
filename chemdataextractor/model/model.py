@@ -14,6 +14,7 @@ import six
 from .base import BaseModel, StringType, ListType, ModelType, SetType
 from .units.temperature import TemperatureModel
 from .units.length import LengthModel
+from .units.charge import ChargeModel
 from ..parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser, CompoundTableParser, names_only, labels_only, roles_only
 from ..parse.ir import IrParser
 from ..parse.mp_new import MpParser
@@ -265,4 +266,13 @@ class CNLabel(BaseModel):
     label_Juraj = StringType(parse_expression=coordination_number_label)
     compound = ModelType(Compound, required=False)
     parsers = [AutoSentenceParser(), AutoTableParser()]
+
+class Cathode(ChargeModel):
+    """ Model for cathode text parsing """
+    specifier_expression = (
+        Optional(R("[Cc]athode(s?)"))
+    )
+    specifier = StringType(parse_expression=specifier_expression, required = True)
+    compound = ModelType(Compound, contextual=True, required=True)
+
 
