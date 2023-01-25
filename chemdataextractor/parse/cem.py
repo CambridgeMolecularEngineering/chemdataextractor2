@@ -294,6 +294,7 @@ proper_chemical_name_options = Group(Not(chemical_name_blacklist) + (
     formula ^ cm ^ element_name ^ element_symbol ^ registry_number ^ amino_acid ^ amino_acid_name
 ))
 
+chemical_name_suffix = (I('C')|I('electrode')|I('electrodes')|I('electron')|I('electrons')|I('cathode')|I('anode')|I('anodes')|I('cathodes')|I('redox')|I('half')+R('-')+I('cell'))
 
 # Mixtures e.g. 30% mol MnAs + 70% mol ZnGeAs2
 mixture_component = (R('\d+(\.\d+)?') + W('%') + Optional(I('mol')) + proper_chemical_name_options).add_action(join)
