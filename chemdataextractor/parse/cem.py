@@ -169,6 +169,9 @@ formula = ((
     R('^(GABA|NO|\(\d\)H|KCl)$')
 ) + Optional(W('+') + W('δ'))).add_action(merge)
 
+
+#CC: note: do we need elements found in water remediation system? Alloys?
+
 solvent_formula = (
     W('CCl4') | W('(CH3)2CHOH') | W('(CH3)2CO') | W('(CH3)2NCOH') | W('C2H4Cl2') | W('C2H5CN') | W('C2H5OH') |
     W('C5H5N') | W('C6H12') | W('C6H14') | W('C6H5CH3') | W('C6H5Cl') | W('C6H6') | W('C7H8') | W('CH2Cl2') |
@@ -221,6 +224,8 @@ other_solvent = (
     I('decan-1-ol') | I('decane') | I('decanol') | I('DEE') | I('di-isopropyl') + I('ether') |
     I('di-n-butyl') + I('ether') | I('di-n-hexyl') + I('ether') | I('dibromoethane') | I('dibutoxymethane') |
     I('dibutyl') + I('ether') | I('dichloro-methane') | I('dichlorobenzene') | I('dichloroethane') |
+    
+
     I('dichloromethane') | I('diethoxymethane') | I('diethyl') + I('carbonate') | I('diethyl') + I('ether') |
     I('diethylamine') | I('diethylether') | I('diglyme') | I('dihexyl') + I('ether') | I('diiodomethane') |
     I('diisopropyl') + I('ether') | I('diisopropylamine') | I('dimethoxyethane') | I('dimethoxymethane') |
@@ -239,6 +244,8 @@ other_solvent = (
     I('heptane') | I('heptanol') | I('heptene') | I('HEX') | I('hexadecylamine') | I('hexafluoroisopropanol') |
     I('hexafluoropropanol') | I('hexan-1-ol') | I('hexane') | I('hexanes') | I('hexanol') | I('hexene') |
     I('hexyl') + I('ether') | I('HFIP') | I('HFP') | I('HNO3') | I('hydrochloric') + I('acid') |
+
+
     I('hydrogen') + I('peroxide') | I('iodobenzene') | I('isohexane') | I('isooctane') | I('isopropanol') |
     I('isopropyl') + I('benzene') | I('KBr') | I('LiCl') | I('ligroine') | I('limonene') | I('Me-THF') | I('Me2CO') |
     I('MeCN') | I('MeCO2Et') | I('MeNO2') | I('MeOH') | I('mesitylene') | I('methanamide') | I('methanol') |
@@ -252,10 +259,10 @@ other_solvent = (
     I('methyl') + I('t-butyl') + I('ether') | I('methyl') + I('tetrahydrofuran') | I('methyl-2-pyrrolidone') |
     I('methylbenzene') | I('methylcyclohexane') | I('methylene') + I('chloride') | I('methylformamide') |
     I('methyltetrahydrofuran') | I('MIBK') | I('morpholine') | I('mTHF') | I('n-butanol') |
-    I('n-butyl') + I('acetate') | I('n-decane') | I('n-heptane') | I('n-HEX') | I('n-hexane') | I('n-methylformamide') |
-    I('n-methylpyrrolidone') | I('n-nonane') | I('n-octanol') | I('n-pentane') | I('n-propanol') |
-    I('n,n-dimethylacetamide') | I('n,n-dimethylformamide') | I('n,n-DMF') | I('Na2SO4') | I('NaCl') | I('NaClO4') |
-    I('NaHCO3') | I('NaOH') | I('nBu4NBF4') | I('nitric') + I('acid') | I('nitrobenzene') | I('nitromethane') |
+    I('n-butyl') + I('acetate') | I('n-decane') | I('n-heptane') | I('n-HEX') | I('n-hexane') | I('n-methylformamide') | I('n-methylpyrrolidone') |
+    I('n-nonane') | I('n-octanol') | I('n-pentane') | I('n-propanol') | I('n,n-dimethylacetamide') | I('n,n-dimethylformamide') | I('n,n-DMF') |
+    
+    I('Na2SO4') | I('NaCl') | I('NaClO4')| I('NaHCO3') | I('NaOH') | I('nBu4NBF4') | I('nitric') + I('acid') | I('nitrobenzene') | I('nitromethane') |
     I('nonane') | I('nujol') | I('o-dichlorobenzene') | I('o-xylene') | I('octan-1-ol') | I('octane') | I('octanol') |
     I('octene') | I('ODCB') | I('p-xylene') | I('pentan-1-ol') | I('pentane') | I('pentanol') | I('pentanone') |
     I('pentene') | I('PeOH') | I('perchloric') + I('acid') | I('PhCH3') | I('PhCl') | I('PhCN') | I('phenoxyethanol') |
@@ -269,6 +276,7 @@ other_solvent = (
     I('silver') + I('nitrate') | I('SNO2') | I('sodium') + I('chloride') | I('sodium') + I('hydroxide') |
     I('sodium') + I('perchlorate') | I('sulfuric') + I('acid') | I('t-butanol') | I('TBABF4') | I('TBAF') | I('TBAH') |
     I('TBAOH') | I('TBAP') | I('TBAPF6') | I('TEAP') | I('TEOA') | I('tert-butanol') | I('tert-butyl') + I('alcohol') |
+    
     I('tetrabutylammonium') + I('hexafluorophosphate') | I('tetrabutylammonium') + I('hydroxide') |
     I('tetrachloroethane') | I('tetrachloroethylene') | I('tetrachloromethane') | I('tetrafluoroethylene') |
     I('tetrahydrofuran') | I('tetralin') | I('tetramethylsilane') | I('tetramethylurea') | I('tetrapiperidine') |
@@ -278,14 +286,29 @@ other_solvent = (
     I('triethyl') + I('amine') | I('triethyl') + I('phosphate') | I('triethylamine') |
     I('trifluoroacetic') + I('acid') | I('trifluoroethanol') | I('trimethyl') + I('benzene') |
     I('trimethyl') + I('pentane') | I('tris') | I('undecan-1-ol') | I('undecanol') | I('valeronitrile') | I('water') |
-    I('xylene') | I('xylol') |
-
-    I('[nBu4N][BF4]') | I('BCN') | I('ACN') | I('BTN') | I('BHDC') | I('AOT') | I('DMA') | I('Triton X-100') |
+    I('xylene') | I('xylol') | I('[nBu4N][BF4]') | I('BCN') | I('ACN') | I('BTN') | I('BHDC') | I('AOT') | I('DMA') | I('Triton X-100') |
     I('MOPS') | I('TX-100') | I('H2O') + I('+') + I('TX') | I('H2O-Triton X') | I('MES') | I('HDA') | I('PIPES') |
     I('heavy') + I('water') | I('IPA') | I('KPB') | I('MCH') | I('NPA') | I('NMP') | I('PBS') | I('HEPES') |
     I('SDS') | I('TBP') | I('TEA')
 )
 # Potentially problematic solvent names at the end above...
+
+# CC change: additional keywords for water remediation system parsing
+"""
+water_remediation_terms = (
+    I('C')
+    |I('electrode')
+    |I('electrodes')
+    |I('electron')
+    |I('electrons')
+    |I('cathode')
+    |I('anode')
+    |I('anodes')
+    |I('cathodes')
+    |I('redox')
+    |I('half')+R('-')+I('cell')
+)
+"""
 
 solvent_name_options = (nmr_solvent | solvent_formula | other_solvent)
 solvent_name = (Optional(include_prefix) + solvent_name_options)('names').add_action(join).add_action(fix_whitespace)
@@ -293,8 +316,6 @@ chemical_name_blacklist = (I('mmc'))
 proper_chemical_name_options = Group(Not(chemical_name_blacklist) + (
     formula ^ cm ^ element_name ^ element_symbol ^ registry_number ^ amino_acid ^ amino_acid_name
 ))
-
-chemical_name_suffix = (I('C')|I('electrode')|I('electrodes')|I('electron')|I('electrons')|I('cathode')|I('anode')|I('anodes')|I('cathodes')|I('redox')|I('half')+R('-')+I('cell'))
 
 # Mixtures e.g. 30% mol MnAs + 70% mol ZnGeAs2
 mixture_component = (R('\d+(\.\d+)?') + W('%') + Optional(I('mol')) + proper_chemical_name_options).add_action(join)
@@ -314,7 +335,13 @@ likely_abbreviation = (Optional(include_prefix + Optional(hyphen)) + R('^([A-Z]{
 lenient_name = OneOrMore((bcm | icm | jj | nn | nnp | nns | hyph | cd | ls | W(',')))('names').add_action(join).add_action(fix_whitespace)
 
 label_name_cem = ((lenient_alphanumeric | lenient_numeric | lenient_letter_number)('labels') + optdelim + lenient_name)('compound')
-labelled_as = (R('^labell?ed$') + W('as')).hide()
+
+# CC: adding more phrases for labelling
+labelled_as = (R('^labell?ed$') + W('as')
+| (R('^named?$') + W('as')).hide()
+| (R('^referred') + W('to') + W('as')).hide()
+| (R('^denoted') + W('as')).hide()
+| (R('^hereafter')).hide())
 optquote = Optional(quote.hide())
 
 name_with_optional_bracketed_label = (Optional(synthesis_of | to_give) + chemical_name + Optional(lbrct + Optional(labelled_as + optquote) + (chemical_label | lenient_chemical_label | likely_abbreviation) + optquote + rbrct))('compound')
