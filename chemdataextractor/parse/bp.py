@@ -1,3 +1,4 @@
+import re
 from chemdataextractor.parse import R, I, W, Optional, merge
 from chemdataextractor.parse.base import BaseParser
 from chemdataextractor.utils import first
@@ -31,4 +32,4 @@ class BpParser(BaseParser):
             log.debug(e)
 
 BoilingPoint.parsers = [BpParser()]
-Paragraph.parses = [BpParser()]
+Paragraph.parsers = [BpParser()]
