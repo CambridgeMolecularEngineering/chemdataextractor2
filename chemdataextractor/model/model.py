@@ -14,6 +14,7 @@ import six
 from .base import BaseModel, StringType, ListType, ModelType, SetType
 from .units.temperature import TemperatureModel
 from .units.length import LengthModel
+from .units.charge import ChargeModel
 from ..parse.cem import CompoundParser, CompoundHeadingParser, ChemicalLabelParser, CompoundTableParser, names_only, labels_only, roles_only
 from ..parse.ir import IrParser
 from ..parse.mp_new import MpParser
@@ -25,6 +26,7 @@ from ..parse.actions import merge, join
 from ..model.units.quantity_model import QuantityModel, DimensionlessModel
 from ..parse.auto import AutoTableParser, AutoSentenceParser
 from ..parse.apparatus import ApparatusParser
+from ..parse.bp import BpParser
 
 log = logging.getLogger(__name__)
 
@@ -266,3 +268,13 @@ class CNLabel(BaseModel):
     compound = ModelType(Compound, required=False)
     parsers = [AutoSentenceParser(), AutoTableParser()]
 
+class Altitude(LengthModel):
+    specifier = StringType(parse_expression=I('Altitude'), required = True)
+    compound = ModelType(Compound)
+
+class BoilingPoint(TemperatureModel):
+    """ Model for boiling point text parsing """
+    specifier = StringType(parse_expression=(I('Boiling') + I('Point')).add_action(join), required = True)
+    compound = ModelType(Compound, binding = True)
+    alt = ModelType(Altitude, contextual = True)
+    parsers = [BpParser()]
