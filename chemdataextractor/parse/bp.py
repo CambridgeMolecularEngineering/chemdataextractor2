@@ -2,6 +2,7 @@ from chemdataextractor.parse import R, I, W, Optional, merge
 from chemdataextractor.parse.base import BaseParser
 from chemdataextractor.utils import first
 from chemdataextractor.model import BoilingPoint
+from chemdataextractor.doc import Paragraph
 
 log = logging.getLogger(__name__)
 
@@ -30,3 +31,4 @@ class BpParser(BaseParser):
             log.debug(e)
 
 BoilingPoint.parsers = [BpParser()]
+Paragraph.parses = [BpParser()]
