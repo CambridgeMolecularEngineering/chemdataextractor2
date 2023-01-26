@@ -176,16 +176,15 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         return self.model.specifier.parse_expression('specifier')
 
     @property
-    def prefix(self):
-        """Specifier and prefix"""
-        return (self.specifier_phrase
-                  + Optional(I('values')).hide()
+    def prefix_only(self):
+        """prefix"""
+        return (Optional(I('values')).hide()
                   + Optional(delim).hide()
                   + Optional((I('varies') + I('from')) |
                              R('^increase(s|d)?') | I('falls') | I('reaches')).hide()
                   + Optional(I('steeply')).hide()
                   + Optional(I('recorded') | I('reported')).hide()
-                  + Optional(I('of') | I('was') | I('is') | I('at') | I('near') |
+                  + Optional(I('of') | I('was') | I('is') | I('at') | I('near') | I('are') |
                              I('above') | I('below') | I('with') | I('to') | I('were') | I('a')).hide()
                   + Optional(I('reported') | I('determined') |
                              I('estimated') | I('found') | I('occurs')).hide()
@@ -215,6 +214,11 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                   + Optional(W('=') | W('~') | W('≈') |
                              W('≃') | W('>') | W('<')).hide()
                   + ZeroOrMore(lbrct | delim | rbrct).hide()).add_action(join)
+
+    @property
+    def prefix(self):
+        """specifier and prefix"""
+        return (self.specifier_phrase + self.prefix_only).add_action(join)
 
     @property
     def single_cem(self):
@@ -319,10 +323,9 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     @property
     def multi_entity_phrase_3a(self):
         """multiple compounds, single specifier, multiple transitions cems first
-        e.g. TC in BiFeO3 and LaFeO3 of 640 and 750 K
+        e.g. In BiFeO3 and LaFeO3 Tc are found to be 640 and 750 K
         """
-        return Group(Optional(self.specifier_phrase)
-                    + Optional(I('in') | I('for')).hide()
+        return Group(Optional(I('in') | I('for')).hide()
                     + self.list_of_cems
                     + OneOrMore(Not(self.single_cem | self.specifier_phrase | self.value_phrase) + Any().hide())
                     + self.prefix
@@ -342,16 +345,14 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
 
     @property
     def multi_entity_phrase_3c(self):
-        """multiple compounds, single specifier, multiple transitions cems last
-        e.g. curie temperatures from 100 K in MnO to 300 K in NiO
+        """multiple compounds, single specifier, multiple transitions cems first
+        e.g. Tc of BiFeO3 and LaFeO3 are found to be 640 and 750 K
         """
-        return Group(self.single_specifier_and_value
-                          + Optional(I('for') | I('in')).hide()
-                          + self.single_cem
-                          + (Optional(I('up')) + I('to')).hide()
-                          + self.value_phrase
-                          + Optional(I('in') | I('for')).hide()
-                          + self.single_cem)('multi_entity_phrase_3')
+        return Group(self.specifier_phrase + Optional(I('in') | I('for') | I('of')).hide()
+                     + self.list_of_cems
+                     + self.prefix_only
+                     + self.list_of_values
+                     + Optional(delim.hide() + I('respectively').hide()))('multi_entity_phrase_3')
 
     @property
     def multi_entity_phrase_3(self):
@@ -380,8 +381,21 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         return Group(self.multi_entity_phrase_4a | self.multi_entity_phrase_4b)
 
     @property
+    def multi_entity_phrase_5(self):
+        """multiple compounds, single specifier, multiple transitions cems last
+        e.g. curie temperatures from 100 K in MnO to 300 K in NiO
+        """
+        return Group(self.prefix + self.value_phrase
+                          + Optional(I('for') | I('in')).hide()
+                          + self.single_cem
+                          + (Optional(I('up')) + I('to')).hide()
+                          + self.value_phrase
+                          + Optional(I('in') | I('for')).hide()
+                          + self.single_cem)('multi_entity_phrase_5')
+
+    @property
     def root(self):
-        return (self.multi_entity_phrase_1 | self.multi_entity_phrase_2 | self.multi_entity_phrase_3 | self.multi_entity_phrase_4)
+        return (self.multi_entity_phrase_1 | self.multi_entity_phrase_2 | self.multi_entity_phrase_3 | self.multi_entity_phrase_4 | self.multi_entity_phrase_5)
 
     def interpret(self, result, start, end):
         if result.tag == 'multi_entity_phrase_1':
@@ -399,6 +413,10 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 yield model
         elif result.tag == 'multi_entity_phrase_4':
             for model in self.interpret_multi_entity_4(result, start, end):
+                model.record_method = self.__class__.__name__
+                yield model
+        elif result.tag == 'multi_entity_phrase_5':
+            for model in self.interpret_multi_entity_5(result, start, end):
                 model.record_method = self.__class__.__name__
                 yield model
         else:
@@ -639,6 +657,70 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
                 model_instance.record_method = self.__class__.__name__
                 yield model_instance
 
+    def interpret_multi_entity_5(self, result, start, end):
+        """interpret multiple compounds, single specifier, multiple transitions"""
+        if result is None:
+            return
+
+        cem_list = result.xpath('./compound')
+
+        if cem_list is None:
+            yield None
+
+        specifier = first(result.xpath('./specifier/text()'))
+
+        if specifier is None:
+            yield None
+
+        raw_values_list = result.xpath('./raw_value')
+        raw_units_list = result.xpath('./raw_units')
+        if len(raw_values_list) == 0 and len(raw_units_list) == 0:
+            yield None
+
+        last_unit = None
+        for i, v in enumerate(raw_values_list[::-1]):  # Reverse order to make sure we get a unit
+
+            raw_value = first(v.xpath('./text()'))
+            requirements = True
+            try:
+                raw_units = first(raw_units_list[::-1][i].xpath('./text()'))
+                last_unit = raw_units
+            except IndexError:
+                if last_unit:
+                    raw_units = last_unit
+                else:
+                    requirements = False
+            c = None
+            try:
+                compound = cem_list[::-1][i]
+                c = self.model.compound.model_class(
+                    names=compound.xpath('./names/text()',
+                    labels=compound.xpath('./labels/text()')))
+            except Exception:
+                requirements = False
+
+            value = self.extract_value(raw_value)
+            error = self.extract_error(raw_value)
+            units = None
+            try:
+                units = self.extract_units(raw_units, strict=True)
+            except TypeError as e:
+                requirements=False
+                log.debug(e)
+
+            property_entities = {
+                'specifier': specifier,
+                'raw_value': raw_value,
+                'raw_units': raw_units,
+                'error': error,
+                'value': value,
+                'units': units,
+                'compound': c}
+
+            model_instance = self.model(**property_entities)
+            if requirements:
+                model_instance.record_method = self.__class__.__name__
+                yield model_instance
 
 
 
