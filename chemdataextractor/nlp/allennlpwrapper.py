@@ -36,7 +36,7 @@ class ProcessedTextTagger(BaseTagger):
     single-number tokens with <nUm> in accordance with the training data.
     """
     tag_type = "processed_text"
-    number_pattern = re.compile('([\+\-–−]?\d+(([\.・,\d])+)?)')
+    number_pattern = re.compile(r'([\+\-–−]?\d+(([\.・,\d])+)?)')
     number_string = "<nUm>"
 
     def tag(self, tokens):
