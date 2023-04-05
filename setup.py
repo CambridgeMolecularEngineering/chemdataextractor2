@@ -52,7 +52,9 @@ setup(
         'allennlp==0.9.0',
         'tokenizers',
         'scikit-learn==0.22.1',
-        'overrides==3.1.0'
+        'overrides==3.1.0',
+        'boto3==1.15.18'
+
     ],
     classifiers=[
         'Intended Audience :: Developers',
