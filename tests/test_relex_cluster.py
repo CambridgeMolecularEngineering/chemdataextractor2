@@ -23,7 +23,7 @@ from chemdataextractor.parse.common import lrb, rrb, delim
 from chemdataextractor.parse.actions import join, merge
 from chemdataextractor.parse.cem import chemical_name, names_only
 from chemdataextractor.doc import Sentence
-from collections import OrderedDict
+from collections.abc import OrderedDict
 
 
 logging.basicConfig(level=logging.DEBUG)

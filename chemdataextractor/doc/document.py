@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
-class BaseDocument(six.with_metaclass(ABCMeta, collections.Sequence)):
+class BaseDocument(six.with_metaclass(ABCMeta, collections.abc.Sequence)):
     """Abstract base class for a Document."""
 
     def __repr__(self):
