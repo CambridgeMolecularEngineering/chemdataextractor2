@@ -53,8 +53,9 @@ setup(
         'tokenizers',
         'scikit-learn==0.22.1',
         'overrides==3.1.0',
-        'boto3==1.15.18'
-
+        'boto3==1.15.18',
+        'unittest2',
+        'playsound'
     ],
     classifiers=[
         'Intended Audience :: Developers',
