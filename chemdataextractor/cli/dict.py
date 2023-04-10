@@ -24,13 +24,13 @@ except ImportError:
     unescape = HTMLParser().unescape
 
 
-NG_RE = re.compile('([\[\(](\d\d?CI|USAN|r?INN|BAN|JAN|USP)(\d\d?CI|USAN|r?INN|BAN|JAN|USP|[:\-,]|spanish|latin)*[\)\]])+$', re.I | re.U)
+NG_RE = re.compile(r'([\[\(](\d\d?CI|USAN|r?INN|BAN|JAN|USP)(\d\d?CI|USAN|r?INN|BAN|JAN|USP|[:\-,]|spanish|latin)*[\)\]])+$', re.I | re.U)
 START_RE = re.compile('^(anhydrous|elemental|amorphous|conjugated|colloidal|activated) ', re.I | re.U)
-END_RE = re.compile('[\[\(]((crude )?product|substance|solution|anhydrous|derivative|analog|salt|modified|discontinued|injectable|anesthetic|pharmaceutical|natural|nonionic|european|ester|dye|tablets?|mineral|VAN|hydrolyzed)[\)\]]$', re.I | re.U)
-RATIO_RE = re.compile('[\[\(]((\d\d?)(:(\d\d?|\?|\d\.\d))+)[\)\]]$', re.I | re.U)
-NUM_END_RE = re.compile(' (\d+)$', re.U)
-ALPHANUM_END_RE = re.compile(' ([A-Za-z]\d*)$', re.U)
-BRACKET_RE = re.compile('^\(([^\(\)]+)\)$', re.I | re.U)
+END_RE = re.compile(r'[\[\(]((crude )?product|substance|solution|anhydrous|derivative|analog|salt|modified|discontinued|injectable|anesthetic|pharmaceutical|natural|nonionic|european|ester|dye|tablets?|mineral|VAN|hydrolyzed)[\)\]]$', re.I | re.U)
+RATIO_RE = re.compile(r'[\[\(]((\d\d?)(:(\d\d?|\?|\d\.\d))+)[\)\]]$', re.I | re.U)
+NUM_END_RE = re.compile(r' (\d+)$', re.U)
+ALPHANUM_END_RE = re.compile(r' ([A-Za-z]\d*)$', re.U)
+BRACKET_RE = re.compile(r'^\(([^\(\)]+)\)$', re.I | re.U)
 
 GREEK_WORDS = {
     'Alpha': 'Α',  # \u0391
@@ -106,8 +106,8 @@ UNAMBIGUOUS_GREEK_WORDS = {
     'omega': 'ω',  # \u03c9
 }
 
-DOT_GREEK_RE = re.compile('\.(%s)\.' % '|'.join(re.escape(s) for s in GREEK_WORDS.keys()), re.U)
-GREEK_RE = re.compile('([\daA\W]|^)(%s)([\d\W]|$)' % '|'.join(re.escape(s) for s in GREEK_WORDS.keys()), re.U)
+DOT_GREEK_RE = re.compile(r'\.(%s)\.' % '|'.join(re.escape(s) for s in GREEK_WORDS.keys()), re.U)
+GREEK_RE = re.compile(r'([\daA\W]|^)(%s)([\d\W]|$)' % '|'.join(re.escape(s) for s in GREEK_WORDS.keys()), re.U)
 UNAMBIGUOUS_GREEK_RE = re.compile('(%s)' % '|'.join(re.escape(s) for s in UNAMBIGUOUS_GREEK_WORDS.keys()), re.U)
 
 
@@ -240,11 +240,11 @@ def _get_variants(name):
     for name in names:
         # If last word \d+, add variants with hyphen and no space preceding
         if NUM_END_RE.search(name):
-            newnames.append(NUM_END_RE.sub('-\g<1>', name))
-            newnames.append(NUM_END_RE.sub('\g<1>', name))
+            newnames.append(NUM_END_RE.sub(r'-\g<1>', name))
+            newnames.append(NUM_END_RE.sub(r'\g<1>', name))
         # If last word [A-Za-z]\d* add variants with hyphen preceding.
         if ALPHANUM_END_RE.search(name):
-            newnames.append(ALPHANUM_END_RE.sub('-\g<1>', name))
+            newnames.append(ALPHANUM_END_RE.sub(r'-\g<1>', name))
     names.extend(newnames)
     return names
 

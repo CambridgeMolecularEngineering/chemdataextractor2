@@ -174,7 +174,7 @@ class BaseText(BaseElement):
         return self.text
 
 
-class Text(collections.Sequence, BaseText):
+class Text(collections.abc.Sequence, BaseText):
     """A passage of text, comprising one or more sentences."""
 
     sentence_tokenizer = ChemSentenceTokenizer()

@@ -44,7 +44,7 @@ setup(
         'selenium==3.141.0',
         'numpy',
         'numpy==1.16; python_version < "3.7.0"',
-        'numpy>=1.16; python_version >= "3.7.0"',
+        'numpy<1.20; python_version >= "3.7.0"',
         'protobuf==3.*',
         # 'scipy',
         'yaspin',
@@ -52,7 +52,10 @@ setup(
         'allennlp==0.9.0',
         'tokenizers',
         'scikit-learn==0.22.1',
-        'overrides==3.1.0'
+        'overrides==3.1.0',
+        'boto3==1.15.18',
+        'unittest2',
+        'playsound'
     ],
     classifiers=[
         'Intended Audience :: Developers',

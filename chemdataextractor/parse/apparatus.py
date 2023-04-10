@@ -23,9 +23,9 @@ log = logging.getLogger(__name__)
 
 dt = T('DT')
 
-apparatus_type = R('^\d{2,}$') + W('MHz')
+apparatus_type = R(r'^\d{2,}$') + W('MHz')
 brands = I('HORIBA') + I('Jobin') + I('Yvon') | I('Hitachi') | I('Bruker') | I('Cary') | I('Jeol') | I('PerkinElmer') | I('Agilent') | I('Shimadzu') | I('Varian')
-models = I('FluoroMax-4') | I('F-7000') | I('AVANCE') | I('Digital') | R('\d\d\d+') | I('UV–vis-NIR') | I('Mercury') | I('Avatar') | I('thermonicolet') | I('pulsed') | I('Fourier') | I('transform')
+models = I('FluoroMax-4') | I('F-7000') | I('AVANCE') | I('Digital') | R(r'\d\d\d+') | I('UV–vis-NIR') | I('Mercury') | I('Avatar') | I('thermonicolet') | I('pulsed') | I('Fourier') | I('transform')
 instrument = I('spectrofluorimeter') | I('spectrophotometer') | Optional(I('fluorescence')) + I('spectrometer') | Optional(I('nmr')) + I('workstation') | W('NMR') | I('instrument') | I('spectrometer')
 apparatus = (ZeroOrMore(T('JJ')) + Optional(apparatus_type) + OneOrMore(T('NNP') | T('NN') | brands) + ZeroOrMore(T('NNP') | T('NN') | T('HYPH') | T('CD') | brands | models) + Optional(instrument))('apparatus').add_action(join).add_action(fix_whitespace)
 apparatus_blacklist = R('^(following|usual|equation|standard|accepted|method|point|temperature|melting|boiling)$', re.I)

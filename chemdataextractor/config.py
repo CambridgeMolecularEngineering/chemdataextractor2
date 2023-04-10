@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 import io
 import os
 import sys
-from collections import MutableMapping
+from collections.abc import MutableMapping
 
 import appdirs
 import yaml

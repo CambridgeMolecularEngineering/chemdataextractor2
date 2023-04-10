@@ -44,7 +44,7 @@ class AbbreviationDetector(object):
             if self.abbr_min <= len(abbr_text) <= self.abbr_max and bracket_level(abbr_text) == 0:
                 if abbr_text[0].isalnum() and any(c.isalpha() for c in abbr_text):
                     # Disallow property values
-                    if re.match('^\d+(\.\d+)?(g|m[lL]|cm)$', abbr_text):
+                    if re.match(r'^\d+(\.\d+)?(g|m[lL]|cm)$', abbr_text):
                         return False
                     return True
         return False
