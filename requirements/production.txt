@@ -1,6 +1,6 @@
 appdirs>=1.4.0
 beautifulsoup4>=4.5.3
-click==6.7
+click>=7.0.0
 cssselect>=1.0.1
 DAWG-Patched
 tabledataextractor
@@ -10,7 +10,7 @@ pdfminer.six>=20160614
 python-crfsuite>=0.9.1
 python-dateutil>=2.6.0
 PyYAML>=3.12
-requests>=2.12.5
+requests>=2.28.1
 six>=1.10.0
 selenium>=3.14.1
 protobuf==3.*
