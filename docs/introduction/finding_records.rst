@@ -8,6 +8,7 @@ and then merges data together from every element in the document to produce a si
 Consider this simple document as an example::
 
     >>> from chemdataextractor.doc import Document, Heading, Paragraph
+    >>> from chemdataextractor.model import Compound, MeltingPoint
     >>> doc = Document(
         Heading('5,10,15,20-Tetra(4-carboxyphenyl)porphyrin (3).'),
         Paragraph('m.p. 90°C.'),
