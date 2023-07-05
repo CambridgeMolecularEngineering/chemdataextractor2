@@ -40,14 +40,14 @@ class PlainTextCacher:
         sentences = document.sentences
 
         # Save tokenisation
-        with open(self._document_tokenizer_cache_path(cache_location_root, document_configuration["tokenizer"]), "w+") as f:
+        with open(self._document_tokenizer_cache_path(cache_location_root, document_configuration["tokenizer"]), "w+", encoding='utf-8') as f:
             for sentence in sentences:
                 # We use silly emoji to delineate so that we don't ever get conflicts with actual tokens used.
                 # It's 🙃 between words, and 🔥 between sentences
-                f.write("🙃".join(sentence.raw_tokens) + "🔥")
+                f.write(str(("🙃".join(sentence.raw_tokens) + "🔥").encode('utf-8')))
 
         # Save start and end spans
-        with open(self._document_tag_cache_path(cache_location_root, "start_end"), "w+") as f:
+        with open(self._document_tag_cache_path(cache_location_root, "start_end"), "w+", encoding='utf-8') as f:
             for sentence in sentences:
                 indices = [[token.start, token.end] for token in sentence.tokens]
                 f.write(str(indices) + "\n")
@@ -55,11 +55,11 @@ class PlainTextCacher:
         # Save tags
         for tag in tags:
             # Should we be more careful so that we always get the same tagger for each tag?
-            with open(self._document_tag_cache_path(cache_location_root, tag), "w+") as f:
+            with open(self._document_tag_cache_path(cache_location_root, tag), "w+", encoding='utf-8') as f:
                 for sentence in sentences:
                     # TODO(ti250): Assumes tags are plain text
                     sentence_tags = [token[tag] if token[tag] is not None else "😂" for token in sentence.tokens]
-                    f.write("🙃".join(sentence_tags) + "🔥")
+                    f.write(str(("🙃".join(sentence_tags) + "🔥").encode('utf-8')))
 
     def hydrate_document(self, document, document_id, tags=None):
         # Add in all the tags, tokenisation for a document.
