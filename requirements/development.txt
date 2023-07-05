@@ -1,5 +1,4 @@
+wheel>=0.40.0
 -r production.txt
 pytest>=3.0.6
 twine>=1.8.1
-wheel>=0.40.0
-
