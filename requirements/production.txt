@@ -17,7 +17,7 @@ six>=1.10.0
 selenium>=3.14.1
 protobuf==3.*
 scipy
-numpy
+numpy<1.23
 deprecation
 yaspin
 tokenizers==0.12.1

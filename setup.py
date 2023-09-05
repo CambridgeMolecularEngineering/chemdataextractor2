@@ -26,6 +26,7 @@ setup(
     entry_points={'console_scripts': ['cde = chemdataextractor.cli:cli']},
     tests_require=['pytest'],
     install_requires=[
+        'wheel>=0.37.0',
         'appdirs',
         'beautifulsoup4',
         'boto3==1.15.18',
@@ -44,9 +45,8 @@ setup(
         'DAWG; python_version < "3.7.0"',
         'PyYAML',
         'selenium==3.141.0',
-        'numpy',
         'numpy==1.16; python_version < "3.7.0"',
-        'numpy>=1.16; python_version >= "3.7.0"',
+        'numpy>=1.16, <1.23; python_version >= "3.7.0"',
         'protobuf==3.*',
         # 'scipy',
         'yaspin',
