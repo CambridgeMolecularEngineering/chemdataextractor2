@@ -248,6 +248,31 @@ class TestModel(unittest.TestCase):
                                    "inferred_from_nested": "4321"}}
         self.assertEqual(expected, outer_model.serialize())
 
+    def test_deserialize(self):
+        def reverse_string(string, instance):
+            if string is not None:
+                return string[::-1]
+
+        class InnerModel(BaseModel):
+            string_field = StringType()
+
+        class OuterModel(BaseModel):
+            inferred_from_field = InferredProperty(StringType(), origin_field="origin_field",
+                                                   inferrer=reverse_string)
+            inferred_from_nested = InferredProperty(StringType(), origin_field="origin_model.string_field",
+                                                    inferrer=reverse_string)
+            origin_field = StringType()
+            origin_model = ModelType(InnerModel)
+
+        inner_model = InnerModel(string_field="1234")
+        outer_model = OuterModel(origin_model=inner_model, origin_field="abcd")
+        self.assertEqual(outer_model.serialize(), OuterModel.deserialize(outer_model.serialize()).serialize())
+        expected = {"OuterModel": {"origin_field": "abcd",
+                           "origin_model": {"InnerModel": {"string_field": "1234"}},
+                           "inferred_from_field": "dcba",
+                           "inferred_from_nested": "4321"}}
+        self.assertEqual(OuterModel.deserialize(expected).serialize(), outer_model.serialize())
+
 
 if __name__ == '__main__':
     unittest.main()

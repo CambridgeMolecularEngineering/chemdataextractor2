@@ -25,7 +25,7 @@ from ..doc.table import Table
 from ..doc.figure import Figure
 from ..scrape import INLINE_ELEMENTS
 from ..scrape.clean import clean
-from ..scrape.csstranslator import CssHTMLTranslator
+from ..scrape.csstranslator import CssXmlTranslator
 from ..text import get_encoding
 from .base import BaseReader
 
@@ -142,7 +142,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
             except TypeError as e:
                 log.warning('Adding of two objects was skipped. {} and {} cannot be added.'.format(str(type(element)), str(type(next_element))))
         return [element]
-    
+
     def _parse_figure_links(self, el):
         return self._css(self.figure_download_link_css, el)
 
@@ -262,7 +262,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
         return result
 
     def _css(self, query, root):
-        return self._xpath(CssHTMLTranslator().css_to_xpath(query), root)
+        return self._xpath(CssXmlTranslator().css_to_xpath(query), root)
 
     def _is_inline(self, element):
         """Return True if an element is inline."""

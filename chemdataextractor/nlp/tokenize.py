@@ -980,6 +980,23 @@ class BertWordTokenizer(ChemWordTokenizer):
                 i += 1
                 offset, token = zipped[i]
                 current_span = (current_span[0], offset[1])
+            # Prevent splitting of negative numbers, but allow splitting of ranges such as 0.5-1.0
+            # and cases like 5-Bromo-6-Penda...
+            elif (s[offset[0]: offset[1]] == "-"
+               and i < len(zipped) - 1 and zipped[i + 1][0][0] == offset[1]
+               and re.match(r"\d+$", s[zipped[i + 1][0][0]: zipped[i + 1][0][1]])
+               and (i == 0
+                    or not (zipped[i - 1][0][1] == offset[0]
+                        and re.match(r"\d+$", s[zipped[i - 1][0][0]: zipped[i - 1][0][1]])))
+               and (i >= len(zipped) - 2
+                    or not (zipped[i + 2][0][0] == zipped[i + 1][0][1]
+                        and s[zipped[i + 2][0][0]: zipped[i + 2][0][1]] == "-"))):
+                i += 1
+                if current_span != (0, 0):
+                    spans.append(current_span)
+                current_span = offset
+                offset, token = zipped[i]
+                current_span = (current_span[0], offset[1])
             # If the token is a subword, as defined by BERT, then merge it with the previous token
             elif len(token) > 2 and token[:2] == "##":
                 current_span = (current_span[0], offset[1])

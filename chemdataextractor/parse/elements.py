@@ -518,20 +518,16 @@ class Every(ParseExpression):
         for e in self.exprs:
             try:
                 end_i = e.try_parse(tokens, i)
+            except ParseException as err:
+                raise err
             except IndexError:
                 if len(tokens) > furthest_exception_i:
                     furthest_exception = ParseException(tokens, len(tokens), '', self)
-                    furthest_exception_i = len(tokens)
+                    raise furthest_exception
             else:
                 if end_i > furthest_match_i:
                     furthest_match_i = end_i
                     furthest_match = e
-
-        if furthest_match_i < 0:
-            if furthest_exception is not None:
-                raise furthest_exception
-            else:
-                raise ParseException(tokens, i, 'No alternatives match', self)
 
         # If a name is assigned to an Every, it replaces the name of the contained result
         if self.name:

@@ -40,8 +40,9 @@ ir_solvent = (I('KBr') | I('ATR') | I('neat') | I('NaCl') | I('CaF2') | I('AgCl'
 solvent = (ir_solvent | chemical_name)('solvent').add_action(join)
 
 units = Optional(W('/')).hide() + (
-    (Optional(W('[')) + R('^\[?cm[-–−‒]?1\]?$') + Optional(W(']'))) |
-    W('cm') + R('^[-–−‒]$') + W('1')
+    (Optional(W('[')) + R('^\[?cm[-–−‒]?1\]?$') + Optional(W(']')))
+    | (W('cm') + R('^[-–−‒]$') + W('1'))
+    | (W('cm') + W('-1'))
 )('units').add_action(merge)
 
 
@@ -78,6 +79,7 @@ ir = (prelude + peaks + Optional(delim) + Optional(units))('ir')
 class IrParser(BaseSentenceParser):
     """"""
     root = ir
+    parse_full_sentence = True
 
     def interpret(self, result, start, end):
         c = self.model.fields['compound'].model_class()

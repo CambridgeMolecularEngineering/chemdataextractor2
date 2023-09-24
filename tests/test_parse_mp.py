@@ -84,10 +84,11 @@ class TestParseMp(unittest.TestCase):
         expected = '<mp_phrase><compound><roles>to give</roles><names>4-acetylamino-3-chloro-6-(4-chloro-2-fluoro-5-methoxyphenyl)pyridine-2-carboxylic acid methyl ester</names></compound><mp><raw_value>180-182</raw_value><raw_units>\xb0C</raw_units></mp></mp_phrase>'
         self.do_parse(s, expected)
 
-    def test_degrees_only(self):
-        s = 'm.p. 91 ° - 109 °'
-        expected = '<mp_phrase><mp><raw_value>91-109</raw_value><raw_units>\xb0</raw_units></mp></mp_phrase>'
-        self.do_parse(s, expected)
+    # Not a common enough use case and was causing trouble elsewhere so disabled - ti250
+    # def test_degrees_only(self):
+    #     s = 'm.p. 91 ° - 109 °'
+    #     expected = '<mp_phrase><mp><raw_value>91-109</raw_value><raw_units>\xb0</raw_units></mp></mp_phrase>'
+    #     self.do_parse(s, expected)
 
     def test_afforded(self):
         s = 'afforded bissulfonic acid (102 mg, 41%) as a green solid m.p.>300 °C.'

@@ -31,7 +31,7 @@ def remove_if_reference(el):
 
 # XML stripper that removes the tags around numbers in chemical formulas
 strip_els_xml = Cleaner(strip_xpath='.//ce:inf | .//ce:italic | .//ce:bold | .//ce:formula | .//mml:* | .//ce:sup | .//ce:table//ce:sup',
-                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:note-para',
+                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:note-para | .//ce:cross-ref | .//ce:cross-refs',
                         process_xpaths={'.//ce:cross-ref//ce:sup | .//ce:cross-ref | .//ce:cross-refs':
                                         remove_if_reference})
 
@@ -143,6 +143,7 @@ class ElsevierXmlReader(XmlReader):
     metadata_pii_css = 'xocs|pii-unformatted'
 
 
+    # ce|cross-ref may need to return
     ignore_css = 'ce|bibliography, ce|acknowledgment, ce|correspondence, ce|author, ce|doi, ja|jid, ja|aid, ce|pii, xocs|oa-sponsor-type, xocs|open-access, default|openaccess,'\
                  'default|openaccessArticle, dc|format, dc|creator, dc|identifier,'\
                  'default|eid, default|pii, xocs|meta, xocs|ref-info, default|scopus-eid,'\
@@ -150,11 +151,13 @@ class ElsevierXmlReader(XmlReader):
                  'xocs|eid, xocs|hub-eid, xocs|normalized-first-auth-surname,' \
                  'xocs|normalized-first-auth-initial, xocs|refkeys,' \
                  'xocs|attachment-eid, xocs|attachment-type,' \
-                 'ja|jid, ce|given-name, ce|surname, ce|affiliation, ce|cross-refs, ce|cross-ref,' \
+                 'ja|jid, ce|given-name, ce|surname, ce|affiliation,' \
                  'ce|grant-sponsor, ce|grant-number, prism|copyright,' \
                  'xocs|pii-unformatted, xocs|ucs-locator, ce|copyright,' \
                  'prism|publisher, prism|*, xocs|copyright-line, xocs|cp-notice,' \
-                 'dc|description'
+                 'dc|description, xocs|document-subtype, ce|keywords, default|openaccessType,'\
+                 'default|openArchiveArticle, default|openaccessSponsorName, default|openaccessSponsorType, default|openaccessUserLicense, dcterms|subject,'\
+                 'ce|dochead, ce|label, default|pubType'
 
     url_prefix = 'https://sciencedirect.com/science/article/pii/'
 

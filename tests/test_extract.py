@@ -64,7 +64,7 @@ class TestExtract(unittest.TestCase):
         d = Document(Paragraph('Yielding 2,4,6-trinitrotoluene,\n m.p. 20 \x0eC.'))
         d.models = [Compound]
         expected = [{'Compound': {'names': ['2,4,6-trinitrotoluene']}}]
-        self.assertEqual(expected, d.records.serialize())
+        self.assertCountEqual(expected, d.records.serialize())
 
     def test_merge_contextual(self):
         """

@@ -1,7 +1,8 @@
-from .text import RichToken
+from .text import RichToken, Subsentence
 import os
 import shutil
 import json
+import unicodedata
 
 
 def get_document_configuration(document):
@@ -61,6 +62,13 @@ class PlainTextCacher:
                     sentence_tags = [token[tag] if token[tag] is not None else "😂" for token in sentence.tokens]
                     f.write("🙃".join(sentence_tags) + "🔥")
 
+        with open(self._document_subsentence_cache_path(cache_location_root), "w+") as f:
+            for sentence in sentences:
+                indices = []
+                for subsentence in sentence.subsentences:
+                    indices.append([token.index for token in subsentence.tokens])
+                f.write(str(indices) + "\n")
+
     def hydrate_document(self, document, document_id, tags=None):
         # Add in all the tags, tokenisation for a document.
         document_configuration = get_document_configuration(document)
@@ -117,6 +125,22 @@ class PlainTextCacher:
                     for token, tag in zip(tokens, sentence_tags):
                         token._tags[tag_type] = tag if tag != "😂" else None
 
+        # Add subsentences
+        with open(self._document_subsentence_cache_path(cache_location_root)) as f:
+            all_indices = []
+            for line in f.readlines():
+                line = line.strip()
+                if line != "":
+                    all_indices.append(json.loads(line))
+            for sentence, sent_indices in zip(sentences, all_indices):
+                subsentences = []
+                for subsent_indices in sent_indices:
+                    subsent_tokens = [sentence.tokens[index] for index in subsent_indices]
+                    subsentences.append(Subsentence(sentence, subsent_tokens))
+                if len(subsentences) == 1:
+                    subsentences[0]._is_only_subsentence = True
+                sentence._subsentences = subsentences
+
         return document
 
     def _safe_document_id(self, document_id):
@@ -124,6 +148,9 @@ class PlainTextCacher:
 
     def _document_config_path(self, cache_location_root):
         return os.path.join(cache_location_root, "configuration.json")
+
+    def _document_subsentence_cache_path(self, cache_location_root):
+        return os.path.join(cache_location_root, "subsentences.txt")
 
     def _document_tokenizer_cache_path(self, cache_location_root, tokenizer):
         return os.path.join(cache_location_root, "tokenizer__" + tokenizer + ".txt")

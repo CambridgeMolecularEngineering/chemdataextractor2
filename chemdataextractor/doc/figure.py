@@ -34,6 +34,7 @@ class Figure(CaptionedElement):
         """
         records = ModelList()
         seen_labels = set()
+        skip_parsers = self.document.skip_parsers if self.document is not None else []
 
         p = None
 
@@ -44,6 +45,9 @@ class Figure(CaptionedElement):
 
         for model in self._streamlined_models:
             for parser in model.parsers:
+                if parser in skip_parsers:
+                    # print(f"Figure Skipped: {parser.model}")
+                    continue
                 parser_records = []
 
                 if hasattr(parser, 'parse_caption'):
@@ -52,8 +56,9 @@ class Figure(CaptionedElement):
 
                 elif hasattr(parser, 'parse_sentence'):
                     for caption_sentence in self.caption.sentences:
-                        for record in parser.parse_sentence(caption_sentence):
-                            parser_records.append(record)
+                        for subsentence in caption_sentence.subsentences:
+                            for record in parser.parse_sentence(subsentence):
+                                parser_records.append(record)
                 else:
                     continue
 
@@ -97,7 +102,15 @@ class Figure(CaptionedElement):
                     records[j].merge_all(records[i])
                 j += 1
             i += 1
-        return records
+
+        cleaned_records = []
+        for record in records:
+            record._clean(clean_contextual=False)
+            if record.noncontextual_required_fulfilled:
+                cleaned_records.append(record)
+
+        sorted_records = ModelList(*sorted(cleaned_records, key=lambda el: el.total_confidence() if el.total_confidence() is not None else -10000, reverse=True))
+        return sorted_records
 
     def _repr_html_(self):
         html_lines = ['<figure>', self.caption._repr_html_(), '</figure>']

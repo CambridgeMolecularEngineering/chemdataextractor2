@@ -40,6 +40,8 @@ class Compound(BaseModel):
     def merge(self, other):
         """Merge data from another Compound into this Compound."""
         log.debug('Merging: %s and %s' % (self.serialize(), other.serialize()))
+        if type(other) != type(self):
+            return self
         for k in self.keys():
             if other[k] is not None:
                 if self[k] is not None:

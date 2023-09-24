@@ -23,9 +23,9 @@ project = 'ChemDataExtractor'
 author = 'University of Cambridge, Molecular Engineering Group'
 
 # The short X.Y version
-version = '2.1'
+version = '2.2'
 # The full version, including alpha/beta/rc tags
-release = 'v2.1.2'
+release = 'v2.2.0'
 
 
 # -- General configuration ---------------------------------------------------

@@ -73,7 +73,7 @@ def strip_delta(tokens, start, result):
     return result
 
 
-shift_range = (Optional(R('^[\-–−‒]$')) + (R('^δ?[\+\-–−‒]?\d+(\.+\d+)?[\-–−‒]\d+(\.+\d+)?\.?$') | (R('^[\+\-–−‒]?\d+(\.+\d+)?$') + R('^[\-–−‒]$') + R('^[\+\-–−‒]?\d+(\.+\d+)?\.?$'))))('shift').add_action(merge)
+shift_range = (Optional(R('^[\-–−‒]$')) + (R('^δ?[\+\-–−‒]?\d+(\.+\d+)?[\-–−‒]\d+(\.+\d+)?\.?$') | (R('^[\+\-–−‒]?\d+(\.+\d+)?$') + Optional(R('^[\-–−‒]$')) + R('^[\+\-–−‒]?\d+(\.+\d+)?\.?$'))))('shift').add_action(merge)
 shift_value = (Optional(R('^[\-–−‒]$')) + R('^δ?[\+\-–−‒]?\d+(\.+\d+)?\.?$'))('shift').add_action(merge)
 shift_error = (Optional(R('^[\-–−‒]$')) + R('^δ?[\+\-–−‒]?\d+(\.+\d+)?,\d+(\.+\d+)?\.?$'))('shift').add_action(merge)
 shift = (shift_range | shift_value | shift_error).add_action(strip_stop).add_action(strip_delta)
@@ -117,6 +117,7 @@ class NmrParser(BaseParser):
     """"""
 
     root = nmr
+    parse_full_sentence = True
 
     def __init__(self):
         pass

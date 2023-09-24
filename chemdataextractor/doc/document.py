@@ -28,6 +28,7 @@ from .meta import MetaData
 from ..errors import ReaderError
 from ..model.base import ModelList
 from ..model.model import Compound
+from ..model.contextual_range import SentenceRange, ParagraphRange, SectionRange
 from ..text import get_encoding
 from ..config import Config
 from ..parse.cem import chemical_name
@@ -75,6 +76,8 @@ class Document(BaseDocument):
         :param list[chemdataextractor.doc.element.BaseElement|string] elements: Elements in this Document.
         :keyword Config config: (Optional) Config file for the Document.
         :keyword list[BaseModel] models: (Optional) Models that the Document should extract data for.
+        :keyword list[(list[str], list[str])] adjascent_sections_for_merging: (Optional) Sections that will be treated as though they are adjascent for the purpose of contextual merging. All elements should be in lowercase.
+        :keyword list[chemdataextractor.doc.element.BaseElement subclass] skip_elements: (Optional) Element types to be skipped in parsing
         """
         self._elements = []
         for element in elements:
@@ -96,11 +99,24 @@ class Document(BaseDocument):
             self.models = kwargs['models']
         else:
             self._models = []
+        if 'adjascent_sections_for_merging' in kwargs:
+            self.adjascent_sections_for_merging = copy.copy(kwargs["adjascent_sections_for_merging"])
+        else:
+            self.adjascent_sections_for_merging = None
+        if 'skip_elements' in kwargs:
+            self.skip_elements = kwargs["skip_elements"]
+        else:
+            self.skip_elements = []
+        if '_should_remove_subrecord_if_merged_in' in kwargs:
+            self._should_remove_subrecord_if_merged_in = kwargs["should_remove_subrecord_if_merged_in"]
+        else:
+            self._should_remove_subrecord_if_merged_in = False
 
         # Sets parameters from configuration file
         for element in elements:
             if callable(getattr(element, 'set_config', None)):
                 element.set_config()
+        self.skip_parsers = []
         log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
 
     def add_models(self, models):
@@ -221,13 +237,22 @@ class Document(BaseDocument):
         """
         log.debug("Getting chemical records")
         records = ModelList()  # Final list of records -- output
+        records_by_el = [] # List of records by element -- used for some merging, should contain all the same records as records
         head_def_record = None  # Most recent record from a heading, title or short paragraph
         head_def_record_i = None # Element index of head_def_record
         last_product_record = None
         title_record = None # Records found in the title
+        record_id_el_map = {} # A dictionary that tells what element each record ID came from. We use their IDs as the records themselves change as they are updated
+
+        prev_records = []
+        el_records = []
 
         # Main loop, over all elements in the document
         for i, el in enumerate(self.elements):
+
+            if type(el) in self.skip_elements:
+                continue
+
             log.debug("Element %d, type %s" %(i, str(type(el))))
             last_id_record = None
 
@@ -240,9 +265,22 @@ class Document(BaseDocument):
             for model in el._streamlined_models:
                 if hasattr(model, 'is_id_only'):
                     model.update(chemical_defs)
+                # TODO(ti250): Why is this an if-else? Shouldn't we be updating this for any model?
+                # - it was this way before I changed this...
                 else:
                     model.update(element_definitions)
 
+            # Check any parsers that should be skipped
+            if isinstance(el, Title) or isinstance(el, Heading):
+                self.skip_parsers = []
+                for model in el._streamlined_models:
+                    for parser in model.parsers:
+                        if hasattr(parser, 'should_read_section') and not parser.should_read_section(el):
+                            self.skip_parsers.append(parser)
+                # print(f"\nElement: {el.text}")
+                # print(f"SKIP_PARSERS: {self.skip_parsers}")
+
+            prev_records = el_records
             el_records = el.records
             # Save the title compound
             if isinstance(el, Title):
@@ -251,7 +289,7 @@ class Document(BaseDocument):
 
             # Reset head_def_record unless consecutive heading with no records
             if isinstance(el, Heading) and head_def_record is not None:
-                if not (i == head_def_record_i + 1 and len(el.records) == 0):
+                if not (i == head_def_record_i + 1 and len(el_records) == 0):
                     head_def_record = None
                     head_def_record_i = None
 
@@ -274,6 +312,7 @@ class Document(BaseDocument):
                             head_def_record = sent_record
                             head_def_record_i = i
 
+            cleaned_el_records = []
             #: BACKWARD INTERDEPENDENCY RESOLUTION BEGINS HERE
             for record in el_records:
                 if isinstance(record, MetaData):
@@ -293,12 +332,12 @@ class Document(BaseDocument):
                         # If 2 consecutive headings with compound ID, merge in from previous
                         if i > 0 and isinstance(self.elements[i - 1], Heading):
                             prev = self.elements[i - 1]
-                            if (len(el.records) == 1 and record.is_id_only and len(prev.records) == 1 and
-                                isinstance(prev.records[0], Compound) and prev.records[0].is_id_only and not (record.labels and prev.records[0].labels) and
-                                    not (record.names and prev.records[0].names)):
-                                record.names.update(prev.records[0].names)
-                                record.labels.update(prev.records[0].labels)
-                                record.roles.update(prev.records[0].roles)
+                            if (len(el_records) == 1 and record.is_id_only and len(prev_records) == 1 and
+                                isinstance(prev_records[0], Compound) and prev_records[0].is_id_only and not (record.labels and prev_records[0].labels) and
+                                    not (record.names and prev_records[0].names)):
+                                record.names.update(prev_records[0].names)
+                                record.labels.update(prev_records[0].labels)
+                                record.roles.update(prev_records[0].roles)
 
                 # Unidentified records -- those without compound names or labels
                 if record.is_unidentified:
@@ -329,7 +368,12 @@ class Document(BaseDocument):
                             pass
                 if record not in records:
                     log.debug(record.serialize())
-                    records.append(record)
+                    cleaned_el_records.append(record)
+
+            records.extend(cleaned_el_records)
+            records_by_el.append(cleaned_el_records)
+            for record in cleaned_el_records:
+                record_id_el_map[id(record)] = el
 
         # for record in records:
         #     for contextual_record in contextual_records:
@@ -363,6 +407,7 @@ class Document(BaseDocument):
         len_l = len(records)
         log.debug(records)
         i = 0
+        removed_records = []
         while i < (len_l - 1):
             j = i + 1
             while j < len_l:
@@ -406,8 +451,12 @@ class Document(BaseDocument):
                         r_compound.merge(other_r_compound)
                         other_r_compound.merge(r_compound)
                         if isinstance(r, Compound) and isinstance(other_r, Compound):
-                            records.pop(j)
-                            records.pop(i)
+                            j_record = records.pop(j)
+                            i_record = records.pop(i)
+                            if i_record == r_compound:
+                                removed_records.append(j_record)
+                            else:
+                                removed_records.append(i_record)
                             records.append(r_compound)
                             len_l -= 1
                             i -= 1
@@ -415,14 +464,49 @@ class Document(BaseDocument):
                 j += 1
             i += 1
 
+        # i = 0
+        # length = len(records)
+        # while i < length:
+        #     j = 0
+        #     while j < length:
+        #         if i != j:
+        #             records[j].merge_contextual(records[i])
+        #         j += 1
+        #     i += 1
+
+        # Be smarter about merging: Merge with closest records instead
+        # of earlier records always having precedence
         i = 0
-        length = len(records)
+        length = len(records_by_el)
+
         while i < length:
-            j = 0
-            while j < length:
-                if i != j:
-                    records[j].merge_contextual(records[i])
-                j += 1
+            if len(records_by_el[i]) == 0:
+                i += 1
+                continue
+            offset = 1
+            max_offset = max(length - i, i)
+            el = record_id_el_map[id(records_by_el[i][0])]
+            merge_candidates = []
+            while offset <= max_offset:
+                backwards_index = i - offset
+                forwards_index = i + offset
+                if backwards_index >= 0 and len(records_by_el[backwards_index]) != 0:
+                    backwards_el = record_id_el_map[id(records_by_el[backwards_index][0])]
+                    distance = self._element_distance(el, backwards_el)
+                    # If we're going backwards, we should iterate over the corresponding record backwards
+                    # as those at the end will be closest to the current record
+                    merge_candidates.extend((distance, candidate) for candidate in reversed(records_by_el[backwards_index]))
+                if forwards_index < length and len(records_by_el[forwards_index]) != 0:
+                    forwards_el = record_id_el_map[id(records_by_el[forwards_index][0])]
+                    distance = self._element_distance(el, forwards_el)
+                    merge_candidates.extend((distance, candidate) for candidate in records_by_el[forwards_index])
+                offset += 1
+            for record in records_by_el[i]:
+                for distance, candidate in merge_candidates:
+                    candidate_el = record_id_el_map[id(candidate)]
+                    record.merge_contextual(candidate, distance=distance)
+                    record_id_el_map[id(record)] = el
+                    record_id_el_map[id(candidate)] = candidate_el
             i += 1
 
         # print("\n\n\nAFTER:")
@@ -436,7 +520,7 @@ class Document(BaseDocument):
                 # print("\nCLEANEDRECORD:", record.required_fulfilled, record not in cleaned_records)
                 # pprint(record.serialize())
                 if record.required_fulfilled and record not in cleaned_records:
-                        cleaned_records.append(record)
+                    cleaned_records.append(record)
 
         cleaned_records.remove_subsets()
 
@@ -616,7 +700,7 @@ class Document(BaseDocument):
             if element.elements is not None:
                 elements.extend(element.elements)
             if hasattr(element, "tokens") and tagger in element.taggers:
-                if len(element.tokens) and isinstance(element.tokens[0], RichToken) and tag_type not in element.tokens[0]._tags.keys():
+                if len(element.tokens) and isinstance(element.tokens[0], RichToken) and tag_type not in element.tokens[0]._tags:
                     all_tokens.append(element.tokens)
 
         if hasattr(tagger, "batch_tag_for_type"):
@@ -641,3 +725,63 @@ class Document(BaseDocument):
         return sentences
 
 
+    def _element_distance(self, element_a, element_b):
+        """
+        This method works by getting the indices for the elements. The elements between are
+        counted, with each heading in between being a section.
+
+        Because of the way this works, the elements must be those directly contained by the document,
+        e.g. paragraphs.
+        """
+        try:
+            index_a = self.elements.index(element_a)
+            index_b = self.elements.index(element_b)
+        except ValueError as e:
+            raise ValueError(f"Elements {index_a} and {index_b} not in elements for this document")
+        if index_a == index_b:
+            return SentenceRange()
+        if index_a > index_b:
+            index_a, index_b = index_b, index_a
+        num_sections = 0
+        num_paragraphs = 0
+        for el in self.elements[index_a + 1: index_b + 1]:
+            if isinstance(el, Heading):
+                num_paragraphs = 0
+                num_sections += 1
+            else:
+                num_paragraphs += 1
+        if num_paragraphs == 0 and num_sections == 0:
+            print(f"SentenceRange returned despite non-equal indices ({index_a}, {index_b}), this is probably a bug")
+            return SentenceRange()
+        if self._are_adjascent_sections_for_merging(self._section_name_for_index(index_a), self._section_name_for_index(index_b)):
+            # Should this be 1?
+            num_sections = 0
+        return num_sections * SectionRange() + num_paragraphs * ParagraphRange()
+
+    def _section_name_for_index(self, index):
+        while index >= 0:
+            el = self.elements[index]
+            if isinstance(el, Heading) or isinstance(el, Title):
+                return el.text
+            index -= 1
+        return None
+
+    def _one_of_substrings_is_in_parent(self, substrings, parent_string):
+        for substring in substrings:
+            if substring in parent_string:
+                return True
+        return False
+
+    def _are_adjascent_sections_for_merging(self, section_a, section_b):
+        if self.adjascent_sections_for_merging is None or section_a is None or section_b is None:
+            return False
+        section_a = section_a.lower()
+        section_b = section_b.lower()
+        for pair_a, pair_b in self.adjascent_sections_for_merging:
+            if self._one_of_substrings_is_in_parent(pair_a, section_a):
+                if self._one_of_substrings_is_in_parent(pair_b, section_b):
+                    return True
+            if self._one_of_substrings_is_in_parent(pair_b, section_a):
+                if self._one_of_substrings_is_in_parent(pair_a, section_b):
+                    return True
+        return False
