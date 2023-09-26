@@ -21,7 +21,7 @@ from lxml import etree
 log = logging.getLogger(__name__)
 
 # XML stripper that removes the tags around numbers in chemical formulas
-strip_rsc_html = Cleaner(strip_xpath='.//b')
+strip_rsc_html = Cleaner(strip_xpath='.//b', kill_xpath=".//p[contains(@class, 'header_text')] | //*[@id='art-admin']")
 
 
 def rsc_html_whitespace(document):

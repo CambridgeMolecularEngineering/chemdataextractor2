@@ -51,3 +51,5 @@ geckodriver.log
 .pytest_cache/
 .DS_Store
 log.txt
+*.sublime-project
+*.sublime-workspace

@@ -14,6 +14,7 @@ from abc import ABCMeta
 from collections import MutableSequence
 import json
 import logging
+import math
 from pprint import pprint
 
 import six
@@ -21,6 +22,8 @@ import six
 from ..utils import python_2_unicode_compatible
 from ..parse.elements import Any, W, I
 from ..parse.auto import AutoSentenceParser, AutoTableParser
+from .confidence_pooling import min_value
+from .contextual_range import DocumentRange, SentenceRange
 
 log = logging.getLogger(__name__)
 
@@ -30,26 +33,42 @@ class BaseType(six.with_metaclass(ABCMeta)):
     # This is assigned by ModelMeta to match the attribute on the Model
     name = None
 
-    def __init__(self, default=None, null=False, required=False, contextual=False, parse_expression=None, updatable=False, binding=False, ignore_when_merging=False):
+    def __init__(
+        self,
+        default=None,
+        null=False,
+        required=False,
+        requiredness=1.0,
+        contextual=False,
+        contextual_range=DocumentRange(),
+        parse_expression=None,
+        updatable=False,
+        binding=False,
+        ignore_when_merging=False,
+        never_merge=False):
         """
 
         :param default: (Optional) The default value for this field if none is set.
         :param bool null: (Optional) Include in serialized output even if value is None. Default False.
         :param bool required: (Optional) Whether a value is required. Default False.
         :param bool contextual: (Optional) Whether this value is contextual. Default False.
+        :param ContextualRange contextual_range: (Optional) The maximum range within which contextual merging can occur if the value is contextual. Default DocumentRange. (i.e. merges across the entire document)
         :param BaseParserElement parse_expression: (Optional) Expression for parsing, instance of a subclass of BaseParserElement. Default None.
         :param bool updatable: (Optional) Whether the parse_expression can be changed by the document as parsing occurs. Default False.
-        :param bool binding: (Optional) If this option is set to True, any submodels that have an attribute with the same name must have the same value for this attribute. Default False/
+        :param bool binding: (Optional) If this option is set to True, any submodels that have an attribute with the same name must have the same value for this attribute. Default False.
         :param bool ignore_when_merging: (Optional) If this option is set to True, any records with a different value for this field is treated as corresponding to the same physical record.
         """
         self.default = copy.deepcopy(default)
         self.null = null
         self.required = required
+        self.requiredness = requiredness
         self.contextual = contextual
+        self.contextual_range = contextual_range
         self.parse_expression = parse_expression
         self.updatable = updatable
         self.binding = binding
         self.ignore_when_merging = ignore_when_merging
+        self.never_merge = never_merge
         if self.parse_expression is None and self.updatable:
             print('No parse_expression supplied but updatable set as True for ', type(self))
             print('updatable refers to whether parse_expression can be changed by the document as parsing occurs. Setting updatable to False.')
@@ -254,7 +273,7 @@ class SetType(BaseType):
         if value is None:
             instance._values[self.name] = None
         else:
-            instance._values[self.name] = set(self.field.process(v) for v in value)
+            instance._values[self.name] = set(self.field.process(v) for v in value if v is not None)
 
     def serialize(self, value, primitive=False):
         """Serialize this field."""
@@ -278,8 +297,9 @@ class ModelMeta(ABCMeta):
     def __new__(mcs, name, bases, attrs):
         cls = super(ModelMeta, mcs).__new__(mcs, name, bases, attrs)
         fields = {}
-        for field_name, field in six.iteritems(cls.fields):
-            fields[field_name] = copy.copy(field)
+        for base in bases:
+            for field_name, field in six.iteritems(base.fields):
+                fields[field_name] = copy.copy(field)
         for attr_name, attr_value in six.iteritems(attrs):
             if isinstance(attr_value, BaseType):
                 # Set the name attribute on the Type to the attribute name on the Model
@@ -355,6 +375,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
     def __init__(self, **raw_data):
         """"""
         self._values = {}
+        self._confidences = {}
         for key, value in six.iteritems(raw_data):
             setattr(self, key, value)
         # Set defaults
@@ -363,6 +384,123 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 setattr(self, key, copy.copy(field.default))
         self._record_method = None
         self.was_updated = self._updated
+        # Keep track of the number of times we've merged contextually.
+        # This is then used to diminish the confidence if we've merged many times.
+        self._contextual_merge_count = 0
+
+    @classmethod
+    def deserialize(cls, serialized):
+        record = cls()
+        flattened_serialized = cls._flatten_serialized(serialized)
+        cleaned_serialized = [(cls._clean_key(key), value) for (key, value) in flattened_serialized]
+        for key, value in cleaned_serialized:
+            record[key] = value
+        return record
+
+    @classmethod
+    def _flatten_serialized(cls, serialized):
+        flattened = []
+        for key, value in serialized.items():
+            if isinstance(value, dict):
+                flattened_for_key = cls._flatten_serialized(value)
+                flattened.extend([([key, *sub_key], sub_value) for (sub_key, sub_value) in flattened_for_key])
+            else:
+                flattened.append(([key], value))
+        return flattened
+
+    @classmethod
+    def _clean_key(cls, key):
+        # Hack to get rid of bits of keys where the type is included
+        return [key_el for key_el in key if key_el.lower() == key_el]
+
+    def get_confidence(self, key, default_confidence=None, pooling_method=min_value):
+        if not isinstance(key, list):
+            key = self._get_keypath(key)
+        if len(key) == 1 and key[0] == 'self':
+            return self.total_confidence()
+        if key[0] in self.fields:
+            try:
+                attribute = getattr(self, key[0])
+
+                # Should raise an error for empty fields as empty fields cannot have confidences
+                if ((attribute is None
+                    or (attribute == [] and len(key) != 1))):
+                    raise AttributeError()
+
+                if len(key) == 1:
+                    confidence = None
+                    if isinstance(attribute, BaseModel):
+                        confidence = attribute.total_confidence(pooling_method=pooling_method)
+                    else:
+                        if key[0] in self._confidences:
+                            confidence = self._confidences[key[0]]
+                    if confidence is not None:
+                        return confidence
+                    return default_confidence
+                else:
+                    if isinstance(attribute, list):
+                        attribute = attribute[0]
+                    return attribute.get_confidence(key[1:])
+            except AttributeError as e:
+                return default_confidence
+        else:
+            raise KeyError(key)
+
+    def set_confidence(self, key, value):
+        try:
+            if not isinstance(key, list):
+                key = self._get_keypath(key)
+            if len(key) == 1 and key[0] == 'self':
+                self._confidences['self'] = value
+            elif key[0] in self.fields:
+                attribute = getattr(self, key[0])
+
+                # Should raise an error for empty fields as empty fields cannot have confidences
+                if ((attribute is None
+                    or (attribute == [] and len(key) != 1))):
+                    raise AttributeError()
+
+                if len(key) == 1:
+                    if isinstance(attribute, BaseModel):
+                        attribute._confidences['self'] = value
+                    else:
+                        self._confidences[key[0]] = value
+                else:
+                    if isinstance(attribute, list):
+                        attribute = attribute[0]
+                    return attribute.set_confidence(key[1:], value)
+        except AttributeError as e:
+            pass
+
+    def total_confidence(self, pooling_method=min_value, _account_for_merging=False):
+        if 'self' in self._confidences and self._confidences['self'] is not None:
+            return self._confidences['self']
+
+        total_confidence = pooling_method(self)
+        if total_confidence is None:
+            # TODO(ti250): Make this configurable instead of arbitrarily being 1
+            total_confidence = 1.0
+            # return total_confidence
+
+        merging_factor = 1.0
+        # Operate on the assumption that each merge decreases confidence by some constant factor?
+        # This doesn't seem to make a difference on the photocatalysis dataset-disabling
+        # if _account_for_merging:
+        #     merging_factor = 0.1 ** self._contextual_merge_count
+        requiredness_factor = self._requiredness_factor()
+        return total_confidence * merging_factor * requiredness_factor
+
+    def _requiredness_factor(self):
+        total_factor = 1.0
+        for field_name, field in self.fields.items():
+            if field.required and field.requiredness != 1.0:
+                if field.is_empty(self._values[field_name]):
+                    total_factor *= 1.0 - field.requiredness
+                else:
+                    total_factor *= 1.0
+            if hasattr(field, "model_class") and self._values[field_name] is not None:
+                total_factor *= self._values[field_name]._requiredness_factor()
+        return total_factor
 
     @property
     def is_unidentified(self):
@@ -370,7 +508,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         If there is no 'compound' field associated with the model but the compound is contextual
         """
         try:
-            if 'compound' not in self.fields.keys():
+            if 'compound' not in self.fields:
                 return False
             if not self.compound.contextual_fulfilled:
                 return self.compound.is_unidentified
@@ -577,21 +715,21 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         for field_name, field in six.iteritems(self.fields):
             if hasattr(field, 'model_class'):
                 if self[field_name] == field.default \
-                   and field.required:
-
+                   and field.required and math.isclose(field.requiredness, 1.0):
                     if not strict and field.contextual:
                         pass
                     else:
                         return False
-                if field.required and hasattr(self[field_name], 'required_fulfilled') and \
-                   not self[field_name].required_fulfilled:
+                if field.required and field.requiredness == 1.0 \
+                   and hasattr(self[field_name], 'required_fulfilled') \
+                   and not self[field_name].required_fulfilled:
 
                     if not strict and field.contextual:
                         pass
                     else:
                         log.debug('Required unfulfilled')
                         return False
-            elif field.required and self[field_name] == field.default:
+            elif field.required and field.requiredness == 1.0 and self[field_name] == field.default:
                 # print(self.serialize(), field_name, "did not exist")
                 if not strict and field.contextual:
                     pass
@@ -676,7 +814,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         """
         return other.is_superset(self)
 
-    def merge_contextual(self, other):
+    def merge_contextual(self, other, distance=SentenceRange()):
         """
         Merges any fields marked contextual with additional information from other provided that:
 
@@ -695,6 +833,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         :return: A merged model
         :rtype: BaseModel
         """
+        # TODO(ti250): Add behaviour to actually take the distance into account
 
         log.debug(self.serialize())
         log.debug(other.serialize())
@@ -703,36 +842,76 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         if self.contextual_fulfilled:
             return self
         if self._binding_compatible(other):
+            # Merging in a model of a different type
             _compatible = False
             if type(self) == type(other) and self._compatible(other):
                 _compatible = True
             if type(self) != type(other):
+                if type(other) not in type(self).flatten():
+                    # If the type of the other is not part of the flattened model,
+                    # no point trying to merge
+                    return False
                 for field_name, field in six.iteritems(self.fields):
-                    if hasattr(field, 'model_class') and isinstance(other, field.model_class):
-                        # print('model class case activated')
-                        log.debug('model class case')
-                        if self[field_name] is not None and field.contextual and not self[field_name].contextual_fulfilled:
+                    if hasattr(field, 'field') and hasattr(field.field, 'model_class') and isinstance(other, field.field.model_class):
+                        log.debug('model class list case')
+                        # Basic merging in of lists/sets of models by just creating a list with one element
+                        if (not field.never_merge
+                            and field.contextual
+                            and not self[field_name]
+                            and other and distance <= self.contextual_range(field_name)):
+                            log.debug(field_name)
+                            self[field_name] = [other]
+                            # self.merge_confidence(other, field_name)
+                            did_merge = True
+                    elif hasattr(field, 'model_class') and isinstance(other, field.model_class) and not field.never_merge:
+                        # Merging when there already exists a partial record
+                        if (self[field_name] is not None
+                            and field.contextual
+                            and not self[field_name].contextual_fulfilled
+                            and distance <= self.contextual_range(field_name)):
+                            log.debug('reconciling model classes')
                             if self[field_name].merge_contextual(other):
                                 did_merge = True
-                        elif (field.contextual and not self[field_name]
-                              and other):
+                        # Merging when there is no partial record
+                        elif (field.contextual
+                              and not self[field_name]
+                              and other
+                              and distance <= self.contextual_range(field_name)):
                             log.debug(field_name)
                             self[field_name] = copy.copy(other)
+                            # self.merge_confidence(other, field_name)
                             did_merge = True
+            # Case when merging two records of the same type
             elif self._compatible(other):
                 for field_name, field in six.iteritems(self.fields):
                     if (field.contextual
+                       and not field.never_merge
                        and not self[field_name]
-                       and other.get(field_name, None)):
+                       and other.get(field_name, None)
+                       and distance <= self.contextual_range(field_name)):
                         self[field_name] = other[field_name]
+                        self.merge_confidence(other, field_name)
                         did_merge = True
         self._consolidate_binding()
         if did_merge:
+            self._contextual_merge_count += 1
+            if 'self' in other._confidences:
+                self.merge_confidence(other, 'self')
             if should_keep_both_records:
                 did_merge = False
         return did_merge
 
-    def merge_all(self, other):
+    def contextual_range(self, field_name):
+        """
+        The contextual range for a field. Override this method to allow for contextual ranges to change with time.
+
+        :param str field_name: The name of the field for which to calculate the contextual range
+        :return: The contextual range for the field given the current record
+        :rtype: ContextualRange
+        """
+        return self.fields[field_name].contextual_range
+
+    def merge_all(self, other, strict=True):
         """
         Merges any properties between other and self, regardless of whether that field is contextual.
         Checks to make sure that there are no conflicts between the values contained in self and those in other.
@@ -753,8 +932,23 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         should_keep_both_records = self._should_keep_both_records(other)
         if self._binding_compatible(other):
             if type(self) != type(other):
+                if type(other) not in type(self).flatten():
+                    # If the type of the other is not part of the flattened model,
+                    # no point trying to merge
+                    return False
                 for field_name, field in six.iteritems(self.fields):
-                    if hasattr(field, 'model_class') and isinstance(other, field.model_class):
+                    if hasattr(field, 'field') and hasattr(field.field, 'model_class') and isinstance(other, field.field.model_class) and not field.never_merge:
+                        log.debug('model list case')
+                        if self[field_name]:
+                            for el in self[field_name]:
+                                if el.merge_all(other):
+                                    did_merge = True
+                        elif (not self[field_name]
+                              and other):
+                            log.debug(field_name)
+                            self[field_name] = [copy.copy(other)]
+                            did_merge = True
+                    elif hasattr(field, 'model_class') and isinstance(other, field.model_class) and not field.never_merge:
                         log.debug('model class case')
                         if self[field_name]:
                             if self[field_name].merge_all(other):
@@ -767,14 +961,28 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             elif self._compatible(other):
                 for field_name, field in six.iteritems(self.fields):
                     if (not self[field_name]
-                      and other.get(field_name, None)):
+                      and other.get(field_name, None)
+                      and not field.never_merge):
                         did_merge = True
                         self[field_name] = other[field_name]
+                        self.merge_confidence(other, field_name)
         self._consolidate_binding()
         if did_merge:
+            if 'self' in other._confidences:
+                self.merge_confidence(other, 'self')
             if should_keep_both_records:
                 did_merge = False
         return did_merge
+
+    def merge_confidence(self, other, field_name):
+        # Keep the lower confidence value
+        self_confidence = self.get_confidence(field_name, pooling_method=lambda x: None)
+        other_confidence = other.get_confidence(field_name, pooling_method=lambda x: None)
+        if self_confidence is None and other_confidence is not None:
+            self.set_confidence(field_name, other_confidence)
+        elif self_confidence is not None and other_confidence is not None:
+            new_confidence = self_confidence if self_confidence < other_confidence else other_confidence
+            self.set_confidence(field_name, new_confidence)
 
     def _compatible(self, other):
         """
@@ -870,7 +1078,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         """
         model_set = {cls}
         for field_name, field in six.iteritems(cls.fields):
-            while hasattr(field, 'field') and not isinstance(field, InferredProperty):
+            while hasattr(field, 'field') and (include_inferred or not isinstance(field, InferredProperty)):
                 if hasattr(field, 'model_class'):
                     model_set.update(field.model_class.flatten(include_inferred=include_inferred))
                 field = field.field
@@ -878,6 +1086,49 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 model_set.update(field.model_class.flatten(include_inferred=include_inferred))
         log.debug(model_set)
         return model_set
+
+    def _flatten_instance(self, include_inferred=True):
+        """
+        A set of all records that are associated with this record.
+        Essentially, an instance version of the flatten classmethod.
+        For example, if we have a model like the following with multiple submodels:
+
+        .. code-block:: python
+
+            class A(BaseModel):
+                pass
+
+            class B(BaseModel):
+                a = ModelType(A)
+
+            class C(BaseModel):
+                b = ModelType(B)
+
+            a = A()
+            b = B(a=a)
+            c = C(b=b)
+
+        then `C._flatten_instance()` would give the result::
+
+            set(c, b, a)
+
+        :return: The set of all records associated with this record.
+        :rtype: set(BaseModel instances)
+        """
+        subrecords_set = {self}
+        for field_name, field in six.iteritems(self.fields):
+            while hasattr(field, 'field') and (include_inferred or not isinstance(field, InferredProperty)):
+                if hasattr(field, 'model_class'):
+                    break
+                field = field.field
+            if hasattr(field, 'model_class') and self[field_name]:
+                subrecord = self[field_name]
+                if isinstance(subrecord, list):
+                    for list_el in subrecord:
+                        subrecords_set.update(list_el._flatten_instance(include_inferred=include_inferred))
+                else:
+                    subrecords_set.update(subrecord._flatten_instance(include_inferred=include_inferred))
+        return subrecords_set
 
     @property
     def binding_properties(self):
@@ -922,7 +1173,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             pass
         else:
             for field_name, field in six.iteritems(other.fields):
-                if field_name in binding_properties.keys():
+                if field_name in binding_properties:
                     if other[field_name]:
                         if not (binding_properties[field_name].is_superset(other[field_name]) or
                                 binding_properties[field_name].is_subset(other[field_name])):
@@ -933,12 +1184,13 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         return True
 
     def _consolidate_binding(self, binding_properties=None):
+        # TODO: This doesn't update all the confidences for the submodels yet
         if binding_properties is None:
             binding_properties = self.binding_properties
         if binding_properties == {}:
             return
         for field_name, field in six.iteritems(self.fields):
-            if field_name in binding_properties.keys():
+            if field_name in binding_properties:
                 self[field_name] = binding_properties[field_name]
             elif hasattr(field, 'model_class') and self[field_name]:
                 self[field_name]._consolidate_binding(binding_properties)
@@ -957,22 +1209,30 @@ class BaseModel(six.with_metaclass(ModelMeta)):
             raise TypeError("Record method description is not string.")
         self._record_method = text
 
-    def _clean(self):
+    def _clean(self, clean_contextual=True):
         """
         Removes any subrecords where the required properties have not been fulfilled.
+
+        clean_contextual determines whether contextual fields that are unfulfilled are
+        removed or not.
         """
         for field_name, field in six.iteritems(self.fields):
             if hasattr(field, 'model_class') and self[field_name]:
-                self[field_name]._clean()
-                if not self[field_name].required_fulfilled:
-                    self[field_name] = field.default
+                self[field_name]._clean(clean_contextual=clean_contextual)
+                if clean_contextual:
+                    if not self[field_name].required_fulfilled:
+                        self[field_name] = field.default
+                else:
+                    if not self[field_name].noncontextual_required_fulfilled:
+                        self[field_name] = field.default
 
     @classmethod
-    def _all_keypaths(cls):
+    def _all_keypaths(cls, include_model_lists=True):
         all_keypaths = []
         for field_name, field in six.iteritems(cls.fields):
-            while hasattr(field, 'field'):
-                field = field.field
+            if include_model_lists:
+                while hasattr(field, 'field'):
+                    field = field.field
             if hasattr(field, 'model_class'):
                 sub_keypaths = field.model_class._all_keypaths()
                 for keypath in sub_keypaths:
@@ -1041,13 +1301,15 @@ class ModelList(MutableSequence):
         # A dictionary with the type of each element as the key, and the element itself as the value
         typed_list = {}
         for element in self.models:
-            if type(element) in typed_list.keys():
+            if type(element) in typed_list:
                 typed_list[type(element)].append(element)
             else:
                 typed_list[type(element)] = [element]
         new_models = []
         for _, elements in six.iteritems(typed_list):
             i = 0
+            elements.sort(key=lambda el: el.total_confidence(_account_for_merging=True) if el.total_confidence(_account_for_merging=True) is not None else -10000,
+                          reverse=True)
             length = len(elements)
             to_remove = []
             # Iterate through the list of elements and if any subsets are found, add the
@@ -1071,3 +1333,25 @@ class ModelList(MutableSequence):
                     new_models.append(elements[i])
                 i += 1
         self.models = new_models
+
+    def _remove_used_subrecords(self):
+        to_remove = set()
+        for element in self.models:
+            flattened_instance = element._flatten_instance()
+            flattened_instance.remove(element)
+            to_remove.update(flattened_instance)
+
+        new_models = []
+        for model in self.models:
+            if model not in to_remove:
+                new_models.append(model)
+        self.models = new_models
+
+
+def sort_merge_candidates(merge_candidates, adjust_by_confidence=True):
+    # merge_candidates is a list of tuples (distance, merge candidate)
+    if adjust_by_confidence:
+        return sorted(merge_candidates,
+            key=lambda x: x[0] / (x[1].total_confidence() + 0.01) if x[1].total_confidence() is not None else x[0])
+    else:
+        return sorted(merge_candidates, lambda x: x[0])

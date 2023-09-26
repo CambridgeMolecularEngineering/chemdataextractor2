@@ -11,3 +11,4 @@ from __future__ import unicode_literals
 
 from .base import BaseType, StringType, FloatType, ModelType, ListType, BaseModel, ModelList, InferredProperty
 from .model import *
+from .contextual_range import DocumentRange, SectionRange, ParagraphRange, SentenceRange

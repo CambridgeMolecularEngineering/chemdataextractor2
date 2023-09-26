@@ -43,14 +43,14 @@ class TestElsXMLReader(unittest.TestCase):
         content = f.read()
         d = r.readstring(content)
         f.close()
-        self.assertEqual(len(d.elements), 198)
+        self.assertEqual(len(d.elements), 139)
 
     def test_document_usage(self):
         """Test XMLReader used via Document.from_file."""
         fname = 'j.jnoncrysol.2017.07.006.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'elsevier', fname), 'rb')
         d = Document.from_file(f, readers=[ElsevierXmlReader()])
-        self.assertEqual(len(d.elements), 198)
+        self.assertEqual(len(d.elements), 139)
 
     def test_metadata(self):
         """Test that the retrieved metadata is correct
@@ -69,7 +69,7 @@ class TestElsXMLReader(unittest.TestCase):
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'elsevier', fname), 'rb')
         d = Document.from_file(f, readers=[ElsevierXmlReader()])
         table_1 = d.tables[0].tde_table.category_table
-        expected = [['1500', ['Tm (K)'], ['MD simulations with ReaxFF potential [ ]']], ['1750', ['Tm (K)'], ['MC simulations with ARK parameters [ ]']], ['1775', ['Tm (K)'], ['MD simulations with SW potential [ ]']], ['2.36\u202f×\u202f1011', ['γC (K/s)'], ['MD simulations with ReaxFF potential [ ]']], ['4.25\u202f×\u202f1011', ['γC (K/s)'], ['MC simulations with ARK parameters [ ]']], ['4.95\u202f×\u202f1011', ['γC (K/s)'], ['MD simulations with SW potential [ ]']]]
+        expected = [['1500', ['Tm (K)'], ['MD simulations with ReaxFF potential []']], ['1750', ['Tm (K)'], ['MC simulations with ARK parameters []']], ['1775', ['Tm (K)'], ['MD simulations with SW potential []']], ['2.36\u202f×\u202f1011', ['γC (K/s)'], ['MD simulations with ReaxFF potential []']], ['4.25\u202f×\u202f1011', ['γC (K/s)'], ['MC simulations with ARK parameters []']], ['4.95\u202f×\u202f1011', ['γC (K/s)'], ['MD simulations with SW potential []']]]
         self.assertEqual(table_1, expected)
 
 

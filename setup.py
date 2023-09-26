@@ -12,7 +12,7 @@ else:
 
 setup(
     name='chemdataextractor2',
-    version='2.1.2',
+    version='2.2.1',
     author='Matt Swain, Callum Court, Juraj Mavracic, Taketomo Isazawa, and contributors',
     author_email='m.swain@me.com, cc889@cam.ac.uk, jm2111@cam.ac.uk, ti250@cam.ac.uk',
     license='MIT',
@@ -54,7 +54,8 @@ setup(
         'allennlp==0.9.0',
         'tokenizers==0.12.1',
         'scikit-learn==0.22.1',
-        'overrides==3.1.0'
+        'overrides==3.1.0',
+        'stanza==1.2.0',
     ],
     classifiers=[
         'Intended Audience :: Developers',

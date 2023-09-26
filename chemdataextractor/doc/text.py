@@ -18,7 +18,7 @@ import unicodedata
 
 import six
 
-from ..model.base import ModelList
+from ..model.base import ModelList, sort_merge_candidates
 from ..nlp.lexicon import ChemLexicon, Lexicon
 from ..nlp.cem import IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
 from ..nlp.new_cem import CemTagger
@@ -27,6 +27,8 @@ from ..nlp.tag import NoneTagger, POS_TAG_TYPE, NER_TAG_TYPE
 from ..nlp.pos import ChemCrfPosTagger, CrfPosTagger, ApPosTagger, ChemApPosTagger
 # from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_tokenize, SentenceTokenizer, WordTokenizer, FineWordTokenizer, ChemTokWordTokenizer, SpacyTokenizer
 from ..nlp.tokenize import BertWordTokenizer, ChemSentenceTokenizer, regex_span_tokenize, SentenceTokenizer, WordTokenizer
+from ..nlp.subsentence import SubsentenceExtractor, NoneSubsentenceExtractor
+from ..nlp.dependency import DependencyTagger, IndexTagger
 from ..text import CONTROL_RE
 from ..utils import memoized_property, python_2_unicode_compatible, first
 from .element import BaseElement
@@ -34,6 +36,8 @@ from ..parse.definitions import specifier_definition
 from ..parse.cem import chemical_name, cem_phrase
 from ..parse.quantity import construct_quantity_re
 from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
+from ..model.contextual_range import SentenceRange
+
 
 
 log = logging.getLogger(__name__)
@@ -181,7 +185,8 @@ class Text(collections.Sequence, BaseText):
     word_tokenizer = BertWordTokenizer()
     lexicon = ChemLexicon()
     abbreviation_detector = ChemAbbreviationDetector()
-    taggers = [ChemCrfPosTagger(), cem_tagger]
+    taggers = [ChemCrfPosTagger(), cem_tagger, DependencyTagger()]
+    subsentence_extractor = None
 
     def __init__(self, text, sentence_tokenizer=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, parsers=None, **kwargs):
         """
@@ -273,7 +278,8 @@ class Text(collections.Sequence, BaseText):
                 ner_tagger=self.ner_tagger,
                 document=self.document,
                 models=self.models,
-                taggers=self.taggers
+                taggers=self.taggers,
+                subsentence_extractor=self.subsentence_extractor,
             )
             sents.append(sent)
         return sents
@@ -382,7 +388,35 @@ class Text(collections.Sequence, BaseText):
     @property
     def records(self):
         """All records found in the object, as a list of :class:`~chemdataextractor.model.base.BaseModel`."""
-        return ModelList(*[r for sent in self.sentences for r in sent.records])
+        records_by_sentence = [sent.records for sent in self.sentences]
+        num_sentences = len(records_by_sentence)
+
+        for index, sent_records in enumerate(records_by_sentence):
+            offset = 1
+            max_offset = max(num_sentences - index, index)
+            merge_candidates = []
+            while offset <= max_offset:
+                backwards_index = index - offset
+                forwards_index = index + offset
+                distance = offset * SentenceRange()
+                merge_candidates.extend([(distance, record) for record in records_by_sentence[backwards_index]])
+
+                if backwards_index >= 0:
+                    merge_candidates.extend((distance, record) for record in records_by_sentence[backwards_index])
+                if forwards_index < num_sentences:
+                    merge_candidates.extend((distance, record) for record in records_by_sentence[forwards_index])
+                offset += 1
+            self._resolve_contextual(sent_records, sort_merge_candidates(merge_candidates))
+
+        # Don't sort these records as this encodes where they were found in the paragraph
+        records = ModelList(*[r for sentence_records in records_by_sentence for r in sentence_records])
+        records.remove_subsets()
+        return records
+
+    def _resolve_contextual(self, parent_records, child_records):
+        for parent_record in parent_records:
+            for distance, child_record in child_records:
+                parent_record.merge_contextual(child_record, distance=distance)
 
     def __add__(self, other):
         if type(self) == type(other):
@@ -446,8 +480,9 @@ class Footnote(Text):
 
 
 class Citation(Text):
-    taggers = [ChemCrfPosTagger(), NoneTagger(tag_type=NER_TAG_TYPE)]
+    taggers = [ChemCrfPosTagger(), NoneTagger(tag_type=NER_TAG_TYPE), NoneTagger(tag_type="dependency"), IndexTagger()]
     abbreviation_detector = None
+    subsentence_extractor = NoneSubsentenceExtractor()
     # TODO: Citation parser
     # TODO: Store number/label
 
@@ -476,9 +511,11 @@ class Sentence(BaseText):
     word_tokenizer = BertWordTokenizer()
     lexicon = ChemLexicon()
     abbreviation_detector = ChemAbbreviationDetector()
-    taggers = [ChemCrfPosTagger(), cem_tagger]
+    subsentence_extractor = SubsentenceExtractor()
+    taggers = [ChemCrfPosTagger(), cem_tagger, DependencyTagger()]
+    specifier_definition = specifier_definition
 
-    def __init__(self, text, start=0, end=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, **kwargs):
+    def __init__(self, text, start=0, end=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, specifier_definition=None, subsentence_extractor=None, **kwargs):
         """
         .. note::
 
@@ -516,6 +553,10 @@ class Sentence(BaseText):
         self.start = start
         #: The end index of this sentence within the text passage.
         self.end = end if end is not None else len(text)
+        if specifier_definition is not None:
+            self.specifier_definition = specifier_definition
+        if subsentence_extractor is not None:
+            self.subsentence_extractor = subsentence_extractor
 
     def __repr__(self):
         return '%s(%r, %r, %r)' % (self.__class__.__name__, self._text, self.start, self.end)
@@ -726,7 +767,7 @@ class Sentence(BaseText):
         """
         defs = []
         tokens = self.tokens
-        for result in specifier_definition.scan(tokens):
+        for result in self.specifier_definition.scan(tokens):
             definition = result[0]
             start = result[1]
             end = result[2]
@@ -806,14 +847,108 @@ class Sentence(BaseText):
     def quantity_re(self):
         return construct_quantity_re(*self._streamlined_models)
 
+    @memoized_property
+    def subsentences(self):
+        subsentence_tokens_list = self.subsentence_extractor.subsentences(self)
+        subsentences = []
+        for subsentence_tokens in subsentence_tokens_list:
+            subsentence = Subsentence(self, subsentence_tokens)
+            subsentences.append(subsentence)
+        if len(subsentences) == 1:
+            subsentences[0]._is_only_subsentence = True
+        return subsentences
+
+    @memoized_property
+    def full_subsentence(self):
+        subsentence_tokens = self.tokens
+        return Subsentence(self, subsentence_tokens, is_full_sentence=True)
+
+    @property
+    def records(self):
+        """All records found in the object, as a list of :class:`~chemdataextractor.model.base.BaseModel`."""
+        records = ModelList()
+        if len(self.subsentences) != 1:
+            records = self.full_subsentence.records
+
+        for subsentence in self.subsentences:
+            records.extend(subsentence.records)
+        records.remove_subsets()
+
+        i = 0
+        length = len(records)
+        while i < length:
+            j = 0
+            while j < length:
+                if i != j:
+                    records[j].merge_all(records[i])
+                j += 1
+            i += 1
+
+        cleaned_records = []
+        for record in records:
+            record._clean(clean_contextual=False)
+            if record.noncontextual_required_fulfilled:
+                cleaned_records.append(record)
+        cleaned_records = ModelList(*cleaned_records)
+
+        if self.document and self.document._should_remove_subrecord_if_merged_in:
+            cleaned_records._remove_used_subrecords()
+
+        sorted_records = ModelList(*sorted(cleaned_records, key=lambda el: el.total_confidence() if el.total_confidence() is not None else -10000, reverse=True))
+        return sorted_records
+
+    def __add__(self, other):
+        if type(self) == type(other):
+            merged = self.__class__(
+                text=self.text + other.text,
+                start=self.start,
+                end=None,
+                id=self.id or other.id,
+                references=self.references + other.references,
+                word_tokenizer=self.word_tokenizer,
+                lexicon=self.lexicon,
+                abbreviation_detector=self.abbreviation_detector,
+                pos_tagger=self.pos_tagger,
+                ner_tagger=self.ner_tagger,
+            )
+            return merged
+        return NotImplemented
+
+
+class Subsentence(Sentence):
+    """
+    A sub-sentence level logical division of text. Used to store clauses in CDE based on clause extraction as described
+    in the paper Automated Construction of a Photocatalysis Dataset for Water-Splitting Applications
+    (https://www.nature.com/articles/s41597-023-02511-6).
+    An example of subsentences would be “A has quality α” and “A has quality β” from the sentence
+    “A has quality α and quality β”. This enables rule-based and template-based parsing to adapt to a wider range
+    of sentences.
+    """
+    tokens = []
+
+    def __init__(self, parent_sentence, tokens, is_full_sentence=False):
+        super().__init__(' '.join([token.text for token in tokens]))
+        self.tokens = tokens
+        self.models = parent_sentence.models
+        self.parent_sentence = parent_sentence
+        self.document = self.parent_sentence.document
+        self.is_full_sentence = is_full_sentence
+        self._is_only_subsentence = False
+
     @property
     def records(self):
         """All records found in the object, as a list of :class:`~chemdataextractor.model.base.BaseModel`."""
         records = ModelList()
         seen_labels = set()
+        skip_parsers = self.document.skip_parsers if self.document is not None else []
+
         for model in self._streamlined_models:
             for parser in model.parsers:
+                if parser in skip_parsers:
+                    continue
                 if hasattr(parser, 'parse_sentence'):
+                    if (parser.parse_full_sentence != self.is_full_sentence) and not self._is_only_subsentence:
+                        continue
                     for record in parser.parse_sentence(self):
                         p = record.serialize()
                         if record.is_empty:  # TODO: Potential performance issues?
@@ -822,10 +957,10 @@ class Sentence(BaseText):
                         if record in records:
                             continue
                         # Skip just labels that have already been seen (bit of a hack)
-                        if (isinstance(record, Compound) and 'Compound' in p.keys() and all(k in {'labels', 'roles'} for k in p['Compound'].keys()) and
-                          set(record.labels).issubset(seen_labels)):
+                        if (type(record) == Compound and 'Compound' in p.keys() and all(k in {'labels', 'roles'} for k in p['Compound'].keys())
+                          and set(record.labels).issubset(seen_labels)):
                             continue
-                        if isinstance(record, Compound):
+                        if type(record) == Compound:
                             seen_labels.update(record.labels)
                             # This could be super slow if we find lots of things
                             found = False
@@ -853,23 +988,6 @@ class Sentence(BaseText):
             i += 1
         return records
 
-    def __add__(self, other):
-        if type(self) == type(other):
-            merged = self.__class__(
-                text=self.text + other.text,
-                start=self.start,
-                end=None,
-                id=self.id or other.id,
-                references=self.references + other.references,
-                word_tokenizer=self.word_tokenizer,
-                lexicon=self.lexicon,
-                abbreviation_detector=self.abbreviation_detector,
-                pos_tagger=self.pos_tagger,
-                ner_tagger=self.ner_tagger,
-            )
-            return merged
-        return NotImplemented
-
 
 class Cell(Sentence):
     """Data cell for tables. One row of the category table"""
@@ -878,6 +996,7 @@ class Cell(Sentence):
     # word_tokenizer = FineWordTokenizer()
     # pos_tagger = NoneTagger()
     # ner_tagger = NoneTagger()
+    subsentence_extractor = NoneSubsentenceExtractor()
 
 
     def __init__(self, *args, **kwargs):

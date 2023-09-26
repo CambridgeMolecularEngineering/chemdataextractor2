@@ -95,7 +95,7 @@ class AllenNlpWrapperTagger(BaseTagger):
         :param tag_type (obj, optional): Override the class's tag type. Refer to the documentation for
             :class:`~chemdataextractor.nlp.tag.BaseTagger` for more information on how to use tag types.
         :param min_batch_size (int, optional): The minimum batch size to use when predicting. Default 100.
-        :param max_batch_size (int, optional): The maximum batch size to use when predicting. Default 300.
+        :param max_batch_size (int, optional): The maximum batch size to use when predicting. Default 200.
         :param max_allowed_length (int, optional): The maximum allowed length of a sentence when predicting.
             Default 220. Any sentences longer than this will be split into multiple smaller sentences via a sliding window approach and the
             results will be collected. Needs to be a multiple of 4 for correct predictions.
@@ -121,7 +121,7 @@ class AllenNlpWrapperTagger(BaseTagger):
 
         self.max_batch_size = max_batch_size
         if max_batch_size is None:
-            self.max_batch_size = 300
+            self.max_batch_size = 200
 
         self.max_allowed_length = max_allowed_length
         if max_allowed_length is None:
@@ -149,6 +149,7 @@ class AllenNlpWrapperTagger(BaseTagger):
             with yaspin(text="Initialising AllenNLP model", side="right").simpleDots as sp:
                 gpu_id = self._gpu_id
                 if gpu_id is None and torch.cuda.is_available():
+                    print("Automatically activating GPU support")
                     gpu_id = torch.cuda.current_device()
                 loaded_archive = load_archive(archive_file=self._archive_location, weights_file=self._weights_location,
                                               overrides=json.dumps(self.overrides))
@@ -312,6 +313,6 @@ class AllenNlpWrapperTagger(BaseTagger):
                         consolidated_tags.extend(subsent_tags[quarter_loc: -quarter_loc])
                         _ranges_used.append(len(subsent_tags[quarter_loc: 3 * quarter_loc]))
             if len(sent) != len(consolidated_tags):
-                raise TypeError("The length of the sentence {} and the length of the consolidated tags {} are different.".format(len(sent), len(consolidated_tags)))
+                raise TypeError(f"The length of the sentence {len(sent)} and the length of the consolidated tags {len(consolidated_tags)} are different for the tagger for {self.tag_type}.")
             tags.append(zip(sent, [self.process(tag) for tag in consolidated_tags]))
         return tags

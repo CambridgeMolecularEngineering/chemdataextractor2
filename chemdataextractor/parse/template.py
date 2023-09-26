@@ -153,6 +153,7 @@ class QuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         root_phrase = Group(self.specifier_before_cem_and_value_phrase | self.cem_after_specifier_and_value_phrase | self.value_specifier_cem_phrase | self.cem_before_specifier_and_value_phrase | Group(self.specifier_and_value)('root_phrase'))
         return root_phrase
 
+
 class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
     """Template for parsing sentences that contain nested or chained entities
 
@@ -170,6 +171,9 @@ class MultiQuantityModelTemplateParser(BaseAutoParser, BaseSentenceParser):
         BaseAutoParser {[type]} -- [description]
         BaseSentenceParser {[type]} -- [description]
     """
+
+    parse_full_sentence = True
+
     @property
     def specifier_phrase(self):
         """Specifier Phrase"""

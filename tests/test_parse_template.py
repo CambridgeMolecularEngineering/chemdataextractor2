@@ -168,7 +168,7 @@ class TestMultiQuantityTemplate(unittest.TestCase):
                                           'specifier': 'TC1',
                                           'units': 'Kelvin^(1.0)',
                                           'value': [640.0]}}]
-        self.assertEqual(self.interpret(s), expected)
+        self.assertCountEqual(self.interpret(s), expected)
 
 if __name__ == '__main__':
     unittest.main()

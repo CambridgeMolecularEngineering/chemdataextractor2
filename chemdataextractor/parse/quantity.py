@@ -60,30 +60,37 @@ _division_pattern = re.compile('[/]\D*')
 _magnitude_indicators = re.compile('[pnµmTGMkc]')
 
 
-def value_element(units=None):
+def value_element(units=None, activate_to_range=False):
     """
     Create a Parse element that can extract all sorts of values.
     """
-    pure_number = R(r'^(([\+\-–−~∼˜]?\d+(([\.・,\d])+)?)|(\<nUm\>)|(×))+$')
+    pure_number = R(r'^(([\+\-–−~∼˜≒]?\d+(([\.・,\d])+)?)|(\<nUm\>)|(×))+$')
     spaced_power_number = pure_number + R(r'^×$') + pure_number
     fraction = R(r'^(([\+\-–−]?\d+/\d+)|(\<nUm\>))$') | (R(r'^(([\+\-–−]?\d+)|(\<nUm\>))$') + R(r'^/$') + R(r'^((\d+)|(\<nUm\>))$')).add_action(merge)
     number = spaced_power_number | fraction | pure_number
     joined_range = R(r'^[\+\-–−~∼˜]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
     if units is not None:
-        spaced_range = (number + Optional(units).hide() + (R(r'^[\-–−~∼˜]$') + number | number))('raw_value').add_action(merge)
+        spaced_range = (number + Optional(units).hide() + Optional(R(r'^[\-–−\—~∼˜]$')) + number)('raw_value').add_action(merge)
         to_range = (number + Optional(units).hide() + I('to') + number)('raw_value').add_action(join)
     else:
-        spaced_range = (number + R(r'^[\-–−~∼˜]$') + number)('raw_value').add_action(merge)
+        spaced_range = (number + R(r'^[\-–−\—~∼˜]$') + number)('raw_value').add_action(merge)
         to_range = (number + I('to') + number)('raw_value').add_action(join)
-    plusminus_range = (number + R('±') + number)('raw_value').add_action(join)
-    bracket_range = R('^' + _number_pattern.pattern + '\(\d+\)' + '$')('raw_value')
+    if units is not None:
+        plusminus_range = (number + Optional(units).hide() + W('±') + number)('raw_value').add_action(join)
+    else:
+        plusminus_range = (number + W('±') + number)('raw_value').add_action(join)
+    bracket_range = R('^' + _number_pattern.pattern + r'\(\d+\)' + '$')('raw_value')
     spaced_bracket_range = (pure_number + W('(') + pure_number + W(')')).add_action(merge)('raw_value')
     between_range = (I('between').hide() + number + I('and') + number).add_action(join)
-    value_range = (Optional(R('^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | to_range | between_range | bracket_range | spaced_bracket_range))('raw_value').add_action(merge)
-    value_single = (Optional(R('^[~∼˜\<\>]$')) + Optional(R('^[\-–−]$')) + number)('raw_value').add_action(merge)
+    if activate_to_range:
+        value_range = (Optional(R(r'^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | between_range | bracket_range | to_range | spaced_bracket_range))('raw_value').add_action(merge)
+    else:
+        value_range = (Optional(R(r'^[\-–−]$')) + (plusminus_range | joined_range | spaced_range | between_range | bracket_range | spaced_bracket_range))('raw_value').add_action(merge)
+    value_single = (Optional(R(r'^[~∼˜\<\>≥]$')) + Optional(R(r'^[\-–−]$')) + number)('raw_value').add_action(merge)
     value = Optional(lbrct).hide() + (value_range | value_single)('raw_value') + Optional(rbrct).hide()
     if units is not None:
-        value = value + units
+        connecting_phrase = W('-')
+        value = value + Optional(connecting_phrase) + units
     return value
 
 
@@ -190,8 +197,11 @@ def extract_value(string):
             elif remaining[0][:2] == '10':
                 string_power = remaining[0][2:]
                 index += 1
-            exponent = 10 ** float(string_power)
-            values[-1] = values[-1] * exponent
+            try:
+                exponent = 10 ** float(string_power)
+                values[-1] = values[-1] * exponent
+            except UnboundLocalError:
+                return None
         try:
             float_val = float(value)
             values.append(float_val)
