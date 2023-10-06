@@ -1029,23 +1029,38 @@ class Cell(Sentence):
 
         # Doing it this way means that a lot of RichTokens are shared between the sub-elements, resulting
         # in tagging being only done once per RichToken, which is faster.
+        
         tokens = cell.data_sent.tokens
-        separator_token = RichToken(separator, 0, 0, cls.lexicon, cell)
+        span_offset = tokens[-1].end + 1  # a cursor to help getting the span location correct when extending the token list
+        separator_token = RichToken(separator, span_offset, span_offset + 4, cls.lexicon, cell)
+        span_offset = separator_token.end + 1
         tokens.append(separator_token)
 
         for row_category_sent in cell.row_categories_sents:
-            cell_separator = RichToken(separator, 0, 0, cls.lexicon, cell)
-            tokens.extend(row_category_sent.tokens)
+            for token in row_category_sent.tokens:
+                token.start = token.start + span_offset
+                token.end = token.end + span_offset
+                tokens.append(token)
+            span_offset = tokens[-1].end + 1
+            cell_separator = RichToken(separator, span_offset, span_offset + 4, cls.lexicon, cell)
             tokens.append(cell_separator)
 
         if cell.row_categories_sents:
             tokens = tokens[:-1]
+            span_offset = tokens[-1].end + 1
 
-        separator_token = RichToken(separator, 0, 0, cls.lexicon, cell)
+        separator_token = RichToken(separator, span_offset, span_offset + 4, cls.lexicon, cell)
+        span_offset = separator_token.end + 1
+
         tokens.append(separator_token)
         for col_category_sent in cell.col_categories_sents:
-            cell_separator = RichToken(separator, 0, 0, cls.lexicon, cell)
-            tokens.extend(col_category_sent.tokens)
+            
+            for token in col_category_sent.tokens:
+                token.start = token.start + span_offset
+                token.end = token.end + span_offset
+                tokens.append(token)
+            span_offset = tokens[-1].end + 1
+            cell_separator = RichToken(separator, span_offset, span_offset + 4, cls.lexicon, cell)
             tokens.append(cell_separator)
 
         if cell.col_categories_sents:
