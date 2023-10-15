@@ -43,14 +43,14 @@ class TestElsXMLReader(unittest.TestCase):
         content = f.read()
         d = r.readstring(content)
         f.close()
-        self.assertEqual(len(d.elements), 139)
+        self.assertEqual(len(d.elements), 145)
 
     def test_document_usage(self):
         """Test XMLReader used via Document.from_file."""
         fname = 'j.jnoncrysol.2017.07.006.xml'
         f = io.open(os.path.join(os.path.dirname(__file__), 'data', 'elsevier', fname), 'rb')
         d = Document.from_file(f, readers=[ElsevierXmlReader()])
-        self.assertEqual(len(d.elements), 139)
+        self.assertEqual(len(d.elements), 145)
 
     def test_metadata(self):
         """Test that the retrieved metadata is correct

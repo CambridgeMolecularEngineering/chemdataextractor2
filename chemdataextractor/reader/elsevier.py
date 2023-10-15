@@ -155,7 +155,7 @@ class ElsevierXmlReader(XmlReader):
                  'ce|grant-sponsor, ce|grant-number, prism|copyright,' \
                  'xocs|pii-unformatted, xocs|ucs-locator, ce|copyright,' \
                  'prism|publisher, prism|*, xocs|copyright-line, xocs|cp-notice,' \
-                 'dc|description, xocs|document-subtype, ce|keywords, default|openaccessType,'\
+                 'dc|description, xocs|document-subtype, default|openaccessType,'\
                  'default|openArchiveArticle, default|openaccessSponsorName, default|openaccessSponsorType, default|openaccessUserLicense, dcterms|subject,'\
                  'ce|dochead, ce|label, default|pubType'
 
