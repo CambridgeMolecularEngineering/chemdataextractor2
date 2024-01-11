@@ -8,7 +8,7 @@ DAWG-Patched
 tabledataextractor
 lxml>=3.7.2
 nltk>=3.2.2
-pdfminer.six>=20160614
+pdfminer.six >=20160614, <=20220524 ; python_version < "3.8"
 python-crfsuite>=0.9.1
 python-dateutil>=2.6.0
 PyYAML>=3.12
