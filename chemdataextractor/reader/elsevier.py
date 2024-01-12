@@ -25,13 +25,13 @@ import re
 def remove_if_reference(el):
     text = el.text
     check_regex = re.compile('\[\d')
-    if check_regex.match(text):
+    if check_regex.match(text) or text.isnumeric():
         return None
     return el
 
 # XML stripper that removes the tags around numbers in chemical formulas
-strip_els_xml = Cleaner(strip_xpath='.//ce:inf | .//ce:italic | .//ce:bold | .//ce:formula | .//mml:* | .//ce:sup | .//ce:table//ce:sup',
-                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:note-para | .//ce:cross-ref | .//ce:cross-refs',
+strip_els_xml = Cleaner(strip_xpath='.//ce:inf | .//ce:italic | .//ce:bold | .//ce:formula | .//mml:* | .//ce:sup | .//ce:table//ce:sup | .//ce:inter-ref | .//ce:cross-ref ',
+                        kill_xpath='.//ce:cross-ref//ce:sup | .//ce:note-para | .//ce:cross-refs | .//ce:float-anchor',
                         process_xpaths={'.//ce:cross-ref//ce:sup | .//ce:cross-ref | .//ce:cross-refs':
                                         remove_if_reference})
 
