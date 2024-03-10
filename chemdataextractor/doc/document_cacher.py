@@ -69,6 +69,13 @@ class PlainTextCacher:
                     indices.append([token.index for token in subsentence.tokens])
                 f.write(str(indices) + "\n")
 
+        with open(self._document_subsentence_cache_path(cache_location_root), "w+") as f:
+            for sentence in sentences:
+                indices = []
+                for subsentence in sentence.subsentences:
+                    indices.append([token.index for token in subsentence.tokens])
+                f.write(str(indices) + "\n")
+
     def hydrate_document(self, document, document_id, tags=None):
         # Add in all the tags, tokenisation for a document.
         document_configuration = get_document_configuration(document)
@@ -144,7 +151,7 @@ class PlainTextCacher:
         return document
 
     def _safe_document_id(self, document_id):
-        return document_id.replace(".", "🔥")
+        return document_id.replace(".", "🔥").replace("/", "😅")
 
     def _document_config_path(self, cache_location_root):
         return os.path.join(cache_location_root, "configuration.json")

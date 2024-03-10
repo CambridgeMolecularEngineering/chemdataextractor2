@@ -387,6 +387,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         # Keep track of the number of times we've merged contextually.
         # This is then used to diminish the confidence if we've merged many times.
         self._contextual_merge_count = 0
+        self._no_merge_ranges = {}
 
     @classmethod
     def deserialize(cls, serialized):
@@ -394,7 +395,12 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         flattened_serialized = cls._flatten_serialized(serialized)
         cleaned_serialized = [(cls._clean_key(key), value) for (key, value) in flattened_serialized]
         for key, value in cleaned_serialized:
-            record[key] = value
+            if isinstance(cls.fields[key[0]], ListType) and isinstance(cls.fields[key[0]].field, ModelType):
+                model = cls.fields[key[0]].field.model_class
+                value = [model.deserialize(val) for val in value]
+                record[key] = value
+            else:
+                record[key] = value
         return record
 
     @classmethod
@@ -579,7 +585,7 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 else:
                     if isinstance(attribute, list):
                         attribute = attribute[0]
-                    return attribute[key[1:]]
+                    return attribute._get_item(key[1:], create_defaults=create_defaults)
         except AttributeError as e:
             pass
         raise KeyError(key)
@@ -858,7 +864,10 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         if (not field.never_merge
                             and field.contextual
                             and not self[field_name]
-                            and other and distance <= self.contextual_range(field_name)):
+                            and other
+                            and distance <= self.contextual_range(field_name)
+                            and distance > self.no_merge_range(field_name)
+                        ):
                             log.debug(field_name)
                             self[field_name] = [other]
                             # self.merge_confidence(other, field_name)
@@ -868,7 +877,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         if (self[field_name] is not None
                             and field.contextual
                             and not self[field_name].contextual_fulfilled
-                            and distance <= self.contextual_range(field_name)):
+                            and distance <= self.contextual_range(field_name)
+                            and distance > self.no_merge_range(field_name)
+                        ):
                             log.debug('reconciling model classes')
                             if self[field_name].merge_contextual(other):
                                 did_merge = True
@@ -876,7 +887,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                         elif (field.contextual
                               and not self[field_name]
                               and other
-                              and distance <= self.contextual_range(field_name)):
+                              and distance <= self.contextual_range(field_name)
+                              and distance > self.no_merge_range(field_name)
+                            ):
                             log.debug(field_name)
                             self[field_name] = copy.copy(other)
                             # self.merge_confidence(other, field_name)
@@ -888,7 +901,9 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                        and not field.never_merge
                        and not self[field_name]
                        and other.get(field_name, None)
-                       and distance <= self.contextual_range(field_name)):
+                       and distance <= self.contextual_range(field_name)
+                       and distance > self.no_merge_range(field_name)
+                    ):
                         self[field_name] = other[field_name]
                         self.merge_confidence(other, field_name)
                         did_merge = True
@@ -911,7 +926,19 @@ class BaseModel(six.with_metaclass(ModelMeta)):
         """
         return self.fields[field_name].contextual_range
 
-    def merge_all(self, other, strict=True):
+    def no_merge_range(self, field_name):
+        """
+        A range within which the model should not be merging the field
+
+        :param str field_name: The name of the field for which to calculate the contextual range
+        :return: The contextual range within which the field should not be merged given the current record
+        :rtype: ContextualRange
+        """
+        if field_name in self._no_merge_ranges:
+            return self._no_merge_ranges[field_name]
+        return 0 * SentenceRange()
+
+    def merge_all(self, other, strict=True, distance=SentenceRange()):
         """
         Merges any properties between other and self, regardless of whether that field is contextual.
         Checks to make sure that there are no conflicts between the values contained in self and those in other.
@@ -939,30 +966,43 @@ class BaseModel(six.with_metaclass(ModelMeta)):
                 for field_name, field in six.iteritems(self.fields):
                     if hasattr(field, 'field') and hasattr(field.field, 'model_class') and isinstance(other, field.field.model_class) and not field.never_merge:
                         log.debug('model list case')
-                        if self[field_name]:
+                        if (
+                            self[field_name]
+                            and distance > self.no_merge_range(field_name)
+                        ):
                             for el in self[field_name]:
                                 if el.merge_all(other):
                                     did_merge = True
                         elif (not self[field_name]
-                              and other):
+                              and other
+                              and distance > self.no_merge_range(field_name)):
                             log.debug(field_name)
                             self[field_name] = [copy.copy(other)]
                             did_merge = True
                     elif hasattr(field, 'model_class') and isinstance(other, field.model_class) and not field.never_merge:
                         log.debug('model class case')
-                        if self[field_name]:
+                        if (
+                            self[field_name]
+                            and distance > self.no_merge_range(field_name)
+                        ):
                             if self[field_name].merge_all(other):
                                 did_merge = True
-                        elif (not self[field_name]
-                              and other):
+                        elif (
+                            not self[field_name]
+                            and other
+                            and distance > self.no_merge_range(field_name)
+                        ):
                             log.debug(field_name)
                             self[field_name] = copy.copy(other)
                             did_merge = True
             elif self._compatible(other):
                 for field_name, field in six.iteritems(self.fields):
-                    if (not self[field_name]
-                      and other.get(field_name, None)
-                      and not field.never_merge):
+                    if (
+                        not self[field_name]
+                        and other.get(field_name, None)
+                        and not field.never_merge
+                        and distance > self.no_merge_range(field_name)
+                    ):
                         did_merge = True
                         self[field_name] = other[field_name]
                         self.merge_confidence(other, field_name)

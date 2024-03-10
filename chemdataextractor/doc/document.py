@@ -10,6 +10,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractproperty
+from operator import index
 from pprint import pprint
 import collections
 import io
@@ -19,7 +20,7 @@ import copy
 
 import six
 
-from ..utils import python_2_unicode_compatible
+from ..utils import memoized_property, python_2_unicode_compatible
 from .text import Paragraph, Citation, Footnote, Heading, Title, Caption, RichToken, Sentence, Cell
 from .element import CaptionedElement
 from .table import Table
@@ -247,6 +248,8 @@ class Document(BaseDocument):
 
         prev_records = []
         el_records = []
+
+        self._batch_parse_sentences()
 
         # Main loop, over all elements in the document
         for i, el in enumerate(self.elements):
@@ -530,6 +533,8 @@ class Document(BaseDocument):
         #     if record.required_fulfilled:
         #         records.append(record)
 
+        self._clean_batch_parsed_records_dict()
+
         return cleaned_records
 
     def get_element_with_id(self, id):
@@ -708,6 +713,30 @@ class Document(BaseDocument):
             for token, tag in tag_result:
                 token._tags[tag_type] = tag
 
+    def _batch_parse_sentences(self):
+        sentences = self.sentences
+        self._batch_parsers = []
+        sentences_for_parser_at_index = []
+        for sentence in sentences:
+            for model in sentence._streamlined_models:
+                parsers = model.parsers
+                for parser in parsers:
+                    if hasattr(parser, "batch_parse_sentences"):
+                        if parser not in self._batch_parsers:
+                            self._batch_parsers.append(parser)
+                            sentences_for_parser_at_index.append([sentence])
+                        else:
+                            batch_parser_index = self._batch_parsers.index(parser)
+                            sentences_for_parser_at_index[batch_parser_index].append(sentence)
+        for parser, sentences in zip(self._batch_parsers, sentences_for_parser_at_index):
+            records_dict = parser.batch_parse_sentences(sentences)
+            parser._batch_parsed_records_dict = records_dict
+
+    def _clean_batch_parsed_records_dict(self):
+        for batch_parser in self._batch_parsers:
+            batch_parser._batch_parsed_records_dict = {}
+        self._batch_parsers = []
+
     @property
     def sentences(self):
         elements = copy.copy(self.elements)
@@ -719,6 +748,56 @@ class Document(BaseDocument):
             if isinstance(element, Sentence) and not isinstance(element, Cell):
                 sentences.append(element)
         return sentences
+
+    def heading_for_sentence(self, sentence):
+        # Note: By design, this returns None if we are passing in a sentence
+        # that's part of a heading
+        elements = copy.copy(self.elements)
+
+        elements_under_heading = []
+        current_heading = None
+        for element in elements:
+            if isinstance(element, Heading):
+                if self._sentence_in_elements(sentence, elements_under_heading):
+                    return current_heading
+                current_heading = element
+                elements_under_heading = []
+                continue
+            else:
+                elements_under_heading.append(element)
+        if self._sentence_in_elements(sentence, elements_under_heading):
+            return current_heading
+        return None
+
+    def _sentence_in_elements(self, sentence, elements):
+        # Warning: this method mutates the elements argument
+        for element in elements:
+            if element is sentence:
+                return True
+            elif element.elements is not None:
+                elements.extend(element.elements)
+        return False
+
+
+    def adjacent_sentences(self, sentence, num_adjacent=2):
+        sentences = self.sentences
+        sentence_index = sentences.index(sentence)
+        adjacent_sentences = sentences[max(0, sentence_index - num_adjacent): sentence_index + num_adjacent]
+        return adjacent_sentences
+
+
+    def preceding_sentences(self, sentence, num_preceding=2):
+        sentences = self.sentences
+        sentence_index = sentences.index(sentence)
+        adjacent_sentences = sentences[max(0, sentence_index - num_preceding): sentence_index]
+        return adjacent_sentences
+
+
+    def following_sentences(self, sentence, num_following=2):
+        sentences = self.sentences
+        sentence_index = sentences.index(sentence)
+        adjacent_sentences = sentences[sentence_index + 1: sentence_index + num_following + 1]
+        return adjacent_sentences
 
 
     def _element_distance(self, element_a, element_b):

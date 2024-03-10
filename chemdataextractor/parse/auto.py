@@ -37,12 +37,17 @@ import xml.etree.ElementTree as etree
 log = logging.getLogger(__name__)
 
 
-def construct_unit_element(dimensions):
+def construct_unit_element(dimensions, max_power=None):
     """
     Construct an element for detecting units for the dimensions given.
     Any magnitude modifiers (e.g. kilo) will be automatically handled.
 
     :param Dimension dimensions: The dimensions that the element produced will look for.
+    :param int max_power: The maximum absolute value of the power that can be on any unit.
+        Default is None, where any power is allowed, but this can lead to false positives for things like GenericExtractor,
+        and it's actually unlikely that we'll ever get a unit to the power of 10 or something.
+        .. note::
+            This can only be a number between 2 and 9 due to how it has been implemented.
     :returns: An Element to look for units of given dimensions. If None or Dimensionless are passed in, returns None.
     :rtype: BaseParserElement or None
     """
@@ -61,8 +66,18 @@ def construct_unit_element(dimensions):
     for element in dimensions.units_dict:
         units_regex += '(' + element.pattern + ')|'
     units_regex += r'(\/)'
+    numbers_regex = r'\d+'
+    if max_power is not None:
+        if not isinstance(max_power, int):
+            raise TypeError(f"max_power should be an integer, not {type(max_power)}")
+        elif max_power <= 2:
+            raise ValueError(f"max_power should be greater than or equal to 2, not {max_power}")
+        elif max_power > 9:
+            raise ValueError(f"max_power should be less than or equal to 9 due to the implementation, not {max_power}")
+        else:
+            numbers_regex = f'[2-{max_power}]'
     # Case when we have powers, or one or more units
-    units_regex2 = units_regex + r'|([\+\-–−]?\d+(\.\d+)?)'
+    units_regex2 = units_regex + r'|([\+\-–−]?' + numbers_regex + r'(\.' + numbers_regex + ')?)'
     units_regex2 += '))+$'
     units_regex += '))+'
     units_regex += (units_regex2[1:-2] + '*')

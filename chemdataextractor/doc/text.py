@@ -42,6 +42,7 @@ from ..model.contextual_range import SentenceRange
 
 log = logging.getLogger(__name__)
 cem_tagger = CemTagger()
+dep_tagger = DependencyTagger()
 
 
 @python_2_unicode_compatible
@@ -185,7 +186,7 @@ class Text(collections.Sequence, BaseText):
     word_tokenizer = BertWordTokenizer()
     lexicon = ChemLexicon()
     abbreviation_detector = ChemAbbreviationDetector()
-    taggers = [ChemCrfPosTagger(), cem_tagger, DependencyTagger()]
+    taggers = [ChemCrfPosTagger(), cem_tagger, dep_tagger]
     subsentence_extractor = None
 
     def __init__(self, text, sentence_tokenizer=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, parsers=None, **kwargs):
@@ -512,7 +513,7 @@ class Sentence(BaseText):
     lexicon = ChemLexicon()
     abbreviation_detector = ChemAbbreviationDetector()
     subsentence_extractor = SubsentenceExtractor()
-    taggers = [ChemCrfPosTagger(), cem_tagger, DependencyTagger()]
+    taggers = [ChemCrfPosTagger(), cem_tagger, dep_tagger]
     specifier_definition = specifier_definition
 
     def __init__(self, text, start=0, end=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, specifier_definition=None, subsentence_extractor=None, **kwargs):
@@ -880,7 +881,7 @@ class Sentence(BaseText):
             j = 0
             while j < length:
                 if i != j:
-                    records[j].merge_all(records[i])
+                    records[j].merge_all(records[i], distance=0*SentenceRange())
                 j += 1
             i += 1
 
@@ -916,6 +917,7 @@ class Sentence(BaseText):
 
 
 class Subsentence(Sentence):
+
     """
     A sub-sentence level logical division of text. Used to store clauses in CDE based on clause extraction as described
     in the paper Automated Construction of a Photocatalysis Dataset for Water-Splitting Applications
@@ -946,10 +948,19 @@ class Subsentence(Sentence):
             for parser in model.parsers:
                 if parser in skip_parsers:
                     continue
-                if hasattr(parser, 'parse_sentence'):
+                if hasattr(parser, 'parse_sentence') or hasattr(parser, "batch_parse_sentences"):
                     if (parser.parse_full_sentence != self.is_full_sentence) and not self._is_only_subsentence:
                         continue
-                    for record in parser.parse_sentence(self):
+                    parser_records = []
+                    # Add batch parsed records
+                    if (
+                        parser not in skip_parsers
+                        and hasattr(parser, "_batch_parsed_records_dict")
+                        and id(self.parent_sentence) in parser._batch_parsed_records_dict
+                    ):
+                        parser_records.extend(parser._batch_parsed_records_dict[id(self.parent_sentence)])
+                    parser_records.extend(parser.parse_sentence(self))
+                    for record in parser_records:
                         p = record.serialize()
                         if record.is_empty:  # TODO: Potential performance issues?
                             continue
@@ -983,7 +994,7 @@ class Subsentence(Sentence):
             j = 0
             while j < length:
                 if i != j:
-                    records[j].merge_all(records[i])
+                    records[j].merge_all(records[i], distance=0*SentenceRange())
                 j += 1
             i += 1
         return records
