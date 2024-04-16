@@ -3,3 +3,5 @@ unittest2>=1.1.0
 pytest>=3.0.6,<8.1
 twine>=1.8.1
 wheel>=0.37.0
+playsound
+

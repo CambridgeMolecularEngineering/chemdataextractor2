@@ -35,7 +35,7 @@ setup(
         'cssselect',
         'lxml',
         'nltk',
-        'pdfminer.six',
+        'pdfminer.six >=20160614, <=20220524 ; python_version < "3.8"',
         'python-dateutil',
         'requests==2.21.0',
         'six',
