@@ -55,7 +55,7 @@ setup(
         'tokenizers==0.12.1',
         'scikit-learn==0.22.1',
         'overrides==3.1.0',
-        'stanza==1.2.0',
+        'stanza==1.6.1',
     ],
     classifiers=[
         'Intended Audience :: Developers',
