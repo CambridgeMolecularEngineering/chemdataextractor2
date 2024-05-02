@@ -25,7 +25,7 @@ author = 'University of Cambridge, Molecular Engineering Group'
 # The short X.Y version
 version = '2.3'
 # The full version, including alpha/beta/rc tags
-release = 'v2.3.1'
+release = 'v2.3.2'
 
 
 # -- General configuration ---------------------------------------------------
