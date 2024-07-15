@@ -7,6 +7,16 @@ ChemDataExtractor v2 is a toolkit for extracting chemical information from the s
 Installation
 ------------
 
+#### Create a virtual environment, for example with `conda`
+
+`conda create -n cde2 python=3.8`
+
+#### Activate the `cde2` environment
+
+`conda activate cde2`
+
+#### Install `chemdataextractor2` with `pip`
+
 `pip install chemdataextractor2`
 
 
