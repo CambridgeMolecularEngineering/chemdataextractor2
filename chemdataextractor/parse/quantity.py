@@ -66,7 +66,7 @@ def value_element(units=None, activate_to_range=False):
     """
     pure_number = R(r'^(([\+\-–−~∼˜≒]?\d+(([\.・,\d])+)?)|(\<nUm\>)|(×))+$')
     spaced_power_number = pure_number + R(r'^×$') + pure_number
-    fraction = R(r'^(([\+\-–−]?\d+/\d+)|(\<nUm\>))$') | (R(r'^(([\+\-–−]?\d+)|(\<nUm\>))$') + R(r'^/$') + R(r'^((\d+)|(\<nUm\>))$')).add_action(merge)
+    fraction = R(r'^(([\+\-–−]?\d+/\d+)|(\<nUm\>))$') | R(r'^(([\+\-–−]?\d+:\d+)|(\<nUm\>))$') | (R(r'^(([\+\-–−]?\d+)|(\<nUm\>))$') + R(r'^[/:]$') + R(r'^((\d+)|(\<nUm\>))$')).add_action(merge)
     number = spaced_power_number | fraction | pure_number
     joined_range = R(r'^[\+\-–−~∼˜]?\d+(([\.・,\d])+)?[\-–−~∼˜]\d+(([\.・,\d])+)?$')('raw_value').add_action(merge)
     if units is not None:
