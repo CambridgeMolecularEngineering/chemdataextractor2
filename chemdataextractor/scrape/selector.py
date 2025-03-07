@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from collections import Sequence
+from collections.abc import Sequence
 from copy import deepcopy
 import logging
 import re
@@ -16,7 +16,7 @@ from bs4 import UnicodeDammit
 
 from lxml.etree import XMLParser, fromstring, tostring
 from lxml.html import HTMLParser
-import six
+
 
 from ..utils import flatten
 from .csstranslator import CssHTMLTranslator, CssXmlTranslator
@@ -101,7 +101,7 @@ class Selector(object):
         return self.xpath(self._translator.css_to_xpath(query))
 
     def re(self, regex):
-        if isinstance(regex, six.string_types):
+        if isinstance(regex, str):
             regex = re.compile(regex, re.U)
         text = self.extract()
         return flatten(regex.findall(text))
@@ -111,10 +111,10 @@ class Selector(object):
             root = deepcopy(self._root)
             if cleaner:
                 cleaner(root)
-            return tostring(root, method=self.fmt if raw else 'text', encoding=six.text_type, with_tail=False)
+            return tostring(root, method=self.fmt if raw else 'text', encoding=str, with_tail=False)
         except (AttributeError, TypeError) as e:
             #log.warn(e)
-            return six.text_type(self._root)
+            return str(self._root)
 
     @classmethod
     def _get_encoding(cls, input_string, encoding):

@@ -16,7 +16,7 @@ from pprint import pprint
 from deprecation import deprecated
 import unicodedata
 
-import six
+
 
 from ..model.base import ModelList, sort_merge_candidates
 from ..nlp.lexicon import ChemLexicon, Lexicon
@@ -30,7 +30,7 @@ from ..nlp.tokenize import BertWordTokenizer, ChemSentenceTokenizer, regex_span_
 from ..nlp.subsentence import SubsentenceExtractor, NoneSubsentenceExtractor
 from ..nlp.dependency import DependencyTagger, IndexTagger
 from ..text import CONTROL_RE
-from ..utils import memoized_property, python_2_unicode_compatible, first
+from ..utils import memoized_property, first
 from .element import BaseElement
 from ..parse.definitions import specifier_definition
 from ..parse.cem import chemical_name, cem_phrase
@@ -45,7 +45,7 @@ cem_tagger = CemTagger()
 dep_tagger = DependencyTagger()
 
 
-@python_2_unicode_compatible
+
 class BaseText(BaseElement):
     """Abstract base class for a text Document Element."""
     taggers = []
@@ -80,7 +80,7 @@ class BaseText(BaseElement):
             inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
         """
-        if not isinstance(text, six.text_type):
+        if not isinstance(text, str):
             raise TypeError('Text must be a unicode string')
         super(BaseText, self).__init__(**kwargs)
         self._text = text
@@ -179,7 +179,7 @@ class BaseText(BaseElement):
         return self.text
 
 
-class Text(collections.Sequence, BaseText):
+class Text(collections.abc.Sequence, BaseText):
     """A passage of text, comprising one or more sentences."""
 
     sentence_tokenizer = ChemSentenceTokenizer()
@@ -1104,7 +1104,7 @@ class Cell(Sentence):
         return elements
 
 
-@python_2_unicode_compatible
+
 class Span(object):
     """A text span within a sentence."""
 

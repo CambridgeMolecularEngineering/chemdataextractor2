@@ -13,7 +13,7 @@ import logging
 import re
 from lxml.etree import fromstring, tostring
 from lxml.html import fromstring as html_fromstring
-import six
+
 
 from . import BLOCK_ELEMENTS
 
@@ -139,7 +139,7 @@ class Cleaner(object):
                 if parent is None:
                     continue
                 # Append the text to previous tail (or parent text if no previous), ensuring newline if block level
-                if el.text and isinstance(el.tag, six.string_types):
+                if el.text and isinstance(el.tag, str):
                     if previous is None:
                         parent.text = (parent.text or '') + el.text
                     else:
@@ -172,14 +172,14 @@ class Cleaner(object):
     def clean_html(self, html):
         """Apply ``Cleaner`` to HTML string or document and return a cleaned string or document."""
         result_type = type(html)
-        if isinstance(html, six.string_types):
+        if isinstance(html, str):
             doc = html_fromstring(html)
         else:
             doc = copy.deepcopy(html)
         self(doc)
-        if issubclass(result_type, six.binary_type):
+        if issubclass(result_type, bytes):
             return tostring(doc, encoding='utf-8')
-        elif issubclass(result_type, six.text_type):
+        elif issubclass(result_type, str):
             return tostring(doc, encoding='unicode')
         else:
             return doc
@@ -187,14 +187,14 @@ class Cleaner(object):
     def clean_markup(self, markup, parser=None):
         """Apply ``Cleaner`` to markup string or document and return a cleaned string or document."""
         result_type = type(markup)
-        if isinstance(markup, six.string_types):
+        if isinstance(markup, str):
             doc = fromstring(markup, parser=parser)
         else:
             doc = copy.deepcopy(markup)
         self(doc)
-        if issubclass(result_type, six.binary_type):
+        if issubclass(result_type, bytes):
             return tostring(doc, encoding='utf-8')
-        elif issubclass(result_type, six.text_type):
+        elif issubclass(result_type, str):
             return tostring(doc, encoding='unicode')
         else:
             return doc

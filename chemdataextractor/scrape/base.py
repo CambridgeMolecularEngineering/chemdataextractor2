@@ -12,12 +12,12 @@ from abc import ABCMeta, abstractproperty, abstractmethod
 import logging
 
 import requests
-import six
+
 
 log = logging.getLogger(__name__)
 
 
-class BaseScraper(six.with_metaclass(ABCMeta)):
+class BaseScraper(metaclass=ABCMeta):
     """Abstract Scraper class from which all Scrapers inherit."""
 
     #: CSS selector or XPath expression that returns the root of each entity.
@@ -80,7 +80,7 @@ class BaseScraper(six.with_metaclass(ABCMeta)):
                 yield root
 
 
-class BaseFormat(six.with_metaclass(ABCMeta)):
+class BaseFormat(metaclass=ABCMeta):
     """"""
 
     @abstractmethod
@@ -93,7 +93,7 @@ class BaseFormat(six.with_metaclass(ABCMeta)):
         return
 
 
-class BaseRequester(six.with_metaclass(ABCMeta)):
+class BaseRequester(metaclass=ABCMeta):
     """"""
 
     @abstractmethod
@@ -108,7 +108,7 @@ class BaseRequester(six.with_metaclass(ABCMeta)):
         return
 
 
-class BaseEntityProcessor(six.with_metaclass(ABCMeta)):
+class BaseEntityProcessor(metaclass=ABCMeta):
     """Abstract EntityProcessor class from which all EntityProcessors inherit."""
 
     @abstractmethod
@@ -122,7 +122,7 @@ class BaseEntityProcessor(six.with_metaclass(ABCMeta)):
         return entity
 
 
-class BaseEntity(six.with_metaclass(ABCMeta)):
+class BaseEntity(metaclass=ABCMeta):
     """Abstract Entity class from which all Entities inherit."""
     pass
 
@@ -132,10 +132,10 @@ class EntityMeta(ABCMeta):
 
     def __new__(mcs, name, bases, attrs):
         fields = {}
-        for attr_name, attr_value in six.iteritems(attrs):
+        for attr_name, attr_value in attrs.items():
             if isinstance(attr_value, BaseField):
                 # Set the name attribute on the field to the attribute name on the Entity
-                attr_value.name = six.text_type(attr_name)
+                attr_value.name = str(attr_name)
                 fields[attr_name] = attr_value
         #attrs['fields'] = fields
         # Set default _meta values, then update with any custom definitions from meta
@@ -147,7 +147,7 @@ class EntityMeta(ABCMeta):
         return cls
 
 
-class BaseField(six.with_metaclass(ABCMeta)):
+class BaseField(metaclass=ABCMeta):
     """Base class for all fields."""
 
     # This is assigned by EntityMeta to match the attribute on the Entity

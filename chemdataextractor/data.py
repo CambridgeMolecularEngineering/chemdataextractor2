@@ -14,15 +14,15 @@ import os
 
 import appdirs
 import requests
-import six
 import zipfile
 import tarfile
 import os
+import pickle
 from yaspin import yaspin
 
 from .config import config
 from .errors import ModelNotFoundError
-from .utils import python_2_unicode_compatible, ensure_dir
+from .utils import ensure_dir
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ SERVER_ROOT = 'http://data.chemdataextractor.org/'
 AUTO_DOWNLOAD = True
 
 
-@python_2_unicode_compatible
+
 class Package(object):
     """Data package."""
 
@@ -166,7 +166,7 @@ def load_model(path):
     log.debug('Loading model %s' % path)
     try:
         with io.open(abspath, 'rb') as f:
-            model = six.moves.cPickle.load(f)
+            model = pickle.load(f)
     except IOError:
         raise ModelNotFoundError('Could not load %s. Have you run `cde data download`?' % path)
     _model_cache[abspath] = model
@@ -194,6 +194,7 @@ PACKAGES = [
     Package('models/pos_crf_wsj-1.0.pickle'),
     Package('models/punkt_chem-1.0.pickle'),
     Package('models/bert_finetuned_crf_model-1.0a', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/bert_pretrained_crf_model-1.0a.tar.gz', untar=True),
+    Package('models/hf_bert_crf_tagger', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/hf_bert_crf_tagger.tar.gz', untar=True),
     Package('models/scibert_cased_vocab-1.0.txt', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/scibert_cased_vocab_1.0.txt'),
     Package('models/scibert_uncased_vocab-1.0.txt', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/scibert_uncased_vocab-1.0.txt'),
     Package('models/scibert_cased_weights-1.0.tar.gz', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/scibert_cased_weights-1.0.tar.gz'),

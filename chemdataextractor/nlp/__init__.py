@@ -16,3 +16,4 @@ from .cem import LegacyCemTagger, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
 from .new_cem import CemTagger
 from .tag import NoneTagger, ApTagger, CrfTagger, DictionaryTagger, RegexTagger
 from .lexicon import Lexicon, ChemLexicon
+from .crf import ConditionalRandomField

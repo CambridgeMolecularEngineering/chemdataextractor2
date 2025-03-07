@@ -43,7 +43,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from cssselect import GenericTranslator, HTMLTranslator
-from cssselect.xpath import _unicode_safe_getattr, XPathExpr, ExpressionError
+from cssselect.xpath import XPathExpr, ExpressionError
 from cssselect.parser import FunctionalPseudoElement
 
 
@@ -90,13 +90,13 @@ class TranslatorMixin(object):
     def xpath_pseudo_element(self, xpath, pseudo_element):
         if isinstance(pseudo_element, FunctionalPseudoElement):
             method = 'xpath_%s_functional_pseudo_element' % (pseudo_element.name.replace('-', '_'))
-            method = _unicode_safe_getattr(self, method, None)
+            method = getattr(self, method, None)
             if not method:
                 raise ExpressionError("The functional pseudo-element ::%s() is unknown" % pseudo_element.name)
             xpath = method(xpath, pseudo_element)
         else:
             method = 'xpath_%s_simple_pseudo_element' % (pseudo_element.replace('-', '_'))
-            method = _unicode_safe_getattr(self, method, None)
+            method = getattr(self, method, None)
             if not method:
                 raise ExpressionError("The pseudo-element ::%s is unknown" % pseudo_element)
             xpath = method(xpath)

@@ -16,7 +16,7 @@ from .actions import merge, join, fix_whitespace, flatten
 from .base import BaseSentenceParser
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, Group, End
 from .auto import construct_unit_element, match_dimensions_of, value_element, BaseAutoParser, construct_category_element
-import six
+
 log = logging.getLogger(__name__)
 
 delim = R('^[:;\.,]$')

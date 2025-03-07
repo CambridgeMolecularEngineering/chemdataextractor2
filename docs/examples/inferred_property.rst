@@ -9,7 +9,7 @@ Inferred Properties
 
 ChemDataExtractor provides the :class:`~chemdataextractor.model.base.InferredProperty` class so that you can save time on boilerplate code in your parser by making relationships between fields explicit. Let's look at how you can do this by looking at how this functionality is used within the ChemDataExtractor library to express the relationship between ``raw_value`` and ``value`` in the :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` class. ::
 
-    class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
+    class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
         raw_value = StringType(required=True, contextual=True)
         raw_units = StringType(required=True, contextual=True)
         value = InferredProperty(ListType(FloatType(), sorted_=True),

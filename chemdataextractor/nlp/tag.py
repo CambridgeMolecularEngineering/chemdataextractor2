@@ -18,7 +18,7 @@ import re
 
 import dawg
 import pycrfsuite
-import six
+
 
 from ..data import load_model, find_data
 from .lexicon import Lexicon
@@ -31,7 +31,7 @@ POS_TAG_TYPE = "pos_tag"
 NER_TAG_TYPE = "ner_tag"
 
 
-class BaseTagger(six.with_metaclass(ABCMeta)):
+class BaseTagger(metaclass=ABCMeta):
     """
     Abstract tagger class from which all taggers inherit.
 
@@ -116,7 +116,7 @@ class BaseTagger(six.with_metaclass(ABCMeta)):
         tagged_sents = self.tag_sents([w for (w, t) in sent] for sent in gold)
         gold_tokens = sum(gold, [])
         test_tokens = sum(tagged_sents, [])
-        accuracy = float(sum(x == y for x, y in six.moves.zip(gold_tokens, test_tokens))) / len(test_tokens)
+        accuracy = float(sum(x == y for x, y in zip(gold_tokens, test_tokens))) / len(test_tokens)
         return accuracy
 
     def can_tag(self, tag_type):
@@ -347,7 +347,7 @@ class AveragedPerceptron(object):
             self.weights = pickle.load(fin)
 
 
-class ApTagger(six.with_metaclass(ABCMeta, BaseTagger)):
+class ApTagger(BaseTagger, metaclass=ABCMeta):
     """Greedy Averaged Perceptron tagger, based on implementation by Matthew Honnibal, released under the MIT license.
 
      See more:
@@ -604,3 +604,4 @@ class DictionaryTagger(BaseTagger):
             tags[start_token+1:end_token+1] = ['I-%s' % self.entity] * (end_token - start_token)
         tokentags = list(zip(tokens, tags))
         return tokentags
+

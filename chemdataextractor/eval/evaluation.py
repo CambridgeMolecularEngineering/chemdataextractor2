@@ -28,7 +28,7 @@ import os
 import webbrowser
 from playsound import playsound
 import pickle
-import pkg_resources
+from importlib.resources import files
 import os
 from pprint import pprint
 
@@ -154,7 +154,7 @@ class Evaluate:
                     print("    Method:  {}".format(record.record_method))
                     print("    Updated: {}".format(record.updated))
                     if self.play_sound:
-                        sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
+                        sound_file = files('chemdataextractor') / 'eval/sound.mp3'
                         playsound(sound_file)
 
                     if not doc_opened and self.show_website:
@@ -271,7 +271,7 @@ class Evaluate:
 
             if self.limits_reached:
                 if self.play_sound:
-                    sound_end_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound_end.mp3')
+                    sound_end_file = files('chemdataextractor') / 'eval/sound_end.mp3'
                     playsound(sound_end_file)
                 break
             print("")

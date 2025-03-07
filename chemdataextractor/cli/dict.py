@@ -17,11 +17,7 @@ from ..nlp.tag import DictionaryTagger
 from ..nlp.cem import CsDictCemTagger, CiDictCemTagger, STOPLIST, STOP_SUB, STOP_TOKENS
 
 
-try:
-    from html import unescape
-except ImportError:
-    from six.moves.html_parser import HTMLParser
-    unescape = HTMLParser().unescape
+from html import unescape
 
 
 NG_RE = re.compile('([\[\(](\d\d?CI|USAN|r?INN|BAN|JAN|USP)(\d\d?CI|USAN|r?INN|BAN|JAN|USP|[:\-,]|spanish|latin)*[\)\]])+$', re.I | re.U)

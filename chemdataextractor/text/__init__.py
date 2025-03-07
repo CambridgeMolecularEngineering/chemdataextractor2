@@ -222,7 +222,7 @@ def get_encoding(input_string, guesses=None, is_html=False):
     :param list[string] guesses: (Optional) List of encoding guesses to prioritize. Default is ['utf-8']
     :param bool is_html: Whether the input is HTML.
     """
-    converted = UnicodeDammit(input_string, override_encodings=[guesses] if guesses else ['utf-8'], is_html=is_html)
+    converted = UnicodeDammit(input_string, known_definite_encodings=[guesses] if guesses else ['utf-8'], is_html=is_html)
     return converted.original_encoding
 
 

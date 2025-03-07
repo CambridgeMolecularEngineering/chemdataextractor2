@@ -10,7 +10,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 from lxml import etree
-import six
+
 from lxml.html import HTMLParser
 from ..text import get_encoding
 from .markup import HtmlReader, XmlReader

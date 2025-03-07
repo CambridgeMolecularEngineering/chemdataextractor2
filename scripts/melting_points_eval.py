@@ -26,7 +26,7 @@ import cirpy
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolDescriptors
-import six
+
 
 from chemdataextractor import Document
 from chemdataextractor.doc import Paragraph, Table
@@ -159,7 +159,7 @@ def standardize_results():
     n2s = {}
     with open('opsin_input.txt') as op_in:
         with open('opsin_output.txt') as op_out:
-            for name, smiles in six.moves.zip(op_in, op_out):
+            for name, smiles in zip(op_in, op_out):
                 n2s[name.strip().decode('utf8')] = smiles.strip().decode('utf8')
 
     result_dir = '../examples/mp/results'

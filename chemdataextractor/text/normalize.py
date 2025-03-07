@@ -12,13 +12,13 @@ from abc import ABCMeta, abstractmethod
 import re
 import unicodedata
 
-import six
+
 
 from . import CONTROLS, HYPHENS, QUOTES, DOUBLE_QUOTES, ACCENTS, SINGLE_QUOTES, APOSTROPHES, SLASHES, TILDES, MINUSES
 from .processors import BaseProcessor
 
 
-class BaseNormalizer(six.with_metaclass(ABCMeta, BaseProcessor)):
+class BaseNormalizer(BaseProcessor, metaclass=ABCMeta):
     """Abstract normalizer class from which all normalizers inherit.
 
     Subclasses must implement a ``normalize()`` method.

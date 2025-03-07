@@ -16,7 +16,7 @@ import re
 from bs4 import UnicodeDammit
 from lxml.etree import fromstring, FunctionNamespace
 from lxml.html import HTMLParser, Element
-import six
+
 
 from ...text.processors import Substitutor, Discard, Chain, LStrip, RStrip, LAdd
 from ...text.normalize import normalize

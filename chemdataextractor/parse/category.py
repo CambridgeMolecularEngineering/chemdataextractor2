@@ -11,7 +11,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import re
-import six
+
 from fractions import Fraction
 from abc import abstractproperty
 

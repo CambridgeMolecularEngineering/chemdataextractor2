@@ -8,6 +8,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+import io
 
 from pdfminer.converter import PDFPageAggregator
 from pdfminer.layout import LAParams, LTTextLine, LTTextBox, LTFigure
@@ -15,7 +16,6 @@ from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
-import six
 
 from ..doc.document import Document
 from ..doc.text import Paragraph
@@ -46,7 +46,7 @@ class PdfReader(BaseReader):
 
     def parse(self, fstring):
         try:
-            f = six.BytesIO(fstring)
+            f = io.BytesIO(fstring)
             parser = PDFParser(f)
             document = PDFDocument(parser)
             if not document.is_extractable:

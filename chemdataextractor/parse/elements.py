@@ -15,7 +15,7 @@ import re
 from copy import deepcopy
 
 from lxml.builder import E
-import six
+import sys
 import types
 
 log = logging.getLogger(__name__)
@@ -97,7 +97,7 @@ class BaseParserElement(object):
         new.name = name
         return new
 
-    def scan(self, tokens, max_matches=six.MAXSIZE, overlap=False):
+    def scan(self, tokens, max_matches=sys.maxsize, overlap=False):
         """
         Scans for matches in given tokens.
 
@@ -180,7 +180,7 @@ class BaseParserElement(object):
         return self
 
     def __add__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         if not isinstance(other, BaseParserElement):
             # raise?
@@ -188,7 +188,7 @@ class BaseParserElement(object):
         return And([self, other])
 
     def __radd__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         if not isinstance(other, BaseParserElement):
             # raise?
@@ -196,42 +196,42 @@ class BaseParserElement(object):
         return other + self
 
     def __or__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         if not isinstance(other, BaseParserElement):
             return None
         return First([self, other])
 
     def __ror__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         if not isinstance(other, BaseParserElement):
             return None
         return other | self
 
     def __xor__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         if not isinstance(other, BaseParserElement):
             return None
         return Or([self, other])
 
     def __rxor__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         if not isinstance(other, BaseParserElement):
             return None
         return other ^ self
 
     # def __and__(self, other):
-    #     if isinstance(other, six.text_type):
+    #     if isinstance(other, str):
     #         other = Word(other)
     #     if not isinstance(other, BaseParserElement):
     #         return None
     #     return Each([self, other])
     #
     # def __rand__(self, other):
-    #     if isinstance(other, six.text_type):
+    #     if isinstance(other, str):
     #         other = Word(other)
     #     if not isinstance(other, BaseParserElement):
     #         return None
@@ -318,7 +318,7 @@ class Regex(BaseParserElement):
 
     def __init__(self, pattern, flags=0, group=None):
         super(Regex, self).__init__()
-        if isinstance(pattern, six.string_types):
+        if isinstance(pattern, str):
             self.regex = re.compile(pattern, flags)
             self.pattern = pattern
         else:
@@ -371,10 +371,10 @@ class ParseExpression(BaseParserElement):
         super(ParseExpression, self).__init__()
         if isinstance(exprs, types.GeneratorType):
             exprs = list(exprs)
-        if isinstance(exprs, six.text_type):
+        if isinstance(exprs, str):
             self.exprs = [Word(exprs)]
-        elif isinstance(exprs, collections.Sequence):
-            if all(isinstance(expr, six.text_type) for expr in exprs):
+        elif isinstance(exprs, collections.abc.Sequence):
+            if all(isinstance(expr, str) for expr in exprs):
                 exprs = map(Word, exprs)
             self.exprs = list(exprs)
         else:
@@ -430,7 +430,7 @@ class And(ParseExpression):
         return ([E(self.name, *results)] if self.name else results), i
 
     def __iadd__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         return self.append(other)
 
@@ -501,7 +501,7 @@ class Or(ParseExpression):
         return result, result_i
 
     def __ixor__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         return self.append(other)
 
@@ -565,7 +565,7 @@ class First(ParseExpression):
                 raise ParseException(tokens, i, 'No alternatives match', self)
 
     def __ior__(self, other):
-        if isinstance(other, six.text_type):
+        if isinstance(other, str):
             other = Word(other)
         return self.append(other)
 
@@ -575,7 +575,7 @@ class ParseElementEnhance(BaseParserElement):
 
     def __init__(self, expr):
         super(ParseElementEnhance, self).__init__()
-        if isinstance(expr, six.text_type):
+        if isinstance(expr, str):
             expr = Word(expr)
         self.expr = expr
 

@@ -31,7 +31,7 @@ import logging
 
 from os.path import basename
 from playsound import playsound
-import pkg_resources
+from importlib.resources import files
 
 log = logging.getLogger(__name__)
 
@@ -249,7 +249,7 @@ class Snowball(BaseSentenceParser):
                 print("Candidate " + str(i) + ' ' + str(candidate) + '\n')
 
             if self.play_sound:
-                sound_file = pkg_resources.resource_filename('chemdataextractor', 'eval/sound.mp3')
+                sound_file = files('chemdataextractor') / 'eval/sound.mp3'
                 playsound(sound_file)
             res = six.moves.input("...: ").replace(' ', '')
             if res:

@@ -15,7 +15,7 @@ from collections import defaultdict
 from lxml import etree
 from lxml.etree import XMLParser
 from lxml.html import HTMLParser
-import six
+
 
 from ..errors import ReaderError
 from ..doc.document import Document
@@ -33,7 +33,7 @@ from .base import BaseReader
 log = logging.getLogger(__name__)
 
 
-class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
+class LxmlReader(BaseReader, metaclass=ABCMeta):
     """Abstract base class for lxml-based readers."""
 
     #: A ``Cleaner`` instance to
@@ -87,7 +87,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
         id = el.get('id', id)
         references = refs.get(el, [])
         if el.text is not None:
-            elements.append(element_cls(six.text_type(el.text), id=id, references=references))
+            elements.append(element_cls(str(el.text), id=id, references=references))
         elif references:
             elements.append(element_cls('', id=id, references=references))
         for child in el:
@@ -103,9 +103,9 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
             elements.extend(child_elements)
             if child.tail is not None:
                 if self._is_inline(child) and len(elements) > 0 and isinstance(elements[-1], element_cls):
-                    elements[-1] += element_cls(six.text_type(child.tail), id=id)
+                    elements[-1] += element_cls(str(child.tail), id=id)
                 else:
-                    elements.append(element_cls(six.text_type(child.tail), id=id))
+                    elements.append(element_cls(str(child.tail), id=id))
         return elements
 
     def _parse_element(self, el, specials=None, refs=None, element_cls=Paragraph):

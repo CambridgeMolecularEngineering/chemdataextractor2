@@ -18,9 +18,9 @@ import json
 import logging
 import copy
 
-import six
 
-from ..utils import memoized_property, python_2_unicode_compatible
+
+from ..utils import memoized_property
 from .text import Paragraph, Citation, Footnote, Heading, Title, Caption, RichToken, Sentence, Cell
 from .element import CaptionedElement
 from .table import Table
@@ -38,8 +38,8 @@ from ..parse.cem import chemical_name
 log = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
-class BaseDocument(six.with_metaclass(ABCMeta, collections.Sequence)):
+
+class BaseDocument(collections.abc.Sequence, metaclass=ABCMeta):
     """Abstract base class for a Document."""
 
     def __repr__(self):
@@ -84,9 +84,9 @@ class Document(BaseDocument):
         self._elements = []
         for element in elements:
             # Convert raw text to Paragraph elements
-            if isinstance(element, six.text_type):
+            if isinstance(element, str):
                 element = Paragraph(element)
-            elif isinstance(element, six.binary_type):
+            elif isinstance(element, bytes):
                 # Try guess encoding if byte string
                 encoding = get_encoding(element)
                 log.warning('Guessed bytestring encoding as %s. Use unicode strings to avoid this warning.', encoding)
@@ -175,7 +175,7 @@ class Document(BaseDocument):
             :class:`~chemdataextractor.reader.markup.XmlReader`, :class:`~chemdataextractor.reader.markup.HtmlReader`,
             :class:`~chemdataextractor.reader.pdf.PdfReader`, and :class:`~chemdataextractor.reader.plaintext.PlainTextReader`.
         """
-        if isinstance(f, six.string_types):
+        if isinstance(f, str):
             f = io.open(f, 'rb')
         if not fname and hasattr(f, 'name'):
             fname = f.name
@@ -207,7 +207,7 @@ class Document(BaseDocument):
             from ..reader import DEFAULT_READERS
             readers = DEFAULT_READERS
 
-        if isinstance(fstring, six.text_type):
+        if isinstance(fstring, str):
             raise ReaderError('from_string expects a byte string, not a unicode string')
 
         for reader in readers:

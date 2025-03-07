@@ -105,7 +105,7 @@ Inferred Properties
 
 If you adopted :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` in ChemDataExtractor 2.0, you no longer have to include custom interpretation code in your parsers to create values and units. Instead, :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` now takes advantage of :class:`~chemdataextractor.model.base.InferredProperty` to ensure that you don't have to write any interpretation code yourself. See the definition of the updated :class:`~chemdataextractor.model.units.quantity_model.QuantityModel` ::
 
-    class QuantityModel(six.with_metaclass(_QuantityModelMeta, BaseModel)):
+    class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
         raw_value = StringType(required=True, contextual=True)
         raw_units = StringType(required=True, contextual=True)
         value = InferredProperty(ListType(FloatType(), sorted_=True),

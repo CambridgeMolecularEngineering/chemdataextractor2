@@ -13,7 +13,7 @@ import functools
 import logging
 import os
 
-import six
+
 
 
 log = logging.getLogger(__name__)
@@ -43,20 +43,6 @@ def memoize(obj):
     return memoizer
 
 
-def python_2_unicode_compatible(klass):
-    """Fix __str__, __unicode__ and __repr__ methods under Python 2."""
-    if six.PY2:
-        if '__str__' not in klass.__dict__:
-            raise ValueError("Define __str__() on %s to use @python_2_unicode_compatible" % klass.__name__)
-        if '__repr__' not in klass.__dict__:
-            raise ValueError("Define __repr__() on %s to use @python_2_unicode_compatible" % klass.__name__)
-        klass.__unicode__ = klass.__str__
-        klass._unicode_repr = klass.__repr__
-        klass.__str__ = lambda self: self.__unicode__().encode('utf-8')
-        klass.__repr__ = lambda self: self._unicode_repr().encode('ascii', errors='backslashreplace')
-    return klass
-
-
 class Singleton(type):
     """Singleton metaclass."""
     _instances = {}
@@ -71,7 +57,7 @@ def flatten(x):
     """Return a single flat list containing elements from nested lists."""
     result = []
     for el in x:
-        if hasattr(el, '__iter__') and not isinstance(el, six.string_types):
+        if hasattr(el, '__iter__') and not isinstance(el, str):
             result.extend(flatten(el))
         else:
             result.append(el)

@@ -10,7 +10,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 
-import six
+
 
 from ..data import load_model
 from ..text import word_shape, is_ascii, is_punct, like_url, like_number
@@ -74,7 +74,7 @@ class Lexeme(object):
         self.like_number = like_number
 
 
-class Lexicon(six.with_metaclass(Singleton)):
+class Lexicon(metaclass=Singleton):
     """"""
 
     #: The Normalizer for this Lexicon.

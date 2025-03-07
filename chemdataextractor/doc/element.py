@@ -12,15 +12,12 @@ from abc import ABCMeta, abstractproperty
 import json
 import operator
 
-import six
-
-from ..utils import python_2_unicode_compatible
 import logging
 log = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
-class BaseElement(six.with_metaclass(ABCMeta)):
+
+class BaseElement(metaclass=ABCMeta):
     """
     Abstract base class for a Document Element.
 
@@ -134,7 +131,7 @@ class BaseElement(six.with_metaclass(ABCMeta)):
         return None
 
 
-@python_2_unicode_compatible
+
 class CaptionedElement(BaseElement):
     """
     Document Element with a caption.

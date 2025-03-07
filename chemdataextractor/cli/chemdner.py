@@ -10,7 +10,7 @@ from __future__ import print_function
 from collections import defaultdict
 
 import click
-import six
+
 
 from ..doc.document import Document
 from ..doc.text import Title, Paragraph
@@ -94,6 +94,6 @@ def tag(ctx, corpus, output):
         for t, section in [(d.elements[0], u'T'), (d.elements[1], u'A')]:
             for cem in t.cems:
                 code = u'%s:%s:%s' % (section, cem.start, cem.end)
-                output.write(u'\t'.join([pmid, code, six.text_type(counter), u'1']))
+                output.write(u'\t'.join([pmid, code, str(counter), u'1']))
                 output.write(u'\n')
                 counter += 1

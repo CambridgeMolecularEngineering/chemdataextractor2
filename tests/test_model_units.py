@@ -13,7 +13,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import six
+
 import logging
 import unittest
 import copy
@@ -278,7 +278,7 @@ class TestQuantity(unittest.TestCase):
         speed.value = [100.0]
         speed.units = Meter(magnitude=3.0) / Hour()
         print(speed.units)
-        for unit, power in six.iteritems(speed.units.powers):
+        for unit, power in speed.units.powers.items():
             print(unit, power)
         speed.convert_to(Mile() / Second())
         self.assertAlmostEqual(speed.value[0], 0.0172603109, places=places)

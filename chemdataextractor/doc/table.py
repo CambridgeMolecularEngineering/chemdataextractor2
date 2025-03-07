@@ -15,7 +15,7 @@ from __future__ import unicode_literals
 
 import logging
 import copy
-import six
+
 
 from .element import CaptionedElement
 from tabledataextractor import Table as TdeTable
@@ -245,9 +245,9 @@ class Table(CaptionedElement):
                 row_first[row_key] = ModelList(record)
 
         # Consolidate for each row/column
-        for _, records in six.iteritems(row_first):
+        for _, records in row_first.items():
             self._consolidate(records)
-        for _, records in six.iteritems(col_first):
+        for _, records in col_first.items():
             self._consolidate(records)
 
     def _consolidate(self, records, contextual=False):
@@ -283,7 +283,7 @@ class Table(CaptionedElement):
         for record in records:
             if not hasattr(record, '_merged_in'):
                 record._merged_in = []
-            for root_model, submodels in six.iteritems(all_models):
+            for root_model, submodels in all_models.items():
                 if isinstance(record, root_model):
                     segmented_records[root_model][0].append(record)
                 elif type(record) in submodels:
@@ -291,7 +291,7 @@ class Table(CaptionedElement):
 
         # Do all the actual merging
         record_set = set()
-        for model_type, segment in six.iteritems(segmented_records):
+        for model_type, segment in segmented_records.items():
             # Merge all records of the parent type with all records of the child type
             for record_of_type in segment[0]:
                 for record_of_subtype in segment[1]:

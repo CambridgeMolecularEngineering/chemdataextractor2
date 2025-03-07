@@ -13,7 +13,7 @@ from deprecation import deprecated
 import logging
 import re
 
-import six
+
 
 from ..text import bracket_level, GREEK
 from ..data import load_model, find_data
@@ -25,7 +25,7 @@ from tokenizers import BertWordPieceTokenizer
 log = logging.getLogger(__name__)
 
 
-class BaseTokenizer(six.with_metaclass(ABCMeta)):
+class BaseTokenizer(metaclass=ABCMeta):
     """Abstract base class from which all Tokenizer classes inherit.
 
     Subclasses must implement a ``span_tokenize(text)`` method that returns a list of integer offset tuples that
@@ -334,7 +334,7 @@ class WordTokenizer(BaseTokenizer):
                 split_text = regex.search(text)
                 if split_text:
                     groups = split_text.groupdict()
-                    for group_name, group in six.iteritems(groups):
+                    for group_name, group in groups.items():
                         if group is not None:
                             group_length = len(group)
                             if 'split' in group_name and group_length != 0:
@@ -951,6 +951,7 @@ class BertWordTokenizer(ChemWordTokenizer):
         super().__init__(split_last_stop)
         if path is None:
             path = find_data('models/scibert_uncased_vocab-1.0.txt')
+        # TODO: It's maybe worth replacing with the transformers library tokenizers.
         self.tokenizer = BertWordPieceTokenizer(path, lowercase=lowercase)
 
     def span_tokenize(self, s, additional_regex=None):

@@ -14,7 +14,7 @@ import re
 from bs4 import UnicodeDammit
 from lxml.etree import fromstring
 from lxml.html import HTMLParser, Element
-import six
+import urllib.parse
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -333,7 +333,7 @@ class RscSearchDocument(Entity):
     clean_title = Chain(replace_rsc_img_chars, strip_rsc_html)
 
     process_doi = LAdd('10.1039/')
-    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip,
+    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), str.strip,
                           LStrip('\\n'), RStrip('\\n'), LStrip(' '))
     process_landing_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org'))
     process_pdf_url = Chain(normalize, LStrip(':///'), LAdd('https://pubs.rsc.org/'))
@@ -419,7 +419,7 @@ class RscChemicalMention(Entity):
 
     process_text = normalize
     process_chemspider_id = Chain(LStrip('http://www.chemspider.com/Chemical-Structure.'), RStrip('.html'), Discard(''))
-    process_inchi = Chain(LStrip('http://www.chemspider.com/Search.aspx?q='), six.moves.urllib.parse.unquote, six.text_type.strip)
+    process_inchi = Chain(LStrip('http://www.chemspider.com/Search.aspx?q='), urllib.parse.unquote, str.strip)
 
 
 class RscImage(Entity):
@@ -464,7 +464,7 @@ class RscHtmlDocument(DocumentEntity):
     # clean_headings = Chain(replace_rsc_img_chars, strip_rsc_html)
     # clean_paragraphs = Chain(space_references, replace_rsc_img_chars, strip_rsc_html)
 
-    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), six.text_type.strip)
+    process_title = Chain(normalize, RStrip('§'), RStrip('‡'), RStrip('†'), str.strip)
     process_abstract = normalize
     # process_headings = normalize
     # process_paragraphs = Chain(normalize, Discard('Notes and references', 'References', 'Literature', 'Acknowledgements', ''))

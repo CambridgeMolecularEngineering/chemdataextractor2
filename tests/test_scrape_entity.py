@@ -14,7 +14,7 @@ from __future__ import unicode_literals
 import logging
 import unittest
 
-import six
+
 
 from chemdataextractor.scrape.fields import StringField, EntityField
 from chemdataextractor.scrape.entity import Entity, EntityList
@@ -45,7 +45,7 @@ class SimpleContent(Entity):
     urls = StringField('/html/body/div/a/@href', xpath=True, all=True, lower=True)
     in_divs = StringField('//div/div', xpath=True, all=True)
 
-    process_title = Chain(six.text_type.capitalize, RAdd('!'))
+    process_title = Chain(str.capitalize, RAdd('!'))
 
     # def clean_title(self, value):
     #     """Capitalize title and add exclamation mark."""

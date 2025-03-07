@@ -21,7 +21,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import logging
-import six
+
 import copy
 
 from .cem import cem, chemical_label, lenient_chemical_label
@@ -237,7 +237,7 @@ class BaseAutoParser(BaseParser):
                 property_entities.update({"raw_value": raw_value,
                                         "raw_units": raw_units})
 
-            for field_name, field in six.iteritems(self.model.fields):
+            for field_name, field in self.model.fields.items():
                 if field_name not in ['raw_value', 'raw_units', 'value', 'units', 'error']:
                     try:
                         data = self._get_data(field_name, field, result)
@@ -270,7 +270,7 @@ class BaseAutoParser(BaseParser):
                 elif field_result is None:
                     continue
                 field_data = {}
-                for subfield_name, subfield in six.iteritems(field.model_class.fields):
+                for subfield_name, subfield in field.model_class.fields.items():
                     data = self._get_data(subfield_name, subfield, field_result, for_list=False)
                     if data:
                         field_data.update(data)
@@ -335,7 +335,7 @@ class AutoSentenceParser(BaseAutoParser, BaseSentenceParser):
         elif self._trigger_property is not None:
             return self.model.fields[self._trigger_property].parse_expression
         else:
-            for field_name, field in six.iteritems(self.model.fields):
+            for field_name, field in self.model.fields.items():
                 if field.required and field.requiredness == 1.0 and not field.contextual:
                     self._trigger_property = field_name
                     return self.model.fields[self._trigger_property].parse_expression

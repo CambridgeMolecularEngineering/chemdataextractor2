@@ -11,7 +11,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import logging
 import re
-import six
+
 import copy
 from fractions import Fraction
 from deprecation import deprecated
@@ -121,7 +121,7 @@ def construct_quantity_re(*models):
     # Case where we have a token that's just brackets
     units_regex += '(\((?!\d))|(\)|\])|\-|'
     # Handle all the units
-    for element, unit in six.iteritems(units_dict):
+    for element, unit in units_dict.items():
         # if unit is not None:
         units_regex += '(' + element.pattern + ')|'
     units_regex += '(\/)'
@@ -449,7 +449,7 @@ def _find_unit_types(tokenized_sentence, dimensions):
     :rtype: list((chemdataextractor.quantities.Unit, str, str))
     """
     units_dict = {}
-    for key, value in six.iteritems(dimensions.units_dict):
+    for key, value in dimensions.units_dict.items():
         if value is not None:
             units_dict[key] = value
     units_list = []
