@@ -10,7 +10,10 @@ def get_document_configuration(document):
     # We may want to change this.
     # We also don't store any information about sentence tokenization, which we may also want to do
     sentences = document.sentences
-    document_configuration = {"tokenizer": sentences[0].word_tokenizer.__class__.__name__, "taggers": [tagger.__class__.__name__ for tagger in sentences[0].taggers]}
+    document_configuration = {
+        "tokenizer": sentences[0].word_tokenizer.__class__.__name__,
+        "taggers": [tagger.__class__.__name__ for tagger in sentences[0].taggers],
+    }
     return document_configuration
 
 
@@ -20,20 +23,31 @@ class PlainTextCacher:
         if not os.path.isdir(self.cache_location):
             os.makedirs(self.cache_location)
 
-    def cache_document(self, document, document_id, tags=None, save_subsentences=True, overwrite_cache=False):
+    def cache_document(
+        self,
+        document,
+        document_id,
+        tags=None,
+        save_subsentences=True,
+        overwrite_cache=False,
+    ):
         if tags is None:
             tags = ["ner_tag", "pos_tag"]
 
         # Save document configuration
         document_configuration = get_document_configuration(document)
-        cache_location_root = os.path.join(self.cache_location, self._safe_document_id(document_id))
+        cache_location_root = os.path.join(
+            self.cache_location, self._safe_document_id(document_id)
+        )
         if not os.path.isdir(cache_location_root):
             os.makedirs(cache_location_root)
         elif overwrite_cache:
             shutil.rmtree(cache_location_root)
             os.makedirs(cache_location_root)
         elif not overwrite_cache:
-            raise AttributeError("{document_id} is already cached! Enable overwrite_cache to overwrite the previous cache.")
+            raise AttributeError(
+                "{document_id} is already cached! Enable overwrite_cache to overwrite the previous cache."
+            )
 
         with open(self._document_config_path(cache_location_root), "w+") as f:
             json.dump(document_configuration, f)
@@ -41,14 +55,24 @@ class PlainTextCacher:
         sentences = document.sentences
 
         # Save tokenisation
-        with open(self._document_tokenizer_cache_path(cache_location_root, document_configuration["tokenizer"]), "w+", encoding='utf-8') as f:
+        with open(
+            self._document_tokenizer_cache_path(
+                cache_location_root, document_configuration["tokenizer"]
+            ),
+            "w+",
+            encoding="utf-8",
+        ) as f:
             for sentence in sentences:
                 # We use silly emoji to delineate so that we don't ever get conflicts with actual tokens used.
                 # It's 🙃 between words, and 🔥 between sentences
-                f.write(str(("🙃".join(sentence.raw_tokens) + "🔥").encode('utf-8')))
+                f.write(str(("🙃".join(sentence.raw_tokens) + "🔥").encode("utf-8")))
 
         # Save start and end spans
-        with open(self._document_tag_cache_path(cache_location_root, "start_end"), "w+", encoding='utf-8') as f:
+        with open(
+            self._document_tag_cache_path(cache_location_root, "start_end"),
+            "w+",
+            encoding="utf-8",
+        ) as f:
             for sentence in sentences:
                 indices = [[token.start, token.end] for token in sentence.tokens]
                 f.write(str(indices) + "\n")
@@ -56,20 +80,31 @@ class PlainTextCacher:
         # Save tags
         for tag in tags:
             # Should we be more careful so that we always get the same tagger for each tag?
-            with open(self._document_tag_cache_path(cache_location_root, tag), "w+", encoding='utf-8') as f:
+            with open(
+                self._document_tag_cache_path(cache_location_root, tag),
+                "w+",
+                encoding="utf-8",
+            ) as f:
                 for sentence in sentences:
                     # TODO(ti250): Assumes tags are plain text
-                    sentence_tags = [token[tag] if token[tag] is not None else "😂" for token in sentence.tokens]
-                    f.write(str(("🙃".join(sentence_tags) + "🔥").encode('utf-8')))
+                    sentence_tags = [
+                        token[tag] if token[tag] is not None else "😂"
+                        for token in sentence.tokens
+                    ]
+                    f.write(str(("🙃".join(sentence_tags) + "🔥").encode("utf-8")))
 
-        with open(self._document_subsentence_cache_path(cache_location_root), "w+") as f:
+        with open(
+            self._document_subsentence_cache_path(cache_location_root), "w+"
+        ) as f:
             for sentence in sentences:
                 indices = []
                 for subsentence in sentence.subsentences:
                     indices.append([token.index for token in subsentence.tokens])
                 f.write(str(indices) + "\n")
 
-        with open(self._document_subsentence_cache_path(cache_location_root), "w+") as f:
+        with open(
+            self._document_subsentence_cache_path(cache_location_root), "w+"
+        ) as f:
             for sentence in sentences:
                 indices = []
                 for subsentence in sentence.subsentences:
@@ -79,7 +114,9 @@ class PlainTextCacher:
     def hydrate_document(self, document, document_id, tags=None):
         # Add in all the tags, tokenisation for a document.
         document_configuration = get_document_configuration(document)
-        cache_location_root = os.path.join(self.cache_location, self._safe_document_id(document_id))
+        cache_location_root = os.path.join(
+            self.cache_location, self._safe_document_id(document_id)
+        )
 
         # Check cache looks good
         if not os.path.isdir(cache_location_root):
@@ -87,24 +124,38 @@ class PlainTextCacher:
 
         with open(self._document_config_path(cache_location_root)) as f:
             cached_configuration = json.load(f)
-            if cached_configuration["tokenizer"] != document_configuration["tokenizer"] or cached_configuration["taggers"] != document_configuration["taggers"]:
-                raise AttributeError(f"Cached value for tokenizers and taggers don't match for {document_id}")
+            if (
+                cached_configuration["tokenizer"] != document_configuration["tokenizer"]
+                or cached_configuration["taggers"] != document_configuration["taggers"]
+            ):
+                raise AttributeError(
+                    f"Cached value for tokenizers and taggers don't match for {document_id}"
+                )
 
         sentences = document.sentences
 
         # Add tokenization
-        with open(self._document_tokenizer_cache_path(cache_location_root, document_configuration["tokenizer"])) as f:
+        with open(
+            self._document_tokenizer_cache_path(
+                cache_location_root, document_configuration["tokenizer"]
+            )
+        ) as f:
             # Need to remove the final element as it will be an empty one
-            tokenized_sentences = [sent.split("🙃") for sent in f.read().split("🔥")][:-1]
+            tokenized_sentences = [sent.split("🙃") for sent in f.read().split("🔥")][
+                :-1
+            ]
             for sentence, tokenized_sentence in zip(sentences, tokenized_sentences):
                 # TODO(ti250): We currently don't retain spans correctly here; what to do? We can always actually cache this...
-                toks = [RichToken(
-                    text=token,
-                    start=-2,
-                    end=-1,
-                    lexicon=sentence.lexicon,
-                    sentence=sentence
-                ) for token in tokenized_sentence]
+                toks = [
+                    RichToken(
+                        text=token,
+                        start=-2,
+                        end=-1,
+                        lexicon=sentence.lexicon,
+                        sentence=sentence,
+                    )
+                    for token in tokenized_sentence
+                ]
                 sentence._tokens = toks
 
         # Correct start/end of tokens
@@ -125,7 +176,9 @@ class PlainTextCacher:
             tags = ["ner_tag", "pos_tag"]
 
         for tag_type in tags:
-            with open(self._document_tag_cache_path(cache_location_root, tag_type)) as f:
+            with open(
+                self._document_tag_cache_path(cache_location_root, tag_type)
+            ) as f:
                 all_tags = [sent.split("🙃") for sent in f.read().split("🔥")][:-1]
                 for sentence, sentence_tags in zip(sentences, all_tags):
                     tokens = sentence.tokens
@@ -142,7 +195,9 @@ class PlainTextCacher:
             for sentence, sent_indices in zip(sentences, all_indices):
                 subsentences = []
                 for subsent_indices in sent_indices:
-                    subsent_tokens = [sentence.tokens[index] for index in subsent_indices]
+                    subsent_tokens = [
+                        sentence.tokens[index] for index in subsent_indices
+                    ]
                     subsentences.append(Subsentence(sentence, subsent_tokens))
                 if len(subsentences) == 1:
                     subsentences[0]._is_only_subsentence = True

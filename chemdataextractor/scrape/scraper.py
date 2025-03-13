@@ -45,7 +45,7 @@ class GetRequester(BaseRequester):
         :returns: The response to the request.
         :rtype: requests.Response
         """
-        log.debug('Making request: GET %s %s' % (url, kwargs))
+        log.debug("Making request: GET %s %s" % (url, kwargs))
         return session.get(url, **kwargs)
 
 
@@ -59,7 +59,7 @@ class PostRequester(BaseRequester):
         :returns: The response to the request.
         :rtype: requests.Response
         """
-        log.debug('Making request: POST %s %s' % (url, kwargs))
+        log.debug("Making request: POST %s %s" % (url, kwargs))
         return session.post(url, **kwargs)
 
 
@@ -88,16 +88,17 @@ class UrlScraper(GetRequester, HtmlFormat, BaseScraper):
 
 class RssScraper(XmlFormat, UrlScraper):
     """RSS scraper"""
+
     # Treat each RSS item as entity root
-    root = 'item'
+    root = "item"
     # Add common RSS XML namespaces
     namespaces = {
-        'atom': 'http://www.w3.org/2005/Atom',
-        'feedburner': 'http://rssnamespace.org/feedburner/ext/1.0',
+        "atom": "http://www.w3.org/2005/Atom",
+        "feedburner": "http://rssnamespace.org/feedburner/ext/1.0",
     }
 
 
-#Updated by ti250(17/10/18)
+# Updated by ti250(17/10/18)
 class SearchScraper(GetRequester, HtmlFormat, BaseScraper):
     """Scraper that takes a search query as input."""
 
@@ -119,14 +120,14 @@ class SearchScraper(GetRequester, HtmlFormat, BaseScraper):
         entities = []
         for root in self.get_roots(selector):
             entity = self.entity(root)
-            log.debug(str(entity.serialize()).encode('utf-8'))
+            log.debug(str(entity.serialize()).encode("utf-8"))
             entity = self.process_entity(entity)
             if entity:
                 entities.append(entity)
         return EntityList(*entities)
 
 
-#Added by ti250(17/10/18)
+# Added by ti250(17/10/18)
 class SearchResult(object):
     """Class to handle results from a search query to websites,
     regardless of method of scraping used."""
@@ -143,7 +144,7 @@ class SearchResult(object):
         return
 
 
-class SeleniumSearchResult():
+class SeleniumSearchResult:
     """
     Search results when using Selenium for scraping
     """
@@ -159,7 +160,7 @@ class SeleniumSearchResult():
         return Selector.from_html_text(self.driver.page_source)
 
 
-class ResponseSearchResult():
+class ResponseSearchResult:
     """
     Search results when using the requests library for scraping
     """

@@ -32,24 +32,29 @@ class ParseException(Exception):
 
     @classmethod
     def wrap(cls, parse_exception):
-        return cls(parse_exception.tokens, parse_exception.loc, parse_exception.msg, parse_exception.element)
+        return cls(
+            parse_exception.tokens,
+            parse_exception.loc,
+            parse_exception.msg,
+            parse_exception.element,
+        )
 
     def __str__(self):
-        return ('%s (at token %d)' % (self.msg, self.i))
+        return "%s (at token %d)" % (self.msg, self.i)
 
 
 XML_SAFE_TAGS = {
-    '-LRB-': 'LRB',
-    '-RRB-': 'RRB',
-    '.': 'STOP',
-    ',': 'COMMA',
-    ':': 'COLON',
-    '$': 'DOLLAR',
-    '``': 'LQUOTE',
-    '\'\'': 'RQUOTE',
-    'PRP$': 'PRPPOS',
-    'WP$': 'WPPOS',
-    None: 'NONE'
+    "-LRB-": "LRB",
+    "-RRB-": "RRB",
+    ".": "STOP",
+    ",": "COMMA",
+    ":": "COLON",
+    "$": "DOLLAR",
+    "``": "LQUOTE",
+    "''": "RQUOTE",
+    "PRP$": "PRPPOS",
+    "WP$": "WPPOS",
+    None: "NONE",
 }
 
 
@@ -145,7 +150,7 @@ class BaseParserElement(object):
         try:
             result, found_index = self._parse_tokens(tokens, i, actions)
         except IndexError:
-            raise ParseException(tokens, i, 'IndexError', self)
+            raise ParseException(tokens, i, "IndexError", self)
         if actions:
             for action in self.actions:
                 action_result = action(tokens, i, result)
@@ -153,7 +158,9 @@ class BaseParserElement(object):
                     result = action_result
         if self.condition is not None:
             if not self.condition(result):
-                raise ParseException(tokens, found_index, 'Did not satisfy condition', self)
+                raise ParseException(
+                    tokens, found_index, "Did not satisfy condition", self
+                )
         return result, found_index
 
     def try_parse(self, tokens, i):
@@ -264,7 +271,7 @@ class Any(BaseParserElement):
 class NoMatch(BaseParserElement):
 
     def _parse_tokens(self, tokens, i, actions=True):
-        raise ParseException(tokens, i, 'NoMatch will not match any tokens', self)
+        raise ParseException(tokens, i, "NoMatch will not match any tokens", self)
 
 
 class Word(BaseParserElement):
@@ -278,7 +285,9 @@ class Word(BaseParserElement):
         token_text = tokens[i][0]
         if token_text == self.match:
             return [E(self.name or safe_name(tokens[i][1]), token_text)], i + 1
-        raise ParseException(tokens, i, 'Expected %s, got %s' % (self.match, token_text), self)
+        raise ParseException(
+            tokens, i, "Expected %s, got %s" % (self.match, token_text), self
+        )
 
 
 class Tag(BaseParserElement):
@@ -297,7 +306,7 @@ class Tag(BaseParserElement):
         tag = token[self.tag_type]
         if tag == self.match:
             return [E(self.name or safe_name(tag), token[0])], i + 1
-        raise ParseException(tokens, i, 'Expected %s, got %s' % (self.match, tag), self)
+        raise ParseException(tokens, i, "Expected %s, got %s" % (self.match, tag), self)
 
 
 class IWord(Word):
@@ -310,7 +319,9 @@ class IWord(Word):
         token_text = tokens[i][0]
         if token_text.lower() == self.match:
             return [E(self.name or safe_name(tokens[i][1]), tokens[i][0])], i + 1
-        raise ParseException(tokens, i, 'Expected %s, got %s' % (self.match, tokens[i][0]), self)
+        raise ParseException(
+            tokens, i, "Expected %s, got %s" % (self.match, tokens[i][0]), self
+        )
 
 
 class Regex(BaseParserElement):
@@ -332,7 +343,9 @@ class Regex(BaseParserElement):
         if result:
             text = token_text if self.group is None else result.group(self.group)
             return [E(self.name or safe_name(tokens[i][1]), text)], i + 1
-        raise ParseException(tokens, i, 'Expected %s, got %s' % (self.pattern, token_text), self)
+        raise ParseException(
+            tokens, i, "Expected %s, got %s" % (self.pattern, token_text), self
+        )
 
     # Solves issues with deepcopying of records, jm2111
     # only the pattern is copied and the object is created from scratch
@@ -348,7 +361,7 @@ class Start(BaseParserElement):
 
     def _parse_tokens(self, tokens, i, actions=True):
         if i != 0:
-            raise ParseException(tokens, i, 'Expected start of tokens', self)
+            raise ParseException(tokens, i, "Expected start of tokens", self)
         return [], i
 
 
@@ -360,7 +373,7 @@ class End(BaseParserElement):
 
     def _parse_tokens(self, tokens, i, actions=True):
         if i < len(tokens):
-            raise ParseException(tokens, i, 'Expected end of tokens', self)
+            raise ParseException(tokens, i, "Expected end of tokens", self)
         return [], i
 
 
@@ -404,10 +417,18 @@ class ParseExpression(BaseParserElement):
             # collapse nested exprs from e.g. And(And(And(a, b), c), d) to And(a,b,c,d)
             if len(self.exprs) == 2:
                 other = self.exprs[0]
-                if isinstance(other, self.__class__) and not other.actions and other.name is None:
+                if (
+                    isinstance(other, self.__class__)
+                    and not other.actions
+                    and other.name is None
+                ):
                     self.exprs = other.exprs[:] + [self.exprs[1]]
                 other = self.exprs[-1]
-                if isinstance(other, self.__class__) and not other.actions and other.name is None:
+                if (
+                    isinstance(other, self.__class__)
+                    and not other.actions
+                    and other.name is None
+                ):
                     self.exprs = self.exprs[:-1] + other.exprs[:]
         return self
 
@@ -477,7 +498,7 @@ class Or(ParseExpression):
                     furthest_exception_i = err.i
             except IndexError:
                 if len(tokens) > furthest_exception_i:
-                    furthest_exception = ParseException(tokens, len(tokens), '', self)
+                    furthest_exception = ParseException(tokens, len(tokens), "", self)
                     furthest_exception_i = len(tokens)
             else:
                 if end_i > furthest_match_i:
@@ -488,7 +509,7 @@ class Or(ParseExpression):
             if furthest_exception is not None:
                 raise furthest_exception
             else:
-                raise ParseException(tokens, i, 'No alternatives match', self)
+                raise ParseException(tokens, i, "No alternatives match", self)
 
         # If a name is assigned to an Or, it replaces the name of the contained result
         if self.name:
@@ -522,7 +543,7 @@ class Every(ParseExpression):
                 raise err
             except IndexError:
                 if len(tokens) > furthest_exception_i:
-                    furthest_exception = ParseException(tokens, len(tokens), '', self)
+                    furthest_exception = ParseException(tokens, len(tokens), "", self)
                     raise furthest_exception
             else:
                 if end_i > furthest_match_i:
@@ -562,7 +583,7 @@ class First(ParseExpression):
             if furthest_exception is not None:
                 raise furthest_exception
             else:
-                raise ParseException(tokens, i, 'No alternatives match', self)
+                raise ParseException(tokens, i, "No alternatives match", self)
 
     def __ior__(self, other):
         if isinstance(other, str):
@@ -583,7 +604,7 @@ class ParseElementEnhance(BaseParserElement):
         if self.expr is not None:
             return self.expr.parse(tokens, i)
         else:
-            raise ParseException('', i, 'Error', self)
+            raise ParseException("", i, "Error", self)
 
     def streamline(self):
         if not self.streamlined:
@@ -627,7 +648,7 @@ class Not(ParseElementEnhance):
         except (ParseException, IndexError):
             pass
         else:
-            raise ParseException(tokens, i, 'Encountered disallowed token', self)
+            raise ParseException(tokens, i, "Encountered disallowed token", self)
         return [], i
 
 
@@ -727,7 +748,7 @@ class SkipTo(ParseElementEnhance):
                 return results, i
             except (ParseException, IndexError):
                 i += 1
-        raise ParseException(tokens, i, '', self)
+        raise ParseException(tokens, i, "", self)
 
 
 class Hide(ParseElementEnhance):

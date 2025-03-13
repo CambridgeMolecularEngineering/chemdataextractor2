@@ -53,7 +53,6 @@ class Percent(RatioUnit):
         return error
 
 
-units_dict = {R('%', group=0): Percent}
+units_dict = {R("%", group=0): Percent}
 Ratio.units_dict = units_dict
 Ratio.standard_units = Percent()
-

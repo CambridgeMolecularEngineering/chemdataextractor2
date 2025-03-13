@@ -11,7 +11,6 @@ from __future__ import unicode_literals
 import logging
 
 
-
 from ..data import load_model
 from ..text import word_shape, is_ascii, is_punct, like_url, like_number
 from ..text.normalize import Normalizer, ChemNormalizer
@@ -23,13 +22,54 @@ log = logging.getLogger(__name__)
 class Lexeme(object):
     """"""
 
-    __slots__ = ('text', 'normalized', 'lower', 'first', 'suffix', 'shape', 'length', 'upper_count', 'lower_count',
-                 'digit_count', 'is_alpha', 'is_ascii', 'is_digit', 'is_lower', 'is_upper', 'is_title', 'is_punct',
-                 'is_hyphenated', 'like_url', 'like_number', 'cluster')
+    __slots__ = (
+        "text",
+        "normalized",
+        "lower",
+        "first",
+        "suffix",
+        "shape",
+        "length",
+        "upper_count",
+        "lower_count",
+        "digit_count",
+        "is_alpha",
+        "is_ascii",
+        "is_digit",
+        "is_lower",
+        "is_upper",
+        "is_title",
+        "is_punct",
+        "is_hyphenated",
+        "like_url",
+        "like_number",
+        "cluster",
+    )
 
-    def __init__(self, text, normalized, lower, first, suffix, shape, length, upper_count, lower_count, digit_count,
-                 is_alpha, is_ascii, is_digit, is_lower, is_upper, is_title, is_punct, is_hyphenated, like_url,
-                 like_number, cluster):
+    def __init__(
+        self,
+        text,
+        normalized,
+        lower,
+        first,
+        suffix,
+        shape,
+        length,
+        upper_count,
+        lower_count,
+        digit_count,
+        is_alpha,
+        is_ascii,
+        is_digit,
+        is_lower,
+        is_upper,
+        is_title,
+        is_punct,
+        is_hyphenated,
+        like_url,
+        like_number,
+        cluster,
+    ):
         #: Original Lexeme text.
         self.text = text
         #: The Brown Word Cluster for this Lexeme.
@@ -122,7 +162,7 @@ class Lexicon(metaclass=Singleton):
                 is_hyphenated=self.is_hyphenated(normalized),
                 like_url=self.like_url(normalized),
                 like_number=self.like_number(normalized),
-                cluster=self.cluster(normalized)
+                cluster=self.cluster(normalized),
             )
 
     def __getitem__(self, text):
@@ -209,7 +249,7 @@ class Lexicon(metaclass=Singleton):
     def is_hyphenated(self, text):
         """"""
         # TODO: What about '--'?
-        return '-' in text and not text == '-'
+        return "-" in text and not text == "-"
 
     def like_url(self, text):
         """"""
@@ -225,4 +265,4 @@ class ChemLexicon(Lexicon):
     chemistry corpus."""
 
     normalizer = ChemNormalizer()
-    clusters_path = 'models/clusters_chem1500-1.0.pickle'
+    clusters_path = "models/clusters_chem1500-1.0.pickle"

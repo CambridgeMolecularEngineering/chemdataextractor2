@@ -10,7 +10,7 @@ from ..doc.text import Subsentence
 from ..model.contextual_range import SentenceRange
 from ..parse.auto import AutoSentenceParser
 from ..parse.base import BaseSentenceParser
-from ..parse.elements import (NoMatch, OneOrMore, Optional, SkipTo)
+from ..parse.elements import NoMatch, OneOrMore, Optional, SkipTo
 from ..parse.quantity import value_element
 from ..utils import memoized_property
 
@@ -55,7 +55,7 @@ class Question(NoMatch):
         num_preceding_sentences=4,
         num_following_sentences=0,
         include_heading=True,
-        no_merge_range=1
+        no_merge_range=1,
     ):
         """
         Args:
@@ -124,7 +124,9 @@ class Question(NoMatch):
                 answer = action(answer)
         if self.condition is not None:
             if not self.condition(answer):
-                raise ValueError(f"{answer} does not satisfy conditions for question {self.question}")
+                raise ValueError(
+                    f"{answer} does not satisfy conditions for question {self.question}"
+                )
         return answer
 
 
@@ -175,7 +177,7 @@ class _BatchQuestion:
             context = self.sentence.text
         return {
             "question": self.question.formatted_question(self.record),
-            "context": context
+            "context": context,
         }
 
     @classmethod
@@ -190,7 +192,9 @@ class _BatchQuestion:
             asked_questions = [{}] * len(sentences)
 
         batch_questions = []
-        for (sentence, sentence_records, asked_questions_for_sentence) in zip(sentences, records, asked_questions):
+        for sentence, sentence_records, asked_questions_for_sentence in zip(
+            sentences, records, asked_questions
+        ):
             eligible_questions_for_sentence = cls._eligible_questions(
                 question_fields,
                 sentence_records,
@@ -212,14 +216,21 @@ class _BatchQuestion:
                     and question.can_ask_question(record)
                     and (
                         id(record) not in asked_questions
-                        or question.formatted_question(record) not in asked_questions[id(record)]
+                        or question.formatted_question(record)
+                        not in asked_questions[id(record)]
                     )
                 ):
-                    batch_questions_list.append(cls(record, sentence, question, field_name))
+                    batch_questions_list.append(
+                        cls(record, sentence, question, field_name)
+                    )
                     if id(record) in asked_questions:
-                        asked_questions[id(record)].append(question.formatted_question(record))
+                        asked_questions[id(record)].append(
+                            question.formatted_question(record)
+                        )
                     else:
-                        asked_questions[id(record)] = [question.formatted_question(record)]
+                        asked_questions[id(record)] = [
+                            question.formatted_question(record)
+                        ]
         return batch_questions_list
 
     @classmethod
@@ -252,7 +263,7 @@ class MultiTurnQAParser(AutoSentenceParser):
         skip_phrase=None,
         skip_section_phrase=None,
         allow_section_phrase=None,
-        **kwargs
+        **kwargs,
     ):
         """
         .. warning::
@@ -368,10 +379,7 @@ class MultiTurnQAParser(AutoSentenceParser):
         for i in range(self.max_iters):
             # Gather all askable questions
             batch_questions = _BatchQuestion.from_sentences_records_and_questions(
-                filtered_sentences,
-                records,
-                question_fields,
-                asked_questions
+                filtered_sentences, records, question_fields, asked_questions
             )
             qa_inputs = [batch_question.qa_input for batch_question in batch_questions]
 
@@ -403,8 +411,16 @@ class MultiTurnQAParser(AutoSentenceParser):
 
                 if (
                     answer is not None
-                    and ((question.confidence_threshold is not None and confidence > question.confidence_threshold)
-                    or (question.confidence_threshold is None and confidence > self.confidence_threshold))
+                    and (
+                        (
+                            question.confidence_threshold is not None
+                            and confidence > question.confidence_threshold
+                        )
+                        or (
+                            question.confidence_threshold is None
+                            and confidence > self.confidence_threshold
+                        )
+                    )
                     and answer["answer"] != ""
                 ):
                     record = batch_question.record
@@ -428,7 +444,9 @@ class MultiTurnQAParser(AutoSentenceParser):
                         batch_question.question.num_following_sentences,
                         batch_question.question.no_merge_range,
                     )
-                    record._no_merge_ranges[batch_question.field_name] = no_merge_sentence_count * SentenceRange()
+                    record._no_merge_ranges[batch_question.field_name] = (
+                        no_merge_sentence_count * SentenceRange()
+                    )
 
             # Update the records list
             new_records_list = [[] for i in range(len(filtered_sentences))]
@@ -438,19 +456,30 @@ class MultiTurnQAParser(AutoSentenceParser):
                     new_records_list[index].append(batch_question.record)
             # Another loop iterating through current records and checking if that is in
             # the new records list, if not, appending it to the list
-            for (old_sentence_records, new_sentence_records) in zip(records, new_records_list):
+            for old_sentence_records, new_sentence_records in zip(
+                records, new_records_list
+            ):
                 for record in old_sentence_records:
                     if record not in new_sentence_records:
                         new_sentence_records.append(record)
             records = new_records_list
 
-        records_dict = {id(sentence): sentence_records for sentence, sentence_records in zip(filtered_sentences, records)}
+        records_dict = {
+            id(sentence): sentence_records
+            for sentence, sentence_records in zip(filtered_sentences, records)
+        }
         return records_dict
 
     def _is_valid_sentence(self, sentence):
-        if (
-            len([result for result in self.model.specifier.parse_expression.scan(sentence.tokens)])
-            and len([result for result in self.numerical_value_expression.scan(sentence.tokens)])
+        if len(
+            [
+                result
+                for result in self.model.specifier.parse_expression.scan(
+                    sentence.tokens
+                )
+            ]
+        ) and len(
+            [result for result in self.numerical_value_expression.scan(sentence.tokens)]
         ):
             return True
         return False
@@ -503,24 +532,40 @@ class MultiTurnQAParser(AutoSentenceParser):
     def root(self):
         entities = []
 
-        if hasattr(self.model, 'specifier') and self.model.specifier:
+        if hasattr(self.model, "specifier") and self.model.specifier:
             # now we are parsing an element that has no value but some custom string
             # therefore, there will be no matching interpret function, all entities are custom except for the specifier
-            specifier = self.model.specifier.parse_expression('specifier')
+            specifier = self.model.specifier.parse_expression("specifier")
             entities.append(specifier)
 
         # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
         for field in self.model.fields:
-            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'specifier']:
+            if field not in [
+                "raw_value",
+                "raw_units",
+                "value",
+                "units",
+                "error",
+                "specifier",
+            ]:
                 try:
-                    if self.model.__getattribute__(self.model, field).parse_expression is not None:
-                        entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
+                    if (
+                        self.model.__getattribute__(self.model, field).parse_expression
+                        is not None
+                    ):
+                        entities.append(
+                            self.model.__getattribute__(
+                                self.model, field
+                            ).parse_expression(field)
+                        )
                 except AttributeError:
                     pass
 
         # logic for finding all the elements in any order
         combined_entities = _create_entities_list(entities)
-        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
+        root_phrase = OneOrMore(
+            combined_entities + Optional(SkipTo(combined_entities))
+        )("root_phrase")
         return root_phrase
 
 
@@ -536,6 +581,5 @@ def _create_entities_list(entities):
     """
     result = entities[0]
     for entity in entities[1:]:
-        result = (result | entity)
+        result = result | entity
     return result
-

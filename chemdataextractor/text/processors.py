@@ -66,7 +66,7 @@ class LAdd(object):
         self.substring = substring
 
     def __call__(self, value):
-        return '%s%s' % (self.substring, value)
+        return "%s%s" % (self.substring, value)
 
 
 class RAdd(object):
@@ -76,7 +76,7 @@ class RAdd(object):
         self.substring = substring
 
     def __call__(self, value):
-        return '%s%s' % (value, self.substring)
+        return "%s%s" % (value, self.substring)
 
 
 class LStrip(object):
@@ -88,7 +88,7 @@ class LStrip(object):
     def __call__(self, value):
         for substring in self.substrings:
             if value.startswith(substring):
-                return value[len(substring):]
+                return value[len(substring) :]
         return value
 
 
@@ -101,7 +101,7 @@ class RStrip(object):
     def __call__(self, value):
         for substring in self.substrings:
             if value.endswith(substring):
-                return value[:-len(substring)]
+                return value[: -len(substring)]
         return value
 
 
@@ -110,13 +110,17 @@ def floats(s):
     try:
         return float(s)
     except ValueError:
-        s = re.sub(r'(\d)\s*\(\d+(\.\d+)?\)', r'\1', s)        # Remove bracketed numbers from end
-        s = re.sub(r'(\d)\s*±\s*\d+(\.\d+)?', r'\1', s)        # Remove uncertainties from end
-        s = s.rstrip('\'"+-=<>/,.:;!?)]}…∼~≈×*_≥≤')             # Remove trailing punctuation
-        s = s.lstrip('\'"+=<>/([{∼~≈×*_≥≤£$€#§')                # Remove leading punctuation
-        s = s.replace(',', '')                                 # Remove commas
-        s = ''.join(s.split())                                  # Strip whitespace
-        s = re.sub(r'(\d)\s*[×x]\s*10\^?(-?\d)', r'\1e\2', s)  # Convert scientific notation
+        s = re.sub(
+            r"(\d)\s*\(\d+(\.\d+)?\)", r"\1", s
+        )  # Remove bracketed numbers from end
+        s = re.sub(r"(\d)\s*±\s*\d+(\.\d+)?", r"\1", s)  # Remove uncertainties from end
+        s = s.rstrip("'\"+-=<>/,.:;!?)]}…∼~≈×*_≥≤")  # Remove trailing punctuation
+        s = s.lstrip("'\"+=<>/([{∼~≈×*_≥≤£$€#§")  # Remove leading punctuation
+        s = s.replace(",", "")  # Remove commas
+        s = "".join(s.split())  # Strip whitespace
+        s = re.sub(
+            r"(\d)\s*[×x]\s*10\^?(-?\d)", r"\1e\2", s
+        )  # Convert scientific notation
         return float(s)
 
 
@@ -155,7 +159,7 @@ class Substitutor(object):
 
 def extract_emails(text):
     """Return a list of email addresses extracted from the string."""
-    text = text.replace(u'\u2024', '.')
+    text = text.replace("\u2024", ".")
     emails = []
     for m in EMAIL_RE.findall(text):
         emails.append(m[0])
@@ -164,7 +168,5 @@ def extract_emails(text):
 
 def unapostrophe(text):
     """Strip apostrophe and 's' from the end of a string."""
-    text = re.sub(r'[%s]s?$' % ''.join(APOSTROPHES), '', text)
+    text = re.sub(r"[%s]s?$" % "".join(APOSTROPHES), "", text)
     return text
-
-

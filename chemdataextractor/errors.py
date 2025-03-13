@@ -13,7 +13,6 @@ from typing import Any, Tuple, Union
 
 class ChemDataExtractorError(Exception):
     """Base ChemDataExtractor exception."""
-    pass
 
 
 class ReaderError(ChemDataExtractorError):

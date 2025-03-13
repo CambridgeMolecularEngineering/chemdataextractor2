@@ -17,7 +17,7 @@ from __future__ import unicode_literals
 from .quantity_model import QuantityModel
 from .unit import Unit
 from .dimension import Dimension
-from.mass import Mass
+from .mass import Mass
 from .length import Length
 from .time import Time
 from ...parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 class Energy(Dimension):
-    constituent_dimensions = Mass() * Length()**2 / Time()**2
+    constituent_dimensions = Mass() * Length() ** 2 / Time() ** 2
 
 
 class EnergyModel(QuantityModel):
@@ -86,8 +86,10 @@ class Erg(EnergyUnit):
         return 1e7 * error
 
 
-units_dict = {R('(J|j)(oule(s)?)?', group=0): Joule,
-              R('(E|e)(lectron)?( )?(V|v)(olts)?', group=0): ElectronVolt,
-              R('(E|e)rg', group=0): Erg}
+units_dict = {
+    R("(J|j)(oule(s)?)?", group=0): Joule,
+    R("(E|e)(lectron)?( )?(V|v)(olts)?", group=0): ElectronVolt,
+    R("(E|e)rg", group=0): Erg,
+}
 Energy.units_dict.update(units_dict)
 Energy.standard_units = Joule()

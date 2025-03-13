@@ -24,6 +24,7 @@ class ElectricalCurrent(Dimension):
     """
     Dimension subclass for electrical current.
     """
+
     pass
 
 
@@ -31,6 +32,7 @@ class ElectricalCurrentModel(QuantityModel):
     """
     Model for electrical current.
     """
+
     dimensions = ElectricalCurrent()
 
 
@@ -41,7 +43,9 @@ class ElectricalCurrentUnit(Unit):
     """
 
     def __init__(self, magnitude=0.0, powers=None):
-        super(ElectricalCurrentUnit, self).__init__(ElectricalCurrent(), magnitude, powers)
+        super(ElectricalCurrentUnit, self).__init__(
+            ElectricalCurrent(), magnitude, powers
+        )
 
 
 class Ampere(ElectricalCurrentUnit):
@@ -62,6 +66,6 @@ class Ampere(ElectricalCurrentUnit):
         return error
 
 
-units_dict = {R('A(mp(ere)?(s)?)?|amp(ere)?(s)?', group=0): Ampere}
+units_dict = {R("A(mp(ere)?(s)?)?|amp(ere)?(s)?", group=0): Ampere}
 ElectricalCurrent.units_dict = units_dict
 ElectricalCurrent.standard_units = Ampere()

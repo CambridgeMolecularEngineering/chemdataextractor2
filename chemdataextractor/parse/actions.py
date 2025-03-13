@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 def flatten(tokens, start, result):
     """Replace all child results with their text contents."""
     for e in result:
-        strip_tags(e, '*')
+        strip_tags(e, "*")
     return result
 
 
@@ -35,7 +35,7 @@ def join(tokens, start, result):
             for child in e.iter():
                 if child.text is not None:
                     texts.append(child.text)
-        return [E(result[0].tag, ' '.join(texts))]
+        return [E(result[0].tag, " ".join(texts))]
 
 
 def merge(tokens, start, result):
@@ -46,14 +46,14 @@ def merge(tokens, start, result):
             for child in e.iter():
                 if child.text is not None:
                     texts.append(child.text)
-        return [E(result[0].tag, ''.join(texts))]
+        return [E(result[0].tag, "".join(texts))]
 
 
 def strip_stop(tokens, start, result):
     """Remove trailing full stop from tokens."""
     for e in result:
         for child in e.iter():
-            if child.text.endswith('.'):
+            if child.text.endswith("."):
                 child.text = child.text[:-1]
     return result
 
@@ -64,10 +64,10 @@ def fix_whitespace(tokens, start, result):
         for child in e.iter():
             # if check added by Juraj, it has to exist
             if child.text:
-                child.text = child.text.replace(' , ', ', ')
+                child.text = child.text.replace(" , ", ", ")
                 for hyphen in HYPHENS:
-                    child.text = child.text.replace(' %s ' % hyphen, '%s' % hyphen)
-                child.text = re.sub(r'- (.) -', r'-\1-', child.text)
+                    child.text = child.text.replace(" %s " % hyphen, "%s" % hyphen)
+                child.text = re.sub(r"- (.) -", r"-\1-", child.text)
                 child.text = child.text.replace(" -", "-")
                 child.text = child.text.replace(" : ", ":").replace(" ) ", ")")
 

@@ -15,7 +15,7 @@ class TimeDistributed(torch.nn.Module):
     A wrapper that unrolls the second (time) dimension of a tensor
     into the first (batch) dimension, applies some other `Module`,
     and then rolls the time dimension back up.
-    
+
     Given an input shaped like `(batch_size, time_steps, [rest])` and a `Module` that takes
     inputs like `(batch_size, [rest])`, `TimeDistributed` reshapes the input to be
     `(batch_size * time_steps, [rest])`, applies the contained `Module`, then reshapes it back.
@@ -36,7 +36,9 @@ class TimeDistributed(torch.nn.Module):
 
         pass_through = pass_through or []
 
-        reshaped_inputs = [self._reshape_tensor(input_tensor) for input_tensor in inputs]
+        reshaped_inputs = [
+            self._reshape_tensor(input_tensor) for input_tensor in inputs
+        ]
 
         # Need some input to then get the batch_size and time_steps.
         some_input = None
@@ -85,6 +87,7 @@ class TimeDistributed(torch.nn.Module):
         squashed_shape = [-1] + list(input_size[2:])
         return input_tensor.contiguous().view(*squashed_shape)
 
+
 class Token(NamedTuple):
     """
     A simple token representation, keeping track of the token's text, offset in the passage it was
@@ -117,6 +120,7 @@ class Token(NamedTuple):
         The other fields on ``Token`` follow the fields on spacy's ``Token`` object; this is one we
         added, similar to spacy's ``lex_id``.
     """
+
     text: str = None
     idx: int = None
     lemma_: str = None
@@ -134,10 +138,12 @@ class Token(NamedTuple):
 
 
 def show_token(token: Token) -> str:
-    return (f"{token.text} "
-            f"(idx: {token.idx}) "
-            f"(lemma: {token.lemma_}) "
-            f"(pos: {token.pos_}) "
-            f"(tag: {token.tag_}) "
-            f"(dep: {token.dep_}) "
-            f"(ent_type: {token.ent_type_}) ")
+    return (
+        f"{token.text} "
+        f"(idx: {token.idx}) "
+        f"(lemma: {token.lemma_}) "
+        f"(pos: {token.pos_}) "
+        f"(tag: {token.tag_}) "
+        f"(dep: {token.dep_}) "
+        f"(ent_type: {token.ent_type_}) "
+    )

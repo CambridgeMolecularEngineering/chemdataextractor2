@@ -14,20 +14,19 @@ import logging
 import os
 
 
-
-
 log = logging.getLogger(__name__)
 
 
 def memoized_property(fget):
     """Decorator to create memoized properties."""
-    attr_name = '_{}'.format(fget.__name__)
+    attr_name = "_{}".format(fget.__name__)
 
     @functools.wraps(fget)
     def fget_memoized(self):
         if not hasattr(self, attr_name):
             setattr(self, attr_name, fget(self))
         return getattr(self, attr_name)
+
     return property(fget_memoized)
 
 
@@ -40,11 +39,13 @@ def memoize(obj):
         if args not in cache:
             cache[args] = obj(*args, **kwargs)
         return cache[args]
+
     return memoizer
 
 
 class Singleton(type):
     """Singleton metaclass."""
+
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -57,7 +58,7 @@ def flatten(x):
     """Return a single flat list containing elements from nested lists."""
     result = []
     for el in x:
-        if hasattr(el, '__iter__') and not isinstance(el, str):
+        if hasattr(el, "__iter__") and not isinstance(el, str):
             result.extend(flatten(el))
         else:
             result.append(el)

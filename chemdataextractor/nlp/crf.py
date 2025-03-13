@@ -2,6 +2,7 @@
 Conditional random field
 Implemented by AllenNLP 2.5.0
 """
+
 from typing import List, Tuple, Dict, Union
 
 import torch
@@ -12,7 +13,9 @@ from chemdataextractor.nlp import util as util
 VITERBI_DECODING = Tuple[List[int], float]  # a list of tags, and a viterbi score
 
 
-def allowed_transitions(constraint_type: str, labels: Dict[int, str]) -> List[Tuple[int, int]]:
+def allowed_transitions(
+    constraint_type: str, labels: Dict[int, str]
+) -> List[Tuple[int, int]]:
     """
     Given labels and a constraint type, returns the allowed transitions. It will
     additionally include transitions for the start and end states, which are used
@@ -35,7 +38,10 @@ def allowed_transitions(constraint_type: str, labels: Dict[int, str]) -> List[Tu
     num_labels = len(labels)
     start_tag = num_labels
     end_tag = num_labels + 1
-    labels_with_boundaries = list(labels.items()) + [(start_tag, "START"), (end_tag, "END")]
+    labels_with_boundaries = list(labels.items()) + [
+        (start_tag, "START"),
+        (end_tag, "END"),
+    ]
 
     allowed = []
     for from_label_index, from_label in labels_with_boundaries:
@@ -52,7 +58,9 @@ def allowed_transitions(constraint_type: str, labels: Dict[int, str]) -> List[Tu
             else:
                 to_tag = to_label[0]
                 to_entity = to_label[1:]
-            if is_transition_allowed(constraint_type, from_tag, from_entity, to_tag, to_entity):
+            if is_transition_allowed(
+                constraint_type, from_tag, from_entity, to_tag, to_entity
+            ):
                 allowed.append((from_label_index, to_label_index))
     return allowed
 
@@ -106,7 +114,9 @@ def is_transition_allowed(
                 from_tag in ("O", "L", "U") and to_tag in ("O", "B", "U"),
                 # B-x can only transition to I-x or L-x
                 # I-x can only transition to I-x or L-x
-                from_tag in ("B", "I") and to_tag in ("I", "L") and from_entity == to_entity,
+                from_tag in ("B", "I")
+                and to_tag in ("I", "L")
+                and from_entity == to_entity,
             ]
         )
     elif constraint_type == "BIO":
@@ -215,7 +225,9 @@ class ConditionalRandomField(torch.nn.Module):
             torch.nn.init.normal_(self.start_transitions)
             torch.nn.init.normal_(self.end_transitions)
 
-    def _input_likelihood(self, logits: torch.Tensor, mask: torch.BoolTensor) -> torch.Tensor:
+    def _input_likelihood(
+        self, logits: torch.Tensor, mask: torch.BoolTensor
+    ) -> torch.Tensor:
         """
         Computes the (batch_size,) denominator term for the log-likelihood, which is the
         sum of the likelihoods across all possible state sequences.
@@ -309,7 +321,9 @@ class ConditionalRandomField(torch.nn.Module):
 
         # Add the last input if it's not masked.
         last_inputs = logits[-1]  # (batch_size, num_tags)
-        last_input_score = last_inputs.gather(1, last_tags.view(-1, 1))  # (batch_size, 1)
+        last_input_score = last_inputs.gather(
+            1, last_tags.view(-1, 1)
+        )  # (batch_size, 1)
         last_input_score = last_input_score.squeeze()  # (batch_size,)
 
         score = score + last_transition_score + last_input_score * mask[-1]
@@ -381,9 +395,13 @@ class ConditionalRandomField(torch.nn.Module):
             ].data + -10000.0 * (
                 1 - self._constraint_mask[start_tag, :num_tags].detach()
             )
-            transitions[:num_tags, end_tag] = self.end_transitions.detach() * self._constraint_mask[
+            transitions[
                 :num_tags, end_tag
-            ].data + -10000.0 * (1 - self._constraint_mask[:num_tags, end_tag].detach())
+            ] = self.end_transitions.detach() * self._constraint_mask[
+                :num_tags, end_tag
+            ].data + -10000.0 * (
+                1 - self._constraint_mask[:num_tags, end_tag].detach()
+            )
         else:
             transitions[start_tag, :num_tags] = -10000.0 * (
                 1 - self._constraint_mask[start_tag, :num_tags].detach()

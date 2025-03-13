@@ -25,6 +25,7 @@ class AmountOfSubstance(Dimension):
     """
     Dimension subclass for amounts of substances.
     """
+
     pass
 
 
@@ -32,6 +33,7 @@ class AmountOfSubstanceModel(QuantityModel):
     """
     Model for temperatures.
     """
+
     dimensions = AmountOfSubstance()
 
 
@@ -42,7 +44,9 @@ class AmountOfSubstanceUnit(Unit):
     """
 
     def __init__(self, magnitude=0.0, powers=None):
-        super(AmountOfSubstanceUnit, self).__init__(AmountOfSubstance(), magnitude, powers)
+        super(AmountOfSubstanceUnit, self).__init__(
+            AmountOfSubstance(), magnitude, powers
+        )
 
 
 class Mol(AmountOfSubstanceUnit):
@@ -62,7 +66,8 @@ class Mol(AmountOfSubstanceUnit):
     def convert_error_from_standard(self, error):
         return error
 
-units_dict = {R('[Mm](ol)(e(s)?)?', group=0): Mol}
+
+units_dict = {R("[Mm](ol)(e(s)?)?", group=0): Mol}
 # The final element in units_dict is given to ensure that '°C' is parsed correctly,
 # as the tokenizer splits it into two. When a parser element is assigned to None,
 # this means that this element will be ignored when extracting units, but will

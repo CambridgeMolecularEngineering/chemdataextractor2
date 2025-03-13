@@ -19,9 +19,18 @@ import logging
 import copy
 
 
-
 from ..utils import memoized_property
-from .text import Paragraph, Citation, Footnote, Heading, Title, Caption, RichToken, Sentence, Cell
+from .text import (
+    Paragraph,
+    Citation,
+    Footnote,
+    Heading,
+    Title,
+    Caption,
+    RichToken,
+    Sentence,
+    Cell,
+)
 from .element import CaptionedElement
 from .table import Table
 from .figure import Figure
@@ -38,15 +47,14 @@ from ..parse.cem import chemical_name
 log = logging.getLogger(__name__)
 
 
-
 class BaseDocument(collections.abc.Sequence, metaclass=ABCMeta):
     """Abstract base class for a Document."""
 
     def __repr__(self):
-        return '<%s: %s elements>' % (self.__class__.__name__, len(self))
+        return "<%s: %s elements>" % (self.__class__.__name__, len(self))
 
     def __str__(self):
-        return '<%s: %s elements>' % (self.__class__.__name__, len(self))
+        return "<%s: %s elements>" % (self.__class__.__name__, len(self))
 
     def __getitem__(self, index):
         return self.elements[index]
@@ -67,6 +75,7 @@ class BaseDocument(collections.abc.Sequence, metaclass=ABCMeta):
 
 class Document(BaseDocument):
     """A document to extract data from. Contains a list of document elements."""
+
     # TODO: Add a usage example here in the documentation.
 
     def __init__(self, *elements, **kwargs):
@@ -89,37 +98,47 @@ class Document(BaseDocument):
             elif isinstance(element, bytes):
                 # Try guess encoding if byte string
                 encoding = get_encoding(element)
-                log.warning('Guessed bytestring encoding as %s. Use unicode strings to avoid this warning.', encoding)
+                log.warning(
+                    "Guessed bytestring encoding as %s. Use unicode strings to avoid this warning.",
+                    encoding,
+                )
                 element = Paragraph(element.decode(encoding))
             element.document = self
             self._elements.append(element)
-        if 'config' in kwargs.keys():
-            self.config = kwargs['config']
+        if "config" in kwargs.keys():
+            self.config = kwargs["config"]
         else:
             self.config = Config()
-        if 'models' in kwargs.keys():
-            self.models = kwargs['models']
+        if "models" in kwargs.keys():
+            self.models = kwargs["models"]
         else:
             self._models = []
-        if 'adjacent_sections_for_merging' in kwargs:
-            self.adjacent_sections_for_merging = copy.copy(kwargs["adjacent_sections_for_merging"])
+        if "adjacent_sections_for_merging" in kwargs:
+            self.adjacent_sections_for_merging = copy.copy(
+                kwargs["adjacent_sections_for_merging"]
+            )
         else:
             self.adjacent_sections_for_merging = None
-        if 'skip_elements' in kwargs:
+        if "skip_elements" in kwargs:
             self.skip_elements = kwargs["skip_elements"]
         else:
             self.skip_elements = []
-        if '_should_remove_subrecord_if_merged_in' in kwargs:
-            self._should_remove_subrecord_if_merged_in = kwargs["should_remove_subrecord_if_merged_in"]
+        if "_should_remove_subrecord_if_merged_in" in kwargs:
+            self._should_remove_subrecord_if_merged_in = kwargs[
+                "should_remove_subrecord_if_merged_in"
+            ]
         else:
             self._should_remove_subrecord_if_merged_in = False
 
         # Sets parameters from configuration file
         for element in elements:
-            if callable(getattr(element, 'set_config', None)):
+            if callable(getattr(element, "set_config", None)):
                 element.set_config()
         self.skip_parsers = []
-        log.debug('%s: Initializing with %s elements' % (self.__class__.__name__, len(self.elements)))
+        log.debug(
+            "%s: Initializing with %s elements"
+            % (self.__class__.__name__, len(self.elements))
+        )
 
     def add_models(self, models):
         """
@@ -137,7 +156,7 @@ class Document(BaseDocument):
         log.debug("Setting models")
         self._models.extend(models)
         for element in self.elements:
-            if callable(getattr(element, 'add_models', None)):
+            if callable(getattr(element, "add_models", None)):
                 element.add_models(models)
             # print(element.models)
         return
@@ -176,8 +195,8 @@ class Document(BaseDocument):
             :class:`~chemdataextractor.reader.pdf.PdfReader`, and :class:`~chemdataextractor.reader.plaintext.PlainTextReader`.
         """
         if isinstance(f, str):
-            f = io.open(f, 'rb')
-        if not fname and hasattr(f, 'name'):
+            f = io.open(f, "rb")
+        if not fname and hasattr(f, "name"):
             fname = f.name
         return cls.from_string(f.read(), fname=fname, readers=readers)
 
@@ -205,10 +224,11 @@ class Document(BaseDocument):
         """
         if readers is None:
             from ..reader import DEFAULT_READERS
+
             readers = DEFAULT_READERS
 
         if isinstance(fstring, str):
-            raise ReaderError('from_string expects a byte string, not a unicode string')
+            raise ReaderError("from_string expects a byte string, not a unicode string")
 
         for reader in readers:
             # Skip reader if we don't think it can read file
@@ -216,11 +236,11 @@ class Document(BaseDocument):
                 continue
             try:
                 d = reader.readstring(fstring)
-                log.debug('Parsed document with %s' % reader.__class__.__name__)
+                log.debug("Parsed document with %s" % reader.__class__.__name__)
                 return d
             except ReaderError:
                 pass
-        raise ReaderError('Unable to read document')
+        raise ReaderError("Unable to read document")
 
     @property
     def elements(self):
@@ -239,12 +259,18 @@ class Document(BaseDocument):
         """
         log.debug("Getting chemical records")
         records = ModelList()  # Final list of records -- output
-        records_by_el = [] # List of records by element -- used for some merging, should contain all the same records as records
-        head_def_record = None  # Most recent record from a heading, title or short paragraph
-        head_def_record_i = None # Element index of head_def_record
+        records_by_el = (
+            []
+        )  # List of records by element -- used for some merging, should contain all the same records as records
+        head_def_record = (
+            None  # Most recent record from a heading, title or short paragraph
+        )
+        head_def_record_i = None  # Element index of head_def_record
         last_product_record = None
-        title_record = None # Records found in the title
-        record_id_el_map = {} # A dictionary that tells what element each record ID came from. We use their IDs as the records themselves change as they are updated
+        title_record = None  # Records found in the title
+        record_id_el_map = (
+            {}
+        )  # A dictionary that tells what element each record ID came from. We use their IDs as the records themselves change as they are updated
 
         prev_records = []
         el_records = []
@@ -257,7 +283,7 @@ class Document(BaseDocument):
             if type(el) in self.skip_elements:
                 continue
 
-            log.debug("Element %d, type %s" %(i, str(type(el))))
+            log.debug("Element %d, type %s" % (i, str(type(el))))
             last_id_record = None
 
             # FORWARD INTERDEPENDENCY RESOLUTION -- Updated model parsers to reflect defined entities
@@ -267,7 +293,7 @@ class Document(BaseDocument):
             chemical_defs = el.chemical_definitions
 
             for model in el._streamlined_models:
-                if hasattr(model, 'is_id_only'):
+                if hasattr(model, "is_id_only"):
                     model.update(chemical_defs)
                 # TODO(ti250): Why is this an if-else? Shouldn't we be updating this for any model?
                 # - it was this way before I changed this...
@@ -279,7 +305,9 @@ class Document(BaseDocument):
                 self.skip_parsers = []
                 for model in el._streamlined_models:
                     for parser in model.parsers:
-                        if hasattr(parser, 'should_read_section') and not parser.should_read_section(el):
+                        if hasattr(
+                            parser, "should_read_section"
+                        ) and not parser.should_read_section(el):
                             self.skip_parsers.append(parser)
                 # print(f"\nElement: {el.text}")
                 # print(f"SKIP_PARSERS: {self.skip_parsers}")
@@ -288,7 +316,11 @@ class Document(BaseDocument):
             el_records = el.records
             # Save the title compound
             if isinstance(el, Title):
-                if len(el_records) == 1 and isinstance(el_records[0], Compound) and el_records[0].is_id_only:
+                if (
+                    len(el_records) == 1
+                    and isinstance(el_records[0], Compound)
+                    and el_records[0].is_id_only
+                ):
                     title_record = el_records[0]  # TODO: why the first only?
 
             # Reset head_def_record unless consecutive heading with no records
@@ -299,20 +331,34 @@ class Document(BaseDocument):
 
             # Paragraph with single sentence with single ID record considered a head_def_record
             if isinstance(el, Paragraph) and len(el.sentences) == 1:
-                if len(el_records) == 1 and isinstance(el_records[0], Compound) and el_records[0].is_id_only:
+                if (
+                    len(el_records) == 1
+                    and isinstance(el_records[0], Compound)
+                    and el_records[0].is_id_only
+                ):
                     head_def_record = el_records[0]
                     head_def_record_i = i
 
             # Paragraph with multiple sentences
             # We assume that if the first sentence of a paragraph contains only 1 ID Record, we can treat it as a header definition record, unless directly proceeding a header def record
             elif isinstance(el, Paragraph) and len(el.sentences) > 0:
-                if not (isinstance(self.elements[i - 1], Heading) and head_def_record_i == i - 1):
+                if not (
+                    isinstance(self.elements[i - 1], Heading)
+                    and head_def_record_i == i - 1
+                ):
                     first_sent_records = el.sentences[0].records
-                    if len(first_sent_records) == 1 and isinstance(first_sent_records[0], Compound) and first_sent_records[0].is_id_only:
+                    if (
+                        len(first_sent_records) == 1
+                        and isinstance(first_sent_records[0], Compound)
+                        and first_sent_records[0].is_id_only
+                    ):
                         sent_record = first_sent_records[0]
                         if sent_record.names:
-                           longest_name = sorted(sent_record.names, key=len)[0]
-                        if sent_record.labels or (sent_record.names and len(longest_name) > len(el.sentences[0].text) / 2):  # TODO: Why do the length check? Maybe to make sure that the sentence mostly refers to a compound?
+                            longest_name = sorted(sent_record.names, key=len)[0]
+                        if sent_record.labels or (
+                            sent_record.names
+                            and len(longest_name) > len(el.sentences[0].text) / 2
+                        ):  # TODO: Why do the length check? Maybe to make sure that the sentence mostly refers to a compound?
                             head_def_record = sent_record
                             head_def_record_i = i
 
@@ -326,7 +372,7 @@ class Document(BaseDocument):
                     if isinstance(el, Paragraph) and record.labels:
                         last_id_record = record
                     # # Keep track of the most recent compound 'product' record
-                    if record.roles and 'product' in record.roles:
+                    if record.roles and "product" in record.roles:
                         last_product_record = record
 
                     # Heading records with compound ID's
@@ -336,20 +382,33 @@ class Document(BaseDocument):
                         # If 2 consecutive headings with compound ID, merge in from previous
                         if i > 0 and isinstance(self.elements[i - 1], Heading):
                             prev = self.elements[i - 1]
-                            if (len(el_records) == 1 and record.is_id_only and len(prev_records) == 1 and
-                                isinstance(prev_records[0], Compound) and prev_records[0].is_id_only and not (record.labels and prev_records[0].labels) and
-                                    not (record.names and prev_records[0].names)):
+                            if (
+                                len(el_records) == 1
+                                and record.is_id_only
+                                and len(prev_records) == 1
+                                and isinstance(prev_records[0], Compound)
+                                and prev_records[0].is_id_only
+                                and not (record.labels and prev_records[0].labels)
+                                and not (record.names and prev_records[0].names)
+                            ):
                                 record.names.update(prev_records[0].names)
                                 record.labels.update(prev_records[0].labels)
                                 record.roles.update(prev_records[0].roles)
 
                 # Unidentified records -- those without compound names or labels
                 if record.is_unidentified:
-                    if hasattr(record, 'compound'):
+                    if hasattr(record, "compound"):
                         # We have property values but no names or labels... try merge those from previous records
-                        if isinstance(el, Paragraph) and (head_def_record or last_product_record or last_id_record or title_record):
+                        if isinstance(el, Paragraph) and (
+                            head_def_record
+                            or last_product_record
+                            or last_id_record
+                            or title_record
+                        ):
                             # head_def_record from heading takes priority if the heading directly precedes the paragraph ( NOPE: or the last_id_record has no name)
-                            if head_def_record_i and head_def_record_i + 1 == i: # or (last_id_record and not last_id_record.names)):
+                            if (
+                                head_def_record_i and head_def_record_i + 1 == i
+                            ):  # or (last_id_record and not last_id_record.names)):
                                 if head_def_record:
                                     record.compound = head_def_record
                                 elif last_id_record:
@@ -392,15 +451,15 @@ class Document(BaseDocument):
         # Merge abbreviation definitions
         for record in records:
             compound = None
-            if hasattr(record, 'compound'):
+            if hasattr(record, "compound"):
                 compound = record.compound
             elif isinstance(record, Compound):
                 compound = record
             if compound is not None:
                 for short, long_, entity in self.abbreviation_definitions:
-                    if entity == 'CM':
-                        name = ' '.join(long_)
-                        abbrev = ' '.join(short)
+                    if entity == "CM":
+                        name = " ".join(long_)
+                        abbrev = " ".join(short)
                         if compound.names:
                             if name in compound.names and abbrev not in compound.names:
                                 compound.names.add(abbrev)
@@ -420,12 +479,14 @@ class Document(BaseDocument):
                 r_compound = None
                 if isinstance(r, Compound):
                     r_compound = r
-                elif hasattr(r, 'compound') and isinstance(r.compound, Compound):
+                elif hasattr(r, "compound") and isinstance(r.compound, Compound):
                     r_compound = r.compound
                 other_r_compound = None
                 if isinstance(other_r, Compound):
                     other_r_compound = other_r
-                elif hasattr(other_r, 'compound') and isinstance(other_r.compound, Compound):
+                elif hasattr(other_r, "compound") and isinstance(
+                    other_r.compound, Compound
+                ):
                     other_r_compound = other_r.compound
                 if r_compound and other_r_compound:
                     # Strip whitespace and lowercase to compare names
@@ -437,21 +498,31 @@ class Document(BaseDocument):
                     if other_r_names is None:
                         other_r_names = []
 
-                    rnames_std = {''.join(n.split()).lower() for n in r_names}
-                    onames_std = {''.join(n.split()).lower() for n in other_r_names}
+                    rnames_std = {"".join(n.split()).lower() for n in r_names}
+                    onames_std = {"".join(n.split()).lower() for n in other_r_names}
 
                     # Clashing labels, don't merge
-                    if (r_compound.labels is not None and
-                        other_r_compound.labels is not None and
-                        len(r_compound.labels - other_r_compound.labels) > 0 and len(other_r_compound.labels - r_compound.labels) > 0):
+                    if (
+                        r_compound.labels is not None
+                        and other_r_compound.labels is not None
+                        and len(r_compound.labels - other_r_compound.labels) > 0
+                        and len(other_r_compound.labels - r_compound.labels) > 0
+                    ):
                         j += 1
                         continue
 
-                    if (r_compound.labels is not None and
-                        other_r_compound.labels is not None and
-                        rnames_std is not None and
-                        onames_std is not None and
-                        (any(n in rnames_std for n in onames_std) or any(l in r_compound.labels for l in other_r_compound.labels))):
+                    if (
+                        r_compound.labels is not None
+                        and other_r_compound.labels is not None
+                        and rnames_std is not None
+                        and onames_std is not None
+                        and (
+                            any(n in rnames_std for n in onames_std)
+                            or any(
+                                l in r_compound.labels for l in other_r_compound.labels
+                            )
+                        )
+                    ):
                         r_compound.merge(other_r_compound)
                         other_r_compound.merge(r_compound)
                         if isinstance(r, Compound) and isinstance(other_r, Compound):
@@ -490,15 +561,23 @@ class Document(BaseDocument):
                 backwards_index = i - offset
                 forwards_index = i + offset
                 if backwards_index >= 0 and len(records_by_el[backwards_index]) != 0:
-                    backwards_el = record_id_el_map[id(records_by_el[backwards_index][0])]
+                    backwards_el = record_id_el_map[
+                        id(records_by_el[backwards_index][0])
+                    ]
                     distance = self._element_distance(el, backwards_el)
                     # If we're going backwards, we should iterate over the corresponding record backwards
                     # as those at the end will be closest to the current record
-                    merge_candidates.extend((distance, candidate) for candidate in reversed(records_by_el[backwards_index]))
+                    merge_candidates.extend(
+                        (distance, candidate)
+                        for candidate in reversed(records_by_el[backwards_index])
+                    )
                 if forwards_index < length and len(records_by_el[forwards_index]) != 0:
                     forwards_el = record_id_el_map[id(records_by_el[forwards_index][0])]
                     distance = self._element_distance(el, forwards_el)
-                    merge_candidates.extend((distance, candidate) for candidate in records_by_el[forwards_index])
+                    merge_candidates.extend(
+                        (distance, candidate)
+                        for candidate in records_by_el[forwards_index]
+                    )
                 offset += 1
 
             # For each record in this current element, try merging with all of the merge candidates. The merge
@@ -620,10 +699,8 @@ class Document(BaseDocument):
 
     @property
     def metadata(self):
-        """Return metadata information
-        """
+        """Return metadata information"""
         return [el for el in self.elements if isinstance(el, MetaData)][0]
-
 
     @property
     def abbreviation_definitions(self):
@@ -667,7 +744,7 @@ class Document(BaseDocument):
         elements = []
         for element in self.elements:
             elements.append(element.serialize())
-        data = {'type': 'document', 'elements': elements}
+        data = {"type": "document", "elements": elements}
         return data
 
     def to_json(self, *args, **kwargs):
@@ -682,8 +759,8 @@ class Document(BaseDocument):
         html_lines = ['<div class="cde-document">']
         for element in self.elements:
             html_lines.append(element._repr_html_())
-        html_lines.append('</div>')
-        return '\n'.join(html_lines)
+        html_lines.append("</div>")
+        return "\n".join(html_lines)
 
     def _batch_assign_tags(self, tagger, tag_type):
         """
@@ -701,7 +778,11 @@ class Document(BaseDocument):
             if element.elements is not None:
                 elements.extend(element.elements)
             if hasattr(element, "tokens") and tagger in element.taggers:
-                if len(element.tokens) and isinstance(element.tokens[0], RichToken) and tag_type not in element.tokens[0]._tags:
+                if (
+                    len(element.tokens)
+                    and isinstance(element.tokens[0], RichToken)
+                    and tag_type not in element.tokens[0]._tags
+                ):
                     all_tokens.append(element.tokens)
 
         if hasattr(tagger, "batch_tag_for_type"):
@@ -727,8 +808,12 @@ class Document(BaseDocument):
                             sentences_for_parser_at_index.append([sentence])
                         else:
                             batch_parser_index = self._batch_parsers.index(parser)
-                            sentences_for_parser_at_index[batch_parser_index].append(sentence)
-        for parser, sentences in zip(self._batch_parsers, sentences_for_parser_at_index):
+                            sentences_for_parser_at_index[batch_parser_index].append(
+                                sentence
+                            )
+        for parser, sentences in zip(
+            self._batch_parsers, sentences_for_parser_at_index
+        ):
             records_dict = parser.batch_parse_sentences(sentences)
             parser._batch_parsed_records_dict = records_dict
 
@@ -778,27 +863,29 @@ class Document(BaseDocument):
                 elements.extend(element.elements)
         return False
 
-
     def adjacent_sentences(self, sentence, num_adjacent=2):
         sentences = self.sentences
         sentence_index = sentences.index(sentence)
-        adjacent_sentences = sentences[max(0, sentence_index - num_adjacent): sentence_index + num_adjacent]
+        adjacent_sentences = sentences[
+            max(0, sentence_index - num_adjacent) : sentence_index + num_adjacent
+        ]
         return adjacent_sentences
-
 
     def preceding_sentences(self, sentence, num_preceding=2):
         sentences = self.sentences
         sentence_index = sentences.index(sentence)
-        adjacent_sentences = sentences[max(0, sentence_index - num_preceding): sentence_index]
+        adjacent_sentences = sentences[
+            max(0, sentence_index - num_preceding) : sentence_index
+        ]
         return adjacent_sentences
-
 
     def following_sentences(self, sentence, num_following=2):
         sentences = self.sentences
         sentence_index = sentences.index(sentence)
-        adjacent_sentences = sentences[sentence_index + 1: sentence_index + num_following + 1]
+        adjacent_sentences = sentences[
+            sentence_index + 1 : sentence_index + num_following + 1
+        ]
         return adjacent_sentences
-
 
     def _element_distance(self, element_a, element_b):
         """
@@ -812,23 +899,29 @@ class Document(BaseDocument):
             index_a = self.elements.index(element_a)
             index_b = self.elements.index(element_b)
         except ValueError as e:
-            raise ValueError(f"Elements {index_a} and {index_b} not in elements for this document")
+            raise ValueError(
+                f"Elements {index_a} and {index_b} not in elements for this document"
+            )
         if index_a == index_b:
             return SentenceRange()
         if index_a > index_b:
             index_a, index_b = index_b, index_a
         num_sections = 0
         num_paragraphs = 0
-        for el in self.elements[index_a + 1: index_b + 1]:
+        for el in self.elements[index_a + 1 : index_b + 1]:
             if isinstance(el, Heading):
                 num_paragraphs = 0
                 num_sections += 1
             else:
                 num_paragraphs += 1
         if num_paragraphs == 0 and num_sections == 0:
-            print(f"SentenceRange returned despite non-equal indices ({index_a}, {index_b}), this is probably a bug")
+            print(
+                f"SentenceRange returned despite non-equal indices ({index_a}, {index_b}), this is probably a bug"
+            )
             return SentenceRange()
-        if self._are_adjacent_sections_for_merging(self._section_name_for_index(index_a), self._section_name_for_index(index_b)):
+        if self._are_adjacent_sections_for_merging(
+            self._section_name_for_index(index_a), self._section_name_for_index(index_b)
+        ):
             # Should this be 1?
             num_sections = 0
         return num_sections * SectionRange() + num_paragraphs * ParagraphRange()
@@ -848,7 +941,11 @@ class Document(BaseDocument):
         return False
 
     def _are_adjacent_sections_for_merging(self, section_a, section_b):
-        if self.adjacent_sections_for_merging is None or section_a is None or section_b is None:
+        if (
+            self.adjacent_sections_for_merging is None
+            or section_a is None
+            or section_b is None
+        ):
             return False
         section_a = section_a.lower()
         section_b = section_b.lower()

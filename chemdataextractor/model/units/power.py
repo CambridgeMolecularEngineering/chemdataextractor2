@@ -54,7 +54,6 @@ class Watt(PowerUnit):
         return error
 
 
-units_dict = {R('(W|w)(att(s)?)?', group=0): Watt}
+units_dict = {R("(W|w)(att(s)?)?", group=0): Watt}
 Power.units_dict.update(units_dict)
 Power.standard_units = Watt()
-

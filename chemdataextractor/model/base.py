@@ -42,7 +42,8 @@ class BaseType(metaclass=ABCMeta):
         updatable=False,
         binding=False,
         ignore_when_merging=False,
-        never_merge=False):
+        never_merge=False,
+    ):
         """
 
         :param default: (Optional) The default value for this field if none is set.
@@ -67,8 +68,13 @@ class BaseType(metaclass=ABCMeta):
         self.ignore_when_merging = ignore_when_merging
         self.never_merge = never_merge
         if self.parse_expression is None and self.updatable:
-            print('No parse_expression supplied but updatable set as True for ', type(self))
-            print('updatable refers to whether parse_expression can be changed by the document as parsing occurs. Setting updatable to False.')
+            print(
+                "No parse_expression supplied but updatable set as True for ",
+                type(self),
+            )
+            print(
+                "updatable refers to whether parse_expression can be changed by the document as parsing occurs. Setting updatable to False."
+            )
             self.updatable = False
         self.parse_expression = copy.copy(parse_expression)
         self._default_parse_expression = parse_expression
@@ -106,7 +112,7 @@ class BaseType(metaclass=ABCMeta):
 
     def serialize(self, value, primitive=False):
         """Serialize this field."""
-        if hasattr(value, 'serialize'):
+        if hasattr(value, "serialize"):
             # i.e. value is a nested model
             return value.serialize(primitive=primitive)
         else:
@@ -238,8 +244,7 @@ class InferredProperty(BaseType):
         if value is not None and value != self.default:
             return value
 
-        value = self.inferrer(instance[self.origin_field],
-                              instance)
+        value = self.inferrer(instance[self.origin_field], instance)
         self.__set__(instance, value)
         if value is None:
             value = self.default
@@ -270,7 +275,9 @@ class SetType(BaseType):
         if value is None:
             instance._values[self.name] = None
         else:
-            instance._values[self.name] = set(self.field.process(v) for v in value if v is not None)
+            instance._values[self.name] = set(
+                self.field.process(v) for v in value if v is not None
+            )
 
     def serialize(self, value, primitive=False):
         """Serialize this field."""
@@ -321,15 +328,14 @@ class ModelMeta(ABCMeta):
     def required_fields(cls):
         output = []
         for key, field in cls.fields.items():
-            if hasattr(field, 'model_class'):
+            if hasattr(field, "model_class"):
                 nest_req_fields = field.model_class.required_fields
                 for nrf in nest_req_fields:
-                    output.append(key + '__' + nrf)
+                    output.append(key + "__" + nrf)
             else:
                 if field.required:
                     output.append(key)
         return output
-
 
 
 class BaseModel(metaclass=ModelMeta):
@@ -390,9 +396,13 @@ class BaseModel(metaclass=ModelMeta):
     def deserialize(cls, serialized):
         record = cls()
         flattened_serialized = cls._flatten_serialized(serialized)
-        cleaned_serialized = [(cls._clean_key(key), value) for (key, value) in flattened_serialized]
+        cleaned_serialized = [
+            (cls._clean_key(key), value) for (key, value) in flattened_serialized
+        ]
         for key, value in cleaned_serialized:
-            if isinstance(cls.fields[key[0]], ListType) and isinstance(cls.fields[key[0]].field, ModelType):
+            if isinstance(cls.fields[key[0]], ListType) and isinstance(
+                cls.fields[key[0]].field, ModelType
+            ):
                 model = cls.fields[key[0]].field.model_class
                 value = [model.deserialize(val) for val in value]
                 record[key] = value
@@ -406,7 +416,12 @@ class BaseModel(metaclass=ModelMeta):
         for key, value in serialized.items():
             if isinstance(value, dict):
                 flattened_for_key = cls._flatten_serialized(value)
-                flattened.extend([([key, *sub_key], sub_value) for (sub_key, sub_value) in flattened_for_key])
+                flattened.extend(
+                    [
+                        ([key, *sub_key], sub_value)
+                        for (sub_key, sub_value) in flattened_for_key
+                    ]
+                )
             else:
                 flattened.append(([key], value))
         return flattened
@@ -419,21 +434,22 @@ class BaseModel(metaclass=ModelMeta):
     def get_confidence(self, key, default_confidence=None, pooling_method=min_value):
         if not isinstance(key, list):
             key = self._get_keypath(key)
-        if len(key) == 1 and key[0] == 'self':
+        if len(key) == 1 and key[0] == "self":
             return self.total_confidence()
         if key[0] in self.fields:
             try:
                 attribute = getattr(self, key[0])
 
                 # Should raise an error for empty fields as empty fields cannot have confidences
-                if ((attribute is None
-                    or (attribute == [] and len(key) != 1))):
+                if attribute is None or (attribute == [] and len(key) != 1):
                     raise AttributeError()
 
                 if len(key) == 1:
                     confidence = None
                     if isinstance(attribute, BaseModel):
-                        confidence = attribute.total_confidence(pooling_method=pooling_method)
+                        confidence = attribute.total_confidence(
+                            pooling_method=pooling_method
+                        )
                     else:
                         if key[0] in self._confidences:
                             confidence = self._confidences[key[0]]
@@ -453,19 +469,18 @@ class BaseModel(metaclass=ModelMeta):
         try:
             if not isinstance(key, list):
                 key = self._get_keypath(key)
-            if len(key) == 1 and key[0] == 'self':
-                self._confidences['self'] = value
+            if len(key) == 1 and key[0] == "self":
+                self._confidences["self"] = value
             elif key[0] in self.fields:
                 attribute = getattr(self, key[0])
 
                 # Should raise an error for empty fields as empty fields cannot have confidences
-                if ((attribute is None
-                    or (attribute == [] and len(key) != 1))):
+                if attribute is None or (attribute == [] and len(key) != 1):
                     raise AttributeError()
 
                 if len(key) == 1:
                     if isinstance(attribute, BaseModel):
-                        attribute._confidences['self'] = value
+                        attribute._confidences["self"] = value
                     else:
                         self._confidences[key[0]] = value
                 else:
@@ -476,8 +491,8 @@ class BaseModel(metaclass=ModelMeta):
             pass
 
     def total_confidence(self, pooling_method=min_value, _account_for_merging=False):
-        if 'self' in self._confidences and self._confidences['self'] is not None:
-            return self._confidences['self']
+        if "self" in self._confidences and self._confidences["self"] is not None:
+            return self._confidences["self"]
 
         total_confidence = pooling_method(self)
         if total_confidence is None:
@@ -511,7 +526,7 @@ class BaseModel(metaclass=ModelMeta):
         If there is no 'compound' field associated with the model but the compound is contextual
         """
         try:
-            if 'compound' not in self.fields:
+            if "compound" not in self.fields:
                 return False
             if not self.compound.contextual_fulfilled:
                 return self.compound.is_unidentified
@@ -519,10 +534,10 @@ class BaseModel(metaclass=ModelMeta):
             return True
 
     def __repr__(self):
-        return '<%s>' % (self.__class__.__name__,)
+        return "<%s>" % (self.__class__.__name__,)
 
     def __str__(self):
-        return '<%s>' % (self.__class__.__name__,)
+        return "<%s>" % (self.__class__.__name__,)
 
     def __eq__(self, other):
         # TODO: Check this actually works as expected (what about default values?)
@@ -558,12 +573,12 @@ class BaseModel(metaclass=ModelMeta):
             if key[0] in self.fields:
                 attribute = getattr(self, key[0])
 
-                if ((attribute is None
-                    or (attribute == [] and len(key) != 1))
-                    and create_defaults):
+                if (
+                    attribute is None or (attribute == [] and len(key) != 1)
+                ) and create_defaults:
                     field = self.fields[key[0]]
                     is_list = False
-                    while hasattr(field, 'field'):
+                    while hasattr(field, "field"):
                         if isinstance(field, ListType):
                             is_list = True
                         field = field.field
@@ -571,7 +586,7 @@ class BaseModel(metaclass=ModelMeta):
                     if isinstance(field, ModelType):
                         created_attr = field.model_class()
                     else:
-                        created_attr = field('')
+                        created_attr = field("")
                     if is_list:
                         created_attr = [created_attr]
                     attribute = created_attr
@@ -638,14 +653,23 @@ class BaseModel(metaclass=ModelMeta):
         for definition in definitions:
             for field in cls.fields:
                 if cls.fields[field].updatable:
-                    matches = [i for i in cls.fields[field].parse_expression.scan(definition['tokens'])]
+                    matches = [
+                        i
+                        for i in cls.fields[field].parse_expression.scan(
+                            definition["tokens"]
+                        )
+                    ]
                     # print(matches)
                     if any(matches):
                         cls._updated = True
                         if strict:
-                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | W(str(definition['specifier']))
+                            cls.fields[field].parse_expression = cls.fields[
+                                field
+                            ].parse_expression | W(str(definition["specifier"]))
                         else:
-                            cls.fields[field].parse_expression = cls.fields[field].parse_expression | I(str(definition['specifier']))
+                            cls.fields[field].parse_expression = cls.fields[
+                                field
+                            ].parse_expression | I(str(definition["specifier"]))
         return
 
     @property
@@ -654,8 +678,11 @@ class BaseModel(metaclass=ModelMeta):
         True/False dependent on if a specifier within the model was updated.
         """
         for field_name, field in self.fields.items():
-            if hasattr(field, 'model_class'):
-                if hasattr(self[field_name], 'updated') and self[field_name].was_updated:
+            if hasattr(field, "model_class"):
+                if (
+                    hasattr(self[field_name], "updated")
+                    and self[field_name].was_updated
+                ):
                     return True
         return self.was_updated
 
@@ -681,17 +708,19 @@ class BaseModel(metaclass=ModelMeta):
         """
 
         for field_name, field in self.fields.items():
-            if hasattr(field, 'model_class'):
+            if hasattr(field, "model_class"):
                 if self[field_name] == field.default and field.contextual:
                     return False
-                if hasattr(self[field_name], 'contextual_fulfilled') and \
-                   not self[field_name].contextual_fulfilled:
-                    log.debug('Is contextual')
+                if (
+                    hasattr(self[field_name], "contextual_fulfilled")
+                    and not self[field_name].contextual_fulfilled
+                ):
+                    log.debug("Is contextual")
                     return False
             elif field.contextual and self[field_name] == field.default:
-                log.debug('Is contextual')
+                log.debug("Is contextual")
                 return False
-        log.debug('Not contextual')
+        log.debug("Not contextual")
         return True
 
     @property
@@ -716,23 +745,33 @@ class BaseModel(metaclass=ModelMeta):
 
     def _required_fulfilled(self, strict):
         for field_name, field in self.fields.items():
-            if hasattr(field, 'model_class'):
-                if self[field_name] == field.default \
-                   and field.required and math.isclose(field.requiredness, 1.0):
+            if hasattr(field, "model_class"):
+                if (
+                    self[field_name] == field.default
+                    and field.required
+                    and math.isclose(field.requiredness, 1.0)
+                ):
                     if not strict and field.contextual:
                         pass
                     else:
                         return False
-                if field.required and field.requiredness == 1.0 \
-                   and hasattr(self[field_name], 'required_fulfilled') \
-                   and not self[field_name].required_fulfilled:
+                if (
+                    field.required
+                    and field.requiredness == 1.0
+                    and hasattr(self[field_name], "required_fulfilled")
+                    and not self[field_name].required_fulfilled
+                ):
 
                     if not strict and field.contextual:
                         pass
                     else:
-                        log.debug('Required unfulfilled')
+                        log.debug("Required unfulfilled")
                         return False
-            elif field.required and field.requiredness == 1.0 and self[field_name] == field.default:
+            elif (
+                field.required
+                and field.requiredness == 1.0
+                and self[field_name] == field.default
+            ):
                 # print(self.serialize(), field_name, "did not exist")
                 if not strict and field.contextual:
                     pass
@@ -750,7 +789,7 @@ class BaseModel(metaclass=ModelMeta):
             if value is not None:
                 value = field.serialize(value, primitive=primitive)
             # Skip empty fields unless field.null
-            if not field.null and value in [None, '', []]:
+            if not field.null and value in [None, "", []]:
                 continue
             data[field.name] = value
         record = {self.__class__.__name__: data}
@@ -783,7 +822,7 @@ class BaseModel(metaclass=ModelMeta):
             return False
         for field_name, field in self.fields.items():
             # Method works recursively so it works with nested models
-            if hasattr(field, 'model_class'):
+            if hasattr(field, "model_class"):
                 if not self[field_name]:
                     if other[field_name]:
                         return False
@@ -855,10 +894,15 @@ class BaseModel(metaclass=ModelMeta):
                     # no point trying to merge
                     return False
                 for field_name, field in self.fields.items():
-                    if hasattr(field, 'field') and hasattr(field.field, 'model_class') and isinstance(other, field.field.model_class):
-                        log.debug('model class list case')
+                    if (
+                        hasattr(field, "field")
+                        and hasattr(field.field, "model_class")
+                        and isinstance(other, field.field.model_class)
+                    ):
+                        log.debug("model class list case")
                         # Basic merging in of lists/sets of models by just creating a list with one element
-                        if (not field.never_merge
+                        if (
+                            not field.never_merge
                             and field.contextual
                             and not self[field_name]
                             and other
@@ -869,24 +913,30 @@ class BaseModel(metaclass=ModelMeta):
                             self[field_name] = [other]
                             # self.merge_confidence(other, field_name)
                             did_merge = True
-                    elif hasattr(field, 'model_class') and isinstance(other, field.model_class) and not field.never_merge:
+                    elif (
+                        hasattr(field, "model_class")
+                        and isinstance(other, field.model_class)
+                        and not field.never_merge
+                    ):
                         # Merging when there already exists a partial record
-                        if (self[field_name] is not None
+                        if (
+                            self[field_name] is not None
                             and field.contextual
                             and not self[field_name].contextual_fulfilled
                             and distance <= self.contextual_range(field_name)
                             and distance > self.no_merge_range(field_name)
                         ):
-                            log.debug('reconciling model classes')
+                            log.debug("reconciling model classes")
                             if self[field_name].merge_contextual(other):
                                 did_merge = True
                         # Merging when there is no partial record
-                        elif (field.contextual
-                              and not self[field_name]
-                              and other
-                              and distance <= self.contextual_range(field_name)
-                              and distance > self.no_merge_range(field_name)
-                            ):
+                        elif (
+                            field.contextual
+                            and not self[field_name]
+                            and other
+                            and distance <= self.contextual_range(field_name)
+                            and distance > self.no_merge_range(field_name)
+                        ):
                             log.debug(field_name)
                             self[field_name] = copy.copy(other)
                             # self.merge_confidence(other, field_name)
@@ -894,12 +944,13 @@ class BaseModel(metaclass=ModelMeta):
             # Case when merging two records of the same type
             elif self._compatible(other):
                 for field_name, field in self.fields.items():
-                    if (field.contextual
-                       and not field.never_merge
-                       and not self[field_name]
-                       and other.get(field_name, None)
-                       and distance <= self.contextual_range(field_name)
-                       and distance > self.no_merge_range(field_name)
+                    if (
+                        field.contextual
+                        and not field.never_merge
+                        and not self[field_name]
+                        and other.get(field_name, None)
+                        and distance <= self.contextual_range(field_name)
+                        and distance > self.no_merge_range(field_name)
                     ):
                         self[field_name] = other[field_name]
                         self.merge_confidence(other, field_name)
@@ -907,8 +958,8 @@ class BaseModel(metaclass=ModelMeta):
         self._consolidate_binding()
         if did_merge:
             self._contextual_merge_count += 1
-            if 'self' in other._confidences:
-                self.merge_confidence(other, 'self')
+            if "self" in other._confidences:
+                self.merge_confidence(other, "self")
             if should_keep_both_records:
                 did_merge = False
         return did_merge
@@ -961,26 +1012,35 @@ class BaseModel(metaclass=ModelMeta):
                     # no point trying to merge
                     return False
                 for field_name, field in self.fields.items():
-                    if hasattr(field, 'field') and hasattr(field.field, 'model_class') and isinstance(other, field.field.model_class) and not field.never_merge:
-                        log.debug('model list case')
-                        if (
-                            self[field_name]
-                            and distance > self.no_merge_range(field_name)
+                    if (
+                        hasattr(field, "field")
+                        and hasattr(field.field, "model_class")
+                        and isinstance(other, field.field.model_class)
+                        and not field.never_merge
+                    ):
+                        log.debug("model list case")
+                        if self[field_name] and distance > self.no_merge_range(
+                            field_name
                         ):
                             for el in self[field_name]:
                                 if el.merge_all(other):
                                     did_merge = True
-                        elif (not self[field_name]
-                              and other
-                              and distance > self.no_merge_range(field_name)):
+                        elif (
+                            not self[field_name]
+                            and other
+                            and distance > self.no_merge_range(field_name)
+                        ):
                             log.debug(field_name)
                             self[field_name] = [copy.copy(other)]
                             did_merge = True
-                    elif hasattr(field, 'model_class') and isinstance(other, field.model_class) and not field.never_merge:
-                        log.debug('model class case')
-                        if (
-                            self[field_name]
-                            and distance > self.no_merge_range(field_name)
+                    elif (
+                        hasattr(field, "model_class")
+                        and isinstance(other, field.model_class)
+                        and not field.never_merge
+                    ):
+                        log.debug("model class case")
+                        if self[field_name] and distance > self.no_merge_range(
+                            field_name
                         ):
                             if self[field_name].merge_all(other):
                                 did_merge = True
@@ -1005,8 +1065,8 @@ class BaseModel(metaclass=ModelMeta):
                         self.merge_confidence(other, field_name)
         self._consolidate_binding()
         if did_merge:
-            if 'self' in other._confidences:
-                self.merge_confidence(other, 'self')
+            if "self" in other._confidences:
+                self.merge_confidence(other, "self")
             if should_keep_both_records:
                 did_merge = False
         return did_merge
@@ -1014,11 +1074,17 @@ class BaseModel(metaclass=ModelMeta):
     def merge_confidence(self, other, field_name):
         # Keep the lower confidence value
         self_confidence = self.get_confidence(field_name, pooling_method=lambda x: None)
-        other_confidence = other.get_confidence(field_name, pooling_method=lambda x: None)
+        other_confidence = other.get_confidence(
+            field_name, pooling_method=lambda x: None
+        )
         if self_confidence is None and other_confidence is not None:
             self.set_confidence(field_name, other_confidence)
         elif self_confidence is not None and other_confidence is not None:
-            new_confidence = self_confidence if self_confidence < other_confidence else other_confidence
+            new_confidence = (
+                self_confidence
+                if self_confidence < other_confidence
+                else other_confidence
+            )
             self.set_confidence(field_name, new_confidence)
 
     def _compatible(self, other):
@@ -1032,24 +1098,32 @@ class BaseModel(metaclass=ModelMeta):
             match = True
             for field_name, field in self.fields.items():
                 if isinstance(field, ModelType):
-                    if (not field.ignore_when_merging
-                    and self[field_name] is not None
-                    and other[field_name] is not None
-                    and not self[field_name]._compatible(other[field_name])):
+                    if (
+                        not field.ignore_when_merging
+                        and self[field_name] is not None
+                        and other[field_name] is not None
+                        and not self[field_name]._compatible(other[field_name])
+                    ):
                         match = False
                         break
                 elif isinstance(field, ListType) or isinstance(field, SetType):
-                    if (not field.ignore_when_merging
-                      and self[field_name] is not None and len(self[field_name])
-                      and other[field_name] is not None and len(other[field_name])
-                      and self[field_name] != other[field_name]):
+                    if (
+                        not field.ignore_when_merging
+                        and self[field_name] is not None
+                        and len(self[field_name])
+                        and other[field_name] is not None
+                        and len(other[field_name])
+                        and self[field_name] != other[field_name]
+                    ):
                         match = False
                         break
                 else:
-                    if (not field.ignore_when_merging
-                      and self[field_name] is not None
-                      and other[field_name] is not None
-                      and self[field_name] != other[field_name]):
+                    if (
+                        not field.ignore_when_merging
+                        and self[field_name] is not None
+                        and other[field_name] is not None
+                        and self[field_name] != other[field_name]
+                    ):
                         match = False
                         break
         return match
@@ -1060,10 +1134,12 @@ class BaseModel(metaclass=ModelMeta):
             # Check if the other seems to be describing the same thing as self.
             match = True
             for field_name, field in self.fields.items():
-                if (not field.ignore_when_merging
-                  and self[field_name] is not None
-                  and other[field_name] is not None
-                  and self[field_name] != other[field_name]):
+                if (
+                    not field.ignore_when_merging
+                    and self[field_name] is not None
+                    and other[field_name] is not None
+                    and self[field_name] != other[field_name]
+                ):
                     match = False
                     break
         return match
@@ -1074,17 +1150,21 @@ class BaseModel(metaclass=ModelMeta):
             # Check if the other seems to be describing the same thing as self.
             for field_name, field in self.fields.items():
                 if isinstance(field, ModelType):
-                    if (field.ignore_when_merging
-                    and self[field_name] is not None
-                    and other[field_name] is not None
-                    and not self[field_name]._compatible(other[field_name])):
+                    if (
+                        field.ignore_when_merging
+                        and self[field_name] is not None
+                        and other[field_name] is not None
+                        and not self[field_name]._compatible(other[field_name])
+                    ):
                         should_keep_both = True
                         break
                 else:
-                    if (field.ignore_when_merging
-                      and self[field_name] is not None
-                      and other[field_name] is not None
-                      and self[field_name] != other[field_name]):
+                    if (
+                        field.ignore_when_merging
+                        and self[field_name] is not None
+                        and other[field_name] is not None
+                        and self[field_name] != other[field_name]
+                    ):
                         should_keep_both = True
                         break
         return should_keep_both
@@ -1115,12 +1195,18 @@ class BaseModel(metaclass=ModelMeta):
         """
         model_set = {cls}
         for field_name, field in cls.fields.items():
-            while hasattr(field, 'field') and (include_inferred or not isinstance(field, InferredProperty)):
-                if hasattr(field, 'model_class'):
-                    model_set.update(field.model_class.flatten(include_inferred=include_inferred))
+            while hasattr(field, "field") and (
+                include_inferred or not isinstance(field, InferredProperty)
+            ):
+                if hasattr(field, "model_class"):
+                    model_set.update(
+                        field.model_class.flatten(include_inferred=include_inferred)
+                    )
                 field = field.field
-            if hasattr(field, 'model_class'):
-                model_set.update(field.model_class.flatten(include_inferred=include_inferred))
+            if hasattr(field, "model_class"):
+                model_set.update(
+                    field.model_class.flatten(include_inferred=include_inferred)
+                )
         log.debug(model_set)
         return model_set
 
@@ -1154,17 +1240,23 @@ class BaseModel(metaclass=ModelMeta):
         """
         subrecords_set = {self}
         for field_name, field in self.fields.items():
-            while hasattr(field, 'field') and (include_inferred or not isinstance(field, InferredProperty)):
-                if hasattr(field, 'model_class'):
+            while hasattr(field, "field") and (
+                include_inferred or not isinstance(field, InferredProperty)
+            ):
+                if hasattr(field, "model_class"):
                     break
                 field = field.field
-            if hasattr(field, 'model_class') and self[field_name]:
+            if hasattr(field, "model_class") and self[field_name]:
                 subrecord = self[field_name]
                 if isinstance(subrecord, list):
                     for list_el in subrecord:
-                        subrecords_set.update(list_el._flatten_instance(include_inferred=include_inferred))
+                        subrecords_set.update(
+                            list_el._flatten_instance(include_inferred=include_inferred)
+                        )
                 else:
-                    subrecords_set.update(subrecord._flatten_instance(include_inferred=include_inferred))
+                    subrecords_set.update(
+                        subrecord._flatten_instance(include_inferred=include_inferred)
+                    )
         return subrecords_set
 
     @property
@@ -1212,10 +1304,16 @@ class BaseModel(metaclass=ModelMeta):
             for field_name, field in other.fields.items():
                 if field_name in binding_properties:
                     if other[field_name]:
-                        if not (binding_properties[field_name].is_superset(other[field_name]) or
-                                binding_properties[field_name].is_subset(other[field_name])):
+                        if not (
+                            binding_properties[field_name].is_superset(
+                                other[field_name]
+                            )
+                            or binding_properties[field_name].is_subset(
+                                other[field_name]
+                            )
+                        ):
                             return False
-                elif hasattr(field, 'model_class'):
+                elif hasattr(field, "model_class"):
                     if not self._binding_compatible(other[field_name]):
                         return False
         return True
@@ -1229,9 +1327,8 @@ class BaseModel(metaclass=ModelMeta):
         for field_name, field in self.fields.items():
             if field_name in binding_properties:
                 self[field_name] = binding_properties[field_name]
-            elif hasattr(field, 'model_class') and self[field_name]:
+            elif hasattr(field, "model_class") and self[field_name]:
                 self[field_name]._consolidate_binding(binding_properties)
-
 
     @property
     def record_method(self):
@@ -1254,7 +1351,7 @@ class BaseModel(metaclass=ModelMeta):
         removed or not.
         """
         for field_name, field in self.fields.items():
-            if hasattr(field, 'model_class') and self[field_name]:
+            if hasattr(field, "model_class") and self[field_name]:
                 self[field_name]._clean(clean_contextual=clean_contextual)
                 if clean_contextual:
                     if not self[field_name].required_fulfilled:
@@ -1268,12 +1365,12 @@ class BaseModel(metaclass=ModelMeta):
         all_keypaths = []
         for field_name, field in cls.fields.items():
             if include_model_lists:
-                while hasattr(field, 'field'):
+                while hasattr(field, "field"):
                     field = field.field
-            if hasattr(field, 'model_class'):
+            if hasattr(field, "model_class"):
                 sub_keypaths = field.model_class._all_keypaths()
                 for keypath in sub_keypaths:
-                    all_keypaths.append(field_name + '.' + keypath)
+                    all_keypaths.append(field_name + "." + keypath)
             else:
                 all_keypaths.append(field_name)
         return all_keypaths
@@ -1284,8 +1381,6 @@ class BaseModel(metaclass=ModelMeta):
             if not field_type.is_empty(self[field_name]):
                 return False
         return True
-
-
 
 
 class ModelList(MutableSequence):
@@ -1345,8 +1440,14 @@ class ModelList(MutableSequence):
         new_models = []
         for _, elements in typed_list.items():
             i = 0
-            elements.sort(key=lambda el: el.total_confidence(_account_for_merging=True) if el.total_confidence(_account_for_merging=True) is not None else -10000,
-                          reverse=True)
+            elements.sort(
+                key=lambda el: (
+                    el.total_confidence(_account_for_merging=True)
+                    if el.total_confidence(_account_for_merging=True) is not None
+                    else -10000
+                ),
+                reverse=True,
+            )
             length = len(elements)
             to_remove = []
             # Iterate through the list of elements and if any subsets are found, add the
@@ -1354,7 +1455,11 @@ class ModelList(MutableSequence):
             while i < length:
                 j = 0
                 while j < length:
-                    if i != j and elements[i].is_subset(elements[j]) and j not in to_remove:
+                    if (
+                        i != j
+                        and elements[i].is_subset(elements[j])
+                        and j not in to_remove
+                    ):
                         if strict and elements[i] == elements[j]:
                             # Do not remove the element if it is not a strict subset depending on the value of strict
                             pass
@@ -1388,7 +1493,13 @@ class ModelList(MutableSequence):
 def sort_merge_candidates(merge_candidates, adjust_by_confidence=True):
     # merge_candidates is a list of tuples (distance, merge candidate)
     if adjust_by_confidence:
-        return sorted(merge_candidates,
-            key=lambda x: x[0] / (x[1].total_confidence() + 0.01) if x[1].total_confidence() is not None else x[0])
+        return sorted(
+            merge_candidates,
+            key=lambda x: (
+                x[0] / (x[1].total_confidence() + 0.01)
+                if x[1].total_confidence() is not None
+                else x[0]
+            ),
+        )
     else:
         return sorted(merge_candidates, lambda x: x[0])

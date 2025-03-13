@@ -16,6 +16,7 @@ def get_device_of(tensor: torch.Tensor) -> int:
     else:
         return tensor.get_device()
 
+
 def get_range_vector(size: int, device: int) -> torch.Tensor:
     """
     Returns a range vector with the desired size, starting at 0. The CUDA implementation
@@ -25,6 +26,7 @@ def get_range_vector(size: int, device: int) -> torch.Tensor:
         return torch.LongTensor(size).fill_(1).cumsum(0).to(device) - 1
     else:
         return torch.arange(0, size, dtype=torch.long)
+
 
 def combine_initial_dims(tensor: torch.Tensor) -> torch.Tensor:
     """
@@ -39,7 +41,9 @@ def combine_initial_dims(tensor: torch.Tensor) -> torch.Tensor:
         return tensor.view(-1, tensor.size(-1))
 
 
-def uncombine_initial_dims(tensor: torch.Tensor, original_size: torch.Size) -> torch.Tensor:
+def uncombine_initial_dims(
+    tensor: torch.Tensor, original_size: torch.Size
+) -> torch.Tensor:
     """
     Given a tensor of embeddings with shape
     (d1 * ... * dn, sequence_length, embedding_dim)
@@ -54,6 +58,7 @@ def uncombine_initial_dims(tensor: torch.Tensor, original_size: torch.Size) -> t
     else:
         view_args = list(original_size) + [tensor.size(-1)]
         return tensor.view(*view_args)
+
 
 def viterbi_decode(
     tag_sequence: torch.Tensor,
@@ -111,7 +116,9 @@ def viterbi_decode(
     elif top_k >= 1:
         flatten_output = False
     else:
-        raise ValueError(f"top_k must be either None or an integer >=1. Instead received {top_k}")
+        raise ValueError(
+            f"top_k must be either None or an integer >=1. Instead received {top_k}"
+        )
 
     sequence_length, num_tags = list(tag_sequence.size())
 

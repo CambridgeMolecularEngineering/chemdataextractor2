@@ -6,9 +6,13 @@ CoordinatedGroup = namedtuple("CoordinatedGroup", ["root", "content"])
 
 def _add(subsentences, coordinated_group, prev_location, min_index):
     if len(subsentences) != len(coordinated_group.content):
-        raise AttributeError('To perform add, there should be an equal number of coordinated clauses and subsentences.')
+        raise AttributeError(
+            "To perform add, there should be an equal number of coordinated clauses and subsentences."
+        )
     added_subsentences = []
-    for coordinated_content, subsentence in zip(coordinated_group.content, subsentences):
+    for coordinated_content, subsentence in zip(
+        coordinated_group.content, subsentences
+    ):
         sub = copy.copy(subsentence)
         sub.extend([i for i in range(prev_location + 1, min_index)])
 
@@ -39,6 +43,7 @@ class SubsentenceExtractor(object):
     "Automated Construction of a Photocatalysis Dataset for Water-Splitting Applications",
     coming soon.
     """
+
     trigger_words = {"and", "or"}
     disallowed_conjunctions = {"/", ":"}
 
@@ -47,7 +52,14 @@ class SubsentenceExtractor(object):
 
     def subsentences(self, sentence):
         # Ensure that the trigger words are found in the sentence
-        if len(self.trigger_words.intersection(set(token.text.lower() for token in sentence.tokens))) == 0:
+        if (
+            len(
+                self.trigger_words.intersection(
+                    set(token.text.lower() for token in sentence.tokens)
+                )
+            )
+            == 0
+        ):
             return [sentence.tokens]
 
         dependencies = [token.dependency for token in sentence.tokens]
@@ -99,21 +111,37 @@ class SubsentenceExtractor(object):
             next_root = None
             if root_index < len(conj_roots_indices) - 1:
                 next_root = conj_root_indices[index + 1]
-            coordinated_groups.append(CoordinatedGroup(root_index, self._find_coordinated_group(root_index, dependencies, next_root)))
+            coordinated_groups.append(
+                CoordinatedGroup(
+                    root_index,
+                    self._find_coordinated_group(root_index, dependencies, next_root),
+                )
+            )
 
         # Stop early if there is exactly 1 coordinated group and it covers the whole sentence
         # as this is the case of e.g. "The mixture was heated, and then stirred", where
         # we don't really care about splitting the sentence
         if len(coordinated_groups) == 1 and len(coordinated_groups[0].content) == 2:
             coordinated_group = coordinated_groups[0]
-            first_clause_min_index = min([word[0] for word in coordinated_group.content[0]])
-            first_clause_max_index = max([word[0] for word in coordinated_group.content[0]])
-            second_clause_min_index = min([word[0] for word in coordinated_group.content[1]])
-            second_clause_max_index = max([word[0] for word in coordinated_group.content[1]])
+            first_clause_min_index = min(
+                [word[0] for word in coordinated_group.content[0]]
+            )
+            first_clause_max_index = max(
+                [word[0] for word in coordinated_group.content[0]]
+            )
+            second_clause_min_index = min(
+                [word[0] for word in coordinated_group.content[1]]
+            )
+            second_clause_max_index = max(
+                [word[0] for word in coordinated_group.content[1]]
+            )
             clauses_gap = second_clause_min_index - first_clause_max_index
 
-            if (first_clause_min_index == 0 and second_clause_max_index >= len(sentence.tokens) - 2
-               and abs(clauses_gap) <= 2):
+            if (
+                first_clause_min_index == 0
+                and second_clause_max_index >= len(sentence.tokens) - 2
+                and abs(clauses_gap) <= 2
+            ):
                 # We also allow a leniency of one token from the end as punctuation is often omitted
                 # We do the above abs check because the end of the first clause and the start of the
                 # second clause could be separated by an "and" that has been omitted
@@ -134,16 +162,13 @@ class SubsentenceExtractor(object):
 
             extents.append((min_index, max_index))
 
-
         # print(extents)
         # Early stopping if any overlapping ranges of coordinated phrases
         for extent_1 in extents:
             for extent_2 in extents:
-                if extent_1[0] == extent_2[0]\
-                   and extent_1[1] == extent_2[1]:
-                   pass
-                elif extent_1[0] <= extent_2[1] and\
-                     extent_2[0] <= extent_1[1]:
+                if extent_1[0] == extent_2[0] and extent_1[1] == extent_2[1]:
+                    pass
+                elif extent_1[0] <= extent_2[1] and extent_2[0] <= extent_1[1]:
                     # print("ABORTING SUBSENTENCE, OVERLAPPING INDICES")
                     return [sentence.tokens]
 
@@ -155,15 +180,21 @@ class SubsentenceExtractor(object):
 
         subsentence_indices = [[]]
         prev_location = -1
-        for extent, operation, coordinated_group in zip(extents, operations, coordinated_groups):
+        for extent, operation, coordinated_group in zip(
+            extents, operations, coordinated_groups
+        ):
             min_index = extent[0]
             max_index = extent[1]
 
-            subsentence_indices = operation(subsentence_indices, coordinated_group, prev_location, min_index)
+            subsentence_indices = operation(
+                subsentence_indices, coordinated_group, prev_location, min_index
+            )
             prev_location = max_index
 
         for subsentence in subsentence_indices:
-            subsentence.extend([i for i in range(prev_location + 1, len(sentence.tokens))])
+            subsentence.extend(
+                [i for i in range(prev_location + 1, len(sentence.tokens))]
+            )
 
         subsentence_tokens = []
         for subsentence in subsentence_indices:
@@ -190,15 +221,24 @@ class SubsentenceExtractor(object):
         to_trim = ["punct"]
         to_trim_head = []
 
-        min_index_candidates = self._all_dependencies_for_root(root_index, dependencies, excluded_relations)
+        min_index_candidates = self._all_dependencies_for_root(
+            root_index, dependencies, excluded_relations
+        )
         min_index = root_index
         for el in min_index_candidates:
-            if (el[1].head is not None and el[0] < min_index
-               and el[1].relation not in min_index_excluded):
+            if (
+                el[1].head is not None
+                and el[0] < min_index
+                and el[1].relation not in min_index_excluded
+            ):
                 min_index = el[0]
 
-        coordinated_graphs = [self._all_dependencies_for_root(phrase_root, dependencies, excluded_relations, min_index, max_index)
-                              for max_index, phrase_root in zip(max_indices, phrase_roots)]
+        coordinated_graphs = [
+            self._all_dependencies_for_root(
+                phrase_root, dependencies, excluded_relations, min_index, max_index
+            )
+            for max_index, phrase_root in zip(max_indices, phrase_roots)
+        ]
 
         if len(coordinated_graphs) >= 3:
             # Check for syntactic similarities
@@ -208,22 +248,37 @@ class SubsentenceExtractor(object):
             coordinated_graphs = self._remove_unneeded(coordinated_graphs, unneeded_el)
 
         for unneeded_el in to_trim_head:
-            coordinated_graphs = self._remove_unneeded_head(coordinated_graphs, unneeded_el)
+            coordinated_graphs = self._remove_unneeded_head(
+                coordinated_graphs, unneeded_el
+            )
 
         return coordinated_graphs
 
-    def _all_dependencies_for_root(self, root_index, dependencies, excluded_relations=None, min_index=None, max_index=None):
+    def _all_dependencies_for_root(
+        self,
+        root_index,
+        dependencies,
+        excluded_relations=None,
+        min_index=None,
+        max_index=None,
+    ):
         if excluded_relations is None:
             excluded_relations = []
         coordinated_graph = [(root_index, dependencies[root_index])]
         for index, dependency in enumerate(dependencies):
             if max_index is not None and index > max_index:
                 break
-            if dependency.head is not None and\
-               dependency.head.index == root_index and\
-               dependency.relation not in excluded_relations and\
-               (min_index is None or index >= min_index):
-                coordinated_graph.extend(self._all_dependencies_for_root(index, dependencies, excluded_relations))
+            if (
+                dependency.head is not None
+                and dependency.head.index == root_index
+                and dependency.relation not in excluded_relations
+                and (min_index is None or index >= min_index)
+            ):
+                coordinated_graph.extend(
+                    self._all_dependencies_for_root(
+                        index, dependencies, excluded_relations
+                    )
+                )
         return coordinated_graph
 
     def _remove_unneeded(self, coordinated_graphs, unneeded="punct"):
@@ -252,8 +307,9 @@ class SubsentenceExtractor(object):
                 new_coordinated_graph = coordinated_graph
             else:
                 for el in coordinated_graph:
-                    if el[0] not in unneeded_coords \
-                       or (el[0] != max_index and el[0] != min_index):
+                    if el[0] not in unneeded_coords or (
+                        el[0] != max_index and el[0] != min_index
+                    ):
                         new_coordinated_graph.append(el)
 
             new_coordinated_graphs.append(new_coordinated_graph)
@@ -277,7 +333,10 @@ class SubsentenceExtractor(object):
             for dependency in coordinated_graph:
                 if dependency[1].relation == unneeded:
                     unneeded_coords.add(dependency[1].head.index)
-                elif dependency[1].head is not None and dependency[1].head.index in unneeded_coords:
+                elif (
+                    dependency[1].head is not None
+                    and dependency[1].head.index in unneeded_coords
+                ):
                     unneeded_coords.add(dependency[0])
 
         for coordinated_graph in coordinated_graphs:
@@ -288,8 +347,9 @@ class SubsentenceExtractor(object):
                 new_coordinated_graph = coordinated_graph
             else:
                 for el in coordinated_graph:
-                    if el[0] not in unneeded_coords \
-                       or (el[0] != max_index and el[0] != min_index):
+                    if el[0] not in unneeded_coords or (
+                        el[0] != max_index and el[0] != min_index
+                    ):
                         new_coordinated_graph.append(el)
 
             new_coordinated_graphs.append(new_coordinated_graph)
@@ -303,8 +363,9 @@ class SubsentenceExtractor(object):
         for index, group in enumerate(conjugated_groups):
             operation = _add
             if total_subsentences != len(group.content):
-                if previous_operation is _add and \
-                   total_subsentences * len(conjugated_groups[index - 1].content) == len(group.content):
+                if previous_operation is _add and total_subsentences * len(
+                    conjugated_groups[index - 1].content
+                ) == len(group.content):
                     operations[-1] = _multiply
                     total_subsentences *= len(conjugated_groups[index - 1].content)
                 else:
@@ -313,7 +374,11 @@ class SubsentenceExtractor(object):
             operations.append(operation)
             previous_operation = operation
         if total_subsentences > self.max_subsentences:
-            raise RuntimeError("Too many subsentences. Maximum of {} subsentences, found {}.".format(total_subsentences, self.max_subsentences))
+            raise RuntimeError(
+                "Too many subsentences. Maximum of {} subsentences, found {}.".format(
+                    total_subsentences, self.max_subsentences
+                )
+            )
         return operations
 
 

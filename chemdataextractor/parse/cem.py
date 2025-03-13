@@ -16,10 +16,42 @@ import re
 from lxml import etree
 
 from .actions import join, fix_whitespace, merge
-from .common import roman_numeral, cc, nnp, hyph, nns, nn, cd, ls, optdelim, rbrct, lbrct, sym, jj, hyphen, quote, \
-    dt, delim
+from .common import (
+    roman_numeral,
+    cc,
+    nnp,
+    hyph,
+    nns,
+    nn,
+    cd,
+    ls,
+    optdelim,
+    rbrct,
+    lbrct,
+    sym,
+    jj,
+    hyphen,
+    quote,
+    dt,
+    delim,
+)
 from .base import BaseSentenceParser, BaseTableParser
-from .elements import I, R, W, T, ZeroOrMore, Optional, Not, Group, End, Start, OneOrMore, Any, SkipTo, Every
+from .elements import (
+    I,
+    R,
+    W,
+    T,
+    ZeroOrMore,
+    Optional,
+    Not,
+    Group,
+    End,
+    Start,
+    OneOrMore,
+    Any,
+    SkipTo,
+    Every,
+)
 from .cem_factory import _CemFactory
 
 log = logging.getLogger(__name__)
@@ -139,10 +171,14 @@ label_name_cem = default_cem_factory.label_name_cem
 labelled_as = default_cem_factory.labelled_as
 optquote = default_cem_factory.optquote
 
-name_with_optional_bracketed_label = default_cem_factory.name_with_optional_bracketed_label
+name_with_optional_bracketed_label = (
+    default_cem_factory.name_with_optional_bracketed_label
+)
 
 label_before_name = default_cem_factory.label_before_name
-lenient_name_with_bracketed_label = default_cem_factory.lenient_name_with_bracketed_label
+lenient_name_with_bracketed_label = (
+    default_cem_factory.lenient_name_with_bracketed_label
+)
 
 name_with_comma_within = default_cem_factory.name_with_comma_within
 
@@ -185,44 +221,75 @@ roles_only = default_cem_factory.roles_only
 def standardize_role(role):
     """Convert role text into standardized form."""
     role = role.lower()
-    if any(c in role for c in {'synthesis', 'give', 'yield', 'afford', 'product', 'preparation of'}):
-        return 'product'
+    if any(
+        c in role
+        for c in {"synthesis", "give", "yield", "afford", "product", "preparation of"}
+    ):
+        return "product"
     return role
 
 
 # TODO jm2111, Problems here! The parsers don't have a parse method anymore. Ruins parsing of captions.
 class CompoundParser(BaseSentenceParser):
     """Chemical name possibly with an associated label."""
+
     _label = None
     _root_phrase = None
 
     @property
     def root(self):
-        label = self.model.labels.parse_expression('labels')
-        label_name_cem = (label + optdelim + chemical_name)('compound')
+        label = self.model.labels.parse_expression("labels")
+        label_name_cem = (label + optdelim + chemical_name)("compound")
 
-        label_before_name = Optional(synthesis_of | to_give) + label_type + optdelim + label_name_cem + ZeroOrMore(optdelim + cc + optdelim + label_name_cem)
+        label_before_name = (
+            Optional(synthesis_of | to_give)
+            + label_type
+            + optdelim
+            + label_name_cem
+            + ZeroOrMore(optdelim + cc + optdelim + label_name_cem)
+        )
 
-        name_with_optional_bracketed_label = (Optional(synthesis_of | to_give) + chemical_name + Optional(lbrct + Optional(labelled_as + optquote) + (label) + optquote + rbrct))('compound')
+        name_with_optional_bracketed_label = (
+            Optional(synthesis_of | to_give)
+            + chemical_name
+            + Optional(
+                lbrct + Optional(labelled_as + optquote) + (label) + optquote + rbrct
+            )
+        )("compound")
 
         # Very lenient name and label match, with format like "name (Compound 3)"
-        lenient_name_with_bracketed_label = (Start() + Optional(synthesis_of) + lenient_name + lbrct + label_type.hide() + label + rbrct)('compound')
+        lenient_name_with_bracketed_label = (
+            Start()
+            + Optional(synthesis_of)
+            + lenient_name
+            + lbrct
+            + label_type.hide()
+            + label
+            + rbrct
+        )("compound")
 
         # Chemical name with a doped label after
         # name_with_doped_label = (chemical_name + OneOrMore(delim | I('with') | I('for')) + label)('compound')
 
         # Chemical name with an informal label after
         # name_with_informal_label = (chemical_name + Optional(R('compounds?')) + OneOrMore(delim | I('with') | I('for')) + informal_chemical_label)('compound')
-        return Group(name_with_informal_label | name_with_doped_label | lenient_name_with_bracketed_label | label_before_name | name_with_comma_within | name_with_optional_bracketed_label)('cem_phrase')
+        return Group(
+            name_with_informal_label
+            | name_with_doped_label
+            | lenient_name_with_bracketed_label
+            | label_before_name
+            | name_with_comma_within
+            | name_with_optional_bracketed_label
+        )("cem_phrase")
 
     def interpret(self, result, start, end):
         # TODO: Parse label_type into label model object
         # print(etree.tostring(result))
-        for cem_el in result.xpath('./compound'):
+        for cem_el in result.xpath("./compound"):
             c = self.model(
-                names=cem_el.xpath('./names/text()'),
-                labels=cem_el.xpath('./labels/text()'),
-                roles=[standardize_role(r) for r in cem_el.xpath('./roles/text()')]
+                names=cem_el.xpath("./names/text()"),
+                labels=cem_el.xpath("./labels/text()"),
+                roles=[standardize_role(r) for r in cem_el.xpath("./roles/text()")],
             )
             c.record_method = self.__class__.__name__
             yield c
@@ -230,22 +297,25 @@ class CompoundParser(BaseSentenceParser):
 
 class ChemicalLabelParser(BaseSentenceParser):
     """Chemical label occurrences with no associated name."""
+
     _label = None
     _root_phrase = None
 
     @property
     def root(self):
-        label = self.model.labels.parse_expression('labels')
+        label = self.model.labels.parse_expression("labels")
         if self._label is label:
             return self._root_phrase
-        self._root_phrase = (chemical_label_phrase | Group(label)('chemical_label_phrase'))
+        self._root_phrase = chemical_label_phrase | Group(label)(
+            "chemical_label_phrase"
+        )
         self._label = label
         return self._root_phrase
 
     def interpret(self, result, start, end):
         # print(etree.tostring(result))
-        roles = [standardize_role(r) for r in result.xpath('./roles/text()')]
-        for label in result.xpath('./labels/text()'):
+        roles = [standardize_role(r) for r in result.xpath("./roles/text()")]
+        for label in result.xpath("./labels/text()"):
             yield self.model(labels=[label], roles=roles)
 
 
@@ -256,41 +326,57 @@ class CompoundHeadingParser(BaseSentenceParser):
     parse_full_sentence = True
 
     def interpret(self, result, start, end):
-        roles = [standardize_role(r) for r in result.xpath('./roles/text()')]
-        labels = result.xpath('./labels/text()')
+        roles = [standardize_role(r) for r in result.xpath("./roles/text()")]
+        labels = result.xpath("./labels/text()")
         if len(labels) > 1:
             for label in labels:
                 yield self.model(labels=[label], roles=roles)
-            for name in result.xpath('./names/text()'):
+            for name in result.xpath("./names/text()"):
                 yield self.model(names=[name], roles=roles)
         else:
             yield self.model(
-                names=result.xpath('./names/text()'),
-                labels=labels,
-                roles=roles
+                names=result.xpath("./names/text()"), labels=labels, roles=roles
             )
 
 
 class CompoundTableParser(BaseTableParser):
-    entities = (cem | chemical_label | lenient_chemical_label) | ((I('Formula') | I('Compound')).add_action(join))('specifier')
-    root = OneOrMore(entities + Optional(SkipTo(entities)))('root_phrase')
+    entities = (cem | chemical_label | lenient_chemical_label) | (
+        (I("Formula") | I("Compound")).add_action(join)
+    )("specifier")
+    root = OneOrMore(entities + Optional(SkipTo(entities)))("root_phrase")
 
     @property
     def root(self):
         # is always found, our models currently rely on the compound
-        chem_name = (cem | chemical_label | lenient_chemical_label)
+        chem_name = cem | chemical_label | lenient_chemical_label
         compound_model = self.model
-        labels = compound_model.labels.parse_expression('labels')
+        labels = compound_model.labels.parse_expression("labels")
         entities = [labels]
 
-        specifier = (I('Formula') | I('Compound') | I('Alloy')).add_action(join)('specifier')
+        specifier = (I("Formula") | I("Compound") | I("Alloy")).add_action(join)(
+            "specifier"
+        )
         entities.append(specifier)
 
         # the optional, user-defined, entities of the model are added, they are tagged with the name of the field
         for field in self.model.fields:
-            if field not in ['raw_value', 'raw_units', 'value', 'units', 'error', 'specifier']:
-                if self.model.__getattribute__(self.model, field).parse_expression is not None:
-                    entities.append(self.model.__getattribute__(self.model, field).parse_expression(field))
+            if field not in [
+                "raw_value",
+                "raw_units",
+                "value",
+                "units",
+                "error",
+                "specifier",
+            ]:
+                if (
+                    self.model.__getattribute__(self.model, field).parse_expression
+                    is not None
+                ):
+                    entities.append(
+                        self.model.__getattribute__(self.model, field).parse_expression(
+                            field
+                        )
+                    )
 
         # the chem_name has to be parsed last in order to avoid a conflict with other elements of the model
         entities.append(chem_name)
@@ -299,20 +385,23 @@ class CompoundTableParser(BaseTableParser):
 
         combined_entities = entities[0]
         for entity in entities[1:]:
-            combined_entities = (combined_entities | entity)
-        root_phrase = OneOrMore(combined_entities + Optional(SkipTo(combined_entities)))('root_phrase')
+            combined_entities = combined_entities | entity
+        root_phrase = OneOrMore(
+            combined_entities + Optional(SkipTo(combined_entities))
+        )("root_phrase")
         self._root_phrase = root_phrase
         self._specifier = self.model.specifier
         return root_phrase
 
     def interpret(self, result, start, end):
         # TODO: Parse label_type into label model object
-        if result.xpath('./specifier/text()') and \
-        (result.xpath('./names/names/text()') or result.xpath('./labels/text()')):
+        if result.xpath("./specifier/text()") and (
+            result.xpath("./names/names/text()") or result.xpath("./labels/text()")
+        ):
             c = self.model(
-                names=result.xpath('./names/names/text()'),
-                labels=result.xpath('./labels/text()'),
-                roles=[standardize_role(r) for r in result.xpath('./roles/text()')]
+                names=result.xpath("./names/names/text()"),
+                labels=result.xpath("./labels/text()"),
+                roles=[standardize_role(r) for r in result.xpath("./roles/text()")],
             )
             if c is not None:
                 c.record_method = self.__class__.__name__

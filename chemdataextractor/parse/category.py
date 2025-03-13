@@ -19,7 +19,9 @@ from .common import lbrct, rbrct
 from .actions import merge, join
 from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore
 from ..utils import memoize
+
 log = logging.getLogger(__name__)
+
 
 def construct_category_element(category):
     """
@@ -28,13 +30,12 @@ def construct_category_element(category):
     :param Category category: The Category to look for.
     :rtype: BaseParserElement or None
     """
-    category_regex = '^'
+    category_regex = "^"
     if not category or not category.category_dict:
         return None
     # Handle all the units
     for element in category.category_dict:
-        category_regex += '(' + element.pattern + ')|'
+        category_regex += "(" + element.pattern + ")|"
     category_regex = category_regex[:-1]
-    category_regex += '$'
-    return (R(pattern=category_regex))('raw_value').add_action(merge)
-
+    category_regex += "$"
+    return (R(pattern=category_regex))("raw_value").add_action(merge)

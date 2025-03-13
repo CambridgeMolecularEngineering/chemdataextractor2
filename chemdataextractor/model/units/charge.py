@@ -14,7 +14,7 @@ from __future__ import unicode_literals
 from .quantity_model import QuantityModel
 from .unit import Unit
 from .dimension import Dimension
-from.current import ElectricalCurrent
+from .current import ElectricalCurrent
 from .time import Time
 from ...parse.elements import W, I, R, Optional, Any, OneOrMore, Not, ZeroOrMore
 from ...parse.actions import merge, join
@@ -54,6 +54,6 @@ class Coulomb(ChargeUnit):
         return error
 
 
-units_dict = {R('(C|c)(oulomb(s)?)?', group=0): Coulomb}
+units_dict = {R("(C|c)(oulomb(s)?)?", group=0): Coulomb}
 Charge.units_dict.update(units_dict)
 Charge.standard_units = Coulomb()

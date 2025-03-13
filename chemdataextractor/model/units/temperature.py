@@ -25,6 +25,7 @@ class Temperature(Dimension):
     """
     Dimension subclass for temperatures.
     """
+
     pass
 
 
@@ -32,6 +33,7 @@ class TemperatureModel(QuantityModel):
     """
     Model for temperatures.
     """
+
     dimensions = Temperature()
 
 
@@ -87,23 +89,25 @@ class Fahrenheit(TemperatureUnit):
     """
 
     def convert_value_to_standard(self, value):
-        return (value + 459.67) * (5. / 9.)
+        return (value + 459.67) * (5.0 / 9.0)
 
     def convert_value_from_standard(self, value):
-        return value * (9. / 5.) - 459.67
+        return value * (9.0 / 5.0) - 459.67
 
     def convert_error_to_standard(self, error):
-        return error * (5. / 9.)
+        return error * (5.0 / 9.0)
 
     def convert_error_from_standard(self, error):
-        return error * (9. / 5.)
+        return error * (9.0 / 5.0)
 
 
-units_dict = {R('°?(((K|k)elvin(s)?)|K)\.?', group=0): Kelvin,
-              R('(°C|((C|c)elsius))\.?', group=0): Celsius,
-              R('(\[deg\.] C\.)|([D|d]egrees? C(entigrade(s)?)?\.?)', group=0): Celsius,
-              R('°?((F|f)ahrenheit|F)\.?', group=0): Fahrenheit,
-              R('°|C', group=0): None}
+units_dict = {
+    R("°?(((K|k)elvin(s)?)|K)\.?", group=0): Kelvin,
+    R("(°C|((C|c)elsius))\.?", group=0): Celsius,
+    R("(\[deg\.] C\.)|([D|d]egrees? C(entigrade(s)?)?\.?)", group=0): Celsius,
+    R("°?((F|f)ahrenheit|F)\.?", group=0): Fahrenheit,
+    R("°|C", group=0): None,
+}
 # The final element in units_dict is given to ensure that '°C' is parsed correctly,
 # as the tokenizer splits it into two. When a parser element is assigned to None,
 # this means that this element will be ignored when extracting units, but will

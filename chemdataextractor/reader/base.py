@@ -10,8 +10,6 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
 
 
-
-
 class BaseReader(metaclass=ABCMeta):
     """All Document Readers should implement a parse method."""
 

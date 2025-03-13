@@ -101,7 +101,10 @@ class BaseTagger(metaclass=ABCMeta):
     tagger will be called.
     """
 
-    @deprecated(deprecated_in="2.1", details="Deprecated in conjunction with the deprecation of the legacy_tag function. Please write equivalent functionality to use RichTokens.")
+    @deprecated(
+        deprecated_in="2.1",
+        details="Deprecated in conjunction with the deprecation of the legacy_tag function. Please write equivalent functionality to use RichTokens.",
+    )
     def tag_sents(self, sentences):
         """Apply the ``tag`` method to each sentence in ``sentences``."""
         return [self.legacy_tag(s) for s in sentences]
@@ -116,7 +119,9 @@ class BaseTagger(metaclass=ABCMeta):
         tagged_sents = self.tag_sents([w for (w, t) in sent] for sent in gold)
         gold_tokens = sum(gold, [])
         test_tokens = sum(tagged_sents, [])
-        accuracy = float(sum(x == y for x, y in zip(gold_tokens, test_tokens))) / len(test_tokens)
+        accuracy = float(sum(x == y for x, y in zip(gold_tokens, test_tokens))) / len(
+            test_tokens
+        )
         return accuracy
 
     def can_tag(self, tag_type):
@@ -153,6 +158,7 @@ class EnsembleTagger(BaseTagger):
     multiple types of NER labellers (a CRF and multiple dictionary taggers), to create a single
     coherent NER label.
     """
+
     tag_type = ""
     taggers = []
 
@@ -234,15 +240,15 @@ class RegexTagger(BaseTagger):
 
     #: Regular expression patterns in (regex, tag) tuples.
     patterns = [
-        (r'^-?[0-9]+(.[0-9]+)?$', 'CD'),   # cardinal numbers
-        (r'(The|the|A|a|An|an)$', 'AT'),   # articles
-        (r'.*able$', 'JJ'),                # adjectives
-        (r'.*ness$', 'NN'),                # nouns formed from adjectives
-        (r'.*ly$', 'RB'),                  # adverbs
-        (r'.*s$', 'NNS'),                  # plural nouns
-        (r'.*ing$', 'VBG'),                # gerunds
-        (r'.*ed$', 'VBD'),                 # past tense verbs
-        (r'.*', 'NN')                      # nouns (default)
+        (r"^-?[0-9]+(.[0-9]+)?$", "CD"),  # cardinal numbers
+        (r"(The|the|A|a|An|an)$", "AT"),  # articles
+        (r".*able$", "JJ"),  # adjectives
+        (r".*ness$", "NN"),  # nouns formed from adjectives
+        (r".*ly$", "RB"),  # adverbs
+        (r".*s$", "NNS"),  # plural nouns
+        (r".*ing$", "VBG"),  # gerunds
+        (r".*ed$", "VBD"),  # past tense verbs
+        (r".*", "NN"),  # nouns (default)
     ]
 
     #: The lexicon to use
@@ -254,9 +260,14 @@ class RegexTagger(BaseTagger):
         :param list(tuple(string, string)) patterns: List of (regex, tag) pairs.
         """
         self.patterns = patterns if patterns is not None else self.patterns
-        self.regexes = [(re.compile(pattern, re.I | re.U), tag) for pattern, tag in self.patterns]
+        self.regexes = [
+            (re.compile(pattern, re.I | re.U), tag) for pattern, tag in self.patterns
+        ]
         self.lexicon = lexicon if lexicon is not None else self.lexicon
-        log.debug('%s: Initializing with %s patterns' % (self.__class__.__name__, len(self.patterns)))
+        log.debug(
+            "%s: Initializing with %s patterns"
+            % (self.__class__.__name__, len(self.patterns))
+        )
 
     def tag(self, tokens):
         """Return a list of (token, tag) tuples for a given list of tokens."""
@@ -307,6 +318,7 @@ class AveragedPerceptron(object):
 
     def update(self, truth, guess, features):
         """Update the feature weights."""
+
         def upd_feat(c, f, w, v):
             param = (f, c)
             self._totals[param] += (self.i - self._tstamps[param]) * w
@@ -338,25 +350,25 @@ class AveragedPerceptron(object):
 
     def save(self, path):
         """Save the pickled model weights."""
-        with io.open(path, 'wb') as fout:
+        with io.open(path, "wb") as fout:
             return pickle.dump(dict(self.weights), fout)
 
     def load(self, path):
         """Load the pickled model weights."""
-        with io.open(path, 'rb') as fin:
+        with io.open(path, "rb") as fin:
             self.weights = pickle.load(fin)
 
 
 class ApTagger(BaseTagger, metaclass=ABCMeta):
     """Greedy Averaged Perceptron tagger, based on implementation by Matthew Honnibal, released under the MIT license.
 
-     See more:
-         http://spacy.io/blog/part-of-speech-POS-tagger-in-python/
-         https://github.com/sloria/textblob-aptagger
+    See more:
+        http://spacy.io/blog/part-of-speech-POS-tagger-in-python/
+        https://github.com/sloria/textblob-aptagger
 
-     """
+    """
 
-    START = ['-START-', '-START2-']
+    START = ["-START-", "-START2-"]
     lexicon = Lexicon()
     clusters = False
 
@@ -368,7 +380,7 @@ class ApTagger(BaseTagger, metaclass=ABCMeta):
         self.model = model if model is not None else self.model
         self.lexicon = lexicon if lexicon is not None else self.lexicon
         self.clusters = clusters if clusters is not None else self.clusters
-        log.debug('%s: Initializing with %s' % (self.__class__.__name__, self.model))
+        log.debug("%s: Initializing with %s" % (self.__class__.__name__, self.model))
 
     def legacy_tag(self, tokens):
         """Return a list of (token, tag) tuples for a given list of tokens."""
@@ -412,16 +424,22 @@ class ApTagger(BaseTagger, metaclass=ABCMeta):
                     c += guess == tag
                     n += 1
             random.shuffle(sentences)
-            log.debug('Iter %s: %s/%s=%s' % (iter_, c, n, (float(c) / n) * 100))
+            log.debug("Iter %s: %s/%s=%s" % (iter_, c, n, (float(c) / n) * 100))
         self.perceptron.average_weights()
 
     def save(self, f):
         """Save pickled model to file."""
-        return pickle.dump((self.perceptron.weights, self.tagdict, self.classes, self.clusters), f, protocol=pickle.HIGHEST_PROTOCOL)
+        return pickle.dump(
+            (self.perceptron.weights, self.tagdict, self.classes, self.clusters),
+            f,
+            protocol=pickle.HIGHEST_PROTOCOL,
+        )
 
     def load(self, model):
         """Load pickled model."""
-        self.perceptron.weights, self.tagdict, self.classes, self.clusters = load_model(model)
+        self.perceptron.weights, self.tagdict, self.classes, self.clusters = load_model(
+            model
+        )
         self.perceptron.classes = self.classes
 
     @abstractmethod
@@ -448,17 +466,18 @@ class ApTagger(BaseTagger, metaclass=ABCMeta):
 
 class CrfTagger(BaseTagger):
     """Tagger that uses Conditional Random Fields (CRF)."""
+
     lexicon = Lexicon()
     clusters = False
 
     #: Parameters to pass to training algorithm. See http://www.chokkan.org/software/crfsuite/manual.html
     params = {
         # These parameters are valid for the default LBFGS training algorithm. Change if using another.
-        'c1': 1.0,  # Coefficient for L1 regularization (OWL-QN). Default 0.
-        'c2': 0.001,  # Coefficient for L2 regularization. Default 1.
-        'max_iterations': 50,  # The maximum number of iterations for L-BFGS optimization. Default INT_MAX.
-        'feature.possible_transitions': False,  # Force to generate all possible transition features. Default False.
-        'feature.possible_states': False,  # Force to generate all possible state features. Default False.
+        "c1": 1.0,  # Coefficient for L1 regularization (OWL-QN). Default 0.
+        "c2": 0.001,  # Coefficient for L2 regularization. Default 1.
+        "max_iterations": 50,  # The maximum number of iterations for L-BFGS optimization. Default INT_MAX.
+        "feature.possible_transitions": False,  # Force to generate all possible transition features. Default False.
+        "feature.possible_states": False,  # Force to generate all possible state features. Default False.
         # 'feature.minfreq' : 2, # The minimum frequency of features. Default 0.
         # 'epsilon' :  # Epsilon for testing the convergence of the objective. Default 0.00001.
     }
@@ -473,7 +492,7 @@ class CrfTagger(BaseTagger):
         self._loaded_model = False
 
     def load(self, model):
-        log.debug('Loading %s' % model)
+        log.debug("Loading %s" % model)
         self._tagger.open(find_data(model))
         self._loaded_model = True
 
@@ -511,13 +530,15 @@ class DictionaryTagger(BaseTagger):
     #: DAWG model file path.
     model = None
     #: Entity tag. Matches will be tagged like 'B-CM' and 'I-CM' according to IOB scheme. TODO: Optional no B/I?
-    entity = 'CM'
+    entity = "CM"
     #: Delimiters that define where matches are allowed to start or end.
-    delimiters = re.compile(r'(^.|\b|\s|\W|.$)')
+    delimiters = re.compile(r"(^.|\b|\s|\W|.$)")
     #: Whether dictionary matches are case sensitive.
     case_sensitive = False
 
-    def __init__(self, words=None, model=None, entity=None, case_sensitive=None, lexicon=None):
+    def __init__(
+        self, words=None, model=None, entity=None, case_sensitive=None, lexicon=None
+    ):
         """
 
         :param list(list(string)) words: list of words, each of which is a list of tokens.
@@ -525,7 +546,9 @@ class DictionaryTagger(BaseTagger):
         self._dawg = dawg.CompletionDAWG()
         self.model = model if model is not None else self.model
         self.entity = entity if entity is not None else self.entity
-        self.case_sensitive = case_sensitive if case_sensitive is not None else self.case_sensitive
+        self.case_sensitive = (
+            case_sensitive if case_sensitive is not None else self.case_sensitive
+        )
         self.lexicon = lexicon if lexicon is not None else self.lexicon
         self._loaded_model = False
         if words is not None:
@@ -549,9 +572,9 @@ class DictionaryTagger(BaseTagger):
     def _normalize(self, tokens):
         """Normalization transform to apply to both dictionary words and input tokens."""
         if self.case_sensitive:
-            return ' '.join(self.lexicon[t].normalized for t in tokens)
+            return " ".join(self.lexicon[t].normalized for t in tokens)
         else:
-            return ' '.join(self.lexicon[t].lower for t in tokens)
+            return " ".join(self.lexicon[t].lower for t in tokens)
 
     def legacy_tag(self, tokens):
         """Return a list of (token, tag) tuples for a given list of tokens."""
@@ -563,7 +586,15 @@ class DictionaryTagger(BaseTagger):
         norm = self._normalize(tokens)
         length = len(norm)
         # A set of allowed indexes for matches to start or end at
-        delims = [0] + [i for span in [m.span() for m in self.delimiters.finditer(norm)] for i in span] + [length]
+        delims = (
+            [0]
+            + [
+                i
+                for span in [m.span() for m in self.delimiters.finditer(norm)]
+                for i in span
+            ]
+            + [length]
+        )
         # Token indices
         token_at_index = []
         for i, t in enumerate(tokens):
@@ -599,9 +630,10 @@ class DictionaryTagger(BaseTagger):
             start_token = token_at_index[start_i]
             end_token = token_at_index[end_i]
             # Possible for match to start in 'I' token from prev match. Merge matches by not overwriting to 'B'.
-            if not tags[start_token] == 'I-%s' % self.entity:
-                tags[start_token] = 'B-%s' % self.entity
-            tags[start_token+1:end_token+1] = ['I-%s' % self.entity] * (end_token - start_token)
+            if not tags[start_token] == "I-%s" % self.entity:
+                tags[start_token] = "B-%s" % self.entity
+            tags[start_token + 1 : end_token + 1] = ["I-%s" % self.entity] * (
+                end_token - start_token
+            )
         tokentags = list(zip(tokens, tags))
         return tokentags
-

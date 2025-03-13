@@ -21,18 +21,20 @@ def cem(ctx):
 
 
 @cem.command()
-@click.argument('input', type=click.File('r', encoding='utf8'), required=True)
-@click.option('--output', '-o', help='Output model file.', required=True)
-@click.option('--clusters/--no-clusters', help='Whether to use cluster features', default=True)
+@click.argument("input", type=click.File("r", encoding="utf8"), required=True)
+@click.option("--output", "-o", help="Output model file.", required=True)
+@click.option(
+    "--clusters/--no-clusters", help="Whether to use cluster features", default=True
+)
 @click.pass_obj
 def train_crf(ctx, input, output, clusters):
     """Train CRF CEM recognizer."""
-    click.echo('chemdataextractor.crf.train')
+    click.echo("chemdataextractor.crf.train")
     sentences = []
     for line in input:
         sentence = []
         for t in line.split():
-            token, tag, iob = t.rsplit('/', 2)
+            token, tag, iob = t.rsplit("/", 2)
             sentence.append(((token, tag), iob))
         if sentence:
             sentences.append(sentence)

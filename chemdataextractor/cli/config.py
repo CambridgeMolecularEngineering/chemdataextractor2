@@ -17,8 +17,8 @@ from ..config import config
 log = logging.getLogger(__name__)
 
 
-@click.group(name='config')
-@click.help_option('--help', '-h')
+@click.group(name="config")
+@click.help_option("--help", "-h")
 @click.pass_context
 def config_cli(ctx):
     """Manage configuration."""
@@ -29,36 +29,36 @@ def config_cli(ctx):
 @click.pass_context
 def list(ctx):
     """List all config values."""
-    log.debug('chemdataextractor.config.list')
+    log.debug("chemdataextractor.config.list")
     for k in config:
-        click.echo('%s : %s' % (k, config[k]))
+        click.echo("%s : %s" % (k, config[k]))
 
 
 @config_cli.command()
-@click.argument('key', required=True)
+@click.argument("key", required=True)
 @click.pass_context
 def get(ctx, key):
     """Get the config value for a key."""
-    log.debug('chemdataextractor.config.get')
+    log.debug("chemdataextractor.config.get")
     click.echo(config[key])
 
 
 @config_cli.command()
-@click.argument('key', required=True)
-@click.argument('value', required=True)
+@click.argument("key", required=True)
+@click.argument("value", required=True)
 @click.pass_context
 def set(ctx, key, value):
     """Set the config value for a key."""
-    log.debug('chemdataextractor.config.set')
+    log.debug("chemdataextractor.config.set")
     config[key] = value
 
 
 @config_cli.command()
-@click.argument('key', required=True)
+@click.argument("key", required=True)
 @click.pass_context
 def remove(ctx, key):
     """Remove the config value for a key."""
-    log.debug('chemdataextractor.config.remove')
+    log.debug("chemdataextractor.config.remove")
     del config[key]
 
 
@@ -66,5 +66,5 @@ def remove(ctx, key):
 @click.pass_context
 def clear(ctx):
     """Clear all config values."""
-    log.debug('chemdataextractor.config.clear')
+    log.debug("chemdataextractor.config.clear")
     config.clear()

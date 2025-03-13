@@ -47,21 +47,23 @@ class BibtexParser(object):
         self.meta = kwargs
         self._token = None
         self.token_type = None
-        self._tokens = re.compile(r'([^\s"\'#%@{}()=,]+|\s|"|\'|#|%|@|{|}|\(|\)|=|,)').finditer(self.data)
+        self._tokens = re.compile(
+            r'([^\s"\'#%@{}()=,]+|\s|"|\'|#|%|@|{|}|\(|\)|=|,)'
+        ).finditer(self.data)
         self.mode = None
         self.definitions = {}
         self.records = OrderedDict()
 
         # Key name normalizations
         self.keynorms = {
-            u'keyw': u'keyword',
-            u'keywords': u'keyword',
-            u'authors': u'author',
-            u'editors': u'editor',
-            u'url': u'link',
-            u'urls': u'link',
-            u'links': u'link',
-            u'subjects': u'subject'
+            "keyw": "keyword",
+            "keywords": "keyword",
+            "authors": "author",
+            "editors": "editor",
+            "url": "link",
+            "urls": "link",
+            "links": "link",
+            "subjects": "subject",
         }
 
     def _next_token(self, skipws=True):
@@ -74,7 +76,7 @@ class BibtexParser(object):
         while True:
             try:
                 # TODO: If self._next_token() == '%' skip to newline?
-                if self._next_token() == '@':
+                if self._next_token() == "@":
                     self._parse_entry()
             except StopIteration:
                 break
@@ -82,36 +84,33 @@ class BibtexParser(object):
     def _parse_entry(self):
         """Parse an entry."""
         entry_type = self._next_token().lower()
-        if entry_type == 'string':
+        if entry_type == "string":
             self._parse_string()
-        elif entry_type not in ['comment', 'preamble']:
+        elif entry_type not in ["comment", "preamble"]:
             self._parse_record(entry_type)
 
     def _parse_string(self):
         """Parse a string entry and store the definition."""
-        if self._next_token() in ['{', '(']:
+        if self._next_token() in ["{", "("]:
             field = self._parse_field()
             if field:
                 self.definitions[field[0]] = field[1]
 
     def _parse_record(self, record_type):
         """Parse a record."""
-        if self._next_token() in ['{', '(']:
+        if self._next_token() in ["{", "("]:
             key = self._next_token()
-            self.records[key] = {
-                u'id': key,
-                u'type': record_type.lower()
-            }
-            if self._next_token() == ',':
+            self.records[key] = {"id": key, "type": record_type.lower()}
+            if self._next_token() == ",":
                 while True:
                     field = self._parse_field()
                     if field:
                         k, v = field[0], field[1]
                         if k in self.keynorms:
                             k = self.keynorms[k]
-                        if k == 'pages':
-                            v = v.replace(' ', '').replace('--', '-')
-                        if k == 'author' or k == 'editor':
+                        if k == "pages":
+                            v = v.replace(" ", "").replace("--", "-")
+                        if k == "author" or k == "editor":
                             v = self.parse_names(v)
                         # Recapitalizing the title generally causes more problems than it solves
                         # elif k == 'title':
@@ -119,13 +118,13 @@ class BibtexParser(object):
                         else:
                             v = latex_to_unicode(v)
                         self.records[key][k] = v
-                    if self._token != ',':
+                    if self._token != ",":
                         break
 
     def _parse_field(self):
         """Parse a Field."""
         name = self._next_token()
-        if self._next_token() == '=':
+        if self._next_token() == "=":
             value = self._parse_value()
             return name, value
 
@@ -138,42 +137,46 @@ class BibtexParser(object):
                 brac_counter = 0
                 while True:
                     t = self._next_token(skipws=False)
-                    if t == '{':
+                    if t == "{":
                         brac_counter += 1
-                    if t == '}':
+                    if t == "}":
                         brac_counter -= 1
                     if t == '"' and brac_counter <= 0:
                         break
                     else:
                         val.append(t)
-            elif t == '{':
+            elif t == "{":
                 brac_counter = 0
                 while True:
                     t = self._next_token(skipws=False)
-                    if t == '{':
+                    if t == "{":
                         brac_counter += 1
-                    if t == '}':
+                    if t == "}":
                         brac_counter -= 1
                     if brac_counter < 0:
                         break
                     else:
                         val.append(t)
-            elif re.match(r'\w', t):
-                val.extend([self.definitions.get(t, t), ' '])
+            elif re.match(r"\w", t):
+                val.extend([self.definitions.get(t, t), " "])
             elif t.isdigit():
-                val.append([t, ' '])
-            elif t == '#':
+                val.append([t, " "])
+            elif t == "#":
                 pass
             else:
                 break
 
-        value = ' '.join(''.join(val).split())
+        value = " ".join("".join(val).split())
         return value
 
     @classmethod
     def parse_names(cls, names):
         """Parse a string of names separated by "and" like in a BibTeX authors field."""
-        names = [latex_to_unicode(n) for n in re.split(r'\sand\s(?=[^{}]*(?:\{|$))', names) if n]
+        names = [
+            latex_to_unicode(n)
+            for n in re.split(r"\sand\s(?=[^{}]*(?:\{|$))", names)
+            if n
+        ]
         return names
 
     @property
@@ -189,14 +192,18 @@ class BibtexParser(object):
     @property
     def metadata(self):
         """Return metadata for the parsed collection of records."""
-        auto = {u'records': self.size}
+        auto = {"records": self.size}
         auto.update(self.meta)
         return auto
 
     @property
     def json(self):
         """Return a list of records as a JSON string. Follows the BibJSON convention."""
-        return json.dumps(OrderedDict([('metadata', self.metadata), ('records', self.records.values())]))
+        return json.dumps(
+            OrderedDict(
+                [("metadata", self.metadata), ("records", self.records.values())]
+            )
+        )
 
 
 def parse_bibtex(data):
