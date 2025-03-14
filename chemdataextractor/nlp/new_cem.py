@@ -9,11 +9,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from .tag import EnsembleTagger
-from .hf_replaced_tagger import _AllenNlpTokenTagger, ProcessedTextTagger
-from .hf_replaced_tagger import BertCrfTagger
+from .bertcrf_tagger import _BertCrfTokenTagger, ProcessedTextTagger
+from .bertcrf_tagger import BertCrfTagger
 
 
-tokentagger = _AllenNlpTokenTagger()
+tokentagger = _BertCrfTokenTagger()
 processtagger = ProcessedTextTagger()
 
 
