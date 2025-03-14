@@ -1,5 +1,5 @@
-chemdataextractor/relex
-tests/chemdataextractor/relex
+chemdataextractor/relex/data
+tests/chemdataextractor/relex/data
 tests/data/test_cache
 *log.txt
 log*.txt
