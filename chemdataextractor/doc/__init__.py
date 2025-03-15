@@ -10,7 +10,18 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from .document import Document
-from .text import Text, Title, Heading, Paragraph, Footnote, Citation, Caption, Sentence, Span, Token
+from .text import (
+    Text,
+    Title,
+    Heading,
+    Paragraph,
+    Footnote,
+    Citation,
+    Caption,
+    Sentence,
+    Span,
+    Token,
+)
 from .figure import Figure
 from .table import Table
 from .document_cacher import PlainTextCacher

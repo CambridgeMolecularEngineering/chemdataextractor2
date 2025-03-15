@@ -17,7 +17,9 @@ from .markup import HtmlReader, XmlReader
 from ..scrape.clean import clean, Cleaner, strip_html
 from ..scrape.pub.springer import tidy_springer_references
 
-clean_springer_html = Cleaner(fix_whitespace=True, strip_xpath='.//sub | .//em | .//strong')
+clean_springer_html = Cleaner(
+    fix_whitespace=True, strip_xpath=".//sub | .//em | .//strong"
+)
 
 
 class SpringerMaterialsHtmlReader(HtmlReader):
@@ -25,73 +27,91 @@ class SpringerMaterialsHtmlReader(HtmlReader):
 
     cleaners = [clean, clean_springer_html]
 
-    root_css = 'html'
+    root_css = "html"
     citation_css = 'span[class="CitationRef"]'
-    title_css = 'title'
-    heading_css = 'h2, h3, h4, h5, h6, .title1, span.title2, span.title3'
+    title_css = "title"
+    heading_css = "h2, h3, h4, h5, h6, .title1, span.title2, span.title3"
     table_css = 'div[class="Table"]'
     table_caption_css = 'div[class="Table"] p'
-    table_head_row_css = 'thead'
-    table_body_row_css = 'tbody'
-    table_cell_css = 'th, td'
+    table_head_row_css = "thead"
+    table_body_row_css = "tbody"
+    table_cell_css = "th, td"
     ignore_css = 'sub, sup, em[class^="EmphasisTypeItalic "], li[class="article-metrics__item"], div[class="CitationContent"]'
 
     def detect(self, fstring, fname=None):
         """"""
-        if fname and not (fname.endswith('.html') or fname.endswith('.htm')):
+        if fname and not (fname.endswith(".html") or fname.endswith(".htm")):
             return False
-        if b'<a class="footer-copyright_link" href="http://www.springernature.com"' in fstring or b'<meta content="SpringerLink"' in fstring:
+        if (
+            b'<a class="footer-copyright_link" href="http://www.springernature.com"'
+            in fstring
+            or b'<meta content="SpringerLink"' in fstring
+        ):
             return True
         return False
 
     def _make_tree(self, fstring):
-        root = etree.fromstring(fstring, parser=HTMLParser(
-            encoding=get_encoding(fstring, guesses='utf-8', is_html=True)))
+        root = etree.fromstring(
+            fstring,
+            parser=HTMLParser(
+                encoding=get_encoding(fstring, guesses="utf-8", is_html=True)
+            ),
+        )
         return root
 
+
 def springer_html_whitespace(document):
-    """ Remove whitespace in xml.text or xml.tails for all elements, if it is only whitespace """
+    """Remove whitespace in xml.text or xml.tails for all elements, if it is only whitespace"""
     # selects all tags and checks if the text or tail are spaces
-    for el in document.xpath('//*'):
+    for el in document.xpath("//*"):
         if str(el.text).isspace():
-            el.text = ''
+            el.text = ""
         if str(el.tail).isspace():
-            el.tail = ''
-        
+            el.tail = ""
+
     # debug, check the document
-    #print(etree.tostring(document, pretty_print=True))
+    # print(etree.tostring(document, pretty_print=True))
     # sys.exit()
     return document
 
+
 def fix_springer_table_whitespace(document):
     """remove leading and trailing whitespace from table cells
-    
+
     Arguments:
         document {[type]} -- [description]
-    
+
     Returns:
         [type] -- [description]
     """
-    for el in document.xpath('.//table//p | .//table//p'):
+    for el in document.xpath(".//table//p | .//table//p"):
         if el.text:
             stripped = str(el.text).strip()
             el.text = stripped
     return document
 
+
 class SpringerHtmlReader(HtmlReader):
 
-    cleaners = [clean, springer_html_whitespace, clean_springer_html, strip_html, tidy_springer_references, fix_springer_table_whitespace]
+    cleaners = [
+        clean,
+        springer_html_whitespace,
+        clean_springer_html,
+        strip_html,
+        tidy_springer_references,
+        fix_springer_table_whitespace,
+    ]
 
-    root_css = 'html'
+    root_css = "html"
     title_css = 'h1[class^="ArticleTitle"]'
-    heading_css = 'h2, h3, h4'
+    heading_css = "h2, h3, h4"
     table_css = 'div[class="Table"]'
     table_caption_css = 'div[class^="Caption"] p'
-    table_head_row_css = 'thead tr'
-    table_body_row_css = 'tbody tr'
-    table_cell_css = 'td, th'
-    figure_css = 'figure'
-    figure_caption_css = 'figcaption'
+    table_head_row_css = "thead tr"
+    table_body_row_css = "tbody tr"
+    table_cell_css = "td, th"
+    figure_css = "figure"
+    figure_caption_css = "figcaption"
     figure_label_css = 'figcaption span[class^="CaptionNumber"]'
     # citation_css = 'ce|bib-reference'
     ignore_css = 'a[class="skip-to__link pseudo-focus"], div[class="nojs-banner u-interface"], a[class="skip-to__link skip-to__link--contents pseudo-focus"],\
@@ -106,17 +126,23 @@ class SpringerHtmlReader(HtmlReader):
                   div[class="section section--collapsible uptodate-recommendations gtm-recommendations"], span[class="InlineEquation"], div[class="EquationContent"],\
                   div[class="EquationNumber"], footer'
 
-
     def detect(self, fstring, fname=None):
         """"""
-        if fname and not (fname.endswith('.html') or fname.endswith('.htm')):
+        if fname and not (fname.endswith(".html") or fname.endswith(".htm")):
             return False
-        if b'<meta content="Springer US" name="citation_publisher"' in fstring or b'<meta content="SpringerLink"' in fstring:
+        if (
+            b'<meta content="Springer US" name="citation_publisher"' in fstring
+            or b'<meta content="SpringerLink"' in fstring
+        ):
             print("springer HTML")
             return True
         return False
 
     def _make_tree(self, fstring):
-        root = etree.fromstring(fstring, parser=HTMLParser(
-            encoding=get_encoding(fstring, guesses='utf-8', is_html=True)))
+        root = etree.fromstring(
+            fstring,
+            parser=HTMLParser(
+                encoding=get_encoding(fstring, guesses="utf-8", is_html=True)
+            ),
+        )
         return root

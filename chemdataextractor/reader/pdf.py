@@ -28,7 +28,7 @@ class PdfReader(BaseReader):
 
     def detect(self, fstring, fname=None):
         """"""
-        if fname and not fname.endswith('.pdf'):
+        if fname and not fname.endswith(".pdf"):
             return False
         return True
 
@@ -50,7 +50,7 @@ class PdfReader(BaseReader):
             parser = PDFParser(f)
             document = PDFDocument(parser)
             if not document.is_extractable:
-                raise ReaderError('PDF text extraction not allowed')
+                raise ReaderError("PDF text extraction not allowed")
             rsrcmgr = PDFResourceManager()
             laparams = LAParams()
             device = PDFPageAggregator(rsrcmgr, laparams=laparams)

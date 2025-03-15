@@ -24,6 +24,7 @@ class Mass(Dimension):
     """
     Dimension subclass for masses.
     """
+
     pass
 
 
@@ -31,6 +32,7 @@ class MassModel(QuantityModel):
     """
     Model for mass.
     """
+
     dimensions = Mass()
 
 
@@ -68,16 +70,16 @@ class Pound(MassUnit):
     """
 
     def convert_value_to_standard(self, value):
-        return value * .453592
+        return value * 0.453592
 
     def convert_value_from_standard(self, value):
-        return value / .453592
+        return value / 0.453592
 
     def convert_error_to_standard(self, error):
-        return error * .453592
+        return error * 0.453592
 
     def convert_error_from_standard(self, error):
-        return error / .453592
+        return error / 0.453592
 
 
 class Tonne(MassUnit):
@@ -86,19 +88,23 @@ class Tonne(MassUnit):
     """
 
     def convert_value_to_standard(self, value):
-        return value * 1000.
+        return value * 1000.0
 
     def convert_value_from_standard(self, value):
-        return value / 1000.
+        return value / 1000.0
 
     def convert_error_to_standard(self, error):
-        return error * 1000.
+        return error * 1000.0
 
     def convert_error_from_standard(self, error):
-        return error / 1000.
+        return error / 1000.0
 
 
-units_dict = {R('g(ram(s)?)?', group=0): Gram, R('pound[s]?', group=0): Pound, R('lb[s]?', group=0): Pound,
-R('t(onne)?', group=0): Tonne}
+units_dict = {
+    R("g(ram(s)?)?", group=0): Gram,
+    R("pound[s]?", group=0): Pound,
+    R("lb[s]?", group=0): Pound,
+    R("t(onne)?", group=0): Tonne,
+}
 Mass.units_dict = units_dict
 Mass.standard_units = Gram(magnitude=3.0)

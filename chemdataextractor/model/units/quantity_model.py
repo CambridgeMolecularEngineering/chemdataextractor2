@@ -12,13 +12,35 @@ from __future__ import unicode_literals
 
 import copy
 from abc import ABCMeta
-from ..base import BaseModel, BaseType, FloatType, StringType, ListType, ModelMeta, InferredProperty
+from ..base import (
+    BaseModel,
+    BaseType,
+    FloatType,
+    StringType,
+    ListType,
+    ModelMeta,
+    InferredProperty,
+)
 from .unit import Unit, UnitType
 from .dimension import Dimensionless
 from ...parse.elements import Any
-from ...parse.auto import AutoSentenceParser, AutoTableParser, construct_unit_element, match_dimensions_of
-from ...parse.quantity import magnitudes_dict, infer_unit, infer_value, infer_error, value_element
-from ...parse.template import QuantityModelTemplateParser, MultiQuantityModelTemplateParser
+from ...parse.auto import (
+    AutoSentenceParser,
+    AutoTableParser,
+    construct_unit_element,
+    match_dimensions_of,
+)
+from ...parse.quantity import (
+    magnitudes_dict,
+    infer_unit,
+    infer_value,
+    infer_error,
+    value_element,
+)
+from ...parse.template import (
+    QuantityModelTemplateParser,
+    MultiQuantityModelTemplateParser,
+)
 
 
 class _QuantityModelMeta(ModelMeta):
@@ -28,8 +50,8 @@ class _QuantityModelMeta(ModelMeta):
         cls = super(_QuantityModelMeta, mcs).__new__(mcs, name, bases, attrs)
         unit_element = construct_unit_element(cls.dimensions)
         if unit_element:
-            cls.fields['raw_units'].parse_expression = unit_element(None)
-        cls.fields['raw_value'].parse_expression = value_element()(None)
+            cls.fields["raw_units"].parse_expression = unit_element(None)
+        cls.fields["raw_value"].parse_expression = value_element()(None)
         return cls
 
 
@@ -45,17 +67,28 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
 
     Any parse_expressions set in the model should have an added action to ensure that the results are a single word. An example would be to call add_action(join) on each parse expression.
     """
+
     raw_value = StringType(required=True, contextual=True)
     raw_units = StringType(required=True, contextual=True)
-    value = InferredProperty(ListType(FloatType(), sorted_=True),
-                             origin_field='raw_value', inferrer=infer_value, contextual=True)
-    units = InferredProperty(UnitType(),
-                             origin_field='raw_units', inferrer=infer_unit, contextual=True)
-    error = InferredProperty(FloatType(),
-                             origin_field='raw_value', inferrer=infer_error, contextual=True)
+    value = InferredProperty(
+        ListType(FloatType(), sorted_=True),
+        origin_field="raw_value",
+        inferrer=infer_value,
+        contextual=True,
+    )
+    units = InferredProperty(
+        UnitType(), origin_field="raw_units", inferrer=infer_unit, contextual=True
+    )
+    error = InferredProperty(
+        FloatType(), origin_field="raw_value", inferrer=infer_error, contextual=True
+    )
     dimensions = None
     specifier = StringType()
-    parsers = [MultiQuantityModelTemplateParser(), QuantityModelTemplateParser(), AutoTableParser()]
+    parsers = [
+        MultiQuantityModelTemplateParser(),
+        QuantityModelTemplateParser(),
+        AutoTableParser(),
+    ]
 
     # Operators are implemented so that composite quantities can be created easily
     # on the fly, such as the following code snippet:
@@ -77,21 +110,21 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
 
     def __truediv__(self, other):
 
-        other_inverted = other**(-1.0)
+        other_inverted = other ** (-1.0)
         new_model = self * other_inverted
         return new_model
 
     def __pow__(self, other):
 
         new_model = QuantityModel()
-        new_model.dimensions = self.dimensions ** other
+        new_model.dimensions = self.dimensions**other
         if self.value is not None:
             new_val = []
             for val in self.value:
-                new_val.append(val ** other)
+                new_val.append(val**other)
             new_model.value = new_val
         if self.units is not None:
-            new_model.units = self.units ** other
+            new_model.units = self.units**other
         # Handle case that we have a dimensionless quantity, so we don't get dimensionless units squared.
         if isinstance(new_model.dimensions, Dimensionless):
             dimensionless_model = DimensionlessModel()
@@ -109,16 +142,22 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
             if len(self.value) == 2 and len(other.value) == 2:
                 # The following always encompasses the whole range because
                 # value has sorted_=True, so it should sort any values.
-                new_val = [self.value[0] * other.value[0],
-                           self.value[1] * other.value[1]]
+                new_val = [
+                    self.value[0] * other.value[0],
+                    self.value[1] * other.value[1],
+                ]
                 new_model.value = new_val
             elif len(self.value) == 2:
-                new_val = [self.value[0] * other.value[0],
-                           self.value[1] * other.value[0]]
+                new_val = [
+                    self.value[0] * other.value[0],
+                    self.value[1] * other.value[0],
+                ]
                 new_model.value = new_val
             elif len(self.value) == 2 and len(other.value) == 2:
-                new_val = [self.value[0] * other.value[0],
-                           self.value[0] * other.value[1]]
+                new_val = [
+                    self.value[0] * other.value[0],
+                    self.value[0] * other.value[1],
+                ]
                 new_model.value = new_val
             else:
                 new_model.value = [self.value[0] * other.value[0]]
@@ -154,9 +193,9 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
                 self.value = converted_values
                 self.units = unit
             except ZeroDivisionError:
-                raise ValueError('Model not converted due to zero division error')
+                raise ValueError("Model not converted due to zero division error")
         else:
-            raise AttributeError('Current units not set')
+            raise AttributeError("Current units not set")
         return self
 
     def convert_to_standard(self):
@@ -176,9 +215,11 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
             self.convert_to(standard_units)
         else:
             if not self.units:
-                raise AttributeError('Current units not set')
+                raise AttributeError("Current units not set")
             elif not self.dimensions.standard_units:
-                raise AttributeError('Standard units for dimension', self.dimension, 'not set')
+                raise AttributeError(
+                    "Standard units for dimension", self.dimension, "not set"
+                )
         return self
 
     def convert_value(self, from_unit, to_unit):
@@ -194,15 +235,21 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
         if self.value is not None:
             if to_unit.dimensions == from_unit.dimensions:
                 if len(self.value) == 2:
-                    standard_vals = [from_unit.convert_value_to_standard(self.value[0]),
-                                     from_unit.convert_value_to_standard(self.value[1])]
-                    return [to_unit.convert_value_from_standard(standard_vals[0]),
-                            to_unit.convert_value_from_standard(standard_vals[1])]
+                    standard_vals = [
+                        from_unit.convert_value_to_standard(self.value[0]),
+                        from_unit.convert_value_to_standard(self.value[1]),
+                    ]
+                    return [
+                        to_unit.convert_value_from_standard(standard_vals[0]),
+                        to_unit.convert_value_from_standard(standard_vals[1]),
+                    ]
                 else:
                     standard_val = from_unit.convert_value_to_standard(self.value[0])
                     return [to_unit.convert_value_from_standard(standard_val)]
             else:
-                raise ValueError("Unit to convert to must have same dimensions as current unit")
+                raise ValueError(
+                    "Unit to convert to must have same dimensions as current unit"
+                )
             raise AttributeError("Unit to convert from not set")
         else:
             raise AttributeError("Value for model not set")
@@ -223,7 +270,9 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
                 standard_error = from_unit.convert_error_to_standard(self.error)
                 return to_unit.convert_error_from_standard(standard_error)
             else:
-                raise ValueError("Unit to convert to must have same dimensions as current unit")
+                raise ValueError(
+                    "Unit to convert to must have same dimensions as current unit"
+                )
             raise AttributeError("Unit to convert from not set")
         else:
             raise AttributeError("Value for model not set")
@@ -258,7 +307,10 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
         if other.error is not None:
             min_other_value = min_other_value - other.error
             max_other_value = max_other_value + other.error
-        if min_converted_value <= max_other_value or max_converted_value >= min_other_value:
+        if (
+            min_converted_value <= max_other_value
+            or max_converted_value >= min_other_value
+        ):
             return True
         return False
 
@@ -267,7 +319,7 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
             return False
         for field_name, field in self.fields.items():
             # Method works recursively so it works with nested models
-            if hasattr(field, 'model_class'):
+            if hasattr(field, "model_class"):
                 if self[field_name] is None:
                     if other[field_name] is not None:
                         return False
@@ -276,10 +328,16 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
                 elif not self[field_name].is_superset(other[field_name]):
                     return False
             else:
-                if (field_name == 'raw_value' and other[field_name] == 'NoValue'
-                    and self[field_name] is not None):
+                if (
+                    field_name == "raw_value"
+                    and other[field_name] == "NoValue"
+                    and self[field_name] is not None
+                ):
                     pass
-                elif other[field_name] is not None and self[field_name] != other[field_name]:
+                elif (
+                    other[field_name] is not None
+                    and self[field_name] != other[field_name]
+                ):
                     return False
         return True
 
@@ -289,23 +347,31 @@ class QuantityModel(BaseModel, metaclass=_QuantityModelMeta):
             # Check if the other seems to be describing the same thing as self.
             match = True
             for field_name, field in self.fields.items():
-                if (field_name == 'raw_value' and other[field_name] == 'NoValue'
-                    and self[field_name] is not None):
+                if (
+                    field_name == "raw_value"
+                    and other[field_name] == "NoValue"
+                    and self[field_name] is not None
+                ):
                     pass
-                elif (self[field_name] is not None
-                  and other[field_name] is not None
-                  and self[field_name] != other[field_name]):
+                elif (
+                    self[field_name] is not None
+                    and other[field_name] is not None
+                    and self[field_name] != other[field_name]
+                ):
                     match = False
                     break
         return match
 
     def __str__(self):
-        string = 'Quantity with ' + self.dimensions.__str__() + ', ' + self.units.__str__()
-        string += ' and a value of ' + str(self.value)
+        string = (
+            "Quantity with " + self.dimensions.__str__() + ", " + self.units.__str__()
+        )
+        string += " and a value of " + str(self.value)
         return string
 
 
 class DimensionlessModel(QuantityModel):
-    """ Special case to handle dimensionless quantities"""
+    """Special case to handle dimensionless quantities"""
+
     dimensions = Dimensionless()
     raw_units = StringType(required=False, contextual=False)

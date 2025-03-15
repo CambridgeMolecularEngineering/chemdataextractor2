@@ -24,6 +24,7 @@ class Angle(Dimension):
     """
     Dimension subclass for angles.
     """
+
     pass
 
 
@@ -31,6 +32,7 @@ class AngleModel(QuantityModel):
     """
     Model for angles.
     """
+
     dimensions = Angle()
 
 
@@ -48,6 +50,7 @@ class Degrees(AngleUnit):
     """
     Class for degrees.
     """
+
     # TODO Does not take minutes into account properly, but only decimal degrees
 
     def convert_value_to_standard(self, value):
@@ -63,8 +66,6 @@ class Degrees(AngleUnit):
         return error
 
 
-units_dict = {R('[°º˚̥ ⁰∘]', group=0): Degrees}
+units_dict = {R("[°º˚̥ ⁰∘]", group=0): Degrees}
 Angle.units_dict = units_dict
 Angle.standard_units = Degrees()
-
-

@@ -23,7 +23,7 @@ class UnitType(BaseType):
         as the model.
         """
 
-        if hasattr(value, 'dimensions'):
+        if hasattr(value, "dimensions"):
             if value.dimensions == instance.dimensions:
                 instance._values[self.name] = self.process(value)
             else:
@@ -54,44 +54,52 @@ class MetaUnit(type):
     def __new__(mcs, name, bases, attrs):
         cls = type.__new__(mcs, name, bases, attrs)
 
-        if hasattr(cls, 'convert_value_to_standard'):
-            sub_convert_to_standard = getattr(cls, 'convert_value_to_standard')
+        if hasattr(cls, "convert_value_to_standard"):
+            sub_convert_to_standard = getattr(cls, "convert_value_to_standard")
 
             def new_convert_to_standard(self, value):
                 val = value * 10 ** (self.magnitude + self.base_magnitude)
                 return sub_convert_to_standard(self, val)
-            setattr(cls, 'convert_value_to_standard', new_convert_to_standard)
 
-        if hasattr(cls, 'convert_value_from_standard'):
-            sub_convert_from_standard = getattr(cls, 'convert_value_from_standard')
+            setattr(cls, "convert_value_to_standard", new_convert_to_standard)
+
+        if hasattr(cls, "convert_value_from_standard"):
+            sub_convert_from_standard = getattr(cls, "convert_value_from_standard")
 
             def new_convert_from_standard(self, value):
-                val = value * 10**(-1 * (self.magnitude + self.base_magnitude))
+                val = value * 10 ** (-1 * (self.magnitude + self.base_magnitude))
                 return sub_convert_from_standard(self, val)
-            setattr(cls, 'convert_value_from_standard', new_convert_from_standard)
 
-        if hasattr(cls, 'convert_error_to_standard'):
-            sub_convert_err_to_standard = getattr(cls, 'convert_error_to_standard')
+            setattr(cls, "convert_value_from_standard", new_convert_from_standard)
+
+        if hasattr(cls, "convert_error_to_standard"):
+            sub_convert_err_to_standard = getattr(cls, "convert_error_to_standard")
 
             def new_convert_err_to_standard(self, value):
-                val = value * 10**(self.magnitude + self.base_magnitude)
+                val = value * 10 ** (self.magnitude + self.base_magnitude)
                 return sub_convert_err_to_standard(self, val)
-            setattr(cls, 'convert_error_to_standard', new_convert_err_to_standard)
 
-        if hasattr(cls, 'convert_error_from_standard'):
-            sub_convert_err_from_standard = getattr(cls, 'convert_error_from_standard')
+            setattr(cls, "convert_error_to_standard", new_convert_err_to_standard)
+
+        if hasattr(cls, "convert_error_from_standard"):
+            sub_convert_err_from_standard = getattr(cls, "convert_error_from_standard")
 
             def new_convert_err_from_standard(self, value):
-                val = value * 10**(-1 * (self.magnitude + self.base_magnitude))
+                val = value * 10 ** (-1 * (self.magnitude + self.base_magnitude))
                 return sub_convert_err_from_standard(self, val)
-            setattr(cls, 'convert_error_from_standard', new_convert_err_from_standard)
 
-        if hasattr(cls, 'constituent_units') and cls.constituent_units is not None:
+            setattr(cls, "convert_error_from_standard", new_convert_err_from_standard)
+
+        if hasattr(cls, "constituent_units") and cls.constituent_units is not None:
             cls.base_magnitude = cls.constituent_units.magnitude
 
             def new_initializer(self, magnitude=0.0):
-                Unit.__init__(self, cls.constituent_units.dimensions, magnitude,
-                              powers=cls.constituent_units.powers)
+                Unit.__init__(
+                    self,
+                    cls.constituent_units.dimensions,
+                    magnitude,
+                    powers=cls.constituent_units.powers,
+                )
 
             cls.__init__ = new_initializer
 
@@ -175,7 +183,7 @@ class Unit(object, metaclass=MetaUnit):
         :param float value: The value to convert to standard units
         """
         for unit, power in self.powers.items():
-            value = unit.convert_value_to_standard(value**(1 / power))**power
+            value = unit.convert_value_to_standard(value ** (1 / power)) ** power
         return value
 
     def convert_value_from_standard(self, value):
@@ -186,7 +194,7 @@ class Unit(object, metaclass=MetaUnit):
         :param float value: The value to convert from standard units
         """
         for unit, power in self.powers.items():
-            value = unit.convert_value_from_standard(value**(1 / power))**power
+            value = unit.convert_value_from_standard(value ** (1 / power)) ** power
         return value
 
     def convert_error_to_standard(self, error):
@@ -199,7 +207,7 @@ class Unit(object, metaclass=MetaUnit):
         """
 
         for unit, power in self.powers.items():
-            error = unit.convert_error_to_standard(error**(1 / power))**power
+            error = unit.convert_error_to_standard(error ** (1 / power)) ** power
         return error
 
     def convert_error_from_standard(self, error):
@@ -212,9 +220,8 @@ class Unit(object, metaclass=MetaUnit):
         """
 
         for unit, power in self.powers.items():
-            error = unit.convert_error_from_standard(error**(1 / power))**power
+            error = unit.convert_error_from_standard(error ** (1 / power)) ** power
         return error
-
 
     """
     Operators are implemented for the easy creation of complicated units out of
@@ -223,7 +230,7 @@ class Unit(object, metaclass=MetaUnit):
     """
 
     def __truediv__(self, other):
-        other_inverted = other**(-1.0)
+        other_inverted = other ** (-1.0)
         new_unit = self * other_inverted
         return new_unit
 
@@ -242,7 +249,9 @@ class Unit(object, metaclass=MetaUnit):
             new_key = copy.deepcopy(self)
             new_key.magnitude = 0.0
             powers[new_key] = other
-        return Unit(self.dimensions**other, powers=powers, magnitude=self.magnitude * other)
+        return Unit(
+            self.dimensions**other, powers=powers, magnitude=self.magnitude * other
+        )
 
     def __mul__(self, other):
 
@@ -311,7 +320,11 @@ class Unit(object, metaclass=MetaUnit):
             if other.powers == (self**1.0).powers:
                 return True
         else:
-            if type(self) == type(other) and self.magnitude == other.magnitude and self.dimensions == other.dimensions:
+            if (
+                type(self) == type(other)
+                and self.magnitude == other.magnitude
+                and self.dimensions == other.dimensions
+            ):
                 return True
         return False
 
@@ -327,13 +340,13 @@ class Unit(object, metaclass=MetaUnit):
         return string.__hash__()
 
     def __str__(self):
-        string = ''
+        string = ""
         if self.magnitude != 0:
-            string += '(10^' + str(self.magnitude) + ') * '
+            string += "(10^" + str(self.magnitude) + ") * "
         name_list = []
         if self.powers is not None:
             for key, value in self.powers.items():
-                name_list.append((type(key).__name__ + '^(' + str(value) + ')  '))
+                name_list.append((type(key).__name__ + "^(" + str(value) + ")  "))
             for name in sorted(name_list):
                 string += name
             string = string[:-2]

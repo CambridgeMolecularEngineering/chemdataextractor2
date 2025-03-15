@@ -34,7 +34,9 @@ class ElectricPotentialModel(QuantityModel):
 class ElectricPotentialUnit(Unit):
 
     def __init__(self, magnitude=0.0, powers=None):
-        super(ElectricPotentialUnit, self).__init__(ElectricPotential(), magnitude, powers)
+        super(ElectricPotentialUnit, self).__init__(
+            ElectricPotential(), magnitude, powers
+        )
 
 
 class Volt(ElectricPotentialUnit):
@@ -52,6 +54,6 @@ class Volt(ElectricPotentialUnit):
         return error
 
 
-units_dict = {R('(V|v)(olt(s)?)?', group=0): Volt}
+units_dict = {R("(V|v)(olt(s)?)?", group=0): Volt}
 ElectricPotential.units_dict.update(units_dict)
 ElectricPotential.standard_units = Volt()

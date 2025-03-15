@@ -23,7 +23,7 @@ def construct_yaml_str(self, node):
     return self.construct_scalar(node)
 
 
-SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+SafeLoader.add_constructor("tag:yaml.org,2002:str", construct_yaml_str)
 
 
 class Config(MutableMapping):
@@ -61,15 +61,20 @@ class Config(MutableMapping):
 
         # Use CHEMDATAEXTRACTOR_CONFIG environment variable if set
         if not self._path:
-            self._path = os.environ.get('CHEMDATAEXTRACTOR_CONFIG')
+            self._path = os.environ.get("CHEMDATAEXTRACTOR_CONFIG")
         # Use OS-dependent config directory given by appdirs
         if not self._path:
             if sys.version_info[0] == 2:
-                self._path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'python2_config.yml')
+                self._path = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), "python2_config.yml"
+                )
             else:
-                self._path = os.path.join(appdirs.user_config_dir('ChemDataExtractor'), 'chemdataextractor.yml')
+                self._path = os.path.join(
+                    appdirs.user_config_dir("ChemDataExtractor"),
+                    "chemdataextractor.yml",
+                )
         if os.path.isfile(self.path):
-            with io.open(self.path, encoding='utf8') as f:
+            with io.open(self.path, encoding="utf8") as f:
                 self._data = yaml.safe_load(f)
                 if self._data is None:
                     self._data = {}
@@ -84,7 +89,7 @@ class Config(MutableMapping):
         d = os.path.dirname(self.path)
         if not os.path.isdir(d):
             os.makedirs(d)
-        with io.open(self.path, 'w', encoding='utf8') as f:
+        with io.open(self.path, "w", encoding="utf8") as f:
             yaml.safe_dump(self._data, f, default_flow_style=False, encoding=None)
 
     def __contains__(self, k):
@@ -108,7 +113,7 @@ class Config(MutableMapping):
         return len(self._data)
 
     def __repr__(self):
-        return '<Config: %s>' % self.path
+        return "<Config: %s>" % self.path
 
     def clear(self):
         """Clear all values from config."""

@@ -24,6 +24,7 @@ class Length(Dimension):
     """
     Dimension subclass for lengths.
     """
+
     pass
 
 
@@ -31,6 +32,7 @@ class LengthModel(QuantityModel):
     """
     Model for lengths.
     """
+
     dimensions = Length()
 
 
@@ -86,35 +88,37 @@ class Angstrom(LengthUnit):
     """
 
     def convert_value_to_standard(self, value):
-        return value * 10**(-10)
+        return value * 10 ** (-10)
 
     def convert_value_from_standard(self, value):
-        return value / 10**(-10)
+        return value / 10 ** (-10)
 
     def convert_error_to_standard(self, error):
-        return error * 10**(-10)
+        return error * 10 ** (-10)
 
     def convert_error_from_standard(self, error):
-        return error / 10**(-10)
+        return error / 10 ** (-10)
 
 
 class Micron(LengthUnit):
     def convert_value_to_standard(self, value):
-        return value / 1000000.
+        return value / 1000000.0
 
     def convert_value_from_standard(self, value):
-        return value * 1000000.
+        return value * 1000000.0
 
     def convert_error_to_standard(self, error):
-        return error / 1000000.
+        return error / 1000000.0
 
     def convert_error_from_standard(self, error):
-        return error * 1000000.
+        return error * 1000000.0
 
 
-units_dict = {R('(m(eter(s)?)?(?!ile(s)?))|(Meter(s)?(?!ile(s)?))', group=0): Meter,
-              R('[Mm]ile[s]?', group=0): Mile,
-              R('[ÅÅ]', group=0): Angstrom,
-              R('[M|m]icron', group=0): Micron}
+units_dict = {
+    R("(m(eter(s)?)?(?!ile(s)?))|(Meter(s)?(?!ile(s)?))", group=0): Meter,
+    R("[Mm]ile[s]?", group=0): Mile,
+    R("[ÅÅ]", group=0): Angstrom,
+    R("[M|m]icron", group=0): Micron,
+}
 Length.units_dict = units_dict
 Length.standard_units = Meter()

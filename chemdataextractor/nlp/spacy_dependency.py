@@ -3,8 +3,9 @@ import spacy
 from .dependency import Dependency, IndexTagger
 from .tag import BaseTagger, EnsembleTagger
 
+
 class _SpacyDependencyTagger(BaseTagger):
-    tag_type = 'dependency'
+    tag_type = "dependency"
 
     def __init__(self):
         self.nlp = spacy.load("en_core_web_sm")
@@ -20,8 +21,8 @@ class _SpacyDependencyTagger(BaseTagger):
             labels = []
             for spacy_token in processed:
                 relation = spacy_token.dep_
-                if relation == 'ROOT':
-                    labels.append(Dependency(None, 'root'))
+                if relation == "ROOT":
+                    labels.append(Dependency(None, "root"))
                 else:
                     labels.append(Dependency(tokens[spacy_token.head.i], relation))
             all_labels.append(zip(tokens, labels))

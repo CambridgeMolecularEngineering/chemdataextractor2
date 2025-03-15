@@ -51,10 +51,18 @@ class AutoDependencyParser(AutoSentenceParser):
     """
     Implementation of DepIE algorithm for ChemDataExtractor models
     """
+
     _excluded_fields_for_quantity_model = ["raw_value", "raw_units", "compound"]
 
-    def __init__(self, chem_name=None, skip_phrase=None, primary_keypath=None,
-                 skip_section_phrase=None, allow_section_phrase=None, value_phrase_constructor=None):
+    def __init__(
+        self,
+        chem_name=None,
+        skip_phrase=None,
+        primary_keypath=None,
+        skip_section_phrase=None,
+        allow_section_phrase=None,
+        value_phrase_constructor=None,
+    ):
         """
 
         :param chem_name: Parse expression to use to detect chemical names, defaults to None,
@@ -75,7 +83,11 @@ class AutoDependencyParser(AutoSentenceParser):
             in which case the default ChemDataExtractor phrase is used.
         """
         super().__init__()
-        self.chem_name = chem_name if chem_name is not None else (cem | chemical_label | lenient_chemical_label)
+        self.chem_name = (
+            chem_name
+            if chem_name is not None
+            else (cem | chemical_label | lenient_chemical_label)
+        )
         self.skip_phrase = skip_phrase
         self.primary_keypath = primary_keypath
         self.skip_section_phrase = skip_section_phrase
@@ -85,12 +97,16 @@ class AutoDependencyParser(AutoSentenceParser):
     def parse_sentence(self, sentence):
         # Skip parsing sentence if it fits skip_phrase
         if self.skip_phrase is not None:
-            skip_phrase_results = [result for result in self.skip_phrase.scan(sentence.tokens)]
+            skip_phrase_results = [
+                result for result in self.skip_phrase.scan(sentence.tokens)
+            ]
             if skip_phrase_results:
                 return []
         # Skip parsing sentence unless it fits trigger_phrase
         if self.trigger_phrase is not None:
-            trigger_phrase_results = [result for result in self.trigger_phrase.scan(sentence.tokens)]
+            trigger_phrase_results = [
+                result for result in self.trigger_phrase.scan(sentence.tokens)
+            ]
             if not trigger_phrase_results:
                 return []
         # Check for a few scenarios and do a different parsing path depending on what sort of model we have
@@ -101,12 +117,17 @@ class AutoDependencyParser(AutoSentenceParser):
         #   first code path?
         if self.primary_keypath is not None:
             return self._parse_sentence_primary_keypath(sentence)
-        elif all(hasattr(self.model, field) for field in self._excluded_fields_for_quantity_model):
+        elif all(
+            hasattr(self.model, field)
+            for field in self._excluded_fields_for_quantity_model
+        ):
             return self._parse_sentence_quantity_model(sentence)
         elif hasattr(self.model, "specifier"):
             return self._parse_sentence_specifier(sentence)
         else:
-            raise TypeError(f"{self.model} is not supported by AutoDependencyParser as it lacks a quantity or specifier, and a primary keypath was not specified.")
+            raise TypeError(
+                f"{self.model} is not supported by AutoDependencyParser as it lacks a quantity or specifier, and a primary keypath was not specified."
+            )
 
     def _parse_sentence_primary_keypath(self, sentence):
         other_results = self._do_other_phrases(sentence)
@@ -114,7 +135,9 @@ class AutoDependencyParser(AutoSentenceParser):
         if "raw_value" in self.model.fields:
             value_results = self.do_value_phrase(sentence)
         try:
-            return self._create_models_primary_keypath(value_results, other_results, sentence)
+            return self._create_models_primary_keypath(
+                value_results, other_results, sentence
+            )
         except AttributeError as e:
             print(e)
             return []
@@ -124,8 +147,12 @@ class AutoDependencyParser(AutoSentenceParser):
             primary_results = other_results.pop(self.primary_keypath)
             other_values_map = {}
             for keypath, results in other_results.items():
-                other_values_map[keypath] = _find_associated(primary_results, results, False, sentence)
-            values_map = _find_associated(primary_results, value_results, True, sentence)
+                other_values_map[keypath] = _find_associated(
+                    primary_results, results, False, sentence
+                )
+            values_map = _find_associated(
+                primary_results, value_results, True, sentence
+            )
 
             for primary in primary_results:
                 record = self.model()
@@ -138,7 +165,10 @@ class AutoDependencyParser(AutoSentenceParser):
                 record.set_confidence(self.primary_keypath, 1.0)
 
                 for keypath, results_map in other_values_map.items():
-                    if primary in results_map.keys() and results_map[primary] is not None:
+                    if (
+                        primary in results_map.keys()
+                        and results_map[primary] is not None
+                    ):
                         data = results_map[primary][0].data
                         if isinstance(data, list):
                             record[keypath] = data[0].text
@@ -176,18 +206,26 @@ class AutoDependencyParser(AutoSentenceParser):
         _remove_contained_ranges(chem_results, parent_results)
 
         try:
-            return self._create_models_specifier(chem_results, specifier_results, other_results, sentence)
+            return self._create_models_specifier(
+                chem_results, specifier_results, other_results, sentence
+            )
         except AttributeError as e:
             print(e)
             return []
 
-    def _create_models_specifier(self, chem_results, specifier_results, other_results, sentence):
+    def _create_models_specifier(
+        self, chem_results, specifier_results, other_results, sentence
+    ):
         try:
-            chem_values_map = _find_associated(specifier_results, chem_results, False, sentence)
+            chem_values_map = _find_associated(
+                specifier_results, chem_results, False, sentence
+            )
 
             other_values_map = {}
             for keypath, results in other_results.items():
-                other_values_map[keypath] = _find_associated(specifier_results, results, False, sentence)
+                other_values_map[keypath] = _find_associated(
+                    specifier_results, results, False, sentence
+                )
 
             for specifier in specifier_results:
                 record = self.model()
@@ -199,16 +237,26 @@ class AutoDependencyParser(AutoSentenceParser):
 
                 record.set_confidence("specifier", 1.0)
 
-                if specifier in chem_values_map.keys() and chem_values_map[specifier] is not None:
-                    test_result = E("wrapped_result", chem_values_map[specifier][0].data)
-                    parsed_result = self._get_data("compound", self.model.fields["compound"], test_result)["compound"]
+                if (
+                    specifier in chem_values_map.keys()
+                    and chem_values_map[specifier] is not None
+                ):
+                    test_result = E(
+                        "wrapped_result", chem_values_map[specifier][0].data
+                    )
+                    parsed_result = self._get_data(
+                        "compound", self.model.fields["compound"], test_result
+                    )["compound"]
 
                     record["compound"] = parsed_result
 
                     record.set_confidence("compound", chem_values_map[specifier][1])
 
                 for keypath, results_map in other_values_map.items():
-                    if specifier in results_map.keys() and results_map[specifier] is not None:
+                    if (
+                        specifier in results_map.keys()
+                        and results_map[specifier] is not None
+                    ):
                         data = results_map[specifier][0].data
                         if isinstance(data, list):
                             record[keypath] = data[0].text
@@ -237,7 +285,9 @@ class AutoDependencyParser(AutoSentenceParser):
         _remove_contained_ranges(chem_results, parent_results)
 
         try:
-            return self._create_models(chem_results, value_results, other_results, sentence)
+            return self._create_models(
+                chem_results, value_results, other_results, sentence
+            )
         except AttributeError as e:
             print(e)
             return []
@@ -245,11 +295,15 @@ class AutoDependencyParser(AutoSentenceParser):
     def _create_models(self, chem_results, value_results, other_results, sentence):
         # TODO(ti250): refactor so all of these create_models are the same - or at least share a lot more...
         try:
-            chem_values_map = _find_associated(value_results, chem_results, False, sentence)
+            chem_values_map = _find_associated(
+                value_results, chem_results, False, sentence
+            )
 
             other_values_map = {}
             for keypath, results in other_results.items():
-                other_values_map[keypath] = _find_associated(value_results, results, False, sentence)
+                other_values_map[keypath] = _find_associated(
+                    value_results, results, False, sentence
+                )
 
             for value in value_results:
                 record = self.model()
@@ -262,9 +316,14 @@ class AutoDependencyParser(AutoSentenceParser):
                 record.set_confidence("raw_value", 1.0)
                 record.set_confidence("raw_units", 1.0)
 
-                if value in chem_values_map.keys() and chem_values_map[value] is not None:
+                if (
+                    value in chem_values_map.keys()
+                    and chem_values_map[value] is not None
+                ):
                     test_result = E("wrapped_result", chem_values_map[value][0].data)
-                    parsed_result = self._get_data("compound", self.model.fields["compound"], test_result)["compound"]
+                    parsed_result = self._get_data(
+                        "compound", self.model.fields["compound"], test_result
+                    )["compound"]
 
                     record["compound"] = parsed_result
 
@@ -285,18 +344,24 @@ class AutoDependencyParser(AutoSentenceParser):
     def _do_other_phrases(self, sentence):
         results = {}
         for keypath, phrase in self._phrases_for_keypaths.items():
-            results[keypath] = _LabelledRange.from_cde_results(phrase.scan(sentence.tokens), subsentence=sentence)
+            results[keypath] = _LabelledRange.from_cde_results(
+                phrase.scan(sentence.tokens), subsentence=sentence
+            )
         return results
 
     def do_value_phrase(self, sentence):
         value_phrase = self._value_phrase
-        value_phrase_results = _LabelledRange.from_cde_results(value_phrase.scan(sentence.tokens), subsentence=sentence)
+        value_phrase_results = _LabelledRange.from_cde_results(
+            value_phrase.scan(sentence.tokens), subsentence=sentence
+        )
         return value_phrase_results
 
     def _do_chem_phrase(self, sentence):
         chem_phrase = self._chem_phrase
 
-        unfiltered_chem_phrase_results = _LabelledRange.from_cde_results(chem_phrase.scan(sentence.tokens), subsentence=sentence)
+        unfiltered_chem_phrase_results = _LabelledRange.from_cde_results(
+            chem_phrase.scan(sentence.tokens), subsentence=sentence
+        )
         chem_phrase_results = []
         for result in unfiltered_chem_phrase_results:
             if isinstance(result.data, list) and result.data[0].tag == "compound":
@@ -312,7 +377,11 @@ class AutoDependencyParser(AutoSentenceParser):
             value_phrase_constructor = value_element
         if hasattr(self.model, "dimensions") and not self.model.dimensions:
             return value_phrase_constructor()
-        unit_element = Group(construct_unit_element(self.model.dimensions).with_condition(match_dimensions_of(self.model))('raw_units'))
+        unit_element = Group(
+            construct_unit_element(self.model.dimensions).with_condition(
+                match_dimensions_of(self.model)
+            )("raw_units")
+        )
         return value_phrase_constructor(unit_element)
 
     @property
@@ -323,7 +392,9 @@ class AutoDependencyParser(AutoSentenceParser):
     def _phrases_for_keypaths(self):
         phrases_keypaths = {}
         for field_name, field in self.model.fields.items():
-            phrases_keypaths.update(self._get_phrases_for_field(field_name, field, do_model=False))
+            phrases_keypaths.update(
+                self._get_phrases_for_field(field_name, field, do_model=False)
+            )
         return phrases_keypaths
 
     def _get_phrases_for_field(self, field_name, field, do_model=True):
@@ -333,7 +404,9 @@ class AutoDependencyParser(AutoSentenceParser):
                 for model_field_name, model_field in field.model_class.fields.items():
                     if model_field not in self._excluded_fields_for_quantity_model:
                         new_keypath = f"{field_name}.{model_field_name}"
-                        phrases_for_field.update(self._get_phrases_for_field(new_keypath, model_field))
+                        phrases_for_field.update(
+                            self._get_phrases_for_field(new_keypath, model_field)
+                        )
             else:
                 if field.parse_expression is not None:
                     phrases_for_field[field_name] = field.parse_expression
@@ -360,8 +433,9 @@ def _find_distance(route_1, route_2, blocked_elements=None):
     # being in a different tree branch as much as possible
     # Add in a small term for the actual distance in between to be a "tie-breaker"
     # if we get two that meet at the same location
-    return ((1. / (len(route_1) - route_1.index(intersect_element)))
-            + 0.01 * (route_1.index(intersect_element) + route_2.index(intersect_element)))
+    return (1.0 / (len(route_1) - route_1.index(intersect_element))) + 0.01 * (
+        route_1.index(intersect_element) + route_2.index(intersect_element)
+    )
 
 
 def _find_intersect_element(route_1, route_2, blocked_elements=None):
@@ -369,17 +443,17 @@ def _find_intersect_element(route_1, route_2, blocked_elements=None):
     intersect_element = None
     if len(route_1) > len(route_2):
         route_1, route_2 = route_2, route_1
-    route_2 = route_2[len(route_2) - len(route_1):]
+    route_2 = route_2[len(route_2) - len(route_1) :]
     for el1, el2 in zip(reversed(route_1), reversed(route_2)):
         if el1 == el2:
             intersect_element = el1
     if blocked_elements is not None:
         if intersect_element is None:
             return intersect_element
-        for el in route_1[:route_1.index(intersect_element)]:
+        for el in route_1[: route_1.index(intersect_element)]:
             if el in blocked_elements:
                 return None
-        for el in route_2[:route_2.index(intersect_element)]:
+        for el in route_2[: route_2.index(intersect_element)]:
             if el in blocked_elements:
                 return None
     return intersect_element
@@ -442,7 +516,9 @@ def _find_associated(parents, children, remove_children, sentence):
 
             child_route = routes[labelled_child_range]
 
-            strict_distance = _find_distance(child_route, parent_route, blocked_elements=blocked_paths)
+            strict_distance = _find_distance(
+                child_route, parent_route, blocked_elements=blocked_paths
+            )
             if strict_distance is not None:
                 distances[labelled_parent_range][labelled_child_range] = strict_distance
 
@@ -450,16 +526,22 @@ def _find_associated(parents, children, remove_children, sentence):
                 lenient_distance = 2 * _find_distance(child_route, parent_route)
                 if lenient_distance is None:
                     lenient_distance = 10000
-                distances[labelled_parent_range][labelled_child_range] = lenient_distance
+                distances[labelled_parent_range][
+                    labelled_child_range
+                ] = lenient_distance
 
     merged = {}
     removed_children = []
 
     for labelled_parent_range in parents:
-        filtered_distances = [item for item in list(distances[labelled_parent_range].items())
-                              if item[0] not in removed_children]
-        associated_distances = sorted(filtered_distances,
-                                      key=lambda x: x[1] if (x[1] is not None) else 10000)
+        filtered_distances = [
+            item
+            for item in list(distances[labelled_parent_range].items())
+            if item[0] not in removed_children
+        ]
+        associated_distances = sorted(
+            filtered_distances, key=lambda x: x[1] if (x[1] is not None) else 10000
+        )
 
         if len(associated_distances):
             associated_child = associated_distances[0][0]

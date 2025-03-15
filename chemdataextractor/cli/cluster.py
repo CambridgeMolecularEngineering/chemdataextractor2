@@ -15,7 +15,7 @@ import click
 log = logging.getLogger(__name__)
 
 
-@click.group(name='cluster')
+@click.group(name="cluster")
 @click.pass_context
 def cluster_cli(ctx):
     """Word clusters commands."""
@@ -23,17 +23,19 @@ def cluster_cli(ctx):
 
 
 @cluster_cli.command()
-@click.option('--output', '-o', type=click.File('wb'), help='Output model file.', required=True)
-@click.argument('input', type=click.File('r', encoding='utf8'), required=True)
+@click.option(
+    "--output", "-o", type=click.File("wb"), help="Output model file.", required=True
+)
+@click.argument("input", type=click.File("r", encoding="utf8"), required=True)
 @click.pass_obj
 def load(ctx, input, output):
     """Read clusters from file and save to model file."""
-    log.debug('chemdataextractor.cluster.load')
+    log.debug("chemdataextractor.cluster.load")
     import pickle
-    click.echo('Reading %s' % input.name)
+
+    click.echo("Reading %s" % input.name)
     clusters = {}
     for line in input.readlines():
         cluster, word, freq = line.split()
         clusters[word] = cluster
     pickle.dump(clusters, output, protocol=pickle.HIGHEST_PROTOCOL)
-

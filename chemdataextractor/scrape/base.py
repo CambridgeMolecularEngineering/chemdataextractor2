@@ -37,7 +37,11 @@ class BaseScraper(metaclass=ABCMeta):
 
     def name(self):
         """A unique name for this scraper."""
-        return ''.join('_%s' % c if c.isupper() else c for c in self.__class__.__name__).strip('_').lower()
+        return (
+            "".join("_%s" % c if c.isupper() else c for c in self.__class__.__name__)
+            .strip("_")
+            .lower()
+        )
 
     @abstractproperty
     def entity(self):
@@ -124,6 +128,7 @@ class BaseEntityProcessor(metaclass=ABCMeta):
 
 class BaseEntity(metaclass=ABCMeta):
     """Abstract Entity class from which all Entities inherit."""
+
     pass
 
 
@@ -137,10 +142,10 @@ class EntityMeta(ABCMeta):
                 # Set the name attribute on the field to the attribute name on the Entity
                 attr_value.name = str(attr_name)
                 fields[attr_name] = attr_value
-        #attrs['fields'] = fields
+        # attrs['fields'] = fields
         # Set default _meta values, then update with any custom definitions from meta
-        #attrs['_meta'] = {'root': None}
-        #attrs['_meta'].update(attrs.pop('meta', {}))
+        # attrs['_meta'] = {'root': None}
+        # attrs['_meta'].update(attrs.pop('meta', {}))
         cls = super(EntityMeta, mcs).__new__(mcs, name, bases, attrs)
         cls.fields = cls.fields.copy()
         cls.fields.update(fields)
@@ -153,7 +158,16 @@ class BaseField(metaclass=ABCMeta):
     # This is assigned by EntityMeta to match the attribute on the Entity
     name = None
 
-    def __init__(self, selection, xpath=False, re=None, all=False, default=None, null=False, raw=False):
+    def __init__(
+        self,
+        selection,
+        xpath=False,
+        re=None,
+        all=False,
+        default=None,
+        null=False,
+        raw=False,
+    ):
         """
 
         :param string selection: The CSS selector or XPath expression used to select the content to scrape.
@@ -180,7 +194,7 @@ class BaseField(metaclass=ABCMeta):
         # Get value from Entity instance if available
         value = instance._values.get(self.name)
         # If value is None, empty list or empty string return the default value if set
-        if value in [None, [], ''] and self.default is not None:
+        if value in [None, [], ""] and self.default is not None:
             return self.default
         # Otherwise if value is None and all, return empty list
         if self.all and value is None:
@@ -204,20 +218,28 @@ class BaseField(metaclass=ABCMeta):
         # Take first unless all is specified
         if not self.all:
             value = value[0] if value else None
-        log.debug('Scraped %s: %s from %s' % (self.name, value, self.selection))
+        log.debug("Scraped %s: %s from %s" % (self.name, value, self.selection))
         return value
 
     def scrape(self, selector, cleaner=None, processor=None):
         """Scrape the value for this field from the selector."""
         # Apply CSS or XPath expression to the selector
-        selected = selector.xpath(self.selection) if self.xpath else selector.css(self.selection)
+        selected = (
+            selector.xpath(self.selection)
+            if self.xpath
+            else selector.css(self.selection)
+        )
         # Extract the value and apply regular expression if specified
-        value = selected.re(self.re) if self.re else selected.extract(raw=self.raw, cleaner=cleaner)
+        value = (
+            selected.re(self.re)
+            if self.re
+            else selected.extract(raw=self.raw, cleaner=cleaner)
+        )
         return self._post_scrape(value, processor=processor)
 
     def serialize(self, value):
         """Serialize this field."""
-        if hasattr(value, 'serialize'):
+        if hasattr(value, "serialize"):
             return value.serialize()
         else:
             return value

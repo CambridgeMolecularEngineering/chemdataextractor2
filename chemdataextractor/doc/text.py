@@ -17,16 +17,30 @@ from deprecation import deprecated
 import unicodedata
 
 
-
 from ..model.base import ModelList, sort_merge_candidates
 from ..nlp.lexicon import ChemLexicon, Lexicon
-from ..nlp.cem import IGNORE_PREFIX, IGNORE_SUFFIX, SPECIALS, SPLITS, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
+from ..nlp.cem import (
+    IGNORE_PREFIX,
+    IGNORE_SUFFIX,
+    SPECIALS,
+    SPLITS,
+    CiDictCemTagger,
+    CsDictCemTagger,
+    CrfCemTagger,
+)
 from ..nlp.new_cem import CemTagger
 from ..nlp.abbrev import ChemAbbreviationDetector
 from ..nlp.tag import NoneTagger, POS_TAG_TYPE, NER_TAG_TYPE
 from ..nlp.pos import ChemCrfPosTagger, CrfPosTagger, ApPosTagger, ChemApPosTagger
+
 # from ..nlp.tokenize import ChemSentenceTokenizer, ChemWordTokenizer, regex_span_tokenize, SentenceTokenizer, WordTokenizer, FineWordTokenizer, ChemTokWordTokenizer, SpacyTokenizer
-from ..nlp.tokenize import BertWordTokenizer, ChemSentenceTokenizer, regex_span_tokenize, SentenceTokenizer, WordTokenizer
+from ..nlp.tokenize import (
+    BertWordTokenizer,
+    ChemSentenceTokenizer,
+    regex_span_tokenize,
+    SentenceTokenizer,
+    WordTokenizer,
+)
 from ..nlp.subsentence import SubsentenceExtractor, NoneSubsentenceExtractor
 from ..nlp.dependency import DependencyTagger, IndexTagger
 from ..text import CONTROL_RE
@@ -35,9 +49,15 @@ from .element import BaseElement
 from ..parse.definitions import specifier_definition
 from ..parse.cem import chemical_name, cem_phrase
 from ..parse.quantity import construct_quantity_re
-from ..model.model import Compound, NmrSpectrum, IrSpectrum, UvvisSpectrum, MeltingPoint, GlassTransition
+from ..model.model import (
+    Compound,
+    NmrSpectrum,
+    IrSpectrum,
+    UvvisSpectrum,
+    MeltingPoint,
+    GlassTransition,
+)
 from ..model.contextual_range import SentenceRange
-
 
 
 log = logging.getLogger(__name__)
@@ -45,16 +65,26 @@ cem_tagger = CemTagger()
 dep_tagger = DependencyTagger()
 
 
-
 class BaseText(BaseElement):
     """Abstract base class for a text Document Element."""
+
     taggers = []
     """
     A list of :class:`~chemdataextractor.nlp.tag.BaseTagger` instances. This is a list of taggers
     that will be called by ChemDataExtractor to assign tags to each of the tokens in this element.
     """
 
-    def __init__(self, text, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, taggers=None, **kwargs):
+    def __init__(
+        self,
+        text,
+        word_tokenizer=None,
+        lexicon=None,
+        abbreviation_detector=None,
+        pos_tagger=None,
+        ner_tagger=None,
+        taggers=None,
+        **kwargs,
+    ):
         """
         .. note::
 
@@ -81,17 +111,28 @@ class BaseText(BaseElement):
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
         """
         if not isinstance(text, str):
-            raise TypeError('Text must be a unicode string')
+            raise TypeError("Text must be a unicode string")
         super(BaseText, self).__init__(**kwargs)
         self._text = text
-        self.word_tokenizer = word_tokenizer if word_tokenizer is not None else self.word_tokenizer
+        self.word_tokenizer = (
+            word_tokenizer if word_tokenizer is not None else self.word_tokenizer
+        )
         self.lexicon = lexicon if lexicon is not None else self.lexicon
-        self.abbreviation_detector = abbreviation_detector if abbreviation_detector is not None else self.abbreviation_detector
+        self.abbreviation_detector = (
+            abbreviation_detector
+            if abbreviation_detector is not None
+            else self.abbreviation_detector
+        )
         if taggers is not None and len(taggers) != 0:
             self.taggers = taggers
 
     def __repr__(self):
-        return '%s(id=%r, references=%r, text=%r)' % (self.__class__.__name__, self.id, self.references, self._text)
+        return "%s(id=%r, references=%r, text=%r)" % (
+            self.__class__.__name__,
+            self.id,
+            self.references,
+            self._text,
+        )
 
     def __str__(self):
         return self._text
@@ -119,7 +160,10 @@ class BaseText(BaseElement):
                 return tagger
 
     @pos_tagger.setter
-    @deprecated(deprecated_in="2.1", details="Deprecated due to the introduction of taggers API. Consult the migration guide for more information.")
+    @deprecated(
+        deprecated_in="2.1",
+        details="Deprecated due to the introduction of taggers API. Consult the migration guide for more information.",
+    )
     def pos_tagger(self, value):
         if not value.can_tag(POS_TAG_TYPE):
             value.tag_type = POS_TAG_TYPE
@@ -133,7 +177,10 @@ class BaseText(BaseElement):
                 return tagger
 
     @ner_tagger.setter
-    @deprecated(deprecated_in="2.1", details="Deprecated due to the introduction of taggers API. Consult the migration guide for more information.")
+    @deprecated(
+        deprecated_in="2.1",
+        details="Deprecated due to the introduction of taggers API. Consult the migration guide for more information.",
+    )
     def ner_tagger(self, value):
         if not value.can_tag(NER_TAG_TYPE):
             value.tag_type = NER_TAG_TYPE
@@ -162,8 +209,7 @@ class BaseText(BaseElement):
 
     @abstractproperty
     def chemical_definitions(self):
-        """A list of all chemical label definitiond
-        """
+        """A list of all chemical label definitiond"""
         return
 
     def serialize(self):
@@ -172,7 +218,7 @@ class BaseText(BaseElement):
         the name of the class being serialized, and the key 'content' will contain
         a serialized representation of :attr:`text`, which is a :class:`str`
         """
-        data = {'type': self.__class__.__name__, 'content': self.text}
+        data = {"type": self.__class__.__name__, "content": self.text}
         return data
 
     def _repr_html_(self):
@@ -189,7 +235,18 @@ class Text(collections.abc.Sequence, BaseText):
     taggers = [ChemCrfPosTagger(), cem_tagger, dep_tagger]
     subsentence_extractor = None
 
-    def __init__(self, text, sentence_tokenizer=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, parsers=None, **kwargs):
+    def __init__(
+        self,
+        text,
+        sentence_tokenizer=None,
+        word_tokenizer=None,
+        lexicon=None,
+        abbreviation_detector=None,
+        pos_tagger=None,
+        ner_tagger=None,
+        parsers=None,
+        **kwargs,
+    ):
         """
         .. note::
 
@@ -221,8 +278,21 @@ class Text(collections.abc.Sequence, BaseText):
             inside a :class:`~chemdataextractor.doc.text.Paragraph`), or is part of a :class:`~chemdataextractor.doc.document.Document`,
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
         """
-        super(Text, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, parsers=None, **kwargs)
-        self.sentence_tokenizer = sentence_tokenizer if sentence_tokenizer is not None else self.sentence_tokenizer
+        super(Text, self).__init__(
+            text,
+            word_tokenizer=word_tokenizer,
+            lexicon=lexicon,
+            abbreviation_detector=abbreviation_detector,
+            pos_tagger=pos_tagger,
+            ner_tagger=ner_tagger,
+            parsers=None,
+            **kwargs,
+        )
+        self.sentence_tokenizer = (
+            sentence_tokenizer
+            if sentence_tokenizer is not None
+            else self.sentence_tokenizer
+        )
 
     def __getitem__(self, index):
         return self.sentences[index]
@@ -231,7 +301,7 @@ class Text(collections.abc.Sequence, BaseText):
         return len(self.sentences)
 
     def set_config(self):
-        """ Load settings from configuration file
+        """Load settings from configuration file
 
         .. note:: Called when Document instance is created
         """
@@ -240,18 +310,22 @@ class Text(collections.abc.Sequence, BaseText):
             pass
         else:
             c = self.document.config
-            if 'SENTENCE_TOKENIZER' in c.keys():
-                self.sentence_tokenizer = eval(c['SENTENCE_TOKENIZER'])()
-            if 'WORD_TOKENIZER' in c.keys():
-                self.word_tokenizer = eval(c['WORD_TOKENIZER'])()
-            if 'POS_TAGGER' in c.keys():
-                self.pos_tagger = eval(c['POS_TAGGER'])()
-            if 'NER_TAGGER' in c.keys():
-                self.ner_tagger = eval(c['NER_TAGGER'])()
-            if 'LEXICON' in c.keys():
-                self.lexicon = eval(c['LEXICON'])()
-            if 'PARSERS' in c.keys():
-                raise(DeprecationWarning('Manually setting parsers deprecated, any settings from config files for this will be ignored.'))
+            if "SENTENCE_TOKENIZER" in c.keys():
+                self.sentence_tokenizer = eval(c["SENTENCE_TOKENIZER"])()
+            if "WORD_TOKENIZER" in c.keys():
+                self.word_tokenizer = eval(c["WORD_TOKENIZER"])()
+            if "POS_TAGGER" in c.keys():
+                self.pos_tagger = eval(c["POS_TAGGER"])()
+            if "NER_TAGGER" in c.keys():
+                self.ner_tagger = eval(c["NER_TAGGER"])()
+            if "LEXICON" in c.keys():
+                self.lexicon = eval(c["LEXICON"])()
+            if "PARSERS" in c.keys():
+                raise (
+                    DeprecationWarning(
+                        "Manually setting parsers deprecated, any settings from config files for this will be ignored."
+                    )
+                )
 
     @memoized_property
     def sentences(self):
@@ -269,7 +343,7 @@ class Text(collections.abc.Sequence, BaseText):
         sents = []
         for span in spans:
             sent = Sentence(
-                text=self.text[span[0]:span[1]],
+                text=self.text[span[0] : span[1]],
                 start=span[0],
                 end=span[1],
                 word_tokenizer=self.word_tokenizer,
@@ -357,17 +431,26 @@ class Text(collections.abc.Sequence, BaseText):
         """
         Return a list of tagged definitions for each sentence in this text passage
         """
-        return [definition for sent in self.sentences for definition in sent.definitions]
+        return [
+            definition for sent in self.sentences for definition in sent.definitions
+        ]
 
     @property
     def chemical_definitions(self):
         """
         Return a list of tagged definitions for each sentence in this text passage
         """
-        return [definition for sent in self.sentences for definition in sent.chemical_definitions]
+        return [
+            definition
+            for sent in self.sentences
+            for definition in sent.chemical_definitions
+        ]
 
     @property
-    @deprecated(deprecated_in="2.1", details="Deprecated due to the introduction of RichTokens, and is now just an alias for .tokens.")
+    @deprecated(
+        deprecated_in="2.1",
+        details="Deprecated due to the introduction of RichTokens, and is now just an alias for .tokens.",
+    )
     def tagged_tokens(self):
         """
         A list of lists of :class:`~chemdataextractor.doc.text.RichToken` instances found in the text.
@@ -400,17 +483,32 @@ class Text(collections.abc.Sequence, BaseText):
                 backwards_index = index - offset
                 forwards_index = index + offset
                 distance = offset * SentenceRange()
-                merge_candidates.extend([(distance, record) for record in records_by_sentence[backwards_index]])
+                merge_candidates.extend(
+                    [
+                        (distance, record)
+                        for record in records_by_sentence[backwards_index]
+                    ]
+                )
 
                 if backwards_index >= 0:
-                    merge_candidates.extend((distance, record) for record in records_by_sentence[backwards_index])
+                    merge_candidates.extend(
+                        (distance, record)
+                        for record in records_by_sentence[backwards_index]
+                    )
                 if forwards_index < num_sentences:
-                    merge_candidates.extend((distance, record) for record in records_by_sentence[forwards_index])
+                    merge_candidates.extend(
+                        (distance, record)
+                        for record in records_by_sentence[forwards_index]
+                    )
                 offset += 1
-            self._resolve_contextual(sent_records, sort_merge_candidates(merge_candidates))
+            self._resolve_contextual(
+                sent_records, sort_merge_candidates(merge_candidates)
+            )
 
         # Don't sort these records as this encodes where they were found in the paragraph
-        records = ModelList(*[r for sentence_records in records_by_sentence for r in sentence_records])
+        records = ModelList(
+            *[r for sentence_records in records_by_sentence for r in sentence_records]
+        )
         records.remove_subsets()
         return records
 
@@ -443,7 +541,7 @@ class Title(Text):
         self.models = []
 
     def _repr_html_(self):
-        return '<h1 class="cde-title">' + self.text + '</h1>'
+        return '<h1 class="cde-title">' + self.text + "</h1>"
 
 
 class Heading(Text):
@@ -454,7 +552,7 @@ class Heading(Text):
         # default_parsers = [CompoundHeadingParser(), ChemicalLabelParser()]
 
     def _repr_html_(self):
-        return '<h2 class="cde-title">' + self.text + '</h2>'
+        return '<h2 class="cde-title">' + self.text + "</h2>"
 
 
 class Paragraph(Text):
@@ -466,7 +564,7 @@ class Paragraph(Text):
         self.models = []
 
     def _repr_html_(self):
-        return '<p class="cde-paragraph">' + self.text + '</p>'
+        return '<p class="cde-paragraph">' + self.text + "</p>"
 
 
 class Footnote(Text):
@@ -477,18 +575,23 @@ class Footnote(Text):
         self.models = []
 
     def _repr_html_(self):
-        return '<p class="cde-footnote">' + self.text + '</p>'
+        return '<p class="cde-footnote">' + self.text + "</p>"
 
 
 class Citation(Text):
-    taggers = [ChemCrfPosTagger(), NoneTagger(tag_type=NER_TAG_TYPE), NoneTagger(tag_type="dependency"), IndexTagger()]
+    taggers = [
+        ChemCrfPosTagger(),
+        NoneTagger(tag_type=NER_TAG_TYPE),
+        NoneTagger(tag_type="dependency"),
+        IndexTagger(),
+    ]
     abbreviation_detector = None
     subsentence_extractor = NoneSubsentenceExtractor()
     # TODO: Citation parser
     # TODO: Store number/label
 
     def _repr_html_(self):
-        return '<p class="cde-citation">' + self.text + '</p>'
+        return '<p class="cde-citation">' + self.text + "</p>"
 
 
 class Caption(Text):
@@ -499,11 +602,13 @@ class Caption(Text):
         # default_parsers = [CompoundParser(), ChemicalLabelParser(), CaptionContextParser()]
 
     def _repr_html_(self):
-        return '<caption class="cde-caption">' + self.text + '</caption>'
+        return '<caption class="cde-caption">' + self.text + "</caption>"
 
     @property
     def definitions(self):
-        return [definition for sent in self.sentences for definition in sent.definitions]
+        return [
+            definition for sent in self.sentences for definition in sent.definitions
+        ]
 
 
 class Sentence(BaseText):
@@ -516,7 +621,20 @@ class Sentence(BaseText):
     taggers = [ChemCrfPosTagger(), cem_tagger, dep_tagger]
     specifier_definition = specifier_definition
 
-    def __init__(self, text, start=0, end=None, word_tokenizer=None, lexicon=None, abbreviation_detector=None, pos_tagger=None, ner_tagger=None, specifier_definition=None, subsentence_extractor=None, **kwargs):
+    def __init__(
+        self,
+        text,
+        start=0,
+        end=None,
+        word_tokenizer=None,
+        lexicon=None,
+        abbreviation_detector=None,
+        pos_tagger=None,
+        ner_tagger=None,
+        specifier_definition=None,
+        subsentence_extractor=None,
+        **kwargs,
+    ):
         """
         .. note::
 
@@ -549,7 +667,15 @@ class Sentence(BaseText):
             this is set automatically to be the same as that of the containing element, unless manually set otherwise.
         """
         self.models = []
-        super(Sentence, self).__init__(text, word_tokenizer=word_tokenizer, lexicon=lexicon, abbreviation_detector=abbreviation_detector, pos_tagger=pos_tagger, ner_tagger=ner_tagger, **kwargs)
+        super(Sentence, self).__init__(
+            text,
+            word_tokenizer=word_tokenizer,
+            lexicon=lexicon,
+            abbreviation_detector=abbreviation_detector,
+            pos_tagger=pos_tagger,
+            ner_tagger=ner_tagger,
+            **kwargs,
+        )
         #: The start index of this sentence within the text passage.
         self.start = start
         #: The end index of this sentence within the text passage.
@@ -560,23 +686,33 @@ class Sentence(BaseText):
             self.subsentence_extractor = subsentence_extractor
 
     def __repr__(self):
-        return '%s(%r, %r, %r)' % (self.__class__.__name__, self._text, self.start, self.end)
+        return "%s(%r, %r, %r)" % (
+            self.__class__.__name__,
+            self._text,
+            self.start,
+            self.end,
+        )
 
     @memoized_property
     def tokens(self):
         tokens = self.word_tokenizer.get_word_tokens(self)
         for token in tokens:
-            token.text = "".join(ch for ch in token.text if unicodedata.category(ch)[0] != "C")
+            token.text = "".join(
+                ch for ch in token.text if unicodedata.category(ch)[0] != "C"
+            )
         return tokens
 
     def _tokens_for_spans(self, spans):
-        toks = [RichToken(
-            text=self.text[span[0]:span[1]],
-            start=span[0] + self.start,
-            end=span[1] + self.start,
-            lexicon=self.lexicon,
-            sentence=self
-        ) for span in spans]
+        toks = [
+            RichToken(
+                text=self.text[span[0] : span[1]],
+                start=span[0] + self.start,
+                end=span[1] + self.start,
+                lexicon=self.lexicon,
+                sentence=self,
+            )
+            for span in spans
+        ]
         return toks
 
     @property
@@ -625,13 +761,19 @@ class Sentence(BaseText):
         if self.abbreviation_detector:
             # log.debug('Detecting abbreviations')
             ners = self.unprocessed_ner_tags
-            for abbr_span, long_span in self.abbreviation_detector.detect_spans(self.raw_tokens):
-                abbr = self.raw_tokens[abbr_span[0]:abbr_span[1]]
-                long = self.raw_tokens[long_span[0]:long_span[1]]
+            for abbr_span, long_span in self.abbreviation_detector.detect_spans(
+                self.raw_tokens
+            ):
+                abbr = self.raw_tokens[abbr_span[0] : abbr_span[1]]
+                long = self.raw_tokens[long_span[0] : long_span[1]]
                 # Check if long is entirely tagged as one named entity type
-                long_tags = ners[long_span[0]:long_span[1]]
+                long_tags = ners[long_span[0] : long_span[1]]
                 unique_tags = set([tag[2:] for tag in long_tags if tag is not None])
-                tag = long_tags[0][2:] if None not in long_tags and len(unique_tags) == 1 else None
+                tag = (
+                    long_tags[0][2:]
+                    if None not in long_tags and len(unique_tags) == 1
+                    else None
+                )
                 abbreviations.append((abbr, long, tag))
         return abbreviations
 
@@ -652,22 +794,36 @@ class Sentence(BaseText):
         """
         # log.debug('Getting ner_tags')
         ner_tags = self.unprocessed_ner_tags
-        abbrev_defs = self.document.abbreviation_definitions if self.document else self.abbreviation_definitions
+        abbrev_defs = (
+            self.document.abbreviation_definitions
+            if self.document
+            else self.abbreviation_definitions
+        )
         # Ensure abbreviation entity matches long entity
         # TODO: This is potentially a performance bottleneck?
         for i in range(0, len(ner_tags)):
             for abbr, long, ner_tag in abbrev_defs:
-                if abbr == self.raw_tokens[i:i+len(abbr)]:
-                    old_ner_tags = ner_tags[i:i+len(abbr)]
-                    ner_tags[i] = 'B-%s' % ner_tag if ner_tag is not None else None
-                    ner_tags[i+1:i+len(abbr)] = ['I-%s' % ner_tag if ner_tag is not None else None] * (len(abbr) - 1)
+                if abbr == self.raw_tokens[i : i + len(abbr)]:
+                    old_ner_tags = ner_tags[i : i + len(abbr)]
+                    ner_tags[i] = "B-%s" % ner_tag if ner_tag is not None else None
+                    ner_tags[i + 1 : i + len(abbr)] = [
+                        "I-%s" % ner_tag if ner_tag is not None else None
+                    ] * (len(abbr) - 1)
                     # Remove ner tags from brackets surrounding abbreviation
-                    if i > 1 and self.raw_tokens[i-1] == '(':
-                        ner_tags[i-1] = None
-                    if i < len(self.raw_tokens) - 1 and self.raw_tokens[i+1] == ')':
-                        ner_tags[i+1] = None
-                    if not old_ner_tags == ner_tags[i:i+len(abbr)]:
-                        log.debug('Correcting abbreviation tag: %s (%s): %s -> %s' % (' '.join(abbr), ' '.join(long), old_ner_tags, ner_tags[i:i+len(abbr)]))
+                    if i > 1 and self.raw_tokens[i - 1] == "(":
+                        ner_tags[i - 1] = None
+                    if i < len(self.raw_tokens) - 1 and self.raw_tokens[i + 1] == ")":
+                        ner_tags[i + 1] = None
+                    if not old_ner_tags == ner_tags[i : i + len(abbr)]:
+                        log.debug(
+                            "Correcting abbreviation tag: %s (%s): %s -> %s"
+                            % (
+                                " ".join(abbr),
+                                " ".join(long),
+                                old_ner_tags,
+                                ner_tags[i : i + len(abbr)],
+                            )
+                        )
         # TODO: Ensure abbreviations in brackets at the end of an entity match are separated and the brackets untagged
         # Hydrogen Peroxide (H2O2)
         # Tungsten Carbide (WC)
@@ -685,11 +841,11 @@ class Sentence(BaseText):
         # print(self.text.encode('utf8'))
         for result in chemical_name.scan(self.tokens):
             # parser scan yields (result, startindex, endindex) - we just use the indexes here
-            tokens = self.tokens[result[1]:result[2]]
+            tokens = self.tokens[result[1] : result[2]]
             start = tokens[0].start
             end = tokens[-1].end
             # Adjust boundaries to exclude disallowed prefixes/suffixes
-            currenttext = self.text[start-self.start:end-self.start].lower()
+            currenttext = self.text[start - self.start : end - self.start].lower()
             for prefix in IGNORE_PREFIX:
                 if currenttext.startswith(prefix):
                     # print('%s removing %s' % (currenttext, prefix))
@@ -701,9 +857,13 @@ class Sentence(BaseText):
                     end -= len(suffix)
                     break
             # Adjust boundaries to exclude matching brackets at start and end
-            currenttext = self.text[start-self.start:end-self.start]
-            for bpair in [('(', ')'), ('[', ']')]:
-                if len(currenttext) > 2 and currenttext[0] == bpair[0] and currenttext[-1] == bpair[1]:
+            currenttext = self.text[start - self.start : end - self.start]
+            for bpair in [("(", ")"), ("[", "]")]:
+                if (
+                    len(currenttext) > 2
+                    and currenttext[0] == bpair[0]
+                    and currenttext[-1] == bpair[1]
+                ):
                     level = 1
                     for k, char in enumerate(currenttext[1:]):
                         if char == bpair[0]:
@@ -719,17 +879,24 @@ class Sentence(BaseText):
             if start >= end:
                 continue
 
-            currenttext = self.text[start-self.start:end-self.start]
+            currenttext = self.text[start - self.start : end - self.start]
 
             # Do splits
             split_spans = []
-            comps = list(regex_span_tokenize(currenttext, '(-|\+|\)?-to-\(?|···|/|\s)'))
+            comps = list(regex_span_tokenize(currenttext, "(-|\+|\)?-to-\(?|···|/|\s)"))
             if len(comps) > 1:
                 for split in SPLITS:
-                    if all(re.search(split, currenttext[comp[0]:comp[1]]) for comp in comps):
+                    if all(
+                        re.search(split, currenttext[comp[0] : comp[1]])
+                        for comp in comps
+                    ):
                         # print('%s splitting %s' % (currenttext, [currenttext[comp[0]:comp[1]] for comp in comps]))
                         for comp in comps:
-                            span = Span(text=currenttext[comp[0]:comp[1]], start=start+comp[0], end=start+comp[1])
+                            span = Span(
+                                text=currenttext[comp[0] : comp[1]],
+                                start=start + comp[0],
+                                end=start + comp[1],
+                            )
                             # print('SPLIT: %s - %s' % (currenttext, repr(span)))
                             split_spans.append(span)
                         break
@@ -745,7 +912,11 @@ class Sentence(BaseText):
                     if m:
                         # print('%s special %s' % (split_span.text, m.groups()))
                         for i in range(1, len(m.groups()) + 1):
-                            span = Span(text=m.group(i), start=split_span.start+m.start(i), end=split_span.start+m.end(i))
+                            span = Span(
+                                text=m.group(i),
+                                start=split_span.start + m.start(i),
+                                end=split_span.start + m.end(i),
+                            )
                             # print('SUBMATCH: %s - %s' % (currenttext, repr(span)))
                             spans.append(span)
                         break
@@ -773,33 +944,28 @@ class Sentence(BaseText):
             start = result[1]
             end = result[2]
             new_def = {
-                       'definition': first(definition.xpath('./phrase/text()')),
-                       'specifier': first(definition.xpath('./specifier/text()')),
-                       'tokens': tokens[start:end],
-                       'start': start,
-                       'end': end}
+                "definition": first(definition.xpath("./phrase/text()")),
+                "specifier": first(definition.xpath("./specifier/text()")),
+                "tokens": tokens[start:end],
+                "start": start,
+                "end": end,
+            }
             defs.append(new_def)
         return defs
 
     @memoized_property
     def chemical_definitions(self):
-        """Return a list of chemical entity mentions and their associated label
-        """
+        """Return a list of chemical entity mentions and their associated label"""
         cem_defs = []
         tokens = self.tokens
         for result in cem_phrase.scan(tokens):
             tree = result[0]
             start = result[1]
             end = result[2]
-            name = first(tree.xpath('./compound/names/text()'))
-            label = first(tree.xpath('./compound/labels/text()'))
+            name = first(tree.xpath("./compound/names/text()"))
+            label = first(tree.xpath("./compound/labels/text()"))
             if name and label:
-                cem_def = {
-                    'name': name,
-                    'label': label,
-                    'start': start,
-                    'end': end
-                }
+                cem_def = {"name": name, "label": label, "start": start, "end": end}
                 cem_defs.append(cem_def)
         return cem_defs
 
@@ -812,7 +978,10 @@ class Sentence(BaseText):
         return tags
 
     @property
-    @deprecated(deprecated_in="2.1", details="Deprecated due to the introduction of RichTokens, and is now just an alias for .tokens.")
+    @deprecated(
+        deprecated_in="2.1",
+        details="Deprecated due to the introduction of RichTokens, and is now just an alias for .tokens.",
+    )
     def tagged_tokens(self):
         """
         A list of :class:`~chemdataextractor.doc.text.RichToken` instances found in the text.
@@ -828,7 +997,11 @@ class Sentence(BaseText):
         for tagger in reversed(self.taggers):
             if tagger.can_tag(tag_type):
                 tags = None
-                if hasattr(tagger, "batch_tag_for_type") and tagger.can_batch_tag(tag_type) and self.document is not None:
+                if (
+                    hasattr(tagger, "batch_tag_for_type")
+                    and tagger.can_batch_tag(tag_type)
+                    and self.document is not None
+                ):
                     self.document._batch_assign_tags(tagger, tag_type)
                 elif hasattr(tagger, "tag_for_type"):
                     tags = tagger.tag_for_type(self.tokens, tag_type)
@@ -881,7 +1054,7 @@ class Sentence(BaseText):
             j = 0
             while j < length:
                 if i != j:
-                    records[j].merge_all(records[i], distance=0*SentenceRange())
+                    records[j].merge_all(records[i], distance=0 * SentenceRange())
                 j += 1
             i += 1
 
@@ -895,7 +1068,17 @@ class Sentence(BaseText):
         if self.document and self.document._should_remove_subrecord_if_merged_in:
             cleaned_records._remove_used_subrecords()
 
-        sorted_records = ModelList(*sorted(cleaned_records, key=lambda el: el.total_confidence() if el.total_confidence() is not None else -10000, reverse=True))
+        sorted_records = ModelList(
+            *sorted(
+                cleaned_records,
+                key=lambda el: (
+                    el.total_confidence()
+                    if el.total_confidence() is not None
+                    else -10000
+                ),
+                reverse=True,
+            )
+        )
         return sorted_records
 
     def __add__(self, other):
@@ -917,7 +1100,6 @@ class Sentence(BaseText):
 
 
 class Subsentence(Sentence):
-
     """
     A sub-sentence level logical division of text. Used to store clauses in CDE based on clause extraction as described
     in the paper Automated Construction of a Photocatalysis Dataset for Water-Splitting Applications
@@ -926,10 +1108,11 @@ class Subsentence(Sentence):
     “A has quality α and quality β”. This enables rule-based and template-based parsing to adapt to a wider range
     of sentences.
     """
+
     tokens = []
 
     def __init__(self, parent_sentence, tokens, is_full_sentence=False):
-        super().__init__(' '.join([token.text for token in tokens]))
+        super().__init__(" ".join([token.text for token in tokens]))
         self.tokens = tokens
         self.models = parent_sentence.models
         self.parent_sentence = parent_sentence
@@ -948,17 +1131,24 @@ class Subsentence(Sentence):
             for parser in model.parsers:
                 if parser in skip_parsers:
                     continue
-                if hasattr(parser, 'parse_sentence') or hasattr(parser, "batch_parse_sentences"):
-                    if (parser.parse_full_sentence != self.is_full_sentence) and not self._is_only_subsentence:
+                if hasattr(parser, "parse_sentence") or hasattr(
+                    parser, "batch_parse_sentences"
+                ):
+                    if (
+                        parser.parse_full_sentence != self.is_full_sentence
+                    ) and not self._is_only_subsentence:
                         continue
                     parser_records = []
                     # Add batch parsed records
                     if (
                         parser not in skip_parsers
                         and hasattr(parser, "_batch_parsed_records_dict")
-                        and id(self.parent_sentence) in parser._batch_parsed_records_dict
+                        and id(self.parent_sentence)
+                        in parser._batch_parsed_records_dict
                     ):
-                        parser_records.extend(parser._batch_parsed_records_dict[id(self.parent_sentence)])
+                        parser_records.extend(
+                            parser._batch_parsed_records_dict[id(self.parent_sentence)]
+                        )
                     parser_records.extend(parser.parse_sentence(self))
                     for record in parser_records:
                         p = record.serialize()
@@ -968,24 +1158,43 @@ class Subsentence(Sentence):
                         if record in records:
                             continue
                         # Skip just labels that have already been seen (bit of a hack)
-                        if (type(record) == Compound and 'Compound' in p.keys() and all(k in {'labels', 'roles'} for k in p['Compound'].keys())
-                          and set(record.labels).issubset(seen_labels)):
+                        if (
+                            type(record) == Compound
+                            and "Compound" in p.keys()
+                            and all(
+                                k in {"labels", "roles"} for k in p["Compound"].keys()
+                            )
+                            and set(record.labels).issubset(seen_labels)
+                        ):
                             continue
                         if type(record) == Compound:
                             seen_labels.update(record.labels)
                             # This could be super slow if we find lots of things
                             found = False
                             for seen_record in records:
-                                if (isinstance(seen_record, Compound)
-                                  and (not set(record.names).isdisjoint(seen_record.names)
-                                       or not set(record.labels).isdisjoint(seen_record.labels))):
-                                    seen_record.names = sorted(list(set(seen_record.names).union(record.names)))
-                                    seen_record.labels = sorted(list(set(seen_record.labels).union(record.labels)))
-                                    seen_record.roles = sorted(list(set(seen_record.roles).union(record.roles)))
+                                if isinstance(seen_record, Compound) and (
+                                    not set(record.names).isdisjoint(seen_record.names)
+                                    or not set(record.labels).isdisjoint(
+                                        seen_record.labels
+                                    )
+                                ):
+                                    seen_record.names = sorted(
+                                        list(set(seen_record.names).union(record.names))
+                                    )
+                                    seen_record.labels = sorted(
+                                        list(
+                                            set(seen_record.labels).union(record.labels)
+                                        )
+                                    )
+                                    seen_record.roles = sorted(
+                                        list(set(seen_record.roles).union(record.roles))
+                                    )
                                     found = True
                             if found:
                                 continue
-                        elif hasattr(record, 'compound') and record.compound is not None:
+                        elif (
+                            hasattr(record, "compound") and record.compound is not None
+                        ):
                             seen_labels.update(record.compound.labels)
                         records.append(record)
         i = 0
@@ -994,7 +1203,7 @@ class Subsentence(Sentence):
             j = 0
             while j < length:
                 if i != j:
-                    records[j].merge_all(records[i], distance=0*SentenceRange())
+                    records[j].merge_all(records[i], distance=0 * SentenceRange())
                 j += 1
             i += 1
         return records
@@ -1002,13 +1211,13 @@ class Subsentence(Sentence):
 
 class Cell(Sentence):
     """Data cell for tables. One row of the category table"""
+
     # It appears that using different tokenizers/taggers is making the cem recognition worse.
     # This is also consistent with the use of the regular expressions etc we have defined so far.
     # word_tokenizer = FineWordTokenizer()
     # pos_tagger = NoneTagger()
     # ner_tagger = NoneTagger()
     subsentence_extractor = NoneSubsentenceExtractor()
-
 
     def __init__(self, *args, **kwargs):
         super(Cell, self).__init__(*args, **kwargs)
@@ -1025,25 +1234,41 @@ class Cell(Sentence):
         # Have the spacing between the cells contain characters that will never be found
         # so that the system doesn't become confused because it found some number in the heading
         # that it confuses as a power for a unit.
-        separator = '🙃🙃🙃🙃'
-        cell_separator = ';'
-        text = ' '.join([tde_cell[0], separator, cell_separator.join(tde_cell[1]), separator, cell_separator.join(tde_cell[2])])
+        separator = "🙃🙃🙃🙃"
+        cell_separator = ";"
+        text = " ".join(
+            [
+                tde_cell[0],
+                separator,
+                cell_separator.join(tde_cell[1]),
+                separator,
+                cell_separator.join(tde_cell[2]),
+            ]
+        )
         cell = cls(text, document=document, **kwargs)
         cell.data = tde_cell[0]
         cell.row_categories = tde_cell[1]
         cell.col_categories = tde_cell[2]
         cell.data_sent = Sentence(cell.data)
-        cell.row_categories_sents = [Sentence(cell_text) for cell_text in cell.row_categories]
-        cell.col_categories_sents = [Sentence(cell_text) for cell_text in cell.col_categories]
+        cell.row_categories_sents = [
+            Sentence(cell_text) for cell_text in cell.row_categories
+        ]
+        cell.col_categories_sents = [
+            Sentence(cell_text) for cell_text in cell.col_categories
+        ]
         cell.is_tde_cell = True
         cell.document = document
 
         # Doing it this way means that a lot of RichTokens are shared between the sub-elements, resulting
         # in tagging being only done once per RichToken, which is faster.
-        
+
         tokens = cell.data_sent.tokens
-        span_offset = tokens[-1].end + 1  # a cursor to help getting the span location correct when extending the token list
-        separator_token = RichToken(separator, span_offset, span_offset + 4, cls.lexicon, cell)
+        span_offset = (
+            tokens[-1].end + 1
+        )  # a cursor to help getting the span location correct when extending the token list
+        separator_token = RichToken(
+            separator, span_offset, span_offset + 4, cls.lexicon, cell
+        )
         span_offset = separator_token.end + 1
         tokens.append(separator_token)
 
@@ -1053,25 +1278,31 @@ class Cell(Sentence):
                 token.end = token.end + span_offset
                 tokens.append(token)
             span_offset = tokens[-1].end + 1
-            cell_separator = RichToken(separator, span_offset, span_offset + 4, cls.lexicon, cell)
+            cell_separator = RichToken(
+                separator, span_offset, span_offset + 4, cls.lexicon, cell
+            )
             tokens.append(cell_separator)
 
         if cell.row_categories_sents:
             tokens = tokens[:-1]
             span_offset = tokens[-1].end + 1
 
-        separator_token = RichToken(separator, span_offset, span_offset + 4, cls.lexicon, cell)
+        separator_token = RichToken(
+            separator, span_offset, span_offset + 4, cls.lexicon, cell
+        )
         span_offset = separator_token.end + 1
 
         tokens.append(separator_token)
         for col_category_sent in cell.col_categories_sents:
-            
+
             for token in col_category_sent.tokens:
                 token.start = token.start + span_offset
                 token.end = token.end + span_offset
                 tokens.append(token)
             span_offset = tokens[-1].end + 1
-            cell_separator = RichToken(separator, span_offset, span_offset + 4, cls.lexicon, cell)
+            cell_separator = RichToken(
+                separator, span_offset, span_offset + 4, cls.lexicon, cell
+            )
             tokens.append(cell_separator)
 
         if cell.col_categories_sents:
@@ -1104,7 +1335,6 @@ class Cell(Sentence):
         return elements
 
 
-
 class Span(object):
     """A text span within a sentence."""
 
@@ -1122,7 +1352,12 @@ class Span(object):
         """The :class:`int` end offset of this token in the original text."""
 
     def __repr__(self):
-        return '%s(%r, %r, %r)' % (self.__class__.__name__, self.text, self.start, self.end)
+        return "%s(%r, %r, %r)" % (
+            self.__class__.__name__,
+            self.text,
+            self.start,
+            self.end,
+        )
 
     def __str__(self):
         return self.text
@@ -1131,7 +1366,11 @@ class Span(object):
         """Span objects are equal if the source text is equal, and the start and end indices are equal."""
         if not isinstance(other, self.__class__):
             return False
-        return self.text == other.text and self.start == other.start and self.end == other.end
+        return (
+            self.text == other.text
+            and self.start == other.start
+            and self.end == other.end
+        )
 
     def __ne__(self, other):
         return not self == other
@@ -1197,11 +1436,13 @@ class RichToken(Token):
 
     @classmethod
     def _from_token(cls, token, sentence):
-        rich_token = cls(text=token.text,
-                         start=token.start,
-                         end=token.end,
-                         lexicon=token.lexicon,
-                         sentence=sentence)
+        rich_token = cls(
+            text=token.text,
+            start=token.start,
+            end=token.end,
+            lexicon=token.lexicon,
+            sentence=sentence,
+        )
         return rich_token
 
     @property
@@ -1229,6 +1470,13 @@ class RichToken(Token):
         else:
             self.sentence._assign_tags(name)
             if name not in self._tags.keys():
-                raise AttributeError(name + " is not a supported tag type for the sentence: " + str(self.sentence) + str(self.sentence.taggers) + str(type(self.sentence))
-                                     + str(self._tags) + str(self))
+                raise AttributeError(
+                    name
+                    + " is not a supported tag type for the sentence: "
+                    + str(self.sentence)
+                    + str(self.sentence.taggers)
+                    + str(type(self.sentence))
+                    + str(self._tags)
+                    + str(self)
+                )
             return self._tags[name]

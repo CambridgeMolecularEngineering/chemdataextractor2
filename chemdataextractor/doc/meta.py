@@ -6,7 +6,9 @@ MetaData Document elements
 from .element import BaseElement
 from ..model.base import ModelList
 import logging
+
 log = logging.getLogger(__name__)
+
 
 class MetaData(BaseElement):
 
@@ -37,7 +39,7 @@ class MetaData(BaseElement):
         return []
 
     def serialize(self):
-        return {'MetaData': {k: v for k, v in self.data.items() if v}}
+        return {"MetaData": {k: v for k, v in self.data.items() if v}}
 
     @property
     def title(self):
@@ -105,7 +107,7 @@ class MetaData(BaseElement):
     @property
     def data(self):
         """Returns all data as a dict()"""
-        return {k.lstrip('_'): v for k, v in self._data.items()}
+        return {k.lstrip("_"): v for k, v in self._data.items()}
 
     @property
     def abbreviation_definitions(self):
@@ -118,7 +120,7 @@ class MetaData(BaseElement):
     @property
     def chemical_definitions(self):
         return []
-    
+
     @property
     def cems(self):
         return []

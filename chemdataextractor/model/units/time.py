@@ -25,6 +25,7 @@ class Time(Dimension):
     """
     Dimension subclass for times.
     """
+
     pass
 
 
@@ -34,6 +35,7 @@ class TimeModel(QuantityModel):
     absolute times, as peculiarities of calendars are not supported,
     e.g. a minute is always defined as 60 seconds.
     """
+
     dimensions = Time()
 
 
@@ -131,8 +133,12 @@ class Day(TimeUnit):
         return error / (60 * 60.0 * 24.0)
 
 
-units_dict = {R('d(ay(s)?)?', group=0): Day, R('y(ear(s)?)?', group=0): Year,
-              R('h(our(s)?)?', group=0): Hour, R('min(ute)?s?', group=0): Minute,
-              R('s(econd(s)?)?', group=0): Second}
+units_dict = {
+    R("d(ay(s)?)?", group=0): Day,
+    R("y(ear(s)?)?", group=0): Year,
+    R("h(our(s)?)?", group=0): Hour,
+    R("min(ute)?s?", group=0): Minute,
+    R("s(econd(s)?)?", group=0): Second,
+}
 Time.units_dict = units_dict
 Time.standard_units = Second()

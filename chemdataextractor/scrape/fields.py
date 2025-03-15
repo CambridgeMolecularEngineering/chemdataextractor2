@@ -108,7 +108,13 @@ class FloatField(BaseField):
 class BoolField(BaseField):
     """A boolean field type."""
 
-    def __init__(self, selection, true=re.compile('true|yes|1', re.I), false=re.compile('false|no|0', re.I), **kwargs):
+    def __init__(
+        self,
+        selection,
+        true=re.compile("true|yes|1", re.I),
+        false=re.compile("false|no|0", re.I),
+        **kwargs,
+    ):
         """
 
         :param true: Regular expression match that evaluates to True.
@@ -130,7 +136,7 @@ class DateTimeField(BaseField):
     """A datetime field. Depends on python-dateutil."""
 
     def process(self, value):
-        if value == '':
+        if value == "":
             return None
         try:
             # Ignore year-only values

@@ -10,7 +10,14 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from .abbrev import AbbreviationDetector, ChemAbbreviationDetector
-from .tokenize import SentenceTokenizer, ChemSentenceTokenizer, WordTokenizer, ChemWordTokenizer, FineWordTokenizer, BertWordTokenizer
+from .tokenize import (
+    SentenceTokenizer,
+    ChemSentenceTokenizer,
+    WordTokenizer,
+    ChemWordTokenizer,
+    FineWordTokenizer,
+    BertWordTokenizer,
+)
 from .pos import ApPosTagger, ChemApPosTagger, CrfPosTagger, ChemCrfPosTagger
 from .cem import LegacyCemTagger, CiDictCemTagger, CsDictCemTagger, CrfCemTagger
 from .new_cem import CemTagger

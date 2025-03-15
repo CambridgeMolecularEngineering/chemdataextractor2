@@ -15,16 +15,16 @@ from ..base import BaseModel, BaseType, FloatType, StringType, ListType
 def standard_units(self):
     if self._standard_units and len(self._standard_units) == 1:
         for unit, power in self._standard_units.items():
-            if power == 1.:
+            if power == 1.0:
                 return unit
             else:
-                return unit ** power
+                return unit**power
     product_unit = None
-    for (unit, power) in self._standard_units.items():
+    for unit, power in self._standard_units.items():
         if not product_unit:
-            product_unit = unit ** power
+            product_unit = unit**power
         else:
-            product_unit = product_unit * (unit ** power)
+            product_unit = product_unit * (unit**power)
     return product_unit
 
 
@@ -37,7 +37,10 @@ class _DimensionMeta(ABCMeta):
 
     def __new__(mcs, name, bases, attrs):
         cls = super(_DimensionMeta, mcs).__new__(mcs, name, bases, attrs)
-        if hasattr(cls, 'constituent_dimensions') and cls.constituent_dimensions is not None:
+        if (
+            hasattr(cls, "constituent_dimensions")
+            and cls.constituent_dimensions is not None
+        ):
             cls.units_dict = copy.copy(cls.constituent_dimensions.units_dict)
             cls._dimensions = cls.constituent_dimensions._dimensions
             cls._standard_units = cls.constituent_dimensions._standard_units
@@ -45,7 +48,7 @@ class _DimensionMeta(ABCMeta):
         return cls
 
     def __setattr__(cls, key, value):
-        if key == 'standard_units' and not isinstance(value, property):
+        if key == "standard_units" and not isinstance(value, property):
             cls._standard_units = {value: 1.0}
         else:
             return super(_DimensionMeta, cls).__setattr__(key, value)
@@ -135,7 +138,7 @@ class Dimension(metaclass=_DimensionMeta):
 
     def __truediv__(self, other):
 
-        other_inverted = other**(-1.0)
+        other_inverted = other ** (-1.0)
         new_model = self * other_inverted
         return new_model
 
@@ -287,11 +290,11 @@ class Dimension(metaclass=_DimensionMeta):
         return string.__hash__()
 
     def __str__(self):
-        string = ''
+        string = ""
         if self._dimensions is not None:
             name_list = []
             for key, value in self._dimensions.items():
-                name_list.append((type(key).__name__ + '^(' + str(value) + ')  '))
+                name_list.append((type(key).__name__ + "^(" + str(value) + ")  "))
             for name in sorted(name_list):
                 string += name
             string = string[:-2]

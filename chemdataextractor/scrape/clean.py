@@ -55,12 +55,12 @@ class Cleaner(object):
     # a dictionary of string: func(el)->el or None which manipulates the text of an element
 
     namespaces = {
-        're': 'http://exslt.org/regular-expressions',
-        'set': 'http://exslt.org/sets',
-        'dc': 'http://purl.org/dc/elements/1.1/',
-        'prism': 'http://prismstandard.org/namespaces/basic/2.0/',
-        'xml': 'http://www.w3.org/XML/1998/namespace',
-        'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns',
+        "re": "http://exslt.org/regular-expressions",
+        "set": "http://exslt.org/sets",
+        "dc": "http://purl.org/dc/elements/1.1/",
+        "prism": "http://prismstandard.org/namespaces/basic/2.0/",
+        "xml": "http://www.w3.org/XML/1998/namespace",
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns",
     }
 
     def __init__(self, **kwargs):
@@ -75,28 +75,32 @@ class Cleaner(object):
         # TODO: This is weird. Why don't we change to proper individual keyword arguments with class attribs as default
         for name, value in kwargs.items():
             if not hasattr(self, name):
-                raise TypeError('Unknown parameter: %s=%r' % (name, value))
+                raise TypeError("Unknown parameter: %s=%r" % (name, value))
             setattr(self, name, value)
 
     def __call__(self, doc):
         """Clean the document."""
-        if hasattr(doc, 'getroot'):
+        if hasattr(doc, "getroot"):
             doc = doc.getroot()
 
         if self.fix_whitespace:
             # Ensure newlines around block elements
             for el in doc.iterdescendants():
                 if el.tag in BLOCK_ELEMENTS:
-                    el.tail = (el.tail or '') + '\n'
+                    el.tail = (el.tail or "") + "\n"
                     previous = el.getprevious()
                     parent = el.getparent()
                     if previous is None:
-                        parent.text = (parent.text or '') + '\n'
+                        parent.text = (parent.text or "") + "\n"
                     else:
-                        previous.tail = (previous.tail or '') + '\n'
-        
+                        previous.tail = (previous.tail or "") + "\n"
+
         # Collect all the allowed elements
-        to_keep = [el for el in doc.xpath(self.allow_xpath, namespaces=self.namespaces)] if self.allow_xpath else []
+        to_keep = (
+            [el for el in doc.xpath(self.allow_xpath, namespaces=self.namespaces)]
+            if self.allow_xpath
+            else []
+        )
 
         # Process xpaths
         if self.process_xpaths:
@@ -114,7 +118,7 @@ class Cleaner(object):
         # Remove elements that match kill_xpath
         if self.kill_xpath:
             for el in doc.xpath(self.kill_xpath, namespaces=self.namespaces):
-                #log.debug('Killing: %s' % tostring(el))
+                # log.debug('Killing: %s' % tostring(el))
                 parent = el.getparent()
                 # We can't kill the root element!
                 if parent is None:
@@ -122,9 +126,9 @@ class Cleaner(object):
                 if el.tail:
                     previous = el.getprevious()
                     if previous is None:
-                        parent.text = (parent.text or '') + el.tail
+                        parent.text = (parent.text or "") + el.tail
                     else:
-                        previous.tail = (previous.tail or '') + el.tail
+                        previous.tail = (previous.tail or "") + el.tail
                 parent.remove(el)
 
         # Replace elements that match strip_xpath with their contents
@@ -141,32 +145,31 @@ class Cleaner(object):
                 # Append the text to previous tail (or parent text if no previous), ensuring newline if block level
                 if el.text and isinstance(el.tag, str):
                     if previous is None:
-                        parent.text = (parent.text or '') + el.text
+                        parent.text = (parent.text or "") + el.text
                     else:
-                        previous.tail = (previous.tail or '') + el.text
+                        previous.tail = (previous.tail or "") + el.text
                 # Append the tail to last child tail, or previous tail, or parent text, ensuring newline if block level
                 if el.tail:
                     if len(el):
                         last = el[-1]
-                        last.tail = (last.tail or '') + el.tail
+                        last.tail = (last.tail or "") + el.tail
                     elif previous is None:
-                        parent.text = (parent.text or '') + el.tail
+                        parent.text = (parent.text or "") + el.tail
                     else:
-                        previous.tail = (previous.tail or '') + el.tail
+                        previous.tail = (previous.tail or "") + el.tail
                 index = parent.index(el)
-                parent[index:index+1] = el[:]
-
+                parent[index : index + 1] = el[:]
 
         # Collapse whitespace down to a single space or a single newline
         if self.fix_whitespace:
             for el in doc.iter():
                 if el.text is not None:
-                    el.text = re.sub(r'\s*\n\s*', '\n', el.text)
-                    el.text = re.sub(r'[ \t]+', ' ', el.text)
+                    el.text = re.sub(r"\s*\n\s*", "\n", el.text)
+                    el.text = re.sub(r"[ \t]+", " ", el.text)
                     # el.text = re.sub(r'\s+', ' ', el.text)
                 if el.tail is not None:
-                    el.tail = re.sub(r'\s*\n\s*', '\n', el.tail)
-                    el.tail = re.sub(r'[ \t]+', ' ', el.tail)
+                    el.tail = re.sub(r"\s*\n\s*", "\n", el.tail)
+                    el.tail = re.sub(r"[ \t]+", " ", el.tail)
                     # el.tail = re.sub(r'\s+', ' ', el.tail)
 
     def clean_html(self, html):
@@ -178,9 +181,9 @@ class Cleaner(object):
             doc = copy.deepcopy(html)
         self(doc)
         if issubclass(result_type, bytes):
-            return tostring(doc, encoding='utf-8')
+            return tostring(doc, encoding="utf-8")
         elif issubclass(result_type, str):
-            return tostring(doc, encoding='unicode')
+            return tostring(doc, encoding="unicode")
         else:
             return doc
 
@@ -193,9 +196,9 @@ class Cleaner(object):
             doc = copy.deepcopy(markup)
         self(doc)
         if issubclass(result_type, bytes):
-            return tostring(doc, encoding='utf-8')
+            return tostring(doc, encoding="utf-8")
         elif issubclass(result_type, str):
-            return tostring(doc, encoding='unicode')
+            return tostring(doc, encoding="unicode")
         else:
             return doc
 
@@ -210,7 +213,7 @@ clean_markup = clean.clean_markup
 clean_html = clean.clean_html
 
 #: A Cleaner instance that is configured to strip all tags, replacing them with their text contents.
-strip = Cleaner(strip_xpath='.//*')
+strip = Cleaner(strip_xpath=".//*")
 
 #: Convenience function for applying ``strip`` to a string.
 strip_markup = strip.clean_markup

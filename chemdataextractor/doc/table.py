@@ -61,7 +61,9 @@ class Table(CaptionedElement):
         :param Document document: (Optional) The document containing this element.
         :param Any id: (Optional) Some identifier for this element. Must be equatable.
         """
-        super(Table, self).__init__(caption=caption, label=label, models=models, **kwargs)
+        super(Table, self).__init__(
+            caption=caption, label=label, models=models, **kwargs
+        )
         try:
             #: TableDataExtractor `Table` object. Can pass any kwargs into TDE directly.
             self.tde_table = TdeTable(table_data, **kwargs)
@@ -72,7 +74,9 @@ class Table(CaptionedElement):
 
             try:
                 #: TableDataExtractor `TrivialTable` object. Can pass any kwargs into TDE directly.
-                self.tde_table = TrivialTdeTable(table_data, standardize_empty_data=True, **kwargs)
+                self.tde_table = TrivialTdeTable(
+                    table_data, standardize_empty_data=True, **kwargs
+                )
             except (TDEError, TypeError) as e:
                 log.error("TableDataExtractor 'TrivialTable' error: {}".format(e))
                 self.tde_subtables = []
@@ -90,7 +94,9 @@ class Table(CaptionedElement):
             # get the subtables
             self.tde_subtables = self.tde_table.subtables
             # adjust the CDE Table heading from TDE results
-            self.heading = self.tde_table.title_row if self.tde_table.title_row is not None else []
+            self.heading = (
+                self.tde_table.title_row if self.tde_table.title_row is not None else []
+            )
 
             if self.tde_subtables:
                 for table in self.tde_subtables:
@@ -112,7 +118,9 @@ class Table(CaptionedElement):
         for category_table in self._category_tables(tde_table):
             cde_table = []
             for cell in category_table:
-                cde_cell = Cell.from_tdecell(cell, models=self.models, document=document)
+                cde_cell = Cell.from_tdecell(
+                    cell, models=self.models, document=document
+                )
                 cde_table.append(cde_cell)
             cde_tables.append(cde_table)
         return cde_tables
@@ -124,8 +132,8 @@ class Table(CaptionedElement):
         a serialized representation of :attr:`caption`, which is a :class:`~chemdataextractor.doc.element.BaseElement`
         """
         data = {
-            'type': self.__class__.__name__,
-            'caption': self.caption.serialize(),
+            "type": self.__class__.__name__,
+            "caption": self.caption.serialize(),
         }
         return data
 
@@ -141,7 +149,7 @@ class Table(CaptionedElement):
         :param cde_table: list of Cell objects
         :return: Yields one result at a time
         """
-        if hasattr(parser, 'parse_cell'):
+        if hasattr(parser, "parse_cell"):
             for cde_cell in cde_table:
                 # print(cde_cell.tagged_tokens)
                 log.debug(parser)
@@ -150,8 +158,8 @@ class Table(CaptionedElement):
                     if result.serialize() != {}:
                         # yield {parser.model.__name__: result.serialize()}
                         # adding of the row/column header categories to the record for potential merging later
-                        result.table_row_categories = ' '.join(cde_cell.row_categories)
-                        result.table_col_categories = ' '.join(cde_cell.col_categories)
+                        result.table_row_categories = " ".join(cde_cell.row_categories)
+                        result.table_col_categories = " ".join(cde_cell.col_categories)
                         yield result
 
     @property
@@ -205,7 +213,9 @@ class Table(CaptionedElement):
         table_records.remove_subsets()
 
         # Step 6
-        caption_records = ModelList(*[c for c in caption_records if c.required_fulfilled])
+        caption_records = ModelList(
+            *[c for c in caption_records if c.required_fulfilled]
+        )
         table_records = self._merge(table_records, caption_records)
 
         return table_records
@@ -233,8 +243,8 @@ class Table(CaptionedElement):
         col_first = {}
         row_first = {}
         for record in records:
-            col_key = ' '.join(record.table_col_categories)
-            row_key = ' '.join(record.table_row_categories)
+            col_key = " ".join(record.table_col_categories)
+            row_key = " ".join(record.table_row_categories)
             if col_key in col_first.keys():
                 col_first[col_key].append(record)
             else:
@@ -261,9 +271,9 @@ class Table(CaptionedElement):
         :param ModelList(BaseModel) records: The list of models that is to be consolidated.
         :param bool contextual: Whether to only merge in contextual fields or to merge in all fields.
         """
-        function_name = 'merge_all'
+        function_name = "merge_all"
         if contextual:
-            function_name = 'merge_contextual'
+            function_name = "merge_contextual"
         segmented_records = {}
         # A dictionary with a Model class as the key, and
         # [A list of all records contained in `records` of that type,
@@ -281,7 +291,7 @@ class Table(CaptionedElement):
 
         # Create the segmented_records dictionary
         for record in records:
-            if not hasattr(record, '_merged_in'):
+            if not hasattr(record, "_merged_in"):
                 record._merged_in = []
             for root_model, submodels in all_models.items():
                 if isinstance(record, root_model):

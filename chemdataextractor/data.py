@@ -27,15 +27,22 @@ from .utils import ensure_dir
 log = logging.getLogger(__name__)
 
 
-SERVER_ROOT = 'http://data.chemdataextractor.org/'
+SERVER_ROOT = "http://data.chemdataextractor.org/"
 AUTO_DOWNLOAD = True
-
 
 
 class Package(object):
     """Data package."""
 
-    def __init__(self, path, server_root=None, remote_path=None, unzip=False, untar=False, custom_download=None):
+    def __init__(
+        self,
+        path,
+        server_root=None,
+        remote_path=None,
+        unzip=False,
+        untar=False,
+        custom_download=None,
+    ):
         """
         :param str path: The path to where this package will be located under
             ChemDataExtractor's default data directory.
@@ -90,50 +97,56 @@ class Package(object):
 
     def default_download(self, force=False):
         """"""
-        log.debug('Considering %s', self.remote_path)
+        log.debug("Considering %s", self.remote_path)
         ensure_dir(os.path.dirname(self.local_path))
         r = requests.get(self.remote_path, stream=True)
         r.raise_for_status()
         # Check if already downloaded
         if self.local_exists():
             # Skip if existing, unless the file has changed
-            if not force and os.path.getsize(self.local_path) == int(r.headers.get('content-length')):
-                log.debug('Skipping existing: %s', self.local_path)
+            if not force and os.path.getsize(self.local_path) == int(
+                r.headers.get("content-length")
+            ):
+                log.debug("Skipping existing: %s", self.local_path)
                 return False
             else:
-                log.debug('File size mismatch for %s', self.local_path)
-        log.info('Downloading %s to %s', self.remote_path, self.local_path)
+                log.debug("File size mismatch for %s", self.local_path)
+        log.info("Downloading %s to %s", self.remote_path, self.local_path)
         download_path = self.local_path
         if self.unzip:
-            download_path = self.local_path + '.zip'
+            download_path = self.local_path + ".zip"
         elif self.untar:
-            download_path = self.local_path + '.tar.gz'
-        with io.open(download_path, 'wb') as f:
-            with yaspin(text='Couldn\'t find {}, downloading'.format(self.path), side='right').simpleDots:
-                for chunk in r.iter_content(chunk_size=1024 * 1024):  # Large 10MB chunks
+            download_path = self.local_path + ".tar.gz"
+        with io.open(download_path, "wb") as f:
+            with yaspin(
+                text="Couldn't find {}, downloading".format(self.path), side="right"
+            ).simpleDots:
+                for chunk in r.iter_content(
+                    chunk_size=1024 * 1024
+                ):  # Large 10MB chunks
                     if chunk:
                         f.write(chunk)
         if self.unzip:
-            with zipfile.ZipFile(download_path, 'r') as f:
+            with zipfile.ZipFile(download_path, "r") as f:
                 f.extractall(self.local_path)
             os.remove(download_path)
         elif self.untar:
-            with tarfile.open(download_path, 'r:gz') as f:
+            with tarfile.open(download_path, "r:gz") as f:
                 f.extractall(self.local_path)
             os.remove(download_path)
         return True
 
     def __repr__(self):
-        return '<Package: %s>' % self.path
+        return "<Package: %s>" % self.path
 
     def __str__(self):
-        return '<Package: %s>' % self.path
+        return "<Package: %s>" % self.path
 
 
 def get_data_dir():
     """Return path to the data directory."""
     # Use data_dir config value if set, otherwise use OS-dependent data directory given by appdirs
-    return config.get('data_dir', appdirs.user_data_dir('ChemDataExtractor'))
+    return config.get("data_dir", appdirs.user_data_dir("ChemDataExtractor"))
 
 
 def find_data(path, warn=True, get_data=True):
@@ -147,7 +160,7 @@ def find_data(path, warn=True, get_data=True):
     elif warn and not os.path.exists(full_path):
         for package in PACKAGES:
             if path == package.path:
-                log.warn('%s doesn\'t exist. Run `cde data download` to get it.' % path)
+                log.warn("%s doesn't exist. Run `cde data download` to get it." % path)
                 break
     return full_path
 
@@ -161,41 +174,60 @@ def load_model(path):
     abspath = find_data(path)
     cached = _model_cache.get(abspath)
     if cached is not None:
-        log.debug('Using cached copy of %s' % path)
+        log.debug("Using cached copy of %s" % path)
         return cached
-    log.debug('Loading model %s' % path)
+    log.debug("Loading model %s" % path)
     try:
-        with io.open(abspath, 'rb') as f:
+        with io.open(abspath, "rb") as f:
             model = pickle.load(f)
     except IOError:
-        raise ModelNotFoundError('Could not load %s. Have you run `cde data download`?' % path)
+        raise ModelNotFoundError(
+            "Could not load %s. Have you run `cde data download`?" % path
+        )
     _model_cache[abspath] = model
     return model
 
 
 #: Current active data packages
 PACKAGES = [
-    Package('models/cem_crf-1.0.pickle'),
-    Package('models/cem_crf_chemdner_cemp-1.0.pickle'),
-    Package('models/cem_dict_cs-1.0.pickle'),
-    Package('models/cem_dict-1.0.pickle'),
-    Package('models/clusters_chem1500-1.0.pickle'),
-    Package('models/pos_ap_genia_nocluster-1.0.pickle'),
-    Package('models/pos_ap_genia-1.0.pickle'),
-    Package('models/pos_ap_wsj_genia_nocluster-1.0.pickle'),
-    Package('models/pos_ap_wsj_genia-1.0.pickle'),
-    Package('models/pos_ap_wsj_nocluster-1.0.pickle'),
-    Package('models/pos_ap_wsj-1.0.pickle'),
-    Package('models/pos_crf_genia_nocluster-1.0.pickle'),
-    Package('models/pos_crf_genia-1.0.pickle'),
-    Package('models/pos_crf_wsj_genia_nocluster-1.0.pickle'),
-    Package('models/pos_crf_wsj_genia-1.0.pickle'),
-    Package('models/pos_crf_wsj_nocluster-1.0.pickle'),
-    Package('models/pos_crf_wsj-1.0.pickle'),
-    Package('models/punkt_chem-1.0.pickle'),
-    Package('models/bert_finetuned_crf_model-1.0a', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/bert_pretrained_crf_model-1.0a.tar.gz', untar=True),
-    Package('models/hf_bert_crf_tagger', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/hf_bert_crf_tagger.tar.gz', untar=True),
-    Package('models/scibert_cased_vocab-1.0.txt', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/scibert_cased_vocab_1.0.txt'),
-    Package('models/scibert_uncased_vocab-1.0.txt', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/scibert_uncased_vocab-1.0.txt'),
-    Package('models/scibert_cased_weights-1.0.tar.gz', remote_path='https://cdemodels.blob.core.windows.net/cdemodels/scibert_cased_weights-1.0.tar.gz'),
+    Package("models/cem_crf-1.0.pickle"),
+    Package("models/cem_crf_chemdner_cemp-1.0.pickle"),
+    Package("models/cem_dict_cs-1.0.pickle"),
+    Package("models/cem_dict-1.0.pickle"),
+    Package("models/clusters_chem1500-1.0.pickle"),
+    Package("models/pos_ap_genia_nocluster-1.0.pickle"),
+    Package("models/pos_ap_genia-1.0.pickle"),
+    Package("models/pos_ap_wsj_genia_nocluster-1.0.pickle"),
+    Package("models/pos_ap_wsj_genia-1.0.pickle"),
+    Package("models/pos_ap_wsj_nocluster-1.0.pickle"),
+    Package("models/pos_ap_wsj-1.0.pickle"),
+    Package("models/pos_crf_genia_nocluster-1.0.pickle"),
+    Package("models/pos_crf_genia-1.0.pickle"),
+    Package("models/pos_crf_wsj_genia_nocluster-1.0.pickle"),
+    Package("models/pos_crf_wsj_genia-1.0.pickle"),
+    Package("models/pos_crf_wsj_nocluster-1.0.pickle"),
+    Package("models/pos_crf_wsj-1.0.pickle"),
+    Package("models/punkt_chem-1.0.pickle"),
+    Package(
+        "models/bert_finetuned_crf_model-1.0a",
+        remote_path="https://cdemodels.blob.core.windows.net/cdemodels/bert_pretrained_crf_model-1.0a.tar.gz",
+        untar=True,
+    ),
+    Package(
+        "models/hf_bert_crf_tagger",
+        remote_path="https://cdemodels.blob.core.windows.net/cdemodels/hf_bert_crf_tagger.tar.gz",
+        untar=True,
+    ),
+    Package(
+        "models/scibert_cased_vocab-1.0.txt",
+        remote_path="https://cdemodels.blob.core.windows.net/cdemodels/scibert_cased_vocab_1.0.txt",
+    ),
+    Package(
+        "models/scibert_uncased_vocab-1.0.txt",
+        remote_path="https://cdemodels.blob.core.windows.net/cdemodels/scibert_uncased_vocab-1.0.txt",
+    ),
+    Package(
+        "models/scibert_cased_weights-1.0.tar.gz",
+        remote_path="https://cdemodels.blob.core.windows.net/cdemodels/scibert_cased_weights-1.0.tar.gz",
+    ),
 ]

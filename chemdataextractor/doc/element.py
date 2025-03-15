@@ -13,8 +13,8 @@ import json
 import operator
 
 import logging
-log = logging.getLogger(__name__)
 
+log = logging.getLogger(__name__)
 
 
 class BaseElement(metaclass=ABCMeta):
@@ -56,14 +56,14 @@ class BaseElement(metaclass=ABCMeta):
         self._streamlined_models_list = None
 
     def __repr__(self):
-        return '<%s>' % (self.__class__.__name__,)
+        return "<%s>" % (self.__class__.__name__,)
 
     def __str__(self):
-        return '<%s>' % (self.__class__.__name__,)
+        return "<%s>" % (self.__class__.__name__,)
 
     @property
     def document(self):
-        """ The :class:`chemdataextractor.doc.document.Document` that this element belongs to. """
+        """The :class:`chemdataextractor.doc.document.Document` that this element belongs to."""
         return self._document
 
     @document.setter
@@ -87,8 +87,7 @@ class BaseElement(metaclass=ABCMeta):
     #     return []
 
     def add_models(self, models):
-        """Set all models on this element
-        """
+        """Set all models on this element"""
         # print(models)
         log.debug("Setting models on %s" % self)
         self._streamlined_models_list = None
@@ -111,8 +110,9 @@ class BaseElement(metaclass=ABCMeta):
             log.debug(self.models)
             for model in self.models:
                 models.update(model.flatten(include_inferred=False))
-            self._streamlined_models_list = sorted(list(models),
-                                                   key=operator.attrgetter('__name__'))
+            self._streamlined_models_list = sorted(
+                list(models), key=operator.attrgetter("__name__")
+            )
         for model in self._streamlined_models_list:
             for parser in model.parsers:
                 parser.model = model
@@ -129,7 +129,6 @@ class BaseElement(metaclass=ABCMeta):
         A list of child elements. Returns None by default.
         """
         return None
-
 
 
 class CaptionedElement(BaseElement):
@@ -166,14 +165,19 @@ class CaptionedElement(BaseElement):
         self.caption.document = self.document
 
     def __repr__(self):
-        return '%s(id=%r, references=%r, caption=%r)' % (self.__class__.__name__, self.id, self.references, self.caption.text)
+        return "%s(id=%r, references=%r, caption=%r)" % (
+            self.__class__.__name__,
+            self.id,
+            self.references,
+            self.caption.text,
+        )
 
     def __str__(self):
         return self.caption.text
 
     @property
     def document(self):
-        """ The :class:`~chemdataextractor.doc.document.Document` that this element belongs to. """
+        """The :class:`~chemdataextractor.doc.document.Document` that this element belongs to."""
         return self._document
 
     @document.setter
@@ -242,7 +246,7 @@ class CaptionedElement(BaseElement):
         the name of the class being serialized, and the key 'caption' will contain
         a serialized representation of :attr:`caption`, which is a :class:`~chemdataextractor.doc.element.BaseElement`
         """
-        data = {'type': self.__class__.__name__, 'caption': self.caption.serialize()}
+        data = {"type": self.__class__.__name__, "caption": self.caption.serialize()}
         return data
 
     @property

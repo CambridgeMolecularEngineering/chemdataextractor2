@@ -24,26 +24,34 @@ log = logging.getLogger(__name__)
 
 
 @click.group()
-@click.option('--verbose', '-v', is_flag=True, help='Verbose debug logging.')
-@click.version_option(__version__, '--version', '-V')
-@click.help_option('--help', '-h')
+@click.option("--verbose", "-v", is_flag=True, help="Verbose debug logging.")
+@click.version_option(__version__, "--version", "-V")
+@click.help_option("--help", "-h")
 @click.pass_context
 def cli(ctx, verbose):
     """ChemDataExtractor command line interface."""
-    log.debug('ChemDataExtractor v%s' % __version__)
+    log.debug("ChemDataExtractor v%s" % __version__)
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
-    logging.getLogger('requests').setLevel(logging.WARN)
+    logging.getLogger("requests").setLevel(logging.WARN)
     ctx.obj = {}
 
 
 @cli.command()
-@click.option('--output', '-o', type=click.File('w', encoding='utf8'), help='Output file.', default=click.get_text_stream('stdout'))
-@click.argument('input', type=click.File('rb'), default=click.get_binary_stream('stdin'))
+@click.option(
+    "--output",
+    "-o",
+    type=click.File("w", encoding="utf8"),
+    help="Output file.",
+    default=click.get_text_stream("stdout"),
+)
+@click.argument(
+    "input", type=click.File("rb"), default=click.get_binary_stream("stdin")
+)
 @click.pass_obj
 def extract(ctx, input, output):
     """Run ChemDataExtractor on a document."""
-    log.info('chemdataextractor.extract')
-    log.info('Reading %s' % input.name)
+    log.info("chemdataextractor.extract")
+    log.info("Reading %s" % input.name)
     doc = Document.from_file(input, fname=input.name)
     records = [record.serialize(primitive=True) for record in doc.records]
     jsonstring = json.dumps(records, indent=2, ensure_ascii=False)
@@ -51,16 +59,24 @@ def extract(ctx, input, output):
 
 
 @cli.command()
-@click.option('--output', '-o', type=click.File('w', encoding='utf8'), help='Output file.', default=click.get_text_stream('stdout'))
-@click.argument('input', type=click.File('rb'), default=click.get_binary_stream('stdin'))
+@click.option(
+    "--output",
+    "-o",
+    type=click.File("w", encoding="utf8"),
+    help="Output file.",
+    default=click.get_text_stream("stdout"),
+)
+@click.argument(
+    "input", type=click.File("rb"), default=click.get_binary_stream("stdin")
+)
 @click.pass_obj
 def read(ctx, input, output):
     """Output processed document elements."""
-    log.info('chemdataextractor.read')
-    log.info('Reading %s' % input.name)
+    log.info("chemdataextractor.read")
+    log.info("Reading %s" % input.name)
     doc = Document.from_file(input)
     for element in doc.elements:
-        output.write(u'%s : %s\n=====\n' % (element.__class__.__name__, str(element)))
+        output.write("%s : %s\n=====\n" % (element.__class__.__name__, str(element)))
 
 
 from . import cluster, config, data, tokenize, pos, chemdner, cem, dict, evaluate

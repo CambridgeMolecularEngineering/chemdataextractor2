@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 class BaseParser(object):
     """"""
+
     model = None
     trigger_phrase = None
     skip_section_phrase = None
@@ -107,6 +108,7 @@ class BaseSentenceParser(BaseParser):
     Base class for parsing sentences. To implement a parser for a new property,
     impelement the interpret function.
     """
+
     parse_full_sentence = False
 
     def should_read_section(self, heading):
@@ -114,13 +116,17 @@ class BaseSentenceParser(BaseParser):
         for sentence in heading.sentences:
 
             if self.allow_section_phrase is not None:
-                allow_phrase_results = [result for result in self.allow_section_phrase.scan(sentence.tokens)]
+                allow_phrase_results = [
+                    result for result in self.allow_section_phrase.scan(sentence.tokens)
+                ]
                 if allow_phrase_results:
                     should_read = True
                     break
 
             if self.skip_section_phrase is not None:
-                skip_phrase_results = [result for result in self.skip_section_phrase.scan(sentence.tokens)]
+                skip_phrase_results = [
+                    result for result in self.skip_section_phrase.scan(sentence.tokens)
+                ]
                 if skip_phrase_results:
                     should_read = False
         return should_read
@@ -138,7 +144,9 @@ class BaseSentenceParser(BaseParser):
         :rtype: Iterator[:class:`chemdataextractor.model.base.BaseModel`]
         """
         if self.trigger_phrase is not None:
-            trigger_phrase_results = [result for result in self.trigger_phrase.scan(sentence.tokens)]
+            trigger_phrase_results = [
+                result for result in self.trigger_phrase.scan(sentence.tokens)
+            ]
         if self.trigger_phrase is None or trigger_phrase_results:
             for result in self.root.scan(sentence.tokens):
                 for model in self.interpret(*result):
@@ -166,8 +174,12 @@ class BaseTableParser(BaseParser):
         :rtype: Iterator[:class:`chemdataextractor.model.base.BaseModel`]
         """
         if self.trigger_phrase is not None:
-            trigger_phrase_results = [result for result in self.trigger_phrase.scan(cell.tokens)]
-        if (self.trigger_phrase is None or trigger_phrase_results) and self.root is not None:
+            trigger_phrase_results = [
+                result for result in self.trigger_phrase.scan(cell.tokens)
+            ]
+        if (
+            self.trigger_phrase is None or trigger_phrase_results
+        ) and self.root is not None:
             for result in self.root.scan(cell.tokens):
                 try:
                     for model in self.interpret(*result):

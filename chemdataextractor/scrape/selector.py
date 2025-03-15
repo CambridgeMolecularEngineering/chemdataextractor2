@@ -30,15 +30,15 @@ class Selector(object):
 
     #: Default namespaces for all selectors
     _namespaces = {
-        're': 'http://exslt.org/regular-expressions',
-        'set': 'http://exslt.org/sets',
-        'dc': 'http://purl.org/dc/elements/1.1/',
-        'prism': 'http://prismstandard.org/namespaces/basic/2.0/',
-        'xml': 'http://www.w3.org/XML/1998/namespace',
-        'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns',
+        "re": "http://exslt.org/regular-expressions",
+        "set": "http://exslt.org/sets",
+        "dc": "http://purl.org/dc/elements/1.1/",
+        "prism": "http://prismstandard.org/namespaces/basic/2.0/",
+        "xml": "http://www.w3.org/XML/1998/namespace",
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns",
     }
 
-    def __init__(self, root, fmt='html', translator=CssHTMLTranslator, namespaces=None):
+    def __init__(self, root, fmt="html", translator=CssHTMLTranslator, namespaces=None):
         self.fmt = fmt
         self._root = root
         self._translator = translator() if type(translator) == type else translator
@@ -52,32 +52,88 @@ class Selector(object):
         return NotImplemented
 
     @classmethod
-    def from_text(cls, text, base_url=None, parser=HTMLParser, translator=CssHTMLTranslator, fmt='html', namespaces=None, encoding=None):
-        log.debug('Parsing {} with {}'.format(fmt, parser))
-        root = fromstring(text, parser=parser(recover=True, encoding=cls._get_encoding(text, encoding)), base_url=base_url)
-        if base_url and hasattr(root, 'make_links_absolute'):
+    def from_text(
+        cls,
+        text,
+        base_url=None,
+        parser=HTMLParser,
+        translator=CssHTMLTranslator,
+        fmt="html",
+        namespaces=None,
+        encoding=None,
+    ):
+        log.debug("Parsing {} with {}".format(fmt, parser))
+        root = fromstring(
+            text,
+            parser=parser(recover=True, encoding=cls._get_encoding(text, encoding)),
+            base_url=base_url,
+        )
+        if base_url and hasattr(root, "make_links_absolute"):
             root.make_links_absolute()
         return cls(root, translator=translator, fmt=fmt, namespaces=namespaces)
 
     @classmethod
     def from_html_text(cls, text, base_url=None, namespaces=None, encoding=None):
-        return cls.from_text(text, base_url=base_url, parser=HTMLParser, translator=CssHTMLTranslator, fmt='html', namespaces=namespaces, encoding=encoding)
+        return cls.from_text(
+            text,
+            base_url=base_url,
+            parser=HTMLParser,
+            translator=CssHTMLTranslator,
+            fmt="html",
+            namespaces=namespaces,
+            encoding=encoding,
+        )
 
     @classmethod
     def from_xml_text(cls, text, base_url=None, namespaces=None, encoding=None):
-        return cls.from_text(text, base_url=base_url, parser=XMLParser, translator=CssXmlTranslator, fmt='xml', namespaces=namespaces, encoding=encoding)
+        return cls.from_text(
+            text,
+            base_url=base_url,
+            parser=XMLParser,
+            translator=CssXmlTranslator,
+            fmt="xml",
+            namespaces=namespaces,
+            encoding=encoding,
+        )
 
     @classmethod
-    def from_response(cls, response, parser=HTMLParser, translator=CssHTMLTranslator, fmt='html', namespaces=None):
-        return cls.from_text(response.content, response.url, parser, translator, fmt, namespaces=namespaces, encoding=response.encoding)
+    def from_response(
+        cls,
+        response,
+        parser=HTMLParser,
+        translator=CssHTMLTranslator,
+        fmt="html",
+        namespaces=None,
+    ):
+        return cls.from_text(
+            response.content,
+            response.url,
+            parser,
+            translator,
+            fmt,
+            namespaces=namespaces,
+            encoding=response.encoding,
+        )
 
     @classmethod
     def from_html(cls, response, namespaces=None):
-        return cls.from_response(response, parser=HTMLParser, translator=CssHTMLTranslator, fmt='html', namespaces=namespaces)
+        return cls.from_response(
+            response,
+            parser=HTMLParser,
+            translator=CssHTMLTranslator,
+            fmt="html",
+            namespaces=namespaces,
+        )
 
     @classmethod
     def from_xml(cls, response, namespaces=None):
-        return cls.from_response(response, parser=XMLParser, translator=CssXmlTranslator, fmt='xml', namespaces=namespaces)
+        return cls.from_response(
+            response,
+            parser=XMLParser,
+            translator=CssXmlTranslator,
+            fmt="xml",
+            namespaces=namespaces,
+        )
 
     @property
     def path(self):
@@ -90,11 +146,21 @@ class Selector(object):
         return self._root.tag
 
     def xpath(self, query):
-        result = self._root.xpath(query, namespaces=self.namespaces, smart_strings=False)
+        result = self._root.xpath(
+            query, namespaces=self.namespaces, smart_strings=False
+        )
         if type(result) is not list:
             result = [result]
-        #log.debug('Selecting XPath: {}: {}'.format(query, result))
-        result = [self.__class__(root=x, fmt=self.fmt, translator=self._translator, namespaces=self.namespaces) for x in result]
+        # log.debug('Selecting XPath: {}: {}'.format(query, result))
+        result = [
+            self.__class__(
+                root=x,
+                fmt=self.fmt,
+                translator=self._translator,
+                namespaces=self.namespaces,
+            )
+            for x in result
+        ]
         return SelectorList(*result)
 
     def css(self, query):
@@ -111,9 +177,11 @@ class Selector(object):
             root = deepcopy(self._root)
             if cleaner:
                 cleaner(root)
-            return tostring(root, method=self.fmt if raw else 'text', encoding=str, with_tail=False)
+            return tostring(
+                root, method=self.fmt if raw else "text", encoding=str, with_tail=False
+            )
         except (AttributeError, TypeError) as e:
-            #log.warn(e)
+            # log.warn(e)
             return str(self._root)
 
     @classmethod

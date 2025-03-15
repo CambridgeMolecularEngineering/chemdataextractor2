@@ -23,7 +23,9 @@ class CemTagger(EnsembleTagger):
     that uses a tagger based on BERT with a Conditional Random Field to constrain the outputs.
     More details in the paper (https://pubs.acs.org/doi/full/10.1021/acs.jcim.1c01199).
     """
-    taggers = [tokentagger,
-               processtagger,
-               BertCrfTagger(),
-              ]
+
+    taggers = [
+        tokentagger,
+        processtagger,
+        BertCrfTagger(),
+    ]
