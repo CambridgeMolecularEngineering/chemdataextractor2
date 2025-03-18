@@ -38,9 +38,10 @@ from yaspin import yaspin
 
 from ..data import find_data
 from ..errors import ConfigurationError
-from .allennlp_modules import TimeDistributed
-from .allennlp_modules import Token as AllenNLPToken
-from .crf import ConditionalRandomField, allowed_transitions
+from .bertcrf_modules import TimeDistributed
+from .bertcrf_modules import Token as BertCrfToken
+from .crf import (ConditionalRandomField,
+                                       allowed_transitions)
 from .tag import BaseTagger, NER_TAG_TYPE
 from .util import (
     combine_initial_dims,
@@ -74,19 +75,18 @@ class ProcessedTextTagger(BaseTagger):
         return tags
 
 
-class _AllenNlpTokenTagger(BaseTagger):
+class _BertCrfTokenTagger(BaseTagger):
     """
-    Class to get the AllenNLP token corresponding to a CDE token.
-    Intended for internal use with AllenNlpWrapperTagger.
+    Class to get the BertCrf token corresponding to a CDE token.
+    Intended for internal use with BertCrfTagger.
     """
-
-    tag_type = "_allennlptoken"
+    tag_type = "_bertcrftoken"
 
     def tag(self, tokens):
         tags = []
         for token in tokens:
-            allennlptoken = AllenNLPToken(text=token.processed_text)
-            tags.append((token, allennlptoken))
+            bertcrftoken = BertCrfToken(text=token.processed_text)
+            tags.append((token, bertcrftoken))
         return tags
 
 
@@ -278,12 +278,13 @@ class BertCrfTagger(BaseTagger):
         start_time = datetime.datetime.now()
 
         # Divide up the sentence so that we don't get sentences longer than BERT can handle
-        all_allennlptokens, sentence_subsentence_map = self._get_subsentences(sents)
+        all_bertcrftokens, sentence_subsentence_map = self._get_subsentences(
+            sents)
 
         # Create batches
-        all_allennlptokens = sorted(all_allennlptokens, key=len)
-        instances = self._create_batches(all_allennlptokens)
-
+        all_bertcrftokens = sorted(all_bertcrftokens, key=len)
+        instances = self._create_batches(all_bertcrftokens)
+        
         instance_time = datetime.datetime.now()
         log.debug("".join(["Created instances:", str(instance_time - start_time)]))
         log.debug("Num Batches: %d", len(instances))
@@ -301,7 +302,7 @@ class BertCrfTagger(BaseTagger):
                 )
             )
         id_predictions_map = {}
-        for allensentence, prediction in zip(all_allennlptokens, predictions):
+        for allensentence, prediction in zip(all_bertcrftokens, predictions):
             id_predictions_map[id(allensentence)] = prediction["tags"]
 
         # Assign tags to each sentence
@@ -321,7 +322,7 @@ class BertCrfTagger(BaseTagger):
         and returning a map between these subsentences and their parent sentence.
         """
         sentence_subsentence_map = {}
-        all_allennlptokens = []
+        all_bertcrftokens = []
         max_allowed_length = self.max_allowed_length
 
         for sent in sents:
@@ -339,18 +340,18 @@ class BertCrfTagger(BaseTagger):
                     subsentences.append(sent[i : i + num_tokens_per_subsentence])
                     i += increment
 
-            allennlpsents_for_sent = []
+            bertcrfsents_for_sent = []
             for subsent in subsentences:
-                allennlptokens = []
+                bertcrftokens = []
                 for token in subsent:
-                    allennlptokens.append(token._allennlptoken)
-                allennlpsents_for_sent.append(id(allennlptokens))
-                all_allennlptokens.append(allennlptokens)
-            sentence_subsentence_map[id(sent)] = allennlpsents_for_sent
+                    bertcrftokens.append(token._bertcrftoken)
+                bertcrfsents_for_sent.append(id(bertcrftokens))
+                all_bertcrftokens.append(bertcrftokens)
+            sentence_subsentence_map[id(sent)] = bertcrfsents_for_sent
 
-        return all_allennlptokens, sentence_subsentence_map
+        return all_bertcrftokens, sentence_subsentence_map
 
-    def _create_batches(self, all_allennlptokens):
+    def _create_batches(self, all_bertcrftokens):
         """
         Create batches to feed into the predictor within the given batch size range.
         To try to be more efficient, these batches are sorted by the length of the sentences.
@@ -360,16 +361,12 @@ class BertCrfTagger(BaseTagger):
         new_list_sequence_delta = 5
         instances = []
 
-        if len(all_allennlptokens) > min_batch_size:
-            current_list_min_sequence_length = len(all_allennlptokens[0])
+        if len(all_bertcrftokens) > min_batch_size:
+            current_list_min_sequence_length = len(all_bertcrftokens[0])
             divided_sents = []
             sents_current = []
-            for sent in all_allennlptokens:
-                if (
-                    len(sent)
-                    > current_list_min_sequence_length + new_list_sequence_delta
-                    and len(sents_current) > min_batch_size
-                ) or len(sents_current) > max_batch_size:
+            for sent in all_bertcrftokens:
+                if (len(sent) > current_list_min_sequence_length + new_list_sequence_delta and len(sents_current) > min_batch_size) or len(sents_current) > max_batch_size:
                     divided_sents.append(sents_current)
                     sents_current = [sent]
                     current_list_min_sequence_length = len(sent)
@@ -384,8 +381,8 @@ class BertCrfTagger(BaseTagger):
                 instances.append(self.collate_batch(division_instances))
 
         else:
-            for allennlptokens in all_allennlptokens:
-                instances.append(self.get_predictor_inputs(allennlptokens))
+            for bertcrftokens in all_bertcrftokens:
+                instances.append(self.get_predictor_inputs(bertcrftokens))
             # just a single batch
             instances = [self.collate_batch(instances)]
         return instances

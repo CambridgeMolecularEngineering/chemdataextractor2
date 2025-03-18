@@ -1,7 +1,7 @@
 ChemDataExtractor
 ==================================
 
-ChemDataExtractor v2 is a toolkit for extracting chemical information from the scientific literature. Python 3.5 to Python 3.8 supported.
+ChemDataExtractor v2 is a toolkit for extracting chemical information from the scientific literature. Python 3.9 to Python 3.11 supported.
 
 
 Installation
@@ -9,7 +9,7 @@ Installation
 
 #### Create a virtual environment, for example with `conda`
 
-`conda create -n cde2 python=3.8`
+`conda create -n cde2 python=3.11`
 
 #### Activate the `cde2` environment
 

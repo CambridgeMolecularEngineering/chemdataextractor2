@@ -1,2 +1,0 @@
-The (curietemperature__specifier) for (compound__names) is (curietemperature__raw_value) <Blank> (curietemperature__raw_units) <Blank> with confidence score 0.75
-
