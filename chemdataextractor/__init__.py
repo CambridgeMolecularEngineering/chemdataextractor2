@@ -9,7 +9,7 @@ import logging
 
 
 __title__ = "ChemDataExtractor"
-__version__ = "2.3.2"
+__version__ = "2.4.0"
 __author__ = (
     "Matt Swain, Callum Court, Edward Beard, Juraj Mavracic and Taketomo Isazawa"
 )
