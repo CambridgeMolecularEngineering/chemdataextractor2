@@ -52,7 +52,7 @@ setup(
         "scikit-learn>=0.22.1",
         "stanza>=1.6.1",
         "overrides>=3.1.0",
-        "transformers>=4.30.1",
+        "transformers>=4.30.1,<5.0.0",
     ],
     classifiers=[
         "Intended Audience :: Developers",
